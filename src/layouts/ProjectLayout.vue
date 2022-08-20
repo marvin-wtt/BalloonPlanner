@@ -47,7 +47,14 @@
 
 <script lang="ts">
 import { ref } from 'vue';
-import { Balloon, Car, Person, Project, VehicleGroup, VehicleInformation } from 'src/lib/entities';
+import {
+  Balloon,
+  Car,
+  Person,
+  Project,
+  VehicleGroup,
+  VehicleInformation,
+} from 'src/lib/entities';
 import { useRouter } from 'vue-router';
 import { useProjectStore } from 'stores/project-store';
 
@@ -99,8 +106,12 @@ export default {
       people.push(new Person('Ella', 'de', true));
 
       const balloonInformation: VehicleInformation[] = [];
-      balloonInformation.push(new VehicleInformation('F-OABC', 4, [people[4], people[9]]));
-      balloonInformation.push(new VehicleInformation('D-OABC', 3, [people[14]]));
+      balloonInformation.push(
+        new VehicleInformation('F-OABC', 4, [people[4], people[9]])
+      );
+      balloonInformation.push(
+        new VehicleInformation('D-OABC', 3, [people[14]])
+      );
 
       const balloons: Balloon[] = [];
       balloons.push(new Balloon(balloonInformation[0]));
@@ -118,7 +129,9 @@ export default {
       balloons[1].addPassenger(people[7]);
 
       const carInformation: VehicleInformation[] = [];
-      carInformation.push(new VehicleInformation('M-AA-111', 8, [people[4], people[9]]));
+      carInformation.push(
+        new VehicleInformation('M-AA-111', 8, [people[4], people[9]])
+      );
       carInformation.push(new VehicleInformation('F-BB-222', 8, [people[19]]));
 
       const cars: Car[] = [];
@@ -153,7 +166,9 @@ export default {
 
     function addFlight() {
       const flight = project.value.createFlight();
-      router.push({ path: '/projects/' + project.value.id + '/flights/' + flight.id });
+      router.push({
+        path: '/projects/' + project.value.id + '/flights/' + flight.id,
+      });
     }
 
     return {
@@ -166,4 +181,3 @@ export default {
   },
 };
 </script>
-

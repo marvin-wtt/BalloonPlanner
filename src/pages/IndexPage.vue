@@ -11,7 +11,7 @@ import { useProjectStore } from 'stores/project-store';
 
 export default defineComponent({
   name: 'IndexPage',
-  components: { },
+  components: {},
   setup() {
     const project = new Project();
 

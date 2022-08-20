@@ -15,16 +15,29 @@
           {{ $t('pilot_index', 'P') }}
         </th>
         <th class="vehicle-person">
-          {{ editable ? createPersonLable(vehicle.operator).value : vehicle.operator.name }}
+          {{
+            editable
+              ? createPersonLable(vehicle.operator).value
+              : vehicle.operator.name
+          }}
         </th>
       </tr>
       <!-- TODO iterate minimum 5 times to ensure label hight if lable is visable -->
-      <tr v-for="c in (editable ? vehicle.information.capacity : vehicle.passengers.length)" :key="c">
+      <tr
+        v-for="c in editable
+          ? vehicle.information.capacity
+          : vehicle.passengers.length"
+        :key="c"
+      >
         <td class="vehicle-index" v-if="indexed">
           {{ c }}
         </td>
         <td class="vehicle-person">
-          {{ editable ? createPersonLable(vehicle.passengers[c - 1]).value : vehicle.passengers[c-1].name }}
+          {{
+            editable
+              ? createPersonLable(vehicle.passengers[c - 1]).value
+              : vehicle.passengers[c - 1].name
+          }}
         </td>
       </tr>
     </table>
@@ -52,8 +65,8 @@ export default {
     },
     editable: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   setup(props: any) {
     const vehicle = ref(props.data);
@@ -71,8 +84,7 @@ export default {
     return {
       createPersonLable,
       vehicle,
-    }
-
+    };
   },
 };
 </script>

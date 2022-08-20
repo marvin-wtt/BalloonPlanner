@@ -8,12 +8,12 @@ import { Flight } from 'src/lib/entities/Flight';
 import { Project } from 'src/lib/entities/Project';
 
 export {
-    Balloon,
-    Car,
-    Flight,
-    Person,
-    Project,
-    Vehicle,
-    VehicleGroup,
-    VehicleInformation,
+  Balloon,
+  Car,
+  Flight,
+  Person,
+  Project,
+  Vehicle,
+  VehicleGroup,
+  VehicleInformation,
 };
