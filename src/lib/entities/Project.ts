@@ -1,12 +1,12 @@
 import { Person } from 'src/lib/entities/Person';
 import { Flight } from 'src/lib/entities/Flight';
-import { withoutIdGeneration } from 'src/lib/utils/Identifyable';
+import { Identifyable, withoutIdGeneration } from 'src/lib/utils/Identifyable';
 import { GerneralSolver } from 'src/lib/solver/GerneralSolver';
 import { ParticipantsFirstSolver } from 'src/lib/solver/ParticipantsFirstSolver';
 import { VehicleInformation } from 'src/lib/entities/VehicleInformation';
 import { Vehicle } from 'src/lib/entities/Vehicle';
 
-export class Project {
+export class Project extends Identifyable {
   private _people: Person[];
   private _balloons: VehicleInformation[];
   private _cars: VehicleInformation[];
@@ -19,6 +19,7 @@ export class Project {
     balloons?: VehicleInformation[],
     cars?: VehicleInformation[]
   ) {
+    super();
     this._people = people ?? [];
     this._balloons = balloons ?? [];
     this._cars = cars ?? [];
@@ -27,11 +28,11 @@ export class Project {
 
   createFlight(): Flight {
     const flight = new Flight(this._balloons, this._cars, this._people.slice());
-    this.flights.push(flight);
+    this._flights.push(flight);
     return flight;
   }
 
-  get flights(): Array<Flight> {
+  get flights(): Flight[] {
     return this._flights;
   }
 
