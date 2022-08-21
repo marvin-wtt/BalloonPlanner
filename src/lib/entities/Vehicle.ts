@@ -24,8 +24,6 @@ export abstract class Vehicle extends Identifyable implements Cloneable {
   }
 
   set operator(value: Person | undefined) {
-    this._operator?.decrementFlights();
-    value?.incrementFlights();
     this._operator = value;
   }
 
@@ -42,7 +40,6 @@ export abstract class Vehicle extends Identifyable implements Cloneable {
   }
 
   addPassenger(person: Person) {
-    person.incrementFlights();
     this._passengers.push(person);
   }
 
@@ -67,7 +64,6 @@ export abstract class Vehicle extends Identifyable implements Cloneable {
   }
 
   clearPassengers() {
-    this._passengers.forEach((passenger) => passenger.decrementFlights());
     this._passengers = [];
   }
 }
