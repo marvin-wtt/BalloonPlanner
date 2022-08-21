@@ -38,6 +38,18 @@
     <!--      </div>-->
     <!--    </div>-->
   </q-page>
+
+  <q-footer bordered class="bg-grey-8 text-white">
+    <q-toolbar>
+      <q-toolbar-title>
+        <div>Title</div>
+      </q-toolbar-title>
+
+      <q-btn class="bg-primary" @click="flight.findSolution()">
+        Fill flight
+      </q-btn>
+    </q-toolbar>
+  </q-footer>
 </template>
 
 <script lang="ts">
