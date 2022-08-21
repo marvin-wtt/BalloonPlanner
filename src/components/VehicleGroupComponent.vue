@@ -1,17 +1,15 @@
 <template>
-  <div class="column">
-    <vehicle-component
-      type="balloov"
-      :data="data.balloon"
-      :key="data.balloon.id"
-    />
-    <vehicle-component
-      v-for="vehicle in data.cars"
-      type="car"
-      :data="vehicle"
-      :key="vehicle.id"
-    />
-  </div>
+  <vehicle-component
+    type="balloov"
+    :vehicle="data.balloon"
+    :key="data.balloon.id"
+  />
+  <vehicle-component
+    v-for="vehicle in data.cars"
+    type="car"
+    :vehicle="vehicle"
+    :key="vehicle.id"
+  />
 </template>
 
 <script>

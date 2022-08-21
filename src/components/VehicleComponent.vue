@@ -18,7 +18,7 @@
           {{
             editable
               ? createPersonLable(vehicle.operator).value
-              : vehicle.operator.name
+              : vehicle.operator?.name
           }}
         </th>
       </tr>
@@ -46,13 +46,13 @@
 
 <script lang="ts">
 import { Person, Vehicle } from 'src/lib/entities';
-import { computed, ref } from 'vue';
+import { computed, defineComponent, PropType } from 'vue';
 
-export default {
+export default defineComponent({
   name: 'VehicleComponent',
   props: {
-    data: {
-      type: Vehicle,
+    vehicle: {
+      type: null as unknown as PropType<Vehicle>,
       required: false,
     },
     indexed: {
@@ -65,12 +65,10 @@ export default {
     },
     editable: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   },
-  setup(props: any) {
-    const vehicle = ref(props.data);
-
+  setup(props) {
     function createPersonLable(person: Person) {
       return computed(() => {
         if (person === undefined) {
@@ -83,10 +81,9 @@ export default {
 
     return {
       createPersonLable,
-      vehicle,
     };
   },
-};
+});
 </script>
 
 <style scoped>
