@@ -3,9 +3,9 @@
     <table class="vehicle-table">
       <tr>
         <th
-          class="vehicle-label"
-          :rowspan="vehicle.information.capacity + 1"
-          v-if="labeled"
+            class="vehicle-label"
+            :rowspan="vehicle.information.capacity + 1"
+            v-if="labeled"
         >
           <span>
             {{ vehicle.information.name }}
@@ -17,17 +17,17 @@
         <th class="vehicle-person">
           {{
             editable
-              ? createPersonLable(vehicle.operator).value
-              : vehicle.operator?.name
+                ? createPersonLable(vehicle.operator).value
+                : vehicle.operator?.name
           }}
         </th>
       </tr>
-      <!-- TODO iterate minimum 5 times to ensure label hight if lable is visable -->
+
       <tr
-        v-for="c in editable
+          v-for="c in editable
           ? vehicle.information.capacity
           : vehicle.passengers.length"
-        :key="c"
+          :key="c"
       >
         <td class="vehicle-index" v-if="indexed">
           {{ c }}
@@ -35,8 +35,8 @@
         <td class="vehicle-person">
           {{
             editable
-              ? createPersonLable(vehicle.passengers[c - 1]).value
-              : vehicle.passengers[c - 1].name
+                ? createPersonLable(vehicle.passengers[c - 1]).value
+                : vehicle.passengers[c - 1].name
           }}
         </td>
       </tr>
@@ -44,46 +44,32 @@
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import { Person, Vehicle } from 'src/lib/entities';
-import { computed, defineComponent, PropType } from 'vue';
+import { computed } from 'vue';
 
-export default defineComponent({
-  name: 'VehicleComponent',
-  props: {
-    vehicle: {
-      type: null as unknown as PropType<Vehicle>,
-      required: false,
-    },
-    indexed: {
-      type: Boolean,
-      default: false,
-    },
-    labeled: {
-      type: Boolean,
-      default: true,
-    },
-    editable: {
-      type: Boolean,
-      default: true,
-    },
-  },
-  setup(props) {
-    function createPersonLable(person: Person) {
-      return computed(() => {
-        if (person === undefined) {
-          return '';
-        }
+interface Props {
+  vehicle: Vehicle;
+  indexed?: boolean;
+  labeled?: boolean;
+  editable?: boolean;
+}
 
-        return person.name + ' (' + (person.numberOfFlights - 1) + ')';
-      });
+const props = withDefaults(defineProps<Props>(), {
+  indexed: false,
+  labeled: true,
+  editable: true,
+});
+
+function createPersonLable(person: Person) {
+  return computed(() => {
+    if (person === undefined) {
+      return '';
     }
 
-    return {
-      createPersonLable,
-    };
-  },
-});
+    return person.name + ' (' + (person.numberOfFlights - 1) + ')';
+  });
+}
 </script>
 
 <style scoped>

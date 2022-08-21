@@ -9,7 +9,7 @@
             v-for="group in flight.vehicleGroups"
             :key="group.id"
           >
-            <vehicle-group-component :data="group" />
+            <vehicle-group-component :group="group" />
           </div>
         </div>
       </template>
@@ -52,8 +52,8 @@
   </q-footer>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from 'vue';
+<script lang="ts" setup>
+import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import VehicleGroupComponent from 'src/components/VehicleGroupComponent.vue';
 import {
@@ -65,71 +65,66 @@ import {
 import { useProjectStore } from 'stores/project-store';
 import { storeToRefs } from 'pinia';
 
-export default defineComponent({
-  name: 'FlightPage',
-  components: { VehicleGroupComponent },
-  setup() {
-    const $q = useQuasar();
-    const route = useRoute();
-    const router = useRouter();
-    const projectStore = useProjectStore();
+const $q = useQuasar();
+const route = useRoute();
+const router = useRouter();
+const projectStore = useProjectStore();
 
-    const flight = ref();
-    const rightDrawerOpen = ref(false);
+const rightDrawerOpen = ref(false);
 
-    function toggleRightDrawer() {
-      rightDrawerOpen.value = !rightDrawerOpen.value;
-    }
+const flight = ref();
+const { project } = storeToRefs(projectStore);
 
-    const { project } = storeToRefs(projectStore);
-    if (project.value === null) {
-      $q.notify({
-        type: 'warning',
-        message: 'No project found.',
-      });
-      router.push({ name: 'projects' });
-      return { rightDrawerOpen };
-    }
+function toggleRightDrawer() {
+  rightDrawerOpen.value = !rightDrawerOpen.value;
+}
 
-    if (Array.isArray(route.params.flight)) {
-      router.push({ name: 'projects' }); // TODO change route
-      return { rightDrawerOpen };
-    }
+function updateFlightPage(params: RouteParams) {
+  flight.value = null;
+  if (Array.isArray(params.fligh)) return;
 
-    updateFlightPage(route.params);
+  const flightId = Number(params.flight);
+  flight.value = project.value?.flights.find((value) => value.id == flightId);
+}
 
-    if (flight.value === undefined) {
-      // TODO Maybe update the store?
-      $q.notify({
-        type: 'warning',
-        message: 'Flight does not exist.',
-      });
-      router.push({ name: 'projects' });
-      return { rightDrawerOpen };
-    }
-
-    function updateFlightPage(params: RouteParams) {
-      flight.value = null;
-      if (Array.isArray(params.fligh)) return;
-
-      const flightId = Number(params.flight);
-      flight.value = project.value?.flights.find(
-        (value) => value.id == flightId
-      );
-    }
-
-    onBeforeRouteUpdate((to, from) => {
-      if (from.params.flight == to.params.flight) return false;
-      updateFlightPage(to.params);
-      return flight.value !== undefined;
+function verifyProject() {
+  // TODO Check if id matches
+  if (project.value === null) {
+    $q.notify({
+      type: 'warning',
+      message: 'Invalid project.',
     });
+    router.push({ name: 'projects' });
+    return;
+  }
+}
 
-    return {
-      rightDrawerOpen,
-      toggleRightDrawer,
+verifyProject();
 
-      flight,
-    };
-  },
+function loadFlight() {
+  if (Array.isArray(route.params.flight)) {
+    router.push({ name: 'projects' }); // TODO change route
+    return;
+  }
+
+  updateFlightPage(route.params);
+
+  if (flight.value === undefined) {
+    // TODO Maybe update the store?
+    $q.notify({
+      type: 'warning',
+      message: 'Flight does not exist.',
+    });
+    router.push({ name: 'projects' });
+    return;
+  }
+}
+
+loadFlight();
+
+onBeforeRouteUpdate((to, from) => {
+  if (from.params.flight == to.params.flight) return false;
+  updateFlightPage(to.params);
+  return flight.value !== undefined;
 });
 </script>

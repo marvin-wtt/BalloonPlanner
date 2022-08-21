@@ -1,35 +1,29 @@
 <template>
   <vehicle-component
     type="balloov"
-    :vehicle="data.balloon"
-    :key="data.balloon.id"
+    :vehicle="group.balloon"
+    :key="group.balloon.id"
   />
   <vehicle-component
-    v-for="vehicle in data.cars"
+    v-for="vehicle in group.cars"
     type="car"
     :vehicle="vehicle"
     :key="vehicle.id"
   />
 </template>
 
-<script>
+<script lang="ts" setup>
 import VehicleComponent from 'src/components/VehicleComponent.vue';
-import { VehicleGroup } from 'src/lib/entities/VehicleGroup';
+import { VehicleGroup } from 'src/lib/entities';
 
-export default {
-  name: 'VehicleGroupComponent',
-  components: { VehicleComponent },
-  props: {
-    data: {
-      type: VehicleGroup,
-      required: true,
-    },
-    editable: {
-      type: Boolean,
-      default: false,
-    },
-  },
-};
+interface Props {
+  group: VehicleGroup;
+  editable?: boolean;
+}
+
+withDefaults(defineProps<Props>(), {
+  editable: true,
+});
 </script>
 
 <style scoped></style>
