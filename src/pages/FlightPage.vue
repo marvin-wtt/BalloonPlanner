@@ -1,15 +1,19 @@
 <template>
-  <q-page padding>
-    <!-- content -->
-    <template v-if="flight !== undefined">
-      <div class="row">
-        <vehicle-group-component
-          v-for="group in flight.vehicleGroups"
-          :key="group.id"
-          :data="group"
-        />
-      </div>
-    </template>
+  <q-page class="flex">
+    <q-scroll-area style="width: 100%">
+      <!-- content -->
+      <template v-if="flight !== undefined">
+        <div class="row">
+          <div
+            class="column"
+            v-for="group in flight.vehicleGroups"
+            :key="group.id"
+          >
+            <vehicle-group-component :data="group" />
+          </div>
+        </div>
+      </template>
+    </q-scroll-area>
 
     <!--    <q-drawer show-if-above v-model="rightDrawerOpen" side="right" bordered>-->
     <q-drawer v-model="rightDrawerOpen" side="right" :overlay="false" bordered>
@@ -59,7 +63,7 @@ export default defineComponent({
     const projectStore = useProjectStore();
 
     const flight = ref();
-    const rightDrawerOpen = ref(true);
+    const rightDrawerOpen = ref(false);
 
     function toggleRightDrawer() {
       rightDrawerOpen.value = !rightDrawerOpen.value;
@@ -72,12 +76,12 @@ export default defineComponent({
         message: 'No project found.',
       });
       router.push({ name: 'projects' });
-      return { flight };
+      return { rightDrawerOpen };
     }
 
     if (Array.isArray(route.params.flight)) {
       router.push({ name: 'projects' }); // TODO change route
-      return { flight };
+      return { rightDrawerOpen };
     }
 
     updateFlightPage(route.params);
@@ -89,14 +93,14 @@ export default defineComponent({
         message: 'Flight does not exist.',
       });
       router.push({ name: 'projects' });
-      return { flight };
+      return { rightDrawerOpen };
     }
 
     function updateFlightPage(params: RouteParams) {
       flight.value = null;
       if (Array.isArray(params.fligh)) return;
 
-      const flightId = Number(route.params.flight);
+      const flightId = Number(params.flight);
       flight.value = project.value?.flights.find(
         (value) => value.id == flightId
       );
