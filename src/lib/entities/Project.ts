@@ -1,10 +1,5 @@
-import { Person } from 'src/lib/entities/Person';
-import { Flight } from 'src/lib/entities/Flight';
-import { Identifyable, withoutIdGeneration } from 'src/lib/utils/Identifyable';
-import { GerneralSolver } from 'src/lib/solver/GerneralSolver';
-import { ParticipantsFirstSolver } from 'src/lib/solver/ParticipantsFirstSolver';
-import { VehicleInformation } from 'src/lib/entities/VehicleInformation';
-import { Vehicle } from 'src/lib/entities/Vehicle';
+import { Flight, Person, Vehicle, VehicleInformation } from 'src/lib/entities';
+import { Identifyable } from 'src/lib/utils/Identifyable';
 
 export class Project extends Identifyable {
   private _people: Person[];
@@ -12,7 +7,6 @@ export class Project extends Identifyable {
   private _cars: VehicleInformation[];
   private _flights: Flight[] = [];
   private _flightCounter = 0;
-  private _solver: GerneralSolver;
 
   constructor(
     people?: Person[],
@@ -23,7 +17,6 @@ export class Project extends Identifyable {
     this._people = people ?? [];
     this._balloons = balloons ?? [];
     this._cars = cars ?? [];
-    this._solver = new ParticipantsFirstSolver(this);
   }
 
   createFlight(): Flight {
@@ -80,13 +73,5 @@ export class Project extends Identifyable {
     }
 
     return false;
-  }
-
-  findSolution(flight: Flight): Flight | null {
-    let f: Flight | null = null;
-    withoutIdGeneration(() => {
-      f = this._solver.solve(flight);
-    });
-    return f;
   }
 }

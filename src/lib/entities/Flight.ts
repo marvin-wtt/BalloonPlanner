@@ -4,12 +4,15 @@ import { Person } from 'src/lib/entities/Person';
 import { Identifyable } from 'src/lib/utils/Identifyable';
 import { Cloneable } from 'src/lib/utils/Cloneable';
 import { VehicleInformation } from 'src/lib/entities/VehicleInformation';
+import { GerneralSolver } from 'src/lib/solver/GerneralSolver';
+import { ParticipantsFirstSolver } from 'src/lib/solver/ParticipantsFirstSolver';
 
 export class Flight extends Identifyable implements Cloneable {
   private _balloons: VehicleInformation[];
   private _cars: VehicleInformation[];
   private _people: Person[];
   private _vehicleGroups: VehicleGroup[];
+  private _solver: GerneralSolver;
 
   constructor(
     balloons: VehicleInformation[],
@@ -22,6 +25,7 @@ export class Flight extends Identifyable implements Cloneable {
     this._cars = cars;
     this._people = people;
     this._vehicleGroups = groups ?? [];
+    this._solver = new ParticipantsFirstSolver();
   }
 
   get vehicleGroups(): VehicleGroup[] {
@@ -41,7 +45,17 @@ export class Flight extends Identifyable implements Cloneable {
   }
 
   get people(): Person[] {
-    return this.people;
+    return this._people;
+  }
+
+  pilots(): Person[] {
+    const pilots: Person[] = [];
+
+    for (const group of this._vehicleGroups) {
+      pilots.push(...group.balloon.information.allowedOperators);
+    }
+
+    return Array.from(new Set(pilots));
   }
 
   addVehicleGroup(balloon: VehicleInformation) {
@@ -92,9 +106,29 @@ export class Flight extends Identifyable implements Cloneable {
     return cars;
   }
 
+  clear() {
+    for (const group of this._vehicleGroups) {
+      group.balloon.clear();
+      for (const car of group.cars) {
+        car.clear();
+      }
+    }
+  }
+
   clone(): Flight {
     const flight = new Flight(this._balloons, this._cars, this._people);
     flight._vehicleGroups = this._vehicleGroups.map((value) => value.clone());
     return flight;
+  }
+
+  findSolution() {
+    Identifyable.stopIdGeneration();
+    const f: Flight | null = this._solver.solve(this);
+
+    if (f !== null) {
+      this._vehicleGroups = f.vehicleGroups;
+    }
+
+    Identifyable.startIdGeneration();
   }
 }
