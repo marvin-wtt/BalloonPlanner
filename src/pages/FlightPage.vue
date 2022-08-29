@@ -2,17 +2,7 @@
   <q-page class="flex">
     <q-scroll-area style="width: 100%">
       <!-- content -->
-      <template v-if="flight !== undefined">
-        <div class="row">
-          <div
-            class="column"
-            v-for="group in flight.vehicleGroups"
-            :key="group.id"
-          >
-            <vehicle-group-component :group="group" />
-          </div>
-        </div>
-      </template>
+      <base-flight :flight="flight" />
     </q-scroll-area>
 
     <!--    <q-drawer show-if-above v-model="rightDrawerOpen" side="right" bordered>-->
@@ -53,9 +43,10 @@
 </template>
 
 <script lang="ts" setup>
+import BaseFlight from 'components/BaseFlight.vue';
+
 import { ref } from 'vue';
 import { useQuasar } from 'quasar';
-import VehicleGroupComponent from 'src/components/VehicleGroupComponent.vue';
 import {
   onBeforeRouteUpdate,
   RouteParams,
@@ -128,3 +119,7 @@ onBeforeRouteUpdate((to, from) => {
   return flight.value !== undefined;
 });
 </script>
+
+<style>
+
+</style>

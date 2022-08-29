@@ -1,6 +1,9 @@
 <template>
-  <div>
-    <table class="vehicle-table">
+  <draggable-item
+      :item="vehicle"
+      @removed="onVehicleRemoved"
+  >
+    <table class="vehicle-table" @dragenter.stop @dragover.stop @dragleave.stop>
       <tr>
         <th
             class="vehicle-label"
@@ -14,13 +17,11 @@
         <th class="vehicle-index" v-if="indexed">
           {{ $t('pilot_index', 'P') }}
         </th>
-        <th class="vehicle-person">
-          {{
-            editable
-                ? createPersonLable(vehicle.operator).value
-                : vehicle.operator?.name
-          }}
-        </th>
+        <base-flight-vehicle-person-cell
+            :editable="editable"
+            :person="vehicle.operator"
+            operator
+        />
       </tr>
 
       <tr
@@ -32,24 +33,27 @@
         <td class="vehicle-index" v-if="indexed">
           {{ c }}
         </td>
-        <td class="vehicle-person">
-          {{
-            editable
-                ? createPersonLable(vehicle.passengers[c - 1]).value
-                : vehicle.passengers[c - 1].name
-          }}
-        </td>
+        <base-flight-vehicle-person-cell
+            :editable="editable"
+            :person="vehicle.passengers[c - 1]"
+            :vehicle="vehicle"
+        />
       </tr>
     </table>
-  </div>
+  </draggable-item>
 </template>
 
 <script lang="ts" setup>
-import { Person, Vehicle } from 'src/lib/entities';
-import { computed } from 'vue';
+import BaseFlightVehiclePersonCell from 'components/BaseFlightVehiclePersonCell.vue';
+import DraggableItem from 'components/drag/DraggableItem.vue';
+
+import { Vehicle } from 'src/lib/entities';
+import { DragHelper } from 'src/util/DragHelper';
+import { Identifyable } from 'src/lib/utils/Identifyable';
 
 interface Props {
   vehicle: Vehicle;
+  type: 'balloon' | 'car';
   indexed?: boolean;
   labeled?: boolean;
   editable?: boolean;
@@ -61,19 +65,16 @@ const props = withDefaults(defineProps<Props>(), {
   editable: true,
 });
 
-function createPersonLable(person: Person) {
-  return computed(() => {
-    if (person === undefined) {
-      return '';
-    }
-
-    return person.name + ' (' + (person.numberOfFlights - 1) + ')';
-  });
+function onVehicleRemoved(element: Identifyable) {
+  // TODO
+  console.log(element);
 }
 </script>
 
 <style scoped>
 .vehicle-table {
+  /* TODO use default bg color */
+  background-color: white;
   margin: 20px;
   border-collapse: collapse;
   border: 1px solid;
@@ -104,6 +105,10 @@ function createPersonLable(person: Person) {
   width: 2em;
 }
 
+th {
+  border-bottom: 2px solid;
+}
+
 .vehicle-person {
   min-width: 120px;
   height: 30px;
@@ -115,9 +120,15 @@ td.vehicle-person {
   border-bottom: 0.5px dotted;
 }
 
-th {
-  border-bottom: 2px solid;
-}
+/*[draggable] * {*/
+/*  cursor: move;*/
+/*  -webkit-touch-callout: none; !* iOS Safari *!*/
+/*  -webkit-user-select: none; !* Safari *!*/
+/*  -khtml-user-select: none; !* Konqueror HTML *!*/
+/*  -moz-user-select: none; !* Old versions of Firefox *!*/
+/*  -ms-user-select: none; !* Internet Explorer/Edge *!*/
+/*  user-select: none; !* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox *!*/
+/*}*/
 
 /** {*/
 /*  outline: 1px solid red;*/
