@@ -1,12 +1,13 @@
 <template>
-  <div
-    :class="{ dragged: dragged }"
-    @dragstart="onDragStart($event)"
-    @dragend="onDragEnd($event)"
-    draggable="true"
+  <component
+      :is="tag"
+      :class="{ dragged: dragged }"
+      @dragstart.stop="onDragStart($event)"
+      @dragend.stop="onDragEnd($event)"
+      draggable="true"
   >
-    <slot />
-  </div>
+    <slot/>
+  </component>
 </template>
 
 <script lang="ts" setup>
@@ -16,41 +17,42 @@ import { ref } from 'vue';
 
 interface Props {
   item: Identifyable;
+  tag?: string;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  tag: 'div',
+});
 
 const emit = defineEmits<{
-  (e: 'canceled', element: Identifyable): void;
-  (e: 'removed', element: Identifyable): void;
+  (e: 'cancel', element: Identifyable): void;
+  (e: 'move', element: Identifyable): void;
+  (e: 'remove', element: Identifyable): void;
 }>();
 
 const dragged = ref(false);
 
 function onDragStart(event: DragEvent) {
   event.stopPropagation();
-  DragHelper.startDrag(event, props.identifyable);
+  DragHelper.startDrag(event, props.item);
   dragged.value = true;
+  emit('move', props.item);
 }
 
 function onDragEnd(event: DragEvent) {
-  event.stopPropagation();
-  DragHelper.stopDrag();
-  dragged.value = false;
-
-  if (DragHelper.verifyDrop(event)) {
-    emit('removed', DragHelper.element as Identifyable);
+  if (DragHelper.verifyEnd(event)) {
+    emit('remove', props.item);
     event.preventDefault();
+  } else {
+    emit('cancel', props.item);
   }
 
-  emit('canceled', DragHelper.element as Identifyable);
+  dragged.value = false;
+  DragHelper.endDrop();
 }
 </script>
 
 <style scoped>
-div {
-  margin: 0;
-}
 .dragged {
   opacity: 0.5;
 }

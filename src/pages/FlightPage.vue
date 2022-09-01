@@ -2,7 +2,45 @@
   <q-page class="flex">
     <q-scroll-area style="width: 100%">
       <!-- content -->
-      <base-flight :flight="flight" />
+      <base-flight
+        :flight="flight"
+        @balloon-add="onBalloonAdd"
+        @balloon-remove="onBalloonRemove"
+      >
+        <base-vehicle-group
+          v-for="group in flight.vehicleGroups"
+          :key="group.id"
+          :group="group"
+          @car-add="(car) => onCarAdd(group, car)"
+          @car-remove="(car) => onCarRemove(group, car)"
+        >
+          <template #balloon>
+            <base-vehicle
+              :key="group.balloon.id"
+              type="balloon"
+              :vehicle="group.balloon"
+              @passenger-add="(p) => onVehiclePersonAdd(group.balloon, p)"
+              @passenger-remove="(p) => onVehiclePersonRemove(group.balloon, p)"
+              @operator-add="(p) => onVehicleOperatorAdd(group.balloon, p)"
+              @operator-remove="
+                (p) => onVehicleOperatorRemove(group.balloon, p)
+              "
+            />
+          </template>
+          <template #cars>
+            <base-vehicle
+              v-for="vehicle in group.cars"
+              :key="vehicle.id"
+              type="car"
+              :vehicle="vehicle"
+              @passenger-add="(p) => onVehiclePersonAdd(vehicle, p)"
+              @passenger-remove="(p) => onVehiclePersonRemove(vehicle, p)"
+              @operator-add="(p) => onVehicleOperatorAdd(vehicle, p)"
+              @operator-remove="(p) => onVehicleOperatorRemove(vehicle, p)"
+            />
+          </template>
+        </base-vehicle-group>
+      </base-flight>
     </q-scroll-area>
 
     <!--    <q-drawer show-if-above v-model="rightDrawerOpen" side="right" bordered>-->
@@ -44,8 +82,10 @@
 
 <script lang="ts" setup>
 import BaseFlight from 'components/BaseFlight.vue';
+import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
+import BaseVehicle from 'components/BaseVehicle.vue';
 
-import { ref } from 'vue';
+import { Ref, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import {
   onBeforeRouteUpdate,
@@ -53,15 +93,16 @@ import {
   useRoute,
   useRouter,
 } from 'vue-router';
-import { useProjectStore } from 'stores/project-store';
+import { useProjectStore } from 'stores/project';
 import { storeToRefs } from 'pinia';
+import { Balloon, Car, Flight, Person, Vehicle, VehicleGroup } from 'src/lib/entities';
 
 const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
 const projectStore = useProjectStore();
 
-const rightDrawerOpen = ref(false);
+const rightDrawerOpen = ref(true  );
 
 const flight = ref();
 const { project } = storeToRefs(projectStore);
@@ -71,7 +112,7 @@ function toggleRightDrawer() {
 }
 
 function updateFlightPage(params: RouteParams) {
-  flight.value = null;
+  flight.value = undefined;
   if (Array.isArray(params.fligh)) return;
 
   const flightId = Number(params.flight);
@@ -118,8 +159,56 @@ onBeforeRouteUpdate((to, from) => {
   updateFlightPage(to.params);
   return flight.value !== undefined;
 });
+
+// TODO reduce above logic
+
+function onBalloonAdd(balloon: Balloon) {
+  // TODO
+  console.log(balloon);
+}
+
+function onBalloonRemove(balloon: Balloon) {
+  // TODO
+  console.log(balloon);
+}
+
+function onCarAdd(group: VehicleGroup, car: Car) {
+  // TODO
+  group.cars.push(car);
+  console.log(group, car);
+}
+
+function onCarRemove(car: Car) {
+  // TODO
+  console.log(car);
+}
+
+function onVehicleOperatorAdd(vehicle: Vehicle, person: Person) {
+  // TODO
+  vehicle.operator = person;
+  console.log(person);
+}
+
+function onVehicleOperatorRemove(vehicle: Vehicle, person: Person) {
+  // TODO
+  vehicle.operator = undefined;
+  console.log(person);
+}
+
+function onVehiclePersonAdd(vehicle: Vehicle, person: Person) {
+  // TODO
+  vehicle.passengers.push(person);
+  console.log(person);
+}
+
+function onVehiclePersonRemove(vehicle: Vehicle, person: Person) {
+  // TODO
+  vehicle.passengers.splice(
+    vehicle.passengers.findIndex((value) => value === person),
+    1
+  );
+  console.log(vehicle, person);
+}
 </script>
 
-<style>
-
-</style>
+<style></style>

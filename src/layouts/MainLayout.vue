@@ -20,7 +20,7 @@
     </q-header>
 
     <q-drawer
-      breakpoint="511"
+      :breakpoint="511"
       show-if-above
       v-model="leftDrawerOpen"
       side="left"

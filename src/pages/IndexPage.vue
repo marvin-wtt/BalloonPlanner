@@ -4,21 +4,6 @@
   </q-page>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-import { Project } from 'src/lib/entities';
-import { useProjectStore } from 'stores/project-store';
+<script lang="ts" setup>
 
-export default defineComponent({
-  name: 'IndexPage',
-  components: {},
-  setup() {
-    const project = new Project();
-
-    const store = useProjectStore();
-    store.project = project;
-
-    return {};
-  },
-});
 </script>

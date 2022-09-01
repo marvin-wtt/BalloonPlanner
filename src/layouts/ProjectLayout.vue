@@ -45,7 +45,7 @@ import {
   VehicleInformation,
 } from 'src/lib/entities';
 import { useRouter } from 'vue-router';
-import { useProjectStore } from 'stores/project-store';
+import { useProjectStore } from 'stores/project';
 
 const router = useRouter();
 const store = useProjectStore();
@@ -116,9 +116,9 @@ if (project.value.flights.length === 0) {
 
   const carInformation: VehicleInformation[] = [];
   carInformation.push(
-      new VehicleInformation('M-AA-111', 8, [people[4], people[9]])
+      new VehicleInformation('M-AA-111', 10, [people[4], people[9]])
   );
-  carInformation.push(new VehicleInformation('F-BB-222', 8, [people[19]]));
+  carInformation.push(new VehicleInformation('F-BB-222', 10, [people[19]]));
 
   const cars: Car[] = [];
   cars.push(new Car(carInformation[0]));

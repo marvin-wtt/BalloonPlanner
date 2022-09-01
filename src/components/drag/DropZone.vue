@@ -1,14 +1,15 @@
 <template>
-  <div
-    @dragenter="onDragEnter($event)"
-    @dragover="onDragOver($event)"
-    @dragleave="onDragLeave($event)"
-    @drop="onDrop($event)"
-    class="drop-zone"
-    :class="{ highlighted: highlighted }"
+  <component
+      :is="tag"
+      @dragenter.stop="onDragEnter($event)"
+      @dragover.stop="onDragOver($event)"
+      @dragleave.stop="onDragLeave($event)"
+      @drop.stop="onDrop($event)"
+      class="drop-zone"
+      :class="{ highlighted: highlighted }"
   >
-    <slot />
-  </div>
+    <slot/>
+  </component>
 </template>
 
 <script lang="ts" setup>
@@ -20,12 +21,14 @@ interface Props {
   accepted?: (element: Identifyable) => boolean;
   highlight?: boolean;
   highlightColor?: string;
+  tag?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   accepted: () => true,
   highlight: true,
   highlightColor: '#31ccec',
+  tag: 'div',
 });
 
 const emit = defineEmits<{
@@ -39,8 +42,6 @@ function accepted(): boolean {
 }
 
 function onDragEnter(event: DragEvent) {
-  event.stopPropagation();
-
   if (!accepted()) {
     return;
   }
@@ -50,8 +51,6 @@ function onDragEnter(event: DragEvent) {
 }
 
 function onDragOver(event: DragEvent) {
-  event.stopPropagation();
-
   if (!accepted()) {
     return;
   }
@@ -60,15 +59,11 @@ function onDragOver(event: DragEvent) {
 }
 
 function onDragLeave(event: DragEvent) {
-  event.stopPropagation();
-
   highlighted.value = false;
   event.preventDefault();
 }
 
 function onDrop(event: DragEvent) {
-  event.stopPropagation();
-
   highlighted.value = false;
 
   const element = DragHelper.element;
@@ -82,9 +77,7 @@ function onDrop(event: DragEvent) {
 </script>
 
 <style scoped>
-
 .highlighted {
   background-color: v-bind(highlightColor);
 }
-
 </style>

@@ -1,13 +1,11 @@
 <template>
   <drop-zone class="row" :accepted="isDropAllowed" @dropped="onDrop">
-    <div class="column" v-for="group in flight.vehicleGroups" :key="group.id">
-      <base-flight-vehicle-group :group="group"/>
-    </div>
+    <slot/>
   </drop-zone>
 </template>
 
 <script lang="ts" setup>
-import BaseFlightVehicleGroup from 'components/BaseFlightVehicleGroup.vue';
+import BaseFlightVehicleGroup from 'components/BaseVehicleGroup.vue';
 
 import { Balloon, Flight } from 'src/lib/entities';
 import DropZone from 'components/drag/DropZone.vue';

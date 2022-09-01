@@ -1,24 +1,15 @@
 <template>
   <drop-zone :accepted="isDropAccepted" @dropped="drop">
-    <base-flight-vehicle
-        type="balloon"
-        :vehicle="group.balloon"
-        :key="group.balloon.id"
-    />
-    <base-flight-vehicle
-        v-for="vehicle in group.cars"
-        type="car"
-        :vehicle="vehicle"
-        :key="vehicle.id"
-    />
+    <slot name="balloon" />
+    <slot name="cars" />
   </drop-zone>
 </template>
 
 <script lang="ts" setup>
 import DropZone from 'components/drag/DropZone.vue';
-import BaseFlightVehicle from 'components/BaseFlightVehicle.vue';
+import BaseFlightVehicle from 'components/BaseVehicle.vue';
 
-import { Car, VehicleGroup } from 'src/lib/entities';
+import { Car, Person, VehicleGroup } from 'src/lib/entities';
 import { Identifyable } from 'src/lib/utils/Identifyable';
 
 interface Props {
@@ -29,6 +20,10 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   editable: true,
 });
+
+const emit = defineEmits<{
+  (e: 'carAdd', person: Car): void;
+}>();
 
 function isDropAccepted(element: Identifyable): boolean {
   if (!(element instanceof Car)) {
@@ -43,7 +38,7 @@ function isDropAccepted(element: Identifyable): boolean {
 }
 
 function drop(element: Car) {
-  console.log('Called');
+  emit('carAdd', element);
 }
 </script>
 
