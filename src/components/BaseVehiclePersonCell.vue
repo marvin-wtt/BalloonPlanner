@@ -61,7 +61,7 @@ function isDropAllowed(element: Identifyable): boolean {
   }
 
   if (props.operator) {
-    return props.vehicle.information.allowedOperators.includes(element);
+    return props.vehicle.allowedOperators.includes(element);
   }
 
   return !props.vehicle.passengers.includes(element);

@@ -4,19 +4,43 @@ import { VehicleInformation } from 'src/lib/entities/VehicleInformation';
 import { Cloneable } from 'src/lib/utils/Cloneable';
 
 export abstract class Vehicle extends Identifyable implements Cloneable {
-  private _information: VehicleInformation;
+  private _name: string;
+  private _capacity: number;
+  private _allowedOperators: Person[];
   private _operator?: Person;
   private _passengers: Person[] = [];
 
-  constructor(information: VehicleInformation) {
+  constructor(name: string, capacity: number, allowedOperators: Person[]) {
     super();
-    this._information = information;
+    this._name = name;
+    this._capacity = capacity;
+    this._allowedOperators = allowedOperators;
   }
 
   abstract clone(): Vehicle;
 
-  get information(): VehicleInformation {
-    return this._information;
+  get name(): string {
+    return this._name;
+  }
+
+  set name(value: string) {
+    this._name = value;
+  }
+
+  get capacity(): number {
+    return this._capacity;
+  }
+
+  set capacity(value: number) {
+    this._capacity = value;
+  }
+
+  get allowedOperators(): Person[] {
+    return this._allowedOperators;
+  }
+
+  set allowedOperators(value: Person[]) {
+    this._allowedOperators = value;
   }
 
   get operator(): Person | undefined {
@@ -51,11 +75,11 @@ export abstract class Vehicle extends Identifyable implements Cloneable {
   }
 
   availableCapacity(): number {
-    return this._information.capacity - this.passengers.length;
+    return this._capacity - this.passengers.length;
   }
 
   isFull(): boolean {
-    return this._passengers.length >= this._information.capacity;
+    return this._passengers.length >= this._capacity;
   }
 
   clear() {

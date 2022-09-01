@@ -4,11 +4,11 @@
       <tr>
         <th
           class="vehicle-label"
-          :rowspan="vehicle.information.capacity + 1"
+          :rowspan="vehicle.capacity + 1"
           v-if="labeled"
         >
           <span>
-            {{ vehicle.information.name }}
+            {{ vehicle.name }}
           </span>
           <q-menu
             touch-position
@@ -59,7 +59,7 @@
 import BaseVehiclePersonCell from 'components/BaseVehiclePersonCell.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 
-import { Car, Person, Vehicle } from 'src/lib/entities';
+import { Person, Vehicle } from 'src/lib/entities';
 import { computed } from 'vue';
 
 interface Props {
@@ -96,7 +96,7 @@ const passengerLabels = computed(() => {
 });
 
 const freePlaces = computed(() => {
-  return props.vehicle.information.capacity - props.vehicle.passengers.length;
+  return props.vehicle.capacity - props.vehicle.passengers.length;
 });
 
 const passengerSeats = computed(() => {
@@ -105,7 +105,7 @@ const passengerSeats = computed(() => {
     : props.vehicle.passengers.length;
 });
 
-function onVehicleRemoved(vehicle: Vehicle) {
+function onVehicleRemoved() {
   if (props.type === 'balloon') {
     emit('balloonRemove', props.vehicle);
   } else {

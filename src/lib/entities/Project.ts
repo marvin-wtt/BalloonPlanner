@@ -1,17 +1,17 @@
-import { Flight, Person, Vehicle, VehicleInformation } from 'src/lib/entities';
+import { Balloon, Car, Flight, Person, Vehicle } from 'src/lib/entities';
 import { Identifyable } from 'src/lib/utils/Identifyable';
 
 export class Project extends Identifyable {
   private _people: Person[];
-  private _balloons: VehicleInformation[];
-  private _cars: VehicleInformation[];
+  private _balloons: Balloon[];
+  private _cars: Car[];
   private _flights: Flight[] = [];
   private _flightCounter = 0;
 
   constructor(
     people?: Person[],
-    balloons?: VehicleInformation[],
-    cars?: VehicleInformation[]
+    balloons?: Balloon[],
+    cars?: Car[]
   ) {
     super();
     this._people = people ?? [];
@@ -33,11 +33,11 @@ export class Project extends Identifyable {
     return this._flights.filter((flight) => flight.id == flightId).at(0);
   }
 
-  get balloons(): VehicleInformation[] {
+  get balloons(): Balloon[] {
     return this._balloons;
   }
 
-  get cars(): VehicleInformation[] {
+  get cars(): Car[] {
     return this._cars;
   }
 

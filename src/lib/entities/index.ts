@@ -1,5 +1,4 @@
 import { Person } from 'src/lib/entities/Person';
-import { VehicleInformation } from 'src/lib/entities/VehicleInformation';
 import { Vehicle } from 'src/lib/entities/Vehicle';
 import { Balloon } from 'src/lib/entities/Balloon';
 import { Car } from 'src/lib/entities/Car';
@@ -15,5 +14,4 @@ export {
   Project,
   Vehicle,
   VehicleGroup,
-  VehicleInformation,
 };

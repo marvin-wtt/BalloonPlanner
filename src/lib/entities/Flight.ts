@@ -3,20 +3,20 @@ import { VehicleGroup } from 'src/lib/entities/VehicleGroup';
 import { Person } from 'src/lib/entities/Person';
 import { Identifyable } from 'src/lib/utils/Identifyable';
 import { Cloneable } from 'src/lib/utils/Cloneable';
-import { VehicleInformation } from 'src/lib/entities/VehicleInformation';
 import { GerneralSolver } from 'src/lib/solver/GerneralSolver';
 import { ParticipantsFirstSolver } from 'src/lib/solver/ParticipantsFirstSolver';
+import { Car } from 'src/lib/entities/Car';
 
 export class Flight extends Identifyable implements Cloneable {
-  private _balloons: VehicleInformation[];
-  private _cars: VehicleInformation[];
+  private _balloons: Balloon[];
+  private _cars: Car[];
   private _people: Person[];
   private _vehicleGroups: VehicleGroup[];
   private _solver: GerneralSolver;
 
   constructor(
-    balloons: VehicleInformation[],
-    cars: VehicleInformation[],
+    balloons: Balloon[],
+    cars: Car[],
     people: Person[],
     groups?: VehicleGroup[]
   ) {
@@ -36,11 +36,11 @@ export class Flight extends Identifyable implements Cloneable {
     this._vehicleGroups = value;
   }
 
-  get balloons(): VehicleInformation[] {
+  get balloons(): Balloon[] {
     return this._balloons;
   }
 
-  get cars(): VehicleInformation[] {
+  get cars(): Car[] {
     return this._cars;
   }
 
@@ -52,14 +52,14 @@ export class Flight extends Identifyable implements Cloneable {
     const pilots: Person[] = [];
 
     for (const group of this._vehicleGroups) {
-      pilots.push(...group.balloon.information.allowedOperators);
+      pilots.push(...group.balloon.allowedOperators);
     }
 
     return Array.from(new Set(pilots));
   }
 
-  addVehicleGroup(balloon: VehicleInformation) {
-    this._vehicleGroups.push(new VehicleGroup(new Balloon(balloon)));
+  addVehicleGroup(balloon: Balloon) {
+    this._vehicleGroups.push(new VehicleGroup(balloon));
   }
 
   removeVehicleGroup(id: number) {
@@ -86,21 +86,21 @@ export class Flight extends Identifyable implements Cloneable {
     return people;
   }
 
-  availableBalloons(): VehicleInformation[] {
-    let balloons: VehicleInformation[] = this._balloons;
+  availableBalloons(): Balloon[] {
+    let balloons: Balloon[] = this._balloons;
     for (const group of this._vehicleGroups) {
       balloons = balloons.filter(
-        (value) => value !== group.balloon.information
+        (value) => value !== group.balloon
       );
     }
     return balloons;
   }
 
-  availableCars(): VehicleInformation[] {
-    let cars: VehicleInformation[] = this._cars;
+  availableCars(): Car[] {
+    let cars: Car[] = this._cars;
     for (const group of this._vehicleGroups) {
       for (const car of group.cars) {
-        cars = cars.filter((value) => value !== car.information);
+        cars = cars.filter((value) => value !== car);
       }
     }
     return cars;

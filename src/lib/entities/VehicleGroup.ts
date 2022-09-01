@@ -49,15 +49,15 @@ export class VehicleGroup extends Identifyable implements Cloneable {
       return;
     }
 
-    let remaingCapacity = this._balloon.information.capacity + 1;
+    let remaingCapacity = this._balloon.capacity + 1;
     for (const car of this._cars) {
-      if (car.information.capacity >= remaingCapacity) {
+      if (car.capacity >= remaingCapacity) {
         car.reseavedCapacity = remaingCapacity;
         remaingCapacity = 0;
         // Do not exit here because all remaing cars remaining capacity should be set to zero
       } else {
-        car.reseavedCapacity = car.information.capacity;
-        remaingCapacity -= car.information.capacity;
+        car.reseavedCapacity = car.capacity;
+        remaingCapacity -= car.capacity;
       }
     }
   }

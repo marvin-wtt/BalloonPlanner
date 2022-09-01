@@ -1,7 +1,6 @@
 import { GerneralSolver } from 'src/lib/solver/GerneralSolver';
 import { Flight } from 'src/lib/entities/Flight';
 import { Person } from 'src/lib/entities/Person';
-import { VehicleInformation } from 'src/lib/entities/VehicleInformation';
 import { Car } from 'src/lib/entities/Car';
 import { shuffle } from 'src/lib/utils/ArrayUtils';
 
@@ -89,7 +88,7 @@ export class ParticipantsFirstSolver extends GerneralSolver {
     }
 
     const availablePeople = flight.availablePeople();
-    const operators = balloon.information.allowedOperators.filter((value) =>
+    const operators = balloon.allowedOperators.filter((value) =>
       availablePeople.includes(value)
     );
     if (operators.length == 0) {
@@ -132,10 +131,10 @@ export class ParticipantsFirstSolver extends GerneralSolver {
       const balloon = group.balloon;
 
       const existingCapacity = group.cars.reduce(
-        (prev, curr) => prev + curr.information.capacity,
+        (prev, curr) => prev + curr.capacity,
         0
       );
-      if (existingCapacity >= balloon.information.capacity + 1) {
+      if (existingCapacity >= balloon.capacity + 1) {
         continue;
       }
 
@@ -147,14 +146,14 @@ export class ParticipantsFirstSolver extends GerneralSolver {
 
       const c = this.findSmallestCarFit(
         cars,
-        balloon.information.capacity + 1 - existingCapacity
+        balloon.capacity + 1 - existingCapacity
       );
       if (c.length == 0) {
         return false;
       }
 
       c.forEach((value) => {
-        group.addCar(new Car(value));
+        group.addCar(value);
       });
     }
 
@@ -162,9 +161,9 @@ export class ParticipantsFirstSolver extends GerneralSolver {
   }
 
   protected findSmallestCarFit(
-    cars: VehicleInformation[],
+    cars: Car[],
     capacity: number
-  ): VehicleInformation[] {
+  ): Car[] {
     cars.sort((a, b) => a.capacity - b.capacity);
     const car = cars.find((value) => value.capacity >= capacity);
     if (car !== undefined) {
@@ -235,7 +234,7 @@ export class ParticipantsFirstSolver extends GerneralSolver {
       return this.findDriverSolution(flight, groupIndex, carIndex + 1);
     }
 
-    const operators = car.information.allowedOperators.filter((value) =>
+    const operators = car.allowedOperators.filter((value) =>
       flight.availablePeople().includes(value)
     );
     // One vehicle was found without a solution. Quit here
