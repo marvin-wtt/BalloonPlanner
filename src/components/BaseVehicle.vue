@@ -1,6 +1,11 @@
 <template>
   <draggable-item :item="vehicle" @removed="onVehicleRemoved">
-    <table class="vehicle-table" @dragenter.stop @dragover.stop @dragleave.stop>
+    <table
+      class="vehicle-table shadow-2"
+      @dragenter.stop
+      @dragover.stop
+      @dragleave.stop
+    >
       <tr>
         <th
           class="vehicle-label"
@@ -10,10 +15,7 @@
           <span>
             {{ vehicle.name }}
           </span>
-          <q-menu
-            touch-position
-            context-menu
-            >
+          <q-menu touch-position context-menu>
             <q-list dense style="min-width: 100px">
               <q-item clickable v-close-popup>
                 <q-item-section>Edit</q-item-section>
@@ -85,19 +87,19 @@ const emit = defineEmits<{
   (e: 'passengerRemove', person: Person): void;
 }>();
 
-const passengerLabels = computed(() => {
-  if (!props.editable) {
-    return props.vehicle.passengers.map((value) => value.name);
-  }
-
-  return props.vehicle.passengers.map(
-    (value) => value.name + ' (' + (value.numberOfFlights - 1) + ')'
-  );
-});
-
-const freePlaces = computed(() => {
-  return props.vehicle.capacity - props.vehicle.passengers.length;
-});
+// const passengerLabels = computed(() => {
+//   if (!props.editable) {
+//     return props.vehicle.passengers.map((value) => value.name);
+//   }
+//
+//   return props.vehicle.passengers.map(
+//     (value) => value.name + ' (' + (value.numberOfFlights - 1) + ')'
+//   );
+// });
+//
+// const freePlaces = computed(() => {
+//   return props.vehicle.capacity - props.vehicle.passengers.length;
+// });
 
 const passengerSeats = computed(() => {
   return props.editable

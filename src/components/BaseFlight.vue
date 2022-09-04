@@ -1,12 +1,10 @@
 <template>
-  <drop-zone class="row" :accepted="isDropAllowed" @dropped="onDrop">
-    <slot/>
+  <drop-zone class="row wrap" :accepted="isDropAllowed" @dropped="onDrop">
+    <slot />
   </drop-zone>
 </template>
 
 <script lang="ts" setup>
-import BaseFlightVehicleGroup from 'components/BaseVehicleGroup.vue';
-
 import { Balloon, Flight } from 'src/lib/entities';
 import DropZone from 'components/drag/DropZone.vue';
 import { Identifyable } from 'src/lib/utils/Identifyable';

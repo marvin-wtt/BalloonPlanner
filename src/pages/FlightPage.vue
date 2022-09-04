@@ -1,83 +1,122 @@
 <template>
-  <q-page class="flex">
-    <q-scroll-area style="width: 100%">
-      <!-- content -->
-      <base-flight
-        :flight="flight"
-        @balloon-add="onBalloonAdd"
-        @balloon-remove="onBalloonRemove"
+  <q-page class="full-width row justify-start no-wrap">
+    <!-- Menu -->
+    <div
+      class="self-stretch row no-wrap col-xl-2 col-lg-3 col-md-3 col-sm-6 col col-xs-12"
+    >
+      <q-tabs
+        v-model="menuTabs"
+        vertical
+        active-bg-color="grey-6"
+        class="bg-grey-10 text-white"
       >
-        <base-vehicle-group
-          v-for="group in flight.vehicleGroups"
-          :key="group.id"
-          :group="group"
-          @car-add="(car) => onCarAdd(group, car)"
-          @car-remove="(car) => onCarRemove(group, car)"
+        <q-tab name="overview" icon="home" :label="$t('overview')" />
+        <q-separator spaced inset color="white" />
+        <q-tab name="balloons" icon="mdi-airballoon" :label="$t('balloon')" />
+        <q-tab name="cars" icon="airport_shuttle" :label="$t('car')" />
+        <q-tab name="people" icon="group" :label="$t('person')" />
+        <q-separator spaced inset color="white" />
+        <q-tab name="settings" icon="settings" :label="$t('setting')" />
+      </q-tabs>
+
+      <div class="col-grow self-stretch column" v-if="menuTabs">
+        <q-tab-panels
+          v-model="menuTabs"
+          animated
+          transition-next="jump-up"
+          transition-prev="jump-down"
+          vertical
+          class="no-wrap bg-grey-6 col-grow"
         >
-          <template #balloon>
-            <base-vehicle
-              :key="group.balloon.id"
-              type="balloon"
-              :vehicle="group.balloon"
-              @passenger-add="(p) => onVehiclePersonAdd(group.balloon, p)"
-              @passenger-remove="(p) => onVehiclePersonRemove(group.balloon, p)"
-              @operator-add="(p) => onVehicleOperatorAdd(group.balloon, p)"
-              @operator-remove="
-                (p) => onVehicleOperatorRemove(group.balloon, p)
-              "
-            />
-          </template>
-          <template #cars>
-            <base-vehicle
-              v-for="vehicle in group.cars"
-              :key="vehicle.id"
-              type="car"
-              :vehicle="vehicle"
-              @passenger-add="(p) => onVehiclePersonAdd(vehicle, p)"
-              @passenger-remove="(p) => onVehiclePersonRemove(vehicle, p)"
-              @operator-add="(p) => onVehicleOperatorAdd(vehicle, p)"
-              @operator-remove="(p) => onVehicleOperatorRemove(vehicle, p)"
-            />
-          </template>
-        </base-vehicle-group>
-      </base-flight>
-    </q-scroll-area>
+          <q-tab-panel name="overview"> Overview</q-tab-panel>
 
-    <!--    <q-drawer show-if-above v-model="rightDrawerOpen" side="right" bordered>-->
-    <q-drawer v-model="rightDrawerOpen" side="right" :overlay="false" bordered>
-      <!-- drawer content -->
-      <div class="column">
-        <q-scroll-area class="fit">
-          <div class="q-pa-sm">
-            <!-- TODO -->
-          </div>
-        </q-scroll-area>
+          <q-tab-panel name="balloons">
+            Balloons
+            <q-table></q-table>
+          </q-tab-panel>
+
+          <q-tab-panel name="cars">Test</q-tab-panel>
+
+          <q-tab-panel name="people" class="bg-grey-6 column">
+            <q-scroll-area class="col-grow self-stretch">
+              People
+              <q-list dense dark bordered separator>
+                <q-item
+                  v-for="participant in availableParticipants"
+                  :key="participant.id"
+                >
+                  <q-item-section>{{ participant.name }}</q-item-section>
+                  <q-item-section side>{{ participant.numberOfFlights }}</q-item-section>
+                </q-item>
+              </q-list>
+
+            </q-scroll-area>
+          </q-tab-panel>
+
+          <q-tab-panel name="settings"></q-tab-panel>
+        </q-tab-panels>
       </div>
-    </q-drawer>
+    </div>
 
-    <!--    <div class="q-px-sm q-py-lg">-->
-    <!--      <div class="column items-center" style="margin-top: 100px; margin-bottom: 100px;">-->
-    <!--        <q-fab color="secondary" push icon="add" direction="left">-->
-    <!--          <q-fab-action color="green" text-color="black" icon="balloon"/>-->
-    <!--        </q-fab>-->
-    <!--        <q-fab color="secondary" push icon="add" direction="left">-->
-    <!--          <q-fab-action color="blue" text-color="black" icon="balloon"/>-->
-    <!--        </q-fab>-->
-    <!--      </div>-->
-    <!--    </div>-->
+    <!-- Flight overview -->
+    <div class="col-grow column no-wrap">
+      <q-scroll-area class="col-grow">
+        <base-flight
+          :flight="flight"
+          @balloon-add="onBalloonAdd"
+          @balloon-remove="onBalloonRemove"
+        >
+          <base-vehicle-group
+            v-for="group in flight.vehicleGroups"
+            :key="group.id"
+            :group="group"
+            @car-add="(car) => onCarAdd(group, car)"
+            @car-remove="(car) => onCarRemove(group, car)"
+          >
+            <template #balloon>
+              <base-vehicle
+                :key="group.balloon.id"
+                type="balloon"
+                :vehicle="group.balloon"
+                @passenger-add="(p) => onVehiclePersonAdd(group.balloon, p)"
+                @passenger-remove="
+                  (p) => onVehiclePersonRemove(group.balloon, p)
+                "
+                @operator-add="(p) => onVehicleOperatorAdd(group.balloon, p)"
+                @operator-remove="
+                  (p) => onVehicleOperatorRemove(group.balloon, p)
+                "
+              />
+            </template>
+            <template #cars>
+              <base-vehicle
+                v-for="vehicle in group.cars"
+                :key="vehicle.id"
+                type="car"
+                :vehicle="vehicle"
+                @passenger-add="(p) => onVehiclePersonAdd(vehicle, p)"
+                @passenger-remove="(p) => onVehiclePersonRemove(vehicle, p)"
+                @operator-add="(p) => onVehicleOperatorAdd(vehicle, p)"
+                @operator-remove="(p) => onVehicleOperatorRemove(vehicle, p)"
+              />
+            </template>
+          </base-vehicle-group>
+        </base-flight>
+      </q-scroll-area>
+
+      <q-footer bordered class="bg-grey-8 text-white">
+        <q-toolbar>
+          <q-toolbar-title>
+            <div>Title</div>
+          </q-toolbar-title>
+
+          <q-btn class="bg-primary" @click="flight.findSolution()">
+            Fill flight
+          </q-btn>
+        </q-toolbar>
+      </q-footer>
+    </div>
   </q-page>
-
-  <q-footer bordered class="bg-grey-8 text-white">
-    <q-toolbar>
-      <q-toolbar-title>
-        <div>Title</div>
-      </q-toolbar-title>
-
-      <q-btn class="bg-primary" @click="flight.findSolution()">
-        Fill flight
-      </q-btn>
-    </q-toolbar>
-  </q-footer>
 </template>
 
 <script lang="ts" setup>
@@ -85,7 +124,7 @@ import BaseFlight from 'components/BaseFlight.vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import BaseVehicle from 'components/BaseVehicle.vue';
 
-import { Ref, ref } from 'vue';
+import { computed, Ref, ref, toRef, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import {
   onBeforeRouteUpdate,
@@ -95,21 +134,24 @@ import {
 } from 'vue-router';
 import { useProjectStore } from 'stores/project';
 import { storeToRefs } from 'pinia';
-import { Balloon, Car, Flight, Person, Vehicle, VehicleGroup } from 'src/lib/entities';
+import {
+  Balloon,
+  Car,
+  Flight,
+  Person,
+  Vehicle,
+  VehicleGroup,
+} from 'src/lib/entities';
+
+const menuTabs = ref('overview');
 
 const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
 const projectStore = useProjectStore();
 
-const rightDrawerOpen = ref(true  );
-
-const flight = ref();
+const flight: Ref<Flight | undefined> = ref();
 const { project } = storeToRefs(projectStore);
-
-function toggleRightDrawer() {
-  rightDrawerOpen.value = !rightDrawerOpen.value;
-}
 
 function updateFlightPage(params: RouteParams) {
   flight.value = undefined;
@@ -209,6 +251,69 @@ function onVehiclePersonRemove(vehicle: Vehicle, person: Person) {
   );
   console.log(vehicle, person);
 }
+
+const availableBalloons: Ref<Balloon[]> = computed(() => {
+  if (flight.value === undefined) return [];
+  // TODO Make sure flight is not undefined in first place
+  return flight.value.balloons.filter((value) => {
+    return (
+      flight.value?.vehicleGroups.find((group) => {
+        group.balloon === value;
+      }) === undefined
+    );
+  });
+});
+
+const availableCars: Ref<Car[]> = computed(() => {
+  if (flight.value === undefined) return [];
+  // TODO Make sure flight is not undefined in first place
+  return flight.value.cars.filter((value) => {
+    return (
+      flight.value?.vehicleGroups.find((group) => {
+        return group.cars.includes(value);
+      }) === undefined
+    );
+  });
+});
+
+const availablePeople = ref(flight.value?.availablePeople() ?? []);
+watch(flight, (value) => {
+  console.log('Called');
+  if (value === undefined) return [];
+  availablePeople.value = value.availablePeople();
+});
+
+const availableParticipants = computed(() => {
+  return availablePeople.value.filter((value) => !value.supervisor);
+});
+
+const availableSupervisor = computed(() => {
+  return availablePeople.value.filter((value) => value.supervisor);
+});
+
+// const availablePeople: Ref<Person[]> = computed(() => {
+//   if (flight.value === undefined) return [];
+//   // TODO Make sure flight is not undefined in first plac
+//   return flight.value.people.filter((value) => {
+//     return (
+//       flight.value?.vehicleGroups.find((group) => {
+//         if (
+//           group.balloon.operator === value ||
+//           group.balloon.passengers.includes(value)
+//         ) {
+//           return true;
+//         }
+//
+//         return (
+//           group.cars.find((car) => {
+//             return car.operator === value || car.passengers.includes(value);
+//           }) === undefined
+//         );
+//       }) === undefined
+//     );
+//   });
+// });
+//
 </script>
 
 <style></style>

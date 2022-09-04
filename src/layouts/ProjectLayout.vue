@@ -24,7 +24,7 @@
       </q-tabs>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" side="left" overlay elevated>
+    <q-drawer v-model="leftDrawerOpen" side="right" overlay elevated>
       <!-- drawer content -->
     </q-drawer>
 
