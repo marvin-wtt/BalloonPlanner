@@ -1,6 +1,5 @@
 import { Person } from 'src/lib/entities/Person';
 import { Identifyable } from 'src/lib/utils/Identifyable';
-import { VehicleInformation } from 'src/lib/entities/VehicleInformation';
 import { Cloneable } from 'src/lib/utils/Cloneable';
 
 export abstract class Vehicle extends Identifyable implements Cloneable {
