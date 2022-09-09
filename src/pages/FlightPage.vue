@@ -26,30 +26,46 @@
           transition-next="jump-up"
           transition-prev="jump-down"
           vertical
-          class="no-wrap bg-grey-6 col-grow"
+          class="no-wrap col-grow shadow-24"
         >
           <q-tab-panel name="overview"> Overview</q-tab-panel>
 
-          <q-tab-panel name="balloons">
-            Balloons
-            <q-table></q-table>
+          <q-tab-panel name="balloons" class="column bg-grey-2">
+            <q-scroll-area class="col-grow self-stretchs">
+              <h6>Balloons</h6>
+              <q-list dense bordered separator>
+                <draggable-item
+                  :tag="QItem"
+                  v-for="balloon in availableBalloons"
+                  :key="balloon.id"
+                  :item="balloon"
+                >
+                  <q-item-section>{{ balloon.name }}</q-item-section>
+                  <q-item-section side>{{ (balloon.capacity - 1) + ' + 1' }}
+                  </q-item-section>
+                </draggable-item>
+              </q-list>
+            </q-scroll-area>
           </q-tab-panel>
 
-          <q-tab-panel name="cars">Test</q-tab-panel>
+          <q-tab-panel name="cars">Test</q-tab-panel>s
 
-          <q-tab-panel name="people" class="bg-grey-6 column">
-            <q-scroll-area class="col-grow self-stretch">
-              People
-              <q-list dense dark bordered separator>
-                <q-item
+          <q-tab-panel name="people" class="column bg-grey-2">
+            <q-scroll-area class="col-grow self-stretchs">
+              <h6>People</h6>
+              <q-list dense bordered separator>
+                <draggable-item
+                  :tag="QItem"
                   v-for="participant in availableParticipants"
                   :key="participant.id"
+                  :item="participant"
                 >
                   <q-item-section>{{ participant.name }}</q-item-section>
-                  <q-item-section side>{{ participant.numberOfFlights }}</q-item-section>
-                </q-item>
+                  <q-item-section side
+                  >{{ participant.numberOfFlights }}
+                  </q-item-section>
+                </draggable-item>
               </q-list>
-
             </q-scroll-area>
           </q-tab-panel>
 
@@ -60,7 +76,7 @@
 
     <!-- Flight overview -->
     <div class="col-grow column no-wrap">
-      <q-scroll-area class="col-grow">
+      <q-scroll-area class="col-grow bg-grey-5 flex content-stretch">
         <base-flight
           :flight="flight"
           @balloon-add="onBalloonAdd"
@@ -120,11 +136,12 @@
 </template>
 
 <script lang="ts" setup>
+import { QItem, QList } from 'quasar';
 import BaseFlight from 'components/BaseFlight.vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import BaseVehicle from 'components/BaseVehicle.vue';
 
-import { computed, Ref, ref, toRef, watch } from 'vue';
+import { computed, Ref, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import {
   onBeforeRouteUpdate,
@@ -142,6 +159,8 @@ import {
   Vehicle,
   VehicleGroup,
 } from 'src/lib/entities';
+import DraggableItem from 'components/drag/DraggableItem.vue';
+import DropZone from 'components/drag/DropZone.vue';
 
 const menuTabs = ref('overview');
 
@@ -222,6 +241,13 @@ function onCarAdd(group: VehicleGroup, car: Car) {
 
 function onCarRemove(car: Car) {
   // TODO
+  for (const group of flight.value?.vehicleGroups) {
+    const index = group.cars.indexOf(car);
+    if (index >= 0) {
+      group.cars.splice(index, 1);
+    }
+  }
+
   console.log(car);
 }
 
@@ -252,68 +278,30 @@ function onVehiclePersonRemove(vehicle: Vehicle, person: Person) {
   console.log(vehicle, person);
 }
 
-const availableBalloons: Ref<Balloon[]> = computed(() => {
-  if (flight.value === undefined) return [];
-  // TODO Make sure flight is not undefined in first place
-  return flight.value.balloons.filter((value) => {
-    return (
-      flight.value?.vehicleGroups.find((group) => {
-        group.balloon === value;
-      }) === undefined
-    );
-  });
-});
-
-const availableCars: Ref<Car[]> = computed(() => {
-  if (flight.value === undefined) return [];
-  // TODO Make sure flight is not undefined in first place
-  return flight.value.cars.filter((value) => {
-    return (
-      flight.value?.vehicleGroups.find((group) => {
-        return group.cars.includes(value);
-      }) === undefined
-    );
-  });
-});
-
 const availablePeople = ref(flight.value?.availablePeople() ?? []);
-watch(flight, (value) => {
-  console.log('Called');
-  if (value === undefined) return [];
-  availablePeople.value = value.availablePeople();
-});
+const availableBalloons = ref(flight.value?.availableBalloons() ?? []);
+const availableCars = ref(flight.value?.availableCars() ?? []);
+watch(
+  flight,
+  (value) => {
+    // TODO maybe just redo the logic with computed
+    if (value === undefined) return [];
+    availablePeople.value = value.availablePeople();
+    availableBalloons.value = value.availableBalloons();
+    availableCars.value = value.availableCars();
+  },
+  { deep: true }
+);
 
 const availableParticipants = computed(() => {
+  // TODO Sort
   return availablePeople.value.filter((value) => !value.supervisor);
 });
 
 const availableSupervisor = computed(() => {
+  // TODO Sort
   return availablePeople.value.filter((value) => value.supervisor);
 });
-
-// const availablePeople: Ref<Person[]> = computed(() => {
-//   if (flight.value === undefined) return [];
-//   // TODO Make sure flight is not undefined in first plac
-//   return flight.value.people.filter((value) => {
-//     return (
-//       flight.value?.vehicleGroups.find((group) => {
-//         if (
-//           group.balloon.operator === value ||
-//           group.balloon.passengers.includes(value)
-//         ) {
-//           return true;
-//         }
-//
-//         return (
-//           group.cars.find((car) => {
-//             return car.operator === value || car.passengers.includes(value);
-//           }) === undefined
-//         );
-//       }) === undefined
-//     );
-//   });
-// });
-//
 </script>
 
 <style></style>
