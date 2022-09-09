@@ -21,7 +21,7 @@ interface Props {
   accepted?: (element: Identifyable) => boolean;
   highlight?: boolean;
   highlightColor?: string;
-  tag?: string;
+  tag?: any;
 }
 
 const props = withDefaults(defineProps<Props>(), {
