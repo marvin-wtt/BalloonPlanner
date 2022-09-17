@@ -79,11 +79,58 @@
             />
           </q-tab-panel>
 
-          <q-tab-panel name="cars">Test</q-tab-panel>
+          <q-tab-panel name="cars" class="column bg-grey-2">
+            <q-scroll-area class="col-grow self-stretchs">
+              <h6>Cars</h6>
+              <q-list dense bordered separator>
+                <!-- Empty List -->
+                <q-item v-if="availableCars.length === 0">
+                  <q-item-section>
+                    <q-item-label>{{ $t('list_empty') }}</q-item-label>
+                    <q-item-label caption
+                    >{{ $t('drop_here_or_create') }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <!-- Balloons -->
+                <draggable-item
+                  v-else
+                  :tag="QItem"
+                  v-for="element in availableCars"
+                  :key="element.id"
+                  :item="element"
+                >
+                  <q-item-section>
+                    {{ element.name }}
+                  </q-item-section>
+                  <q-item-section side>
+                    {{ element.capacity - 1 + ' + 1' }}
+                  </q-item-section>
+                </draggable-item>
+              </q-list>
+
+              <q-btn
+                class="q-ma-sm"
+                color="primary"
+                icon="add"
+                label="Add new item"
+                @click="createCarDialog = true"
+              />
+            </q-scroll-area>
+
+            <!-- Creation dialog -->
+            <create-balloon-dialog
+              type="car"
+              v-model="createCarDialog"
+              v-model:vehicles="flight.cars"
+              :people="flight.people"
+            />
+          </q-tab-panel>
 
           <q-tab-panel name="people" class="column bg-grey-2">
             <q-scroll-area class="col-grow self-stretchs">
-              <h6>People</h6>
+              <h6>Participants</h6>
               <q-list dense bordered separator>
                 <draggable-item
                   :tag="QItem"
@@ -92,8 +139,22 @@
                   :item="participant"
                 >
                   <q-item-section>{{ participant.name }}</q-item-section>
-                  <q-item-section side
-                    >{{ participant.numberOfFlights }}
+                  <q-item-section side>
+                    {{ participant.numberOfFlights }}
+                  </q-item-section>
+                </draggable-item>
+              </q-list>
+              <h6>Supervisors</h6>
+              <q-list dense bordered separator>
+                <draggable-item
+                  :tag="QItem"
+                  v-for="supervisor in availableSupervisor"
+                  :key="supervisor.id"
+                  :item="supervisor"
+                >
+                  <q-item-section>{{ supervisor.name }}</q-item-section>
+                  <q-item-section side>
+                    {{ supervisor.numberOfFlights }}
                   </q-item-section>
                 </draggable-item>
               </q-list>
@@ -191,6 +252,7 @@ import CreateBalloonDialog from 'components/dialog/CreateVehicleDialog.vue';
 const menuTabs = ref('overview');
 
 const createBalloonDialog = ref(false);
+const createCarDialog = ref(false);
 
 const $q = useQuasar();
 const route = useRoute();
@@ -318,12 +380,16 @@ watch(
 
 const availableParticipants = computed(() => {
   // TODO Sort
-  return availablePeople.value.filter((value) => !value.supervisor);
+  return availablePeople.value
+    .filter((value) => !value.supervisor)
+    .sort((a, b) => a.name.localeCompare(b.name));
 });
 
 const availableSupervisor = computed(() => {
   // TODO Sort
-  return availablePeople.value.filter((value) => value.supervisor);
+  return availablePeople.value
+    .filter((value) => value.supervisor)
+    .sort((a, b) => a.name.localeCompare(b.name));
 });
 </script>
 
