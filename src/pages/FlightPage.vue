@@ -34,21 +34,52 @@
             <q-scroll-area class="col-grow self-stretchs">
               <h6>Balloons</h6>
               <q-list dense bordered separator>
+                <!-- Empty List -->
+                <q-item v-if="availableBalloons.length === 0">
+                  <q-item-section>
+                    <q-item-label>{{ $t('list_empty') }}</q-item-label>
+                    <q-item-label caption
+                      >{{ $t('drop_here_or_create') }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <!-- Balloons -->
                 <draggable-item
+                  v-else
                   :tag="QItem"
-                  v-for="balloon in availableBalloons"
-                  :key="balloon.id"
-                  :item="balloon"
+                  v-for="element in availableBalloons"
+                  :key="element.id"
+                  :item="element"
                 >
-                  <q-item-section>{{ balloon.name }}</q-item-section>
-                  <q-item-section side>{{ (balloon.capacity - 1) + ' + 1' }}
+                  <q-item-section>
+                    {{ element.name }}
+                  </q-item-section>
+                  <q-item-section side>
+                    {{ element.capacity - 1 + ' + 1' }}
                   </q-item-section>
                 </draggable-item>
               </q-list>
+
+              <q-btn
+                class="q-ma-sm"
+                color="primary"
+                icon="add"
+                label="Add new item"
+                @click="createBalloonDialog = true"
+              />
             </q-scroll-area>
+
+            <!-- Creation dialog -->
+            <create-balloon-dialog
+              type="balloon"
+              v-model="createBalloonDialog"
+              v-model:vehicles="flight.balloons"
+              :people="flight.people"
+            />
           </q-tab-panel>
 
-          <q-tab-panel name="cars">Test</q-tab-panel>s
+          <q-tab-panel name="cars">Test</q-tab-panel>
 
           <q-tab-panel name="people" class="column bg-grey-2">
             <q-scroll-area class="col-grow self-stretchs">
@@ -62,7 +93,7 @@
                 >
                   <q-item-section>{{ participant.name }}</q-item-section>
                   <q-item-section side
-                  >{{ participant.numberOfFlights }}
+                    >{{ participant.numberOfFlights }}
                   </q-item-section>
                 </draggable-item>
               </q-list>
@@ -132,13 +163,12 @@
 </template>
 
 <script lang="ts" setup>
-import { QItem, QList } from 'quasar';
+import { QItem, QList, useQuasar } from 'quasar';
 import BaseFlight from 'components/BaseFlight.vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import BaseVehicle from 'components/BaseVehicle.vue';
 
 import { computed, Ref, ref, watch } from 'vue';
-import { useQuasar } from 'quasar';
 import {
   onBeforeRouteUpdate,
   RouteParams,
@@ -156,9 +186,11 @@ import {
   VehicleGroup,
 } from 'src/lib/entities';
 import DraggableItem from 'components/drag/DraggableItem.vue';
-import DropZone from 'components/drag/DropZone.vue';
+import CreateBalloonDialog from 'components/dialog/CreateVehicleDialog.vue';
 
 const menuTabs = ref('overview');
+
+const createBalloonDialog = ref(false);
 
 const $q = useQuasar();
 const route = useRoute();
