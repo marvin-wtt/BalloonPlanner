@@ -59,6 +59,8 @@
             :options="filterOptions"
             @filter="filterFn"
             style="width: 250px"
+            emit-value
+            map-options
             filled
           />
         </q-card-section>
@@ -105,7 +107,7 @@ const name = ref();
 const capacity = ref();
 const allowedOperators = ref([]);
 
-const filterOptions = ref(props.people.map((value) => value.name));
+const filterOptions = ref();
 const vehicleType = ref(props.type);
 const vehicleTypes = [
   {
@@ -201,7 +203,12 @@ function filterFn(val: string, update: (a: () => void) => void) {
       a.supervisor == b.supervisor ? 0 : a.supervisor ? -1 : 1
     );
 
-    filterOptions.value = filter.map((value) => value.name);
+    filterOptions.value = filter.map((value) => {
+      return {
+        label: value.name,
+        value: value,
+      }
+    });
   });
 }
 </script>
