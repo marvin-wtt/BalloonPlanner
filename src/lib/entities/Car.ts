@@ -1,8 +1,12 @@
 import { Vehicle } from 'src/lib/entities/Vehicle';
-import { VehicleInformation } from 'src/lib/entities/VehicleInformation';
 
 export class Car extends Vehicle {
   private _reseavedCapacity = 0;
+
+
+  get reseavedCapacity(): number {
+    return this._reseavedCapacity;
+  }
 
   set reseavedCapacity(value: number) {
     this._reseavedCapacity = value;
@@ -25,6 +29,7 @@ export class Car extends Vehicle {
 
   clone(): Car {
     const car = new Car(this.name, this.capacity, this.allowedOperators.slice());
+    car.id = this.id;
     car.passengers = this.passengers.slice();
     car.operator = this.operator;
     car._reseavedCapacity = this._reseavedCapacity;

@@ -75,50 +75,46 @@
     </div>
 
     <!-- Flight overview -->
-    <div class="col-grow column no-wrap">
-      <q-scroll-area class="col-grow bg-grey-5 flex content-stretch">
-        <base-flight
-          :flight="flight"
-          @balloon-add="onBalloonAdd"
-          @balloon-remove="onBalloonRemove"
+    <div class="col-grow flex">
+      <base-flight
+        :flight="flight"
+        @balloon-add="onBalloonAdd"
+        class="col-grow content-stretch bg-grey-5"
+      >
+        <base-vehicle-group
+          v-for="group in flight.vehicleGroups"
+          :key="group.id"
+          :group="group"
+          @car-add="(car) => onCarAdd(group, car)"
         >
-          <base-vehicle-group
-            v-for="group in flight.vehicleGroups"
-            :key="group.id"
-            :group="group"
-            @car-add="(car) => onCarAdd(group, car)"
-            @car-remove="(car) => onCarRemove(group, car)"
-          >
-            <template #balloon>
-              <base-vehicle
-                :key="group.balloon.id"
-                type="balloon"
-                :vehicle="group.balloon"
-                @passenger-add="(p) => onVehiclePersonAdd(group.balloon, p)"
-                @passenger-remove="
-                  (p) => onVehiclePersonRemove(group.balloon, p)
-                "
-                @operator-add="(p) => onVehicleOperatorAdd(group.balloon, p)"
-                @operator-remove="
-                  (p) => onVehicleOperatorRemove(group.balloon, p)
-                "
-              />
-            </template>
-            <template #cars>
-              <base-vehicle
-                v-for="vehicle in group.cars"
-                :key="vehicle.id"
-                type="car"
-                :vehicle="vehicle"
-                @passenger-add="(p) => onVehiclePersonAdd(vehicle, p)"
-                @passenger-remove="(p) => onVehiclePersonRemove(vehicle, p)"
-                @operator-add="(p) => onVehicleOperatorAdd(vehicle, p)"
-                @operator-remove="(p) => onVehicleOperatorRemove(vehicle, p)"
-              />
-            </template>
-          </base-vehicle-group>
-        </base-flight>
-      </q-scroll-area>
+          <template #balloon>
+            <base-vehicle
+              :key="group.balloon.id"
+              type="balloon"
+              :vehicle="group.balloon"
+              @passenger-add="(p) => onVehiclePersonAdd(group.balloon, p)"
+              @passenger-remove="(p) => onVehiclePersonRemove(group.balloon, p)"
+              @operator-add="(p) => onVehicleOperatorAdd(group.balloon, p)"
+              @operator-remove="
+                (p) => onVehicleOperatorRemove(group.balloon, p)
+              "
+            />
+          </template>
+          <template #cars>
+            <base-vehicle
+              v-for="vehicle in group.cars"
+              :key="vehicle.id"
+              type="car"
+              :vehicle="vehicle"
+              @car-remove="(car) => onCarRemove(group, car)"
+              @passenger-add="(p) => onVehiclePersonAdd(vehicle, p)"
+              @passenger-remove="(p) => onVehiclePersonRemove(vehicle, p)"
+              @operator-add="(p) => onVehicleOperatorAdd(vehicle, p)"
+              @operator-remove="(p) => onVehicleOperatorRemove(vehicle, p)"
+            />
+          </template>
+        </base-vehicle-group>
+      </base-flight>
 
       <q-footer bordered class="bg-grey-8 text-white">
         <q-toolbar>
@@ -225,7 +221,9 @@ onBeforeRouteUpdate((to, from) => {
 
 function onBalloonAdd(balloon: Balloon) {
   // TODO
-  console.log(balloon);
+
+  const group = new VehicleGroup(balloon);
+  flight.value?.vehicleGroups.push(group);
 }
 
 function onBalloonRemove(balloon: Balloon) {
@@ -234,21 +232,14 @@ function onBalloonRemove(balloon: Balloon) {
 }
 
 function onCarAdd(group: VehicleGroup, car: Car) {
-  // TODO
+  console.log(car.id);
   group.cars.push(car);
-  console.log(group, car);
 }
 
-function onCarRemove(car: Car) {
+function onCarRemove(group: VehicleGroup, car: Car) {
   // TODO
-  for (const group of flight.value?.vehicleGroups) {
-    const index = group.cars.indexOf(car);
-    if (index >= 0) {
-      group.cars.splice(index, 1);
-    }
-  }
-
-  console.log(car);
+  const index = group.cars.indexOf(car);
+  group.cars.splice(index, 1);
 }
 
 function onVehicleOperatorAdd(vehicle: Vehicle, person: Person) {

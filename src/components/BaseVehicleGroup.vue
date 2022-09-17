@@ -1,15 +1,14 @@
 <template>
-  <drop-zone :accepted="isDropAccepted" @dropped="drop">
-    <slot name="balloon" />
-    <slot name="cars" />
+  <drop-zone :accepted="isDropAccepted" @dropped="drop" class="col-shrink">
+    <slot name="balloon"/>
+    <slot name="cars"/>
   </drop-zone>
 </template>
 
 <script lang="ts" setup>
 import DropZone from 'components/drag/DropZone.vue';
-import BaseFlightVehicle from 'components/BaseVehicle.vue';
 
-import { Car, Person, VehicleGroup } from 'src/lib/entities';
+import { Car, VehicleGroup } from 'src/lib/entities';
 import { Identifyable } from 'src/lib/utils/Identifyable';
 
 interface Props {

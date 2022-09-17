@@ -1,5 +1,5 @@
 <template>
-  <draggable-item :item="vehicle" @removed="onVehicleRemoved">
+  <draggable-item :item="props.vehicle" @remove="onVehicleRemoved" class="row">
     <table
       class="vehicle-table shadow-2"
       @dragenter.stop
@@ -9,11 +9,11 @@
       <tr>
         <th
           class="vehicle-label"
-          :rowspan="vehicle.capacity + 1"
-          v-if="labeled"
+          :rowspan="props.vehicle.capacity + 1"
+          v-if="props.labeled"
         >
           <span>
-            {{ vehicle.name }}
+            {{ props.vehicle.name }}
           </span>
           <q-menu touch-position context-menu>
             <q-list dense style="min-width: 100px">
@@ -31,24 +31,24 @@
         </th>
         <base-vehicle-person-cell
           class="vehicle-person"
-          :editable="editable"
-          :person="vehicle.operator"
-          :vehicle="vehicle"
+          :editable="props.editable"
+          :person="props.vehicle.operator"
+          :vehicle="props.vehicle"
           operator
           @operator-add="(p) => $emit('operatorAdd', p)"
           @operator-remove="(p) => $emit('operatorRemove', p)"
         />
       </tr>
 
-      <tr v-for="c in passengerSeats" :key="c">
-        <td class="vehicle-index" v-if="indexed">
+      <tr v-for="c in capacity" :key="c">
+        <td class="vehicle-index" v-if="props.indexed">
           {{ c }}
         </td>
         <base-vehicle-person-cell
           class="vehicle-person"
-          :editable="editable"
-          :person="vehicle.passengers[c - 1]"
-          :vehicle="vehicle"
+          :editable="props.editable"
+          :person="props.vehicle.passengers[c - 1]"
+          :vehicle="props.vehicle"
           @passenger-add="(p) => $emit('passengerAdd', p)"
           @passenger-remove="(p) => $emit('passengerRemove', p)"
         />
@@ -61,8 +61,8 @@
 import BaseVehiclePersonCell from 'components/BaseVehiclePersonCell.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 
-import { Person, Vehicle } from 'src/lib/entities';
-import { computed } from 'vue';
+import { Car, Person, Vehicle } from 'src/lib/entities';
+import { computed, watch } from 'vue';
 
 interface Props {
   vehicle: Vehicle;
@@ -87,24 +87,12 @@ const emit = defineEmits<{
   (e: 'passengerRemove', person: Person): void;
 }>();
 
-// const passengerLabels = computed(() => {
-//   if (!props.editable) {
-//     return props.vehicle.passengers.map((value) => value.name);
-//   }
-//
-//   return props.vehicle.passengers.map(
-//     (value) => value.name + ' (' + (value.numberOfFlights - 1) + ')'
-//   );
-// });
-//
-// const freePlaces = computed(() => {
-//   return props.vehicle.capacity - props.vehicle.passengers.length;
-// });
+const capacity = computed(() => {
+  if (props.vehicle instanceof Car) {
+    return props.vehicle.capacity - props.vehicle.reseavedCapacity;
+  }
 
-const passengerSeats = computed(() => {
-  return props.editable
-    ? props.vehicle.passengers.length + props.vehicle.availableCapacity()
-    : props.vehicle.passengers.length;
+  return props.vehicle.capacity;
 });
 
 function onVehicleRemoved() {
