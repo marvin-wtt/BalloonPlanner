@@ -17,7 +17,7 @@ import { ref } from 'vue';
 
 interface Props {
   item: Identifyable;
-  tag?: any;
+  tag?: string | object;
 }
 
 const props = withDefaults(defineProps<Props>(), {

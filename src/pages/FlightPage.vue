@@ -71,7 +71,7 @@
             </q-scroll-area>
 
             <!-- Creation dialog -->
-            <create-balloon-dialog
+            <create-vehicle-dialog
               type="balloon"
               v-model="createBalloonDialog"
               v-model:vehicles="flight.balloons"
@@ -120,7 +120,7 @@
             </q-scroll-area>
 
             <!-- Creation dialog -->
-            <create-balloon-dialog
+            <create-vehicle-dialog
               type="car"
               v-model="createCarDialog"
               v-model:vehicles="flight.cars"
@@ -228,6 +228,7 @@ import { QItem, QList, useQuasar } from 'quasar';
 import BaseFlight from 'components/BaseFlight.vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import BaseVehicle from 'components/BaseVehicle.vue';
+import CreateVehicleDialog from 'components/dialog/CreateVehicleDialog.vue';
 
 import { computed, Ref, ref, watch } from 'vue';
 import {
@@ -247,7 +248,6 @@ import {
   VehicleGroup,
 } from 'src/lib/entities';
 import DraggableItem from 'components/drag/DraggableItem.vue';
-import CreateBalloonDialog from 'components/dialog/CreateVehicleDialog.vue';
 
 const menuTabs = ref('overview');
 
@@ -318,11 +318,6 @@ function onBalloonAdd(balloon: Balloon) {
 
   const group = new VehicleGroup(balloon);
   flight.value?.vehicleGroups.push(group);
-}
-
-function onBalloonRemove(balloon: Balloon) {
-  // TODO
-  console.log(balloon);
 }
 
 function onCarAdd(group: VehicleGroup, car: Car) {

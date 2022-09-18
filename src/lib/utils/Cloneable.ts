@@ -1,3 +1,3 @@
 export interface Cloneable {
-  clone(): any;
+  clone(): Cloneable;
 }

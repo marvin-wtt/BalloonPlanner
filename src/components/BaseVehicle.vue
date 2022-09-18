@@ -62,7 +62,7 @@ import BaseVehiclePersonCell from 'components/BaseVehiclePersonCell.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 
 import { Car, Person, Vehicle } from 'src/lib/entities';
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 
 interface Props {
   vehicle: Vehicle;
@@ -73,7 +73,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  indexed: false,
+  indexed: true,
   labeled: true,
   editable: true,
 });
