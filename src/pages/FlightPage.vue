@@ -176,6 +176,18 @@
                   </q-item-section>
                 </draggable-item>
               </q-list>
+              <q-btn
+                class="q-ma-sm"
+                color="primary"
+                icon="add"
+                label="Add new item"
+                @click="createPersonDialog = true"
+              />
+
+              <create-person-dialog
+                v-model="createPersonDialog"
+                v-model:people="flight.people"
+              />
             </q-scroll-area>
           </q-tab-panel>
 
@@ -266,11 +278,13 @@ import {
   VehicleGroup,
 } from 'src/lib/entities';
 import DraggableItem from 'components/drag/DraggableItem.vue';
+import CreatePersonDialog from 'components/dialog/CreatePersonDialog.vue';
 
 const menuTabs = ref('overview');
 
 const createBalloonDialog = ref(false);
 const createCarDialog = ref(false);
+const createPersonDialog = ref(false);
 
 const $q = useQuasar();
 const route = useRoute();
@@ -375,6 +389,16 @@ function onVehiclePersonRemove(vehicle: Vehicle, person: Person) {
   );
   console.log(vehicle, person);
 }
+
+const showBalloonsMenuBadge = computed(() => {
+  return availableBalloons.value.length > 0;
+});
+const showCarsMenuBadge = computed(() => {
+  return availableCars.value.length > 0;
+});
+const showPeopleMenuBadge = computed(() => {
+  return availableParticipants.value.length + availableSupervisor.value.length > 0;
+});
 
 const availablePeople = ref(flight.value?.availablePeople() ?? []);
 const availableBalloons = ref(flight.value?.availableBalloons() ?? []);
