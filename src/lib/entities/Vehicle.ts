@@ -68,9 +68,8 @@ export abstract class Vehicle extends Identifyable implements Cloneable {
 
   removePassenger(person: Person) {
     person.decrementFlights();
-    this._passengers = this._passengers.filter(
-      (passenger) => passenger === person
-    );
+    const i = this._passengers.findIndex(value => value.id === person.id);
+    this._passengers.splice(i, 1);
   }
 
   availableCapacity(): number {

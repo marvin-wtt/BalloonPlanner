@@ -26,10 +26,9 @@ export class VehicleGroup extends Identifyable implements Cloneable {
     return this._cars;
   }
 
-  removeCar(carId: number) {
-    const c = this._cars.findIndex((value) => value.id === carId);
-    this._cars.splice(c);
-    const car = this.cars[c];
+  removeCar(car: Car) {
+    const c = this._cars.findIndex((value) => value.id === car.id);
+    this._cars.splice(c, 1);
     car.clear();
     this.reserveCapacity();
   }
