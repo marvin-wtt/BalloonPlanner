@@ -10,13 +10,29 @@
         active-bg-color="grey-6"
         class="bg-grey-10 text-white"
       >
-        <q-tab name="overview" icon="home" :label="$t('overview')" />
-        <q-separator spaced inset color="white" />
-        <q-tab name="balloons" icon="mdi-airballoon" :label="$t('balloon')" />
-        <q-tab name="cars" icon="airport_shuttle" :label="$t('car')" />
-        <q-tab name="people" icon="group" :label="$t('person')" />
-        <q-separator spaced inset color="white" />
-        <q-tab name="settings" icon="settings" :label="$t('setting')" />
+        <q-tab name="overview" icon="home" :label="$t('overview')"/>
+        <q-separator spaced inset color="white"/>
+        <q-tab name="balloons" icon="mdi-airballoon" :label="$t('balloon')">
+          <q-badge v-if="showBalloonsMenuBadge" color="red" floating>
+            {{ availableBalloons.length }}
+          </q-badge>
+        </q-tab>
+        <q-tab name="cars" icon="airport_shuttle" :label="$t('car')">
+          <q-badge v-if="showCarsMenuBadge" color="red" floating>
+            {{ availableCars.length }}
+          </q-badge>
+        </q-tab>
+        <q-tab name="people" icon="group" :label="$t('person')">
+          <q-badge
+            v-if="showPeopleMenuBadge"
+            color="red"
+            floating
+          >
+            {{ availableParticipants.length + availableSupervisor.length }}
+          </q-badge>
+        </q-tab>
+        <q-separator spaced inset color="white"/>
+        <q-tab name="settings" icon="settings" :label="$t('setting')"/>
       </q-tabs>
 
       <div class="col-grow self-stretch column" v-if="menuTabs">
