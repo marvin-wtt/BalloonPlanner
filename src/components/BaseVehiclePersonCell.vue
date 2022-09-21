@@ -17,7 +17,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Person, Vehicle } from 'src/lib/entities';
+import { Balloon, Person, Vehicle } from 'src/lib/entities';
 import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
 import { Identifyable } from 'src/lib/utils/Identifyable';
@@ -49,7 +49,8 @@ const personLabel = computed(() => {
 
   let label = props.person.name;
   if (props.editable) {
-    label += ' (' + (props.person.numberOfFlights - 1) + ')';
+    const flights = (props.vehicle instanceof Balloon) ? props.person.numberOfFlights - 1 : props.person.numberOfFlights;
+    label += ' (' + flights + ')';
   }
 
   return label;
