@@ -346,48 +346,31 @@ onBeforeRouteUpdate((to, from) => {
 // TODO reduce above logic
 
 function onBalloonAdd(balloon: Balloon) {
-  // TODO
-
-  const group = new VehicleGroup(balloon);
-  flight.value?.vehicleGroups.push(group);
+  flight.value?.addVehicleGroup(balloon);
 }
 
 function onCarAdd(group: VehicleGroup, car: Car) {
-  console.log(car.id);
-  group.cars.push(car);
+  group.addCar(car);
 }
 
 function onCarRemove(group: VehicleGroup, car: Car) {
-  // TODO
-  const index = group.cars.indexOf(car);
-  group.cars.splice(index, 1);
+  group.removeCar(car);
 }
 
 function onVehicleOperatorAdd(vehicle: Vehicle, person: Person) {
-  // TODO
   vehicle.operator = person;
-  console.log(person);
 }
 
 function onVehicleOperatorRemove(vehicle: Vehicle, person: Person) {
-  // TODO
   vehicle.operator = undefined;
-  console.log(person);
 }
 
 function onVehiclePersonAdd(vehicle: Vehicle, person: Person) {
-  // TODO
-  vehicle.passengers.push(person);
-  console.log(person);
+  vehicle.addPassenger(person);
 }
 
 function onVehiclePersonRemove(vehicle: Vehicle, person: Person) {
-  // TODO
-  vehicle.passengers.splice(
-    vehicle.passengers.findIndex((value) => value === person),
-    1
-  );
-  console.log(vehicle, person);
+  vehicle.removePassenger(person);
 }
 
 const showBalloonsMenuBadge = computed(() => {
@@ -416,14 +399,12 @@ watch(
 );
 
 const availableParticipants = computed(() => {
-  // TODO Sort
   return availablePeople.value
     .filter((value) => !value.supervisor)
     .sort((a, b) => a.name.localeCompare(b.name));
 });
 
 const availableSupervisor = computed(() => {
-  // TODO Sort
   return availablePeople.value
     .filter((value) => value.supervisor)
     .sort((a, b) => a.name.localeCompare(b.name));
