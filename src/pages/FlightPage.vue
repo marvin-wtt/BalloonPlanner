@@ -84,17 +84,9 @@
                 color="primary"
                 icon="add"
                 label="Add new item"
-                @click="createBalloonDialog = true"
+                @click="createVehicleDialog('balloon')"
               />
             </q-scroll-area>
-
-            <!-- Creation dialog -->
-            <create-vehicle-dialog
-              type="balloon"
-              v-model="createBalloonDialog"
-              v-model:vehicles="flight.balloons"
-              :people="flight.people"
-            />
           </q-tab-panel>
 
           <q-tab-panel name="cars" class="column bg-grey-2">
@@ -133,17 +125,9 @@
                 color="primary"
                 icon="add"
                 label="Add new item"
-                @click="createCarDialog = true"
+                @click="createVehicleDialog('car')"
               />
             </q-scroll-area>
-
-            <!-- Creation dialog -->
-            <create-vehicle-dialog
-              type="car"
-              v-model="createCarDialog"
-              v-model:vehicles="flight.cars"
-              :people="flight.people"
-            />
           </q-tab-panel>
 
           <q-tab-panel name="people" class="column bg-grey-2">
@@ -181,13 +165,9 @@
                 color="primary"
                 icon="add"
                 label="Add new item"
-                @click="createPersonDialog = true"
+                @click="createPersonDialog()"
               />
 
-              <create-person-dialog
-                v-model="createPersonDialog"
-                v-model:people="flight.people"
-              />
             </q-scroll-area>
           </q-tab-panel>
 
@@ -254,21 +234,22 @@
 </template>
 
 <script lang="ts" setup>
-import { QItem, QList, useQuasar } from 'quasar';
-import BaseFlight from 'components/BaseFlight.vue';
-import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
-import BaseVehicle from 'components/BaseVehicle.vue';
-import CreateVehicleDialog from 'components/dialog/CreateVehicleDialog.vue';
-
 import { computed, Ref, ref, watch } from 'vue';
+import { QItem, QList, useQuasar } from 'quasar';
 import {
   onBeforeRouteUpdate,
   RouteParams,
   useRoute,
   useRouter,
 } from 'vue-router';
-import { useProjectStore } from 'stores/project';
 import { storeToRefs } from 'pinia';
+import { useProjectStore } from 'stores/project';
+import BaseFlight from 'components/BaseFlight.vue';
+import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
+import BaseVehicle from 'components/BaseVehicle.vue';
+import DraggableItem from 'components/drag/DraggableItem.vue';
+import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
+import EditVehicleDialog from 'components/dialog/EditVehicleDialog.vue';
 import {
   Balloon,
   Car,
@@ -277,14 +258,8 @@ import {
   Vehicle,
   VehicleGroup,
 } from 'src/lib/entities';
-import DraggableItem from 'components/drag/DraggableItem.vue';
-import CreatePersonDialog from 'components/dialog/CreatePersonDialog.vue';
 
 const menuTabs = ref('overview');
-
-const createBalloonDialog = ref(false);
-const createCarDialog = ref(false);
-const createPersonDialog = ref(false);
 
 const $q = useQuasar();
 const route = useRoute();
@@ -344,6 +319,68 @@ onBeforeRouteUpdate((to, from) => {
 });
 
 // TODO reduce above logic
+
+function createPersonDialog() {
+  $q.dialog({
+    component: EditPersonDialog,
+    componentProps: {
+      mode: 'create',
+    }
+  }).onOk(payload => {
+    const person = new Person(payload.name, payload.nation, payload.supervisor, payload.flights);
+    flight.value?.people.push(person);
+  });
+}
+
+function editPersonDialog(person: Person) {
+  $q.dialog({
+    component: EditPersonDialog,
+    componentProps: {
+      person: person,
+      mode: 'edit',
+    }
+  }).onOk(payload => {
+    person.name = payload.name;
+    person.nation = payload.nation;
+    person.numberOfFlights = payload.flights;
+    person.supervisor = payload.supervisor;
+  });
+}
+
+function createVehicleDialog(type: 'balloon' | 'car') {
+  $q.dialog({
+    component: EditVehicleDialog,
+    componentProps: {
+      type: type,
+      people: flight.value?.people,
+    }
+  }).onOk(payload => {
+    if (type === 'balloon') {
+      const balloon = new Balloon(payload.name, payload.capacity, payload.allowedOperators);
+      flight.value?.balloons.push(balloon);
+    }
+
+    if (type === 'car') {
+      const car = new Car(payload.name, payload.capacity, payload.allowedOperators);
+      flight.value?.cars.push(car);
+    }
+  });
+}
+
+function editVewhicleDialog(vehicle: Vehicle) {
+  $q.dialog({
+    component: EditPersonDialog,
+    componentProps: {
+      type: (vehicle instanceof Balloon) ? 'balloon' : 'car',
+      vehicle: vehicle,
+      people: flight.value?.people,
+    }
+  }).onOk(payload => {
+    vehicle.name = payload.name;
+    vehicle.capacity = payload.capacity;
+    vehicle.allowedOperators = payload.allowedOperators;
+  });
+}
 
 function onBalloonAdd(balloon: Balloon) {
   flight.value?.addVehicleGroup(balloon);

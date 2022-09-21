@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="visable">
+  <q-dialog ref="dialogRef" @hide="onDialogHide">
     <q-card>
       <q-form @reset="onReset" @submit="onSubmit" class="q-gutter-md">
         <q-card-section>
@@ -84,28 +84,26 @@
 import { computed, ref } from 'vue';
 import { Balloon, Car, Person, Vehicle } from 'src/lib/entities';
 import { useI18n } from 'vue-i18n';
+import { useDialogPluginComponent } from 'quasar';
 
 const { t } = useI18n();
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 interface Props {
-  modelValue: boolean;
-  people: Person[];
-  vehicle?: Vehicle;
-  vehicles?: Vehicle[];
   type?: 'balloon' | 'car';
+  vehicle?: Vehicle;
+  people: Person[],
 }
 
-const props = withDefaults(defineProps<Props>(), {});
+const props = defineProps<Props>();
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void;
-  (e: 'update:vehicle', value: Vehicle): void;
-  (e: 'update:vehicles', value: Vehicle[]): void;
-}>();
+defineEmits([
+  ...useDialogPluginComponent.emits
+]);
 
-const name = ref();
-const capacity = ref();
-const allowedOperators = ref([]);
+const name = ref(props.vehicle?.name);
+const capacity = ref(props.vehicle?.capacity);
+const allowedOperators = ref(props.vehicle?.allowedOperators);
 
 const filterOptions = ref();
 const vehicleType = ref(props.type);
@@ -120,69 +118,17 @@ const vehicleTypes = [
   },
 ];
 
-const visable = computed({
-  get() {
-    return props.modelValue;
-  },
-  set(value) {
-    emit('update:modelValue', value);
-  },
-});
-
-const vehicle = computed({
-  get() {
-    return props.vehicle;
-  },
-  set(value) {
-    if (value) {
-      emit('update:vehicle', value);
-    }
-  },
-});
-
-const vehicles = computed({
-  get() {
-    return props.vehicles;
-  },
-  set(value) {
-    if (value) {
-      emit('update:vehicles', value);
-    }
-  },
-});
-
 function onSubmit() {
-  if (!vehicle.value && !vehicles.value) {
-    // TODO error
-    return;
-  }
-
-  if (vehicle.value) {
-    vehicle.value.name = name.value;
-    vehicle.value.capacity = capacity.value;
-    vehicle.value.allowedOperators = allowedOperators.value;
-  } else if (vehicles.value) {
-    // Create new vehicle
-    if (!vehicleType.value) {
-      return;
-    }
-
-    let vehicle: Vehicle;
-    if (props.type === 'balloon') {
-      vehicle = new Balloon(name.value, capacity.value, allowedOperators.value);
-    } else {
-      vehicle = new Car(name.value, capacity.value, allowedOperators.value);
-    }
-
-    vehicles.value.push(vehicle);
-  }
-
-  visable.value = false;
+  onDialogOK({
+    name: name.value,
+    capacity: capacity.value,
+    allowedOperators: allowedOperators.value,
+  });
 }
 
 function onReset() {
-  name.value = null;
-  capacity.value = null;
+  name.value = undefined;
+  capacity.value = undefined;
   allowedOperators.value = [];
 }
 

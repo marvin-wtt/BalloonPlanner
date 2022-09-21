@@ -1,5 +1,5 @@
 <template>
-  <q-dialog v-model="visable">
+  <q-dialog ref="dialogRef" @hide="onDialogHide">
     <q-card>
       <q-form @reset="onReset" @submit="onSubmit" class="q-gutter-md">
         <q-card-section>
@@ -21,7 +21,7 @@
           />
 
           <q-input
-            v-model.number="numberOfFlights"
+            v-model.number="flights"
             type="number"
             :label="$t('flights')"
             :hint="$t('dialog_edit_person_hint_flights')"
@@ -73,28 +73,33 @@
 import { computed, ref } from 'vue';
 import { Balloon, Car, Person, Vehicle } from 'src/lib/entities';
 import { useI18n } from 'vue-i18n';
-
-const {t} = useI18n();
+import { useDialogPluginComponent } from 'quasar'
 
 interface Props {
-  modelValue: boolean;
-  people?: Person[];
+  mode: 'create' | 'edit',
   person?: Person;
 }
 
-const props = withDefaults(defineProps<Props>(), {});
+const props = defineProps<Props>();
 
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void;
-  (e: 'update:person', value: Person): void;
-  (e: 'update:people', value: Person[]): void;
-}>();
+defineEmits([
+  ...useDialogPluginComponent.emits
+]);
 
-const name = ref();
-const numberOfFlights = ref(0);
-const supervisor = ref(false);
+// const emit = defineEmits<{
+//   (e: 'update:modelValue', value: boolean): void;
+//   (e: 'update:person', value: Person): void;
+//   (e: 'update:people', value: Person[]): void;
+// }>();
 
-const nation = ref();
+const {t} = useI18n();
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+
+const name = ref(props.person?.name ?? null);
+const nation = ref(props.person?.nation ?? null);
+const flights = ref(props.person?.numberOfFlights ?? 0);
+const supervisor = ref(props.person?.supervisor ?? false);
+
 const nations = [
   {
     label: t('german'),
@@ -106,62 +111,22 @@ const nations = [
   },
 ];
 
-const visable = computed({
-  get() {
-    return props.modelValue;
-  },
-  set(value) {
-    emit('update:modelValue', value);
-  },
-});
-
-const person = computed({
-  get() {
-    return props.person;
-  },
-  set(value) {
-    if (value) {
-      emit('update:person', value);
-    }
-  },
-});
-
-const people = computed({
-  get() {
-    return props.people;
-  },
-  set(value) {
-    if (value) {
-      emit('update:people', value);
-    }
-  },
-});
 
 function onSubmit() {
-  if (!person.value && !people.value) {
-    // TODO error
-    return;
-  }
-
-  if (person.value) {
-    person.value.name = name.value;
-    person.value.nation = nation.value;
-    person.value.numberOfFlights = numberOfFlights.value;
-    person.value.supervisor = supervisor.value;
-  } else if (people.value) {
-    // Create new vehicle
-    const person = new Person(name.value, nation.value, supervisor.value, numberOfFlights.value);
-    people.value.push(person);
-  }
-
-  visable.value = false;
+  onDialogOK({
+    name: name.value,
+    nation: nation.value,
+    flights: flights.value,
+    supervisor: supervisor.value
+  });
 }
 
 function onReset() {
   name.value = null;
   nation.value = null;
-  numberOfFlights.value = 0;
+  flights.value = 0;
   supervisor.value = false;
+  onDialogCancel();
 }
 
 </script>
