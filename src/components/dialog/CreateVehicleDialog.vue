@@ -3,7 +3,7 @@
     <q-card>
       <q-form @reset="onReset" @submit="onSubmit" class="q-gutter-md">
         <q-card-section>
-          <div class="text-h6">{{ $t('dialog_edit_balloon_title') }}</div>
+          <div class="text-h6">{{ $t('dialog_edit_vehicle_title') }}</div>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
@@ -14,8 +14,8 @@
             :label="$t('vehicle_type')"
             :rules="[
               (val) =>
-                (val && ['balloon', 'car'].includes(val)) ||
-                $t('dialog_edit_balloon_validation_type'),
+                (val && vehicleTypes.map(val => val.value).includes(val)) ||
+                $t('dialog_edit_vehicle_validation_type'),
             ]"
             emit-value
             map-options
@@ -30,21 +30,21 @@
             :rules="[
               (val) =>
                 (val && val.length > 0) ||
-                $t('dialog_edit_balloon_validation_name_required'),
+                $t('dialog_edit_vehicle_validation_name_required'),
             ]"
             filled
           />
 
           <q-input
-            v-model="capacity"
+            v-model.number="capacity"
             type="number"
             :label="$t('capacity')"
-            :hint="$t('dialog_edit_balloon_hint_capacity')"
+            :hint="$t('dialog_edit_vehicle_hint_capacity')"
             lazy-rules
             :rules="[
               (val) =>
                 (val !== null && val !== '' && val > 0) ||
-                $t('dialog_edit_balloon_validation_capacty'),
+                $t('dialog_edit_vehicle_validation_capacty'),
             ]"
             filled
           />
@@ -91,7 +91,7 @@ interface Props {
   modelValue: boolean;
   people: Person[];
   vehicle?: Vehicle;
-  vehicles: Vehicle[];
+  vehicles?: Vehicle[];
   type?: 'balloon' | 'car';
 }
 
