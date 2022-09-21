@@ -2,7 +2,7 @@
   <q-page class="full-width row justify-start no-wrap">
     <!-- Menu -->
     <div
-      class="self-stretch row no-wrap col-xl-2 col-lg-3 col-md-3 col-sm-6 col col-xs-12"
+      class="self-stretch row no-wrap col-xl-2 col-lg-3 col-md-4 col-sm-12 col-xs-12"
     >
       <q-tabs
         v-model="menuTabs"
@@ -53,9 +53,11 @@
                 <!-- Empty List -->
                 <q-item v-if="availableBalloons.length === 0">
                   <q-item-section>
-                    <q-item-label>{{ $t('list_empty') }}</q-item-label>
-                    <q-item-label caption
-                      >{{ $t('drop_here_or_create') }}
+                    <q-item-label>
+                      {{ $t('list_empty') }}
+                    </q-item-label>
+                    <q-item-label caption>
+                      {{ $t('drop_here_or_create') }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>
