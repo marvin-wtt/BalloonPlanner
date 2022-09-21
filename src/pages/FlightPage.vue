@@ -292,7 +292,7 @@ const router = useRouter();
 const projectStore = useProjectStore();
 
 const flight: Ref<Flight | undefined> = ref();
-const { project } = storeToRefs(projectStore);
+const {project} = storeToRefs(projectStore);
 
 function updateFlightPage(params: RouteParams) {
   flight.value = undefined;
@@ -309,7 +309,7 @@ function verifyProject() {
       type: 'warning',
       message: 'Invalid project.',
     });
-    router.push({ name: 'projects' });
+    router.push({name: 'projects'});
     return;
   }
 }
@@ -318,7 +318,7 @@ verifyProject();
 
 function loadFlight() {
   if (Array.isArray(route.params.flight)) {
-    router.push({ name: 'projects' }); // TODO change route
+    router.push({name: 'projects'}); // TODO change route
     return;
   }
 
@@ -330,7 +330,7 @@ function loadFlight() {
       type: 'warning',
       message: 'Flight does not exist.',
     });
-    router.push({ name: 'projects' });
+    router.push({name: 'projects'});
     return;
   }
 }
@@ -412,7 +412,7 @@ watch(
     availableBalloons.value = value.availableBalloons();
     availableCars.value = value.availableCars();
   },
-  { deep: true }
+  {deep: true}
 );
 
 const availableParticipants = computed(() => {
