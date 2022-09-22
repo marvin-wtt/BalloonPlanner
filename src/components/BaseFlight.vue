@@ -1,7 +1,12 @@
 <template>
-  <drop-zone class="row" :accepted="isDropAllowed" @dropped="onDrop">
-    <q-scroll-area class="col-grow">
-      <div class="row">
+  <drop-zone class="full-width row justify-center items-center" :accepted="isDropAllowed" @dropped="onDrop">
+    <div v-if="empty" class="drop-hint col-12 text-center text-body1">
+        Drop a balloon here to start.
+    </div>
+
+    <q-scroll-area v-else class="col-grow">
+      <div class="full-width row">
+
         <slot />
       </div>
     </q-scroll-area>
@@ -12,6 +17,7 @@
 import { Balloon, Flight, Person } from 'src/lib/entities';
 import DropZone from 'components/drag/DropZone.vue';
 import { Identifyable } from 'src/lib/utils/Identifyable';
+import { computed } from 'vue';
 
 interface Props {
   flight: Flight;
@@ -22,6 +28,10 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'balloonAdd', vehicle: Balloon): void;
 }>();
+
+const empty = computed(() => {
+  return props.flight.vehicleGroups.length === 0;
+});
 
 function isDropAllowed(element: Identifyable): boolean {
   if (element instanceof Person) {
@@ -56,4 +66,8 @@ function onDrop(element: Balloon) {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+div {
+  height: 100%;
+}
+</style>
