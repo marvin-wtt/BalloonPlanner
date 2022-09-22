@@ -2,12 +2,12 @@
   <q-layout view="hHh LpR lFf">
     <q-header elevated class="bg-primary text-white" height-hint="98">
       <q-toolbar>
-        <q-btn dense flat round icon="menu" @click="toggleLeftDrawer"/>
+        <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
 
         <q-toolbar-title>
           <q-avatar>
             <!-- TODO replace avator -->
-            <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg"/>
+            <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg" />
           </q-avatar>
           Title
         </q-toolbar-title>
@@ -20,7 +20,7 @@
           :to="'/projects/' + project.id + '/flights/' + flight.id"
           :label="$t('flight') + ' ' + (index + 1)"
         />
-        <q-tab @click="addFlight" label="+"/>
+        <q-tab @click="addFlight" label="+" />
       </q-tabs>
     </q-header>
 
@@ -29,7 +29,7 @@
     </q-drawer>
 
     <q-page-container>
-      <router-view/>
+      <router-view />
     </q-page-container>
   </q-layout>
 </template>

@@ -1,7 +1,7 @@
 <template>
   <drop-zone :accepted="isDropAccepted" @dropped="drop" class="col-shrink">
-    <slot name="balloon"/>
-    <slot name="cars"/>
+    <slot name="balloon" />
+    <slot name="cars" />
   </drop-zone>
 </template>
 

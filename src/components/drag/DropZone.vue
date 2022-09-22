@@ -1,14 +1,14 @@
 <template>
   <component
-      :is="tag"
-      @dragenter.stop="onDragEnter($event)"
-      @dragover.stop="onDragOver($event)"
-      @dragleave.stop="onDragLeave($event)"
-      @drop.stop="onDrop($event)"
-      class="drop-zone"
-      :class="{ highlighted: highlighted }"
+    :is="tag"
+    @dragenter.stop="onDragEnter($event)"
+    @dragover.stop="onDragOver($event)"
+    @dragleave.stop="onDragLeave($event)"
+    @drop.stop="onDrop($event)"
+    class="drop-zone"
+    :class="{ highlighted: highlighted }"
   >
-    <slot/>
+    <slot />
   </component>
 </template>
 

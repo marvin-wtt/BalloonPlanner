@@ -68,7 +68,13 @@ export abstract class Vehicle extends Identifyable implements Cloneable {
 
   removePassenger(person: Person) {
     person.decrementFlights();
-    const i = this._passengers.findIndex(value => value.id === person.id);
+    const i = this._passengers.findIndex((value) => value.id === person.id);
+    if (i === -1) {
+      console.error(
+        'Failed to remove person from vehicle. Cannot find group with id ' +
+          person.id
+      );
+    }
     this._passengers.splice(i, 1);
   }
 

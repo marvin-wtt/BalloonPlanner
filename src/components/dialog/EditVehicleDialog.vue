@@ -14,7 +14,7 @@
             :label="$t('vehicle_type')"
             :rules="[
               (val) =>
-                (val && vehicleTypes.map(val => val.value).includes(val)) ||
+                (val && vehicleTypes.map((val) => val.value).includes(val)) ||
                 $t('dialog_edit_vehicle_validation_type'),
             ]"
             emit-value
@@ -87,19 +87,18 @@ import { useI18n } from 'vue-i18n';
 import { useDialogPluginComponent } from 'quasar';
 
 const { t } = useI18n();
-const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
+  useDialogPluginComponent();
 
 interface Props {
   type?: 'balloon' | 'car';
   vehicle?: Vehicle;
-  people: Person[],
+  people: Person[];
 }
 
 const props = defineProps<Props>();
 
-defineEmits([
-  ...useDialogPluginComponent.emits
-]);
+defineEmits([...useDialogPluginComponent.emits]);
 
 const name = ref(props.vehicle?.name);
 const capacity = ref(props.vehicle?.capacity);
@@ -153,7 +152,7 @@ function filterFn(val: string, update: (a: () => void) => void) {
       return {
         label: value.name,
         value: value,
-      }
+      };
     });
   });
 }

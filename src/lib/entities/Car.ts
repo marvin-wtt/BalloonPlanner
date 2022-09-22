@@ -3,7 +3,6 @@ import { Vehicle } from 'src/lib/entities/Vehicle';
 export class Car extends Vehicle {
   private _reseavedCapacity = 0;
 
-
   get reseavedCapacity(): number {
     return this._reseavedCapacity;
   }
@@ -13,10 +12,7 @@ export class Car extends Vehicle {
   }
 
   isFull(): boolean {
-    return (
-      this.passengerCount() + this._reseavedCapacity >=
-      this.capacity
-    );
+    return this.passengerCount() + this._reseavedCapacity >= this.capacity;
   }
 
   useableCapacity(): number {
@@ -28,7 +24,11 @@ export class Car extends Vehicle {
   }
 
   clone(): Car {
-    const car = new Car(this.name, this.capacity, this.allowedOperators.slice());
+    const car = new Car(
+      this.name,
+      this.capacity,
+      this.allowedOperators.slice()
+    );
     car.id = this.id;
     car.passengers = this.passengers.slice();
     car.operator = this.operator;

@@ -1,12 +1,12 @@
 <template>
   <component
-      :is="tag"
-      :class="{ dragged: dragged }"
-      @dragstart.stop="onDragStart($event)"
-      @dragend.stop="onDragEnd($event)"
-      draggable="true"
+    :is="tag"
+    :class="{ dragged: dragged }"
+    @dragstart.stop="onDragStart($event)"
+    @dragend.stop="onDragEnd($event)"
+    draggable="true"
   >
-    <slot/>
+    <slot />
   </component>
 </template>
 

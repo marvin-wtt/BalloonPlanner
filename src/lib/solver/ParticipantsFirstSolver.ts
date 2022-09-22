@@ -160,10 +160,7 @@ export class ParticipantsFirstSolver extends GerneralSolver {
     return true;
   }
 
-  protected findSmallestCarFit(
-    cars: Car[],
-    capacity: number
-  ): Car[] {
+  protected findSmallestCarFit(cars: Car[], capacity: number): Car[] {
     cars.sort((a, b) => a.capacity - b.capacity);
     const car = cars.find((value) => value.capacity >= capacity);
     if (car !== undefined) {
@@ -336,8 +333,17 @@ export class ParticipantsFirstSolver extends GerneralSolver {
     }
   }
 
+  private withoutTest(f: () => void): void {
+    f();
+  }
+
   protected fillCars(flight: Flight, people: Person[]) {
     // TODO Check that there are actuvally enough soaces, or is this already ensured?
+
+    let f;
+    this.withoutTest(() => {
+      f = 3;
+    });
 
     // Fill cars so that each crew is the same size
     for (let i = 1; people.length > 0; i++) {

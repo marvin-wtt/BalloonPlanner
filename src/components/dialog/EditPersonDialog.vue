@@ -40,7 +40,7 @@
             :label="$t('nationality')"
             :rules="[
               (val) =>
-                (val && nations.map(val => val.value).includes(val)) ||
+                (val && nations.map((val) => val.value).includes(val)) ||
                 $t('dialog_edit_vehicle_validation_type'),
             ]"
             emit-value
@@ -48,10 +48,7 @@
             filled
           />
 
-          <q-checkbox
-            v-model="supervisor"
-            :label="$t('supervisor')"
-          />
+          <q-checkbox v-model="supervisor" :label="$t('supervisor')" />
         </q-card-section>
 
         <q-card-actions align="right" class="text-primary">
@@ -62,7 +59,7 @@
             v-close-popup
             flat
           />
-          <q-btn type="submit" color="primary" :label="$t('create')"/>
+          <q-btn type="submit" color="primary" :label="$t('create')" />
         </q-card-actions>
       </q-form>
     </q-card>
@@ -73,18 +70,16 @@
 import { computed, ref } from 'vue';
 import { Balloon, Car, Person, Vehicle } from 'src/lib/entities';
 import { useI18n } from 'vue-i18n';
-import { useDialogPluginComponent } from 'quasar'
+import { useDialogPluginComponent } from 'quasar';
 
 interface Props {
-  mode: 'create' | 'edit',
+  mode: 'create' | 'edit';
   person?: Person;
 }
 
 const props = defineProps<Props>();
 
-defineEmits([
-  ...useDialogPluginComponent.emits
-]);
+defineEmits([...useDialogPluginComponent.emits]);
 
 // const emit = defineEmits<{
 //   (e: 'update:modelValue', value: boolean): void;
@@ -92,8 +87,9 @@ defineEmits([
 //   (e: 'update:people', value: Person[]): void;
 // }>();
 
-const {t} = useI18n();
-const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+const { t } = useI18n();
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
+  useDialogPluginComponent();
 
 const name = ref(props.person?.name ?? null);
 const nation = ref(props.person?.nation ?? null);
@@ -111,13 +107,12 @@ const nations = [
   },
 ];
 
-
 function onSubmit() {
   onDialogOK({
     name: name.value,
     nation: nation.value,
     flights: flights.value,
-    supervisor: supervisor.value
+    supervisor: supervisor.value,
   });
 }
 
@@ -128,7 +123,6 @@ function onReset() {
   supervisor.value = false;
   onDialogCancel();
 }
-
 </script>
 
 <style scoped></style>

@@ -2,7 +2,7 @@
   <drop-zone class="row" :accepted="isDropAllowed" @dropped="onDrop">
     <q-scroll-area class="col-grow">
       <div class="row">
-        <slot/>
+        <slot />
       </div>
     </q-scroll-area>
   </drop-zone>
@@ -36,9 +36,11 @@ function isDropAllowed(element: Identifyable): boolean {
 }
 
 function flightContainsElement(element: Identifyable): boolean {
-  return props.flight.vehicleGroups.findIndex(
-    (value) => value.balloon.id === element.id
-  ) >= 0;
+  return (
+    props.flight.vehicleGroups.findIndex(
+      (value) => value.balloon.id === element.id
+    ) >= 0
+  );
 }
 
 function onDrop(element: Balloon) {

@@ -16,7 +16,8 @@ export default {
   dialog_edit_person_validation_name_required: 'Please tyoe a name',
 
   dialog_edit_vehicle_title: 'Create a new vehicle',
-  dialog_edit_vehicle_hint_capacity: 'Maximum amout of passengers including the operator',
+  dialog_edit_vehicle_hint_capacity:
+    'Maximum amout of passengers including the operator',
   dialog_edit_vehicle_validation_type: 'Please select a vehicle type',
   dialog_edit_vehicle_validation_name_required: 'Vehicle name is required',
   dialog_edit_vehicle_validation_name_unique: 'Vehicle name must be unique',

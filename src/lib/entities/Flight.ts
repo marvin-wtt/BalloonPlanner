@@ -62,11 +62,16 @@ export class Flight extends Identifyable implements Cloneable {
     this._vehicleGroups.push(new VehicleGroup(balloon));
   }
 
-  removeVehicleGroup(id: number) {
-    const g = this._vehicleGroups.findIndex((value) => value.id == id);
-    const group = this._vehicleGroups[g];
+  removeVehicleGroup(group: VehicleGroup) {
     group.clear();
-    this._vehicleGroups.splice(g);
+    const i = this._vehicleGroups.findIndex((value) => value.id == group.id);
+    if (i === -1) {
+      console.error(
+        'Failed to remove vehicle group. Cannot find group with id ' + group.id
+      );
+      return;
+    }
+    this._vehicleGroups.splice(i, 1);
   }
 
   availablePeople(): Person[] {
@@ -89,9 +94,7 @@ export class Flight extends Identifyable implements Cloneable {
   availableBalloons(): Balloon[] {
     let balloons: Balloon[] = this._balloons;
     for (const group of this._vehicleGroups) {
-      balloons = balloons.filter(
-        (value) => value !== group.balloon
-      );
+      balloons = balloons.filter((value) => value !== group.balloon);
     }
     return balloons;
   }

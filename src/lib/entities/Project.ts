@@ -8,11 +8,7 @@ export class Project extends Identifyable {
   private _flights: Flight[] = [];
   private _flightCounter = 0;
 
-  constructor(
-    people?: Person[],
-    balloons?: Balloon[],
-    cars?: Car[]
-  ) {
+  constructor(people?: Person[], balloons?: Balloon[], cars?: Car[]) {
     super();
     this._people = people ?? [];
     this._balloons = balloons ?? [];

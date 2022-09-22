@@ -10,8 +10,8 @@
         active-bg-color="grey-6"
         class="bg-grey-10 text-white"
       >
-        <q-tab name="overview" icon="home" :label="$t('overview')"/>
-        <q-separator spaced inset color="white"/>
+        <q-tab name="overview" icon="home" :label="$t('overview')" />
+        <q-separator spaced inset color="white" />
         <q-tab name="balloons" icon="mdi-airballoon" :label="$t('balloon')">
           <q-badge v-if="showBalloonsMenuBadge" color="red" floating>
             {{ availableBalloons.length }}
@@ -23,16 +23,12 @@
           </q-badge>
         </q-tab>
         <q-tab name="people" icon="group" :label="$t('person')">
-          <q-badge
-            v-if="showPeopleMenuBadge"
-            color="red"
-            floating
-          >
+          <q-badge v-if="showPeopleMenuBadge" color="red" floating>
             {{ availableParticipants.length + availableSupervisor.length }}
           </q-badge>
         </q-tab>
-        <q-separator spaced inset color="white"/>
-        <q-tab name="settings" icon="settings" :label="$t('setting')"/>
+        <q-separator spaced inset color="white" />
+        <q-tab name="settings" icon="settings" :label="$t('setting')" />
       </q-tabs>
 
       <div class="col-grow self-stretch column" v-if="menuTabs">
@@ -98,7 +94,7 @@
                   <q-item-section>
                     <q-item-label>{{ $t('list_empty') }}</q-item-label>
                     <q-item-label caption
-                    >{{ $t('drop_here_or_create') }}
+                      >{{ $t('drop_here_or_create') }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>
@@ -167,7 +163,6 @@
                 label="Add new item"
                 @click="createPersonDialog()"
               />
-
             </q-scroll-area>
           </q-tab-panel>
 
@@ -267,7 +262,7 @@ const router = useRouter();
 const projectStore = useProjectStore();
 
 const flight: Ref<Flight | undefined> = ref();
-const {project} = storeToRefs(projectStore);
+const { project } = storeToRefs(projectStore);
 
 function updateFlightPage(params: RouteParams) {
   flight.value = undefined;
@@ -284,7 +279,7 @@ function verifyProject() {
       type: 'warning',
       message: 'Invalid project.',
     });
-    router.push({name: 'projects'});
+    router.push({ name: 'projects' });
     return;
   }
 }
@@ -293,7 +288,7 @@ verifyProject();
 
 function loadFlight() {
   if (Array.isArray(route.params.flight)) {
-    router.push({name: 'projects'}); // TODO change route
+    router.push({ name: 'projects' }); // TODO change route
     return;
   }
 
@@ -305,7 +300,7 @@ function loadFlight() {
       type: 'warning',
       message: 'Flight does not exist.',
     });
-    router.push({name: 'projects'});
+    router.push({ name: 'projects' });
     return;
   }
 }
@@ -325,9 +320,14 @@ function createPersonDialog() {
     component: EditPersonDialog,
     componentProps: {
       mode: 'create',
-    }
-  }).onOk(payload => {
-    const person = new Person(payload.name, payload.nation, payload.supervisor, payload.flights);
+    },
+  }).onOk((payload) => {
+    const person = new Person(
+      payload.name,
+      payload.nation,
+      payload.supervisor,
+      payload.flights
+    );
     flight.value?.people.push(person);
   });
 }
@@ -338,8 +338,8 @@ function editPersonDialog(person: Person) {
     componentProps: {
       person: person,
       mode: 'edit',
-    }
-  }).onOk(payload => {
+    },
+  }).onOk((payload) => {
     person.name = payload.name;
     person.nation = payload.nation;
     person.numberOfFlights = payload.flights;
@@ -353,15 +353,23 @@ function createVehicleDialog(type: 'balloon' | 'car') {
     componentProps: {
       type: type,
       people: flight.value?.people,
-    }
-  }).onOk(payload => {
+    },
+  }).onOk((payload) => {
     if (type === 'balloon') {
-      const balloon = new Balloon(payload.name, payload.capacity, payload.allowedOperators);
+      const balloon = new Balloon(
+        payload.name,
+        payload.capacity,
+        payload.allowedOperators
+      );
       flight.value?.balloons.push(balloon);
     }
 
     if (type === 'car') {
-      const car = new Car(payload.name, payload.capacity, payload.allowedOperators);
+      const car = new Car(
+        payload.name,
+        payload.capacity,
+        payload.allowedOperators
+      );
       flight.value?.cars.push(car);
     }
   });
@@ -371,11 +379,11 @@ function editVewhicleDialog(vehicle: Vehicle) {
   $q.dialog({
     component: EditPersonDialog,
     componentProps: {
-      type: (vehicle instanceof Balloon) ? 'balloon' : 'car',
+      type: vehicle instanceof Balloon ? 'balloon' : 'car',
       vehicle: vehicle,
       people: flight.value?.people,
-    }
-  }).onOk(payload => {
+    },
+  }).onOk((payload) => {
     vehicle.name = payload.name;
     vehicle.capacity = payload.capacity;
     vehicle.allowedOperators = payload.allowedOperators;
@@ -417,7 +425,9 @@ const showCarsMenuBadge = computed(() => {
   return availableCars.value.length > 0;
 });
 const showPeopleMenuBadge = computed(() => {
-  return availableParticipants.value.length + availableSupervisor.value.length > 0;
+  return (
+    availableParticipants.value.length + availableSupervisor.value.length > 0
+  );
 });
 
 const availablePeople = ref(flight.value?.availablePeople() ?? []);
@@ -432,7 +442,7 @@ watch(
     availableBalloons.value = value.availableBalloons();
     availableCars.value = value.availableCars();
   },
-  {deep: true}
+  { deep: true }
 );
 
 const availableParticipants = computed(() => {
