@@ -1,7 +1,19 @@
 <template>
-  <drop-zone :accepted="isDropAccepted" @dropped="drop" class="col-shrink">
-    <slot name="balloon" />
-    <slot name="cars" />
+  <drop-zone
+    :accepted="isDropAccepted"
+    @dropped="drop"
+    class="q-ma-md vehicle-group"
+  >
+    <div class="relative-position">
+      <q-badge v-if="reservedCapacityWarning" color="warning" floating rounded>
+        <q-icon name="warning" color="white" size="1rem" />
+        <q-tooltip>
+          {{ $t('tooltip_insufficient_capacity') }}
+        </q-tooltip>
+      </q-badge>
+      <slot name="balloon" />
+      <slot name="cars" />
+    </div>
   </drop-zone>
 </template>
 
@@ -10,6 +22,7 @@ import DropZone from 'components/drag/DropZone.vue';
 
 import { Car, VehicleGroup } from 'src/lib/entities';
 import { Identifyable } from 'src/lib/utils/Identifyable';
+import { computed } from 'vue';
 
 interface Props {
   group: VehicleGroup;
@@ -23,6 +36,15 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   (e: 'carAdd', person: Car): void;
 }>();
+
+const reservedCapacityWarning = computed(() => {
+  const availableCapacity = props.group.cars.reduce(
+    (prev, curr) => prev + curr.capacity - 1,
+    0
+  );
+
+  return props.group.balloon.capacity > availableCapacity;
+});
 
 function isDropAccepted(element: Identifyable): boolean {
   if (!(element instanceof Car)) {
@@ -44,9 +66,6 @@ function drop(element: Car) {
 <style scoped>
 .vehicle-group {
   border: 1px solid #1976d2;
-}
-
-drop-zone {
-  margin: 1rem;
+  border-radius: 10px;
 }
 </style>
