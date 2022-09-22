@@ -1,11 +1,18 @@
 <template>
   <draggable-item :item="props.vehicle" @remove="onVehicleRemoved" class="row">
     <table
-      class="vehicle-table shadow-2"
+      class="vehicle-table shadow-2 relative-position"
       @dragenter.stop
       @dragover.stop
       @dragleave.stop
     >
+      <q-badge v-if="overfilled" color="negative" floating rounded>
+        <q-icon name="warning" color="white" size="1rem" />
+        <q-tooltip>
+          {{ $t('tooltip_overfilled') }}
+        </q-tooltip>
+      </q-badge>
+
       <tr>
         <th
           class="vehicle-label"
@@ -18,10 +25,17 @@
           <q-menu touch-position context-menu>
             <q-list dense style="min-width: 100px">
               <q-item clickable v-close-popup>
-                <q-item-section>Edit</q-item-section>
+                <q-item-section>
+                  {{ $t('edit') }}
+                </q-item-section>
               </q-item>
               <q-item clickable v-close-popup>
-                <q-item-section>Remove</q-item-section>
+                <q-item-section
+                  @click="onVehicleRemoved()"
+                  class="text-negative"
+                >
+                  {{ $t('remove') }}
+                </q-item-section>
               </q-item>
             </q-list>
           </q-menu>
@@ -93,6 +107,10 @@ const capacity = computed(() => {
   }
 
   return props.vehicle.capacity;
+});
+
+const overfilled = computed(() => {
+  return props.vehicle.passengers.length > capacity.value;
 });
 
 function onVehicleRemoved() {
