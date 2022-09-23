@@ -22,8 +22,9 @@ export default {
   dialog_edit_vehicle_validation_name_required: 'Vehicle name is required',
   dialog_edit_vehicle_validation_name_unique: 'Vehicle name must be unique',
   dialog_edit_vehicle_validation_capacty: 'Please type a positive number',
-
   drop_here_or_create: 'Drop an item here or create a new one',
+
+  edit: 'Edit',
 
   flight: 'Flight | Flights',
   french: 'French',
@@ -41,8 +42,12 @@ export default {
 
   person: 'Person | People',
 
+  remove: 'Remvoe',
+
   success: 'Action was successful',
   supervisor: 'Supervisor',
+
+  tooltip_insufficient_capacity: 'Insufficient seats in car(s)',
 
   vehicle_type: 'Vehicle type',
 };
