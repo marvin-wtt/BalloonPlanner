@@ -339,12 +339,6 @@ export class ParticipantsFirstSolver extends GerneralSolver {
 
   protected fillCars(flight: Flight, people: Person[]) {
     // TODO Check that there are actuvally enough soaces, or is this already ensured?
-
-    let f;
-    this.withoutTest(() => {
-      f = 3;
-    });
-
     // Fill cars so that each crew is the same size
     for (let i = 1; people.length > 0; i++) {
       for (const group of flight.vehicleGroups) {
