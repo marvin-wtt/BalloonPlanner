@@ -67,8 +67,8 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
-import { Balloon, Car, Person, Vehicle } from 'src/lib/entities';
+import { ref } from 'vue';
+import { Person } from 'src/lib/entities';
 import { useI18n } from 'vue-i18n';
 import { useDialogPluginComponent } from 'quasar';
 
@@ -80,12 +80,6 @@ interface Props {
 const props = defineProps<Props>();
 
 defineEmits([...useDialogPluginComponent.emits]);
-
-// const emit = defineEmits<{
-//   (e: 'update:modelValue', value: boolean): void;
-//   (e: 'update:person', value: Person): void;
-//   (e: 'update:people', value: Person[]): void;
-// }>();
 
 const { t } = useI18n();
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
