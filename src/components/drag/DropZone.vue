@@ -56,6 +56,7 @@ function onDragOver(event: DragEvent) {
   }
 
   event.preventDefault();
+  highlighted.value = true;
 }
 
 function onDragLeave(event: DragEvent) {
