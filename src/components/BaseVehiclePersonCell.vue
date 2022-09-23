@@ -6,6 +6,27 @@
     @remove="onDragEnd"
   >
     {{ personLabel }}
+
+    <q-menu touch-position context-menu>
+      <q-list dense style="min-width: 100px">
+        <q-item clickable v-close-popup>
+          <q-item-section
+            @click="dialogs.showEditPerson(person)"
+          >
+            {{ $t('edit') }}
+          </q-item-section>
+        </q-item>
+        <q-item clickable v-close-popup>
+          <q-item-section
+            @click="onDragEnd(person)"
+            class="text-negative"
+          >
+            {{ $t('remove') }}
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-menu>
+
   </draggable-item>
 
   <drop-zone
@@ -22,6 +43,8 @@ import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
 import { Identifyable } from 'src/lib/utils/Identifyable';
 import DraggableItem from 'components/drag/DraggableItem.vue';
+import { useDialogs } from 'src/composables/dialogs';
+import { useQuasar } from 'quasar';
 
 interface Props {
   person: Person;
@@ -34,6 +57,9 @@ const props = withDefaults(defineProps<Props>(), {
   operator: false,
   editable: true,
 });
+
+const $q = useQuasar();
+const dialogs = useDialogs($q);
 
 const emit = defineEmits<{
   (e: 'operatorAdd', person: Person): void;
