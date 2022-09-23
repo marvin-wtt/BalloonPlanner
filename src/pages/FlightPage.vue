@@ -80,7 +80,7 @@
                 color="primary"
                 icon="add"
                 label="Add new item"
-                @click="createVehicleDialog('balloon')"
+                @click="dialogs.showCreateVehicle('type', flight);"
               />
             </q-scroll-area>
           </q-tab-panel>
@@ -121,7 +121,7 @@
                 color="primary"
                 icon="add"
                 label="Add new item"
-                @click="createVehicleDialog('car')"
+                @click="dialogs.showCreateVehicle('car', flight)"
               />
             </q-scroll-area>
           </q-tab-panel>
@@ -161,7 +161,7 @@
                 color="primary"
                 icon="add"
                 label="Add new item"
-                @click="createPersonDialog()"
+                @click="dialogs.showCreatePerson(flight.people);"
               />
             </q-scroll-area>
           </q-tab-panel>
@@ -189,11 +189,12 @@
               :key="group.balloon.id"
               type="balloon"
               :vehicle="group.balloon"
+              @balloon-remove="(b) => onBalloonRemove(group)"
               @passenger-add="(p) => onVehiclePersonAdd(group.balloon, p)"
               @passenger-remove="(p) => onVehiclePersonRemove(group.balloon, p)"
               @operator-add="(p) => onVehicleOperatorAdd(group.balloon, p)"
               @operator-remove="
-                (p) => onVehicleOperatorRemove(group.balloon, p)
+                (p) => onVehicleOperatorRemove(group.balloon)
               "
             />
           </template>
@@ -207,7 +208,7 @@
               @passenger-add="(p) => onVehiclePersonAdd(vehicle, p)"
               @passenger-remove="(p) => onVehiclePersonRemove(vehicle, p)"
               @operator-add="(p) => onVehicleOperatorAdd(vehicle, p)"
-              @operator-remove="(p) => onVehicleOperatorRemove(vehicle, p)"
+              @operator-remove="(p) => onVehicleOperatorRemove(vehicle)"
             />
           </template>
         </base-vehicle-group>
@@ -239,6 +240,7 @@ import {
 } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
+import { useDialogs } from 'src/composables/dialogs';
 import BaseFlight from 'components/BaseFlight.vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import BaseVehicle from 'components/BaseVehicle.vue';
@@ -260,8 +262,9 @@ const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
 const projectStore = useProjectStore();
+const dialogs = useDialogs($q);
 
-const flight: Ref<Flight | undefined> = ref();
+const flight = ref<Flight>();
 const { project } = storeToRefs(projectStore);
 
 function updateFlightPage(params: RouteParams) {
@@ -314,84 +317,12 @@ onBeforeRouteUpdate((to, from) => {
 });
 
 // TODO reduce above logic
-
-function createPersonDialog() {
-  $q.dialog({
-    component: EditPersonDialog,
-    componentProps: {
-      mode: 'create',
-    },
-  }).onOk((payload) => {
-    const person = new Person(
-      payload.name,
-      payload.nation,
-      payload.supervisor,
-      payload.flights
-    );
-    flight.value?.people.push(person);
-  });
-}
-
-function editPersonDialog(person: Person) {
-  $q.dialog({
-    component: EditPersonDialog,
-    componentProps: {
-      person: person,
-      mode: 'edit',
-    },
-  }).onOk((payload) => {
-    person.name = payload.name;
-    person.nation = payload.nation;
-    person.numberOfFlights = payload.flights;
-    person.supervisor = payload.supervisor;
-  });
-}
-
-function createVehicleDialog(type: 'balloon' | 'car') {
-  $q.dialog({
-    component: EditVehicleDialog,
-    componentProps: {
-      type: type,
-      people: flight.value?.people,
-    },
-  }).onOk((payload) => {
-    if (type === 'balloon') {
-      const balloon = new Balloon(
-        payload.name,
-        payload.capacity,
-        payload.allowedOperators
-      );
-      flight.value?.balloons.push(balloon);
-    }
-
-    if (type === 'car') {
-      const car = new Car(
-        payload.name,
-        payload.capacity,
-        payload.allowedOperators
-      );
-      flight.value?.cars.push(car);
-    }
-  });
-}
-
-function editVewhicleDialog(vehicle: Vehicle) {
-  $q.dialog({
-    component: EditPersonDialog,
-    componentProps: {
-      type: vehicle instanceof Balloon ? 'balloon' : 'car',
-      vehicle: vehicle,
-      people: flight.value?.people,
-    },
-  }).onOk((payload) => {
-    vehicle.name = payload.name;
-    vehicle.capacity = payload.capacity;
-    vehicle.allowedOperators = payload.allowedOperators;
-  });
-}
-
 function onBalloonAdd(balloon: Balloon) {
   flight.value?.addVehicleGroup(balloon);
+}
+
+function onBalloonRemove(group: VehicleGroup) {
+  flight.value?.removeVehicleGroup(group);
 }
 
 function onCarAdd(group: VehicleGroup, car: Car) {
@@ -406,7 +337,7 @@ function onVehicleOperatorAdd(vehicle: Vehicle, person: Person) {
   vehicle.operator = person;
 }
 
-function onVehicleOperatorRemove(vehicle: Vehicle, person: Person) {
+function onVehicleOperatorRemove(vehicle: Vehicle) {
   vehicle.operator = undefined;
 }
 
