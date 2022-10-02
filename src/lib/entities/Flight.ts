@@ -6,6 +6,7 @@ import { Cloneable } from 'src/lib/utils/Cloneable';
 import { GerneralSolver } from 'src/lib/solver/GerneralSolver';
 import { ParticipantsFirstSolver } from 'src/lib/solver/ParticipantsFirstSolver';
 import { Car } from 'src/lib/entities/Car';
+import { removeFromArray } from 'src/lib/utils/ArrayUtils';
 
 export class Flight extends Identifyable implements Cloneable {
   private _balloons: Balloon[];
@@ -64,14 +65,19 @@ export class Flight extends Identifyable implements Cloneable {
 
   removeVehicleGroup(group: VehicleGroup) {
     group.clear();
-    const i = this._vehicleGroups.findIndex((value) => value.id == group.id);
-    if (i === -1) {
-      console.error(
-        'Failed to remove vehicle group. Cannot find group with id ' + group.id
-      );
-      return;
-    }
-    this._vehicleGroups.splice(i, 1);
+    removeFromArray(this._vehicleGroups, group);
+  }
+
+  removePerson(person: Person) {
+    removeFromArray(this._people, person);
+  }
+
+  removeBalloon(balloon: Balloon) {
+    removeFromArray(this._balloons, balloon);
+  }
+
+  removeCar(car: Car) {
+    removeFromArray(this._cars, car);
   }
 
   availablePeople(): Person[] {

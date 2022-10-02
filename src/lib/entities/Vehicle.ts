@@ -1,6 +1,7 @@
 import { Person } from 'src/lib/entities/Person';
 import { Identifyable } from 'src/lib/utils/Identifyable';
 import { Cloneable } from 'src/lib/utils/Cloneable';
+import { removeFromArray } from 'src/lib/utils/ArrayUtils';
 
 export abstract class Vehicle extends Identifyable implements Cloneable {
   private _name: string;
@@ -68,14 +69,7 @@ export abstract class Vehicle extends Identifyable implements Cloneable {
 
   removePassenger(person: Person) {
     person.decrementFlights();
-    const i = this._passengers.findIndex((value) => value.id === person.id);
-    if (i === -1) {
-      console.error(
-        'Failed to remove person from vehicle. Cannot find group with id ' +
-          person.id
-      );
-    }
-    this._passengers.splice(i, 1);
+    removeFromArray(this._passengers, person);
   }
 
   availableCapacity(): number {
