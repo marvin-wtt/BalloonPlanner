@@ -1,6 +1,6 @@
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import { Balloon, Car, Flight, Person, Vehicle } from 'src/lib/entities';
-import { QVueGlobals, useQuasar } from 'quasar';
+import { QVueGlobals } from 'quasar';
 import EditVehicleDialog from 'components/dialog/EditVehicleDialog.vue';
 
 
@@ -40,7 +40,7 @@ export function useDialogs($q: QVueGlobals) {
 
     function showEditVehicle(vehicle: Vehicle, flight: Flight) {
         $q.dialog({
-            component: EditPersonDialog,
+            component: EditVehicleDialog,
             componentProps: {
                 type: vehicle instanceof Balloon ? 'balloon' : 'car',
                 vehicle: vehicle,
