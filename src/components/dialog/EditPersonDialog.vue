@@ -3,19 +3,21 @@
     <q-card>
       <q-form @reset="onReset" @submit="onSubmit" class="q-gutter-md">
         <q-card-section>
-          <div class="text-h6">{{ $t('dialog_edit_person_title') }}</div>
+          <div class="text-h6">
+            {{ $t('dialog.person.title') }}
+          </div>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
           <!-- TODO unique rule -->
           <q-input
             v-model="name"
-            :label="$t('name')"
+            :label="$t('dialog.person.name.label')"
             lazy-rules
             :rules="[
               (val) =>
                 (val && val.length > 0) ||
-                $t('dialog_edit_person_validation_name_required'),
+                $t('dialog.person.name_validation.required'),
             ]"
             filled
           />
@@ -23,13 +25,13 @@
           <q-input
             v-model.number="flights"
             type="number"
-            :label="$t('flights')"
-            :hint="$t('dialog_edit_person_hint_flights')"
+            :label="$t('dialog.person.flights.label')"
+            :hint="$t('dialog.person.flights.hint')"
             lazy-rules
             :rules="[
               (val) =>
                 (val !== null && val !== '' && val >= 0) ||
-                $t('dialog_edit_vehicle_validation_capacty'),
+                $t('dialog.person.validation.flights'),
             ]"
             filled
           />
@@ -41,14 +43,17 @@
             :rules="[
               (val) =>
                 (val && nations.map((val) => val.value).includes(val)) ||
-                $t('dialog_edit_vehicle_validation_type'),
+                $t('dialog.person.nationality.validation.type'),
             ]"
             emit-value
             map-options
             filled
           />
 
-          <q-checkbox v-model="supervisor" :label="$t('supervisor')" />
+          <q-checkbox
+            v-model="supervisor"
+            :label="$t('dialog.person.supervisor.label')"
+          />
         </q-card-section>
 
         <q-card-actions align="right" class="text-primary">

@@ -3,7 +3,9 @@
     <q-card>
       <q-form @reset="onReset" @submit="onSubmit" class="q-gutter-md">
         <q-card-section>
-          <div class="text-h6">{{ $t('dialog_edit_vehicle_title') }}</div>
+          <div class="text-h6">
+            {{ $t('dialog.vehicle.title') }}
+          </div>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
@@ -11,11 +13,11 @@
             v-if="type === undefined"
             v-model="vehicleType"
             :options="vehicleTypes"
-            :label="$t('vehicle_type')"
+            :label="$t('dialog.vehicle.type.label')"
             :rules="[
               (val) =>
                 (val && vehicleTypes.map((val) => val.value).includes(val)) ||
-                $t('dialog_edit_vehicle_validation_type'),
+                $t('dialog.vehicle.validation.required'),
             ]"
             emit-value
             map-options
@@ -25,12 +27,12 @@
           <!-- TODO unique rule -->
           <q-input
             v-model="name"
-            :label="$t('name')"
+            :label="$t('dialog.vehicle.name.label')"
             lazy-rules
             :rules="[
               (val) =>
                 (val && val.length > 0) ||
-                $t('dialog_edit_vehicle_validation_name_required'),
+                $t('dialog.vehicle.name.validation.required'),
             ]"
             filled
           />
@@ -38,20 +40,20 @@
           <q-input
             v-model.number="capacity"
             type="number"
-            :label="$t('capacity')"
-            :hint="$t('dialog_edit_vehicle_hint_capacity')"
+            :label="$t('dialog.vehicle.capacity.label')"
+            :hint="$t('dialog.vehicle.capacity.hint')"
             lazy-rules
             :rules="[
               (val) =>
                 (val !== null && val !== '' && val > 0) ||
-                $t('dialog_edit_vehicle_validation_capacty'),
+                $t('dialog.vehicle.capacity.validation.number'),
             ]"
             filled
           />
 
           <q-select
             v-model="allowedOperators"
-            :label="$t('allowed_operators')"
+            :label="$t('dialog.vehicle.allowed_operators.label')"
             use-input
             use-chips
             multiple

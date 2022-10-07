@@ -11,17 +11,58 @@ export default {
   car: 'Car | Cars',
   create: 'Create',
 
-  dialog_edit_person_title: 'Add a new person',
-  dialog_edit_person_hint_flights: 'Number of flights previous to this flight',
-  dialog_edit_person_validation_name_required: 'Please tyoe a name',
+  dialog: {
+    person: {
+      title: 'Add a new person',
+      name: {
+        label: 'Name',
+        hint: 'Unique name of the vehicle',
+        validation: {
+          required: 'Please tyoe an unqiue name',
+        },
+      },
+      nationality: {
+        label: 'Nationality',
+        validation: {
+          type: 'Please select a valid ',
+        },
+      },
+      flights: {
+        label: 'Flights',
+        hint: 'Number of flights previous to this flight',
+      },
+      supervisor: {
+        label: 'Supervisor',
+      },
+    },
+    vehicle: {
+      title: 'Create a new vehicle',
+      type: {
+        label: 'Type of vehicle',
+        validation: {
+          required: 'Please select a vehicle type',
+        },
+      },
+      name: {
+        label: 'Vehicle name',
+        validation: {
+          unique: 'Vehicle name must be unique',
+          required: 'Vehicle name is required',
+        },
+      },
+      capacity: {
+        label: 'Capacity',
+        hint: 'Maximum amout of passengers including the operator',
+        validation: {
+          number: 'Please type a positive number',
+        },
+      },
+      allowed_operators: {
+        label: 'Allowed operators',
+      },
+    },
+  },
 
-  dialog_edit_vehicle_title: 'Create a new vehicle',
-  dialog_edit_vehicle_hint_capacity:
-    'Maximum amout of passengers including the operator',
-  dialog_edit_vehicle_validation_type: 'Please select a vehicle type',
-  dialog_edit_vehicle_validation_name_required: 'Vehicle name is required',
-  dialog_edit_vehicle_validation_name_unique: 'Vehicle name must be unique',
-  dialog_edit_vehicle_validation_capacty: 'Please type a positive number',
   drop_here_or_create: 'Drop an item here or create a new one',
 
   edit: 'Edit',
