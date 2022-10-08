@@ -1,10 +1,12 @@
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import { Balloon, Car, Flight, Person, Vehicle } from 'src/lib/entities';
-import { QVueGlobals } from 'quasar';
+import { format, QVueGlobals } from 'quasar';
 import EditVehicleDialog from 'components/dialog/EditVehicleDialog.vue';
+import between = format.between;
+import { ComposerTranslation } from 'vue-i18n';
 
 
-export function useDialogs($q: QVueGlobals) {
+export function useDialogs($q: QVueGlobals, t: ComposerTranslation) {
 
     function showCreatePerson(people: Person[]) {
         $q.dialog({
@@ -35,6 +37,25 @@ export function useDialogs($q: QVueGlobals) {
             person.nation = payload.nation;
             person.numberOfFlights = payload.flights;
             person.supervisor = payload.supervisor;
+        });
+    }
+
+    function showDeletePerson(person: Person, flight: Flight) {
+        $q.dialog({
+            title: t('dialog.person.delete.confirm.title'),
+            message: t('dialog.person.delete.confirm.message', {name: person.name}),
+            ok: {
+                label: t('delete'),
+                color: 'negative',
+            },
+            cancel: {
+                label: t('cancel'),
+                outline: true,
+                color: 'grey',
+            },
+            persistent: true
+        }).onOk(() => {
+            flight.removePerson(person);
         });
     }
 
@@ -81,11 +102,36 @@ export function useDialogs($q: QVueGlobals) {
         });
     }
 
+    function showDeleteVehicle(vehicle: Vehicle, flight: Flight) {
+        $q.dialog({
+            title: t('dialog.vehicle.delete.confirm.title'),
+            message: t('dialog.vehicle.delete.confirm.message', {name: vehicle.name}),
+            ok: {
+                label: t('delete'),
+                color: 'negative',
+            },
+            cancel: {
+                label: t('cancel'),
+                outline: true,
+                color: 'grey',
+            },
+            persistent: true
+        }).onOk(() => {
+            if (vehicle instanceof Balloon) {
+                flight.removeBalloon(vehicle);
+            } else if (vehicle instanceof Car) {
+                flight.removeCar(vehicle);
+            }
+        });
+    }
+
     return {
         showCreatePerson,
         showEditPerson,
+        showDeletePerson,
         showEditVehicle,
-        showCreateVehicle
+        showCreateVehicle,
+        showDeleteVehicle,
     }
 
 }

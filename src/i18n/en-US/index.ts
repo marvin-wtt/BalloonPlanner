@@ -34,6 +34,14 @@ export default {
       supervisor: {
         label: 'Supervisor',
       },
+      delete: {
+        confirm: {
+          title: 'Delete person',
+          message: 'Are you sure you want to delete  \"{name}\" permanently from this flight? All records will be removed.',
+          delete: 'Delete',
+          cancel: 'Cancel',
+        }
+      }
     },
     vehicle: {
       title: 'Create a new vehicle',
@@ -60,6 +68,14 @@ export default {
       allowed_operators: {
         label: 'Allowed operators',
       },
+      delete: {
+        confirm: {
+          title: 'Delete vehicle from flight',
+          message: 'Are you sure you want to delete  \"{name}\"?',
+          delete: 'Delete',
+          cancel: 'Cancel',
+        }
+      }
     },
   },
 
