@@ -45,6 +45,7 @@ import { Identifyable } from 'src/lib/utils/Identifyable';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import { useDialogs } from 'src/composables/dialogs';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 
 interface Props {
   person: Person;
@@ -59,7 +60,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const $q = useQuasar();
-const dialogs = useDialogs($q);
+const { t } = useI18n();
+const dialogs = useDialogs($q, t);
 
 const emit = defineEmits<{
   (e: 'operatorAdd', person: Person): void;
