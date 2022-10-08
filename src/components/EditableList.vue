@@ -54,6 +54,7 @@
             <div class="q-gutter-xs">
               <q-btn
                 round
+                outline
                 size="sm"
                 padding="xs"
                 color="warning"
@@ -62,10 +63,11 @@
               />
               <q-btn
                 round
+                outline
                 size="sm"
                 padding="xs"
                 color="negative"
-                icon="delete_outline"
+                icon="delete"
                 @click="deleteItem(element)"
               />
             </div>
