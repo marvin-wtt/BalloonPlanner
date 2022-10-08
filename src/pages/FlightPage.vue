@@ -1,9 +1,7 @@
 <template>
   <q-page class="full-width row justify-start no-wrap">
     <!-- Menu -->
-    <div
-      class="self-stretch row no-wrap col-xl-3 col-lg-3 col-md-4 col-sm-12 col-xs-12"
-    >
+    <div class="self-stretch row no-wrap" :class="menuClasses">
       <q-tabs
         v-model="menuTabs"
         vertical
@@ -37,10 +35,10 @@
           </q-badge>
         </q-tab>
         <q-separator spaced inset color="white" />
-        <q-tab name="settings" icon="settings" :label="$t('setting')" />
+        <q-tab name="settings" icon="settings" :label="$t('settings')" />
       </q-tabs>
 
-      <div class="col-grow self-stretch column" v-if="menuTabs">
+      <div class="col-grow self-stretch column" v-if="menuTabs !== 'overview'">
         <q-tab-panels
           v-model="menuTabs"
           animated
@@ -49,8 +47,6 @@
           vertical
           class="no-wrap col-grow shadow-24"
         >
-          <q-tab-panel style="display: none" name="overview"> Overview</q-tab-panel>
-
           <q-tab-panel name="balloons" class="column bg-grey-2">
             <q-scroll-area class="col-grow self-stretchs">
               <editable-list
@@ -100,7 +96,6 @@
                 @create="dialogs.showCreatePerson(flight.people)"
                 @edit="(person) => dialogs.showEditPerson(person)"
                 @delete="(person) => dialogs.showDeletePerson(person, flight)"
-                dense
               >
                 <template #main="{ item }">
                   {{ item.name }}
@@ -121,7 +116,7 @@
                 @create="dialogs.showCreatePerson(flight.people)"
                 @edit="(person) => dialogs.showEditPerson(person)"
                 @delete="(person) => dialogs.showDeletePerson(person, flight)"
-                dense
+                :dense="availableParticipants.length > 10"
               >
                 <template #main="{ item }">
                   {{ item.name }}
@@ -320,16 +315,16 @@ function onVehiclePersonRemove(vehicle: Vehicle, person: Person) {
   vehicle.removePassenger(person);
 }
 
-const showBalloonsMenuBadge = computed(() => {
+const showBalloonsMenuBadge = computed<boolean>(() => {
   return availableBalloons.value.length > 0;
 });
-const showCarsMenuBadge = computed(() => {
+const showCarsMenuBadge = computed<boolean>(() => {
   return availableCars.value.length > 0;
 });
-const showParticiapntsMenuBadge = computed(() => {
-  return availableParticipants.value.length;
+const showParticiapntsMenuBadge = computed<boolean>(() => {
+  return availableParticipants.value.length > 0;
 });
-const showSupervisorsMenuBadge = computed(() => {
+const showSupervisorsMenuBadge = computed<boolean>(() => {
   return availableSupervisors.value.length > 0;
 });
 
@@ -360,14 +355,20 @@ const availableSupervisors = computed(() => {
     .sort((a, b) => a.name.localeCompare(b.name));
 });
 
-const showFlightView = computed(() => {
-  return !($q.screen.sm || $q.screen.xs) || menuTabs.value === 'overview';
+const showFlightView = computed<boolean>(() => {
+  return !$q.screen.xs || menuTabs.value === 'overview';
+});
+
+const menuClasses = computed<string>(() => {
+  return menuTabs.value !== 'overview'
+    ? 'col-xl-3 col-lg-3 col-md-4 col-sm-6 col-xs-12'
+    : '';
 });
 </script>
 
 <style>
 .q-tab__content {
-  width: 80px !important;
+  width: 90px !important;
 }
 
 .q-tab .q-badge {
