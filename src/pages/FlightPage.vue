@@ -174,17 +174,34 @@
         </base-vehicle-group>
       </base-flight>
 
-      <q-footer bordered class="bg-grey-8 text-white">
-        <q-toolbar>
-          <q-toolbar-title>
-            <div>Title</div>
-          </q-toolbar-title>
-
-          <q-btn class="bg-primary" @click="flight.findSolution()">
-            Fill flight
-          </q-btn>
-        </q-toolbar>
-      </q-footer>
+      <q-page-sticky position="bottom-right" :offset="[18, 18]">
+        <q-fab icon="add" direction="up" color="primary" external-label>
+          <q-fab-action
+            external-label
+            label-position="left"
+            :label="$t('actions.add_car')"
+            icon="airport_shuttle"
+            color="primary"
+            @click="onClick"
+          />
+          <q-fab-action
+            external-label
+            label-position="left"
+            :label="$t('actions.add_balloon')"
+            icon="mdi-airballoon"
+            color="primary"
+            @click="onClick"
+          />
+          <q-fab-action
+            external-label
+            label-position="left"
+            :label="$t('actions.smart_fill')"
+            icon="fast_forward"
+            color="accent"
+            @click="flight.findSolution()"
+          />
+        </q-fab>
+      </q-page-sticky>
     </div>
   </q-page>
 </template>
