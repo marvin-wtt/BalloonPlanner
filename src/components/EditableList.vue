@@ -20,10 +20,14 @@
         <q-item v-if="itens.length === 0">
           <q-item-section>
             <q-item-label>
-              {{ $t('list.empty.label', {name: itemName.toLowerCase() + 's'}) }}
+              {{
+                $t('list.empty.label', { name: itemName.toLowerCase() + 's' })
+              }}
             </q-item-label>
             <q-item-label caption>
-              {{ $t('list.empty.caption', {name: itemName.toLowerCase() + 's'}) }}
+              {{
+                $t('list.empty.caption', { name: itemName.toLowerCase() + 's' })
+              }}
             </q-item-label>
           </q-item-section>
         </q-item>
@@ -79,7 +83,7 @@
         class="q-ma-sm"
         color="primary"
         icon="add"
-        :label="$t('list.item.create', {name: itemName.toLowerCase()})"
+        :label="$t('list.item.create', { name: itemName.toLowerCase() })"
         @click="addItem()"
       />
     </div>
@@ -91,7 +95,6 @@ import DraggableItem from 'components/drag/DraggableItem.vue';
 import { QItem } from 'quasar';
 import { Identifyable } from 'src/lib/utils/Identifyable';
 import { ref } from 'vue';
-import DropZone from 'components/drag/DropZone.vue';
 
 interface Props {
   title: string;
@@ -100,7 +103,7 @@ interface Props {
   dense?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   itemName: 'item',
   dense: false,
 });

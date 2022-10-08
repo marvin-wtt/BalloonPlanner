@@ -55,7 +55,9 @@
                 :itens="availableBalloons"
                 @create="dialogs.showCreateVehicle('balloon', flight)"
                 @edit="(balloon) => dialogs.showEditVehicle(balloon, flight)"
-                @delete="(balloon) => dialogs.showDeleteVehicle(balloon, flight)"
+                @delete="
+                  (balloon) => dialogs.showDeleteVehicle(balloon, flight)
+                "
               >
                 <template #main="{ item }">
                   {{ item.name }}
@@ -128,7 +130,18 @@
             </q-scroll-area>
           </q-tab-panel>
 
-          <q-tab-panel name="settings"></q-tab-panel>
+          <q-tab-panel name="settings">
+            <div class="q-py-md">
+              <a class="text-h6">
+                {{ $t('settings') }}
+              </a>
+              <div class="q-gutter-sm">
+                <q-list>
+                  <q-item> Test </q-item>
+                </q-list>
+              </div>
+            </div>
+          </q-tab-panel>
         </q-tab-panels>
       </div>
     </div>
@@ -221,7 +234,6 @@ import { useDialogs } from 'src/composables/dialogs';
 import BaseFlight from 'components/BaseFlight.vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import BaseVehicle from 'components/BaseVehicle.vue';
-import DraggableItem from 'components/drag/DraggableItem.vue';
 import {
   Balloon,
   Car,
@@ -293,11 +305,6 @@ onBeforeRouteUpdate((to, from) => {
   updateFlightPage(to.params);
   return flight.value !== undefined;
 });
-
-function handleSwipe(details: any) {
-  // native Javascript event
-  console.log(details);
-}
 
 // TODO reduce above logic
 function onBalloonAdd(balloon: Balloon) {

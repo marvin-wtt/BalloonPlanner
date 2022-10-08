@@ -19,7 +19,6 @@
 import { contextBridge } from 'electron';
 import { BrowserWindow } from '@electron/remote';
 
-
 export const windowAPI = {
   minimize() {
     BrowserWindow.getFocusedWindow()?.minimize();
@@ -42,6 +41,6 @@ export const windowAPI = {
   close() {
     BrowserWindow.getFocusedWindow()?.close();
   },
-}
+};
 
 contextBridge.exposeInMainWorld('windowAPI', windowAPI);

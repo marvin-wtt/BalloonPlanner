@@ -5,7 +5,7 @@ export default {
   actions: {
     add_balloon: 'Add balloon',
     add_car: 'Add car',
-    smart_fill: 'Smart fillup'
+    smart_fill: 'Smart fillup',
   },
   allowed_operators: 'Allowed operators',
   app_name: 'Balloon Organizer',
@@ -43,11 +43,12 @@ export default {
       delete: {
         confirm: {
           title: 'Delete person',
-          message: 'Are you sure you want to delete  \"{name}\" permanently from this flight? All records will be removed.',
+          message:
+            'Are you sure you want to delete  "{name}" permanently from this flight? All records will be removed.',
           delete: 'Delete',
           cancel: 'Cancel',
-        }
-      }
+        },
+      },
     },
     vehicle: {
       title: 'Create a new vehicle',
@@ -77,11 +78,11 @@ export default {
       delete: {
         confirm: {
           title: 'Delete vehicle from flight',
-          message: 'Are you sure you want to delete  \"{name}\"?',
+          message: 'Are you sure you want to delete  "{name}"?',
           delete: 'Delete',
           cancel: 'Cancel',
-        }
-      }
+        },
+      },
     },
   },
 

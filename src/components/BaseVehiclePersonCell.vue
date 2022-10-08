@@ -10,23 +10,17 @@
     <q-menu touch-position context-menu>
       <q-list dense style="min-width: 100px">
         <q-item clickable v-close-popup>
-          <q-item-section
-            @click="dialogs.showEditPerson(person)"
-          >
+          <q-item-section @click="dialogs.showEditPerson(person)">
             {{ $t('edit') }}
           </q-item-section>
         </q-item>
         <q-item clickable v-close-popup>
-          <q-item-section
-            @click="onDragEnd(person)"
-            class="text-negative"
-          >
+          <q-item-section @click="onDragEnd(person)" class="text-negative">
             {{ $t('remove') }}
           </q-item-section>
         </q-item>
       </q-list>
     </q-menu>
-
   </draggable-item>
 
   <drop-zone
