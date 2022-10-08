@@ -100,7 +100,7 @@ export class Flight extends Identifyable implements Cloneable {
   availableBalloons(): Balloon[] {
     let balloons: Balloon[] = this._balloons;
     for (const group of this._vehicleGroups) {
-      balloons = balloons.filter((value) => value !== group.balloon);
+      balloons = balloons.filter((value) => value.id !== group.balloon.id);
     }
     return balloons;
   }
@@ -109,7 +109,7 @@ export class Flight extends Identifyable implements Cloneable {
     let cars: Car[] = this._cars;
     for (const group of this._vehicleGroups) {
       for (const car of group.cars) {
-        cars = cars.filter((value) => value !== car);
+        cars = cars.filter((value) => value.id !== car.id);
       }
     }
     return cars;
