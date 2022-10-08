@@ -1,6 +1,17 @@
 <template>
   <q-layout view="hHh LpR lFf">
     <q-header elevated class="bg-primary text-white" height-hint="98">
+      <q-bar class="q-electron-drag" v-if="$q.platform.is.electron">
+        <q-icon name="mdi-airballoon" />
+        <div>{{ $t('app_name') }}</div>
+
+        <q-space />
+
+        <q-btn dense flat icon="minimize" @click="minimize()" />
+        <q-btn dense flat icon="crop_square" @click="toggleMaximize()" />
+        <q-btn dense flat icon="close" @click="closeApp()" />
+      </q-bar>
+
       <q-toolbar>
         <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
 
@@ -102,5 +113,23 @@ function addFlight() {
   router.push({
     path: '/projects/' + project.value.id + '/flights/' + flight.id,
   });
+}
+
+function minimize() {
+  if (process.env.MODE === 'electron') {
+    window.windowAPI.minimize();
+  }
+}
+
+function toggleMaximize() {
+  if (process.env.MODE === 'electron') {
+    window.windowAPI.toggleMaximize();
+  }
+}
+
+function closeApp() {
+  if (process.env.MODE === 'electron') {
+    window.windowAPI.close();
+  }
 }
 </script>

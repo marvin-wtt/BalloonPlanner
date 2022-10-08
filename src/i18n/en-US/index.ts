@@ -2,7 +2,13 @@
 // so you can safely delete all default props below
 
 export default {
+  actions: {
+    add_balloon: 'Add balloon',
+    add_car: 'Add car',
+    smart_fill: 'Smart fillup'
+  },
   allowed_operators: 'Allowed operators',
+  app_name: 'Balloon Organizer',
 
   balloon: 'Balloon | Balloons',
 
@@ -109,8 +115,9 @@ export default {
 
   remove: 'Remvoe',
 
+  settings: 'Settings',
   success: 'Action was successful',
-  supervisor: 'Supervisor',
+  supervisor: 'Supervisor | Supervisors',
 
   tooltip_insufficient_capacity: 'Insufficient seats in car(s)',
 
