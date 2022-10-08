@@ -79,7 +79,15 @@ export default {
     },
   },
 
-  drop_here_or_create: 'Drop an item here or create a new one',
+  list: {
+    item: {
+      create: 'Create new {name}',
+    },
+    empty: {
+      label: 'There are currently no {name} in this list',
+      caption: 'Drop a {name} here or create a new one',
+    },
+  },
 
   edit: 'Edit',
 
@@ -90,12 +98,12 @@ export default {
 
   hint_balloon_capacity: 'Amount of passengers without the pilot',
 
-  list_empty: 'There are currently no items in this list',
-
   name: 'Name',
   nationality: 'Nationality',
 
   overview: 'Overview',
+
+  participant: 'Participant | Participants',
 
   person: 'Person | People',
 
