@@ -17,6 +17,11 @@ export class Balloon extends Vehicle {
     super.addPassenger(person);
   }
 
+  removePassenger(person: Person) {
+    person.decrementFlights();
+    super.removePassenger(person);
+  }
+
   clearPassengers() {
     this.passengers.forEach((passenger) => passenger.decrementFlights());
     super.clearPassengers();

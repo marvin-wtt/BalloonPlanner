@@ -68,7 +68,6 @@ export abstract class Vehicle extends Identifyable implements Cloneable {
   }
 
   removePassenger(person: Person) {
-    person.decrementFlights();
     removeFromArray(this._passengers, person);
   }
 
