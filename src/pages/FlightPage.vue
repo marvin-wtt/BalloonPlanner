@@ -2,7 +2,7 @@
   <q-page class="full-width row justify-start no-wrap">
     <!-- Menu -->
     <div
-      class="self-stretch row no-wrap col-xl-2 col-lg-3 col-md-4 col-sm-12 col-xs-12"
+      class="self-stretch row no-wrap col-xl-3 col-lg-3 col-md-4 col-sm-12 col-xs-12"
     >
       <q-tabs
         v-model="menuTabs"
@@ -12,19 +12,28 @@
       >
         <q-tab name="overview" icon="home" :label="$t('overview')" />
         <q-separator spaced inset color="white" />
-        <q-tab name="balloons" icon="mdi-airballoon" :label="$t('balloon')">
+        <q-tab name="balloons" icon="mdi-airballoon" :label="$t('balloon', 2)">
           <q-badge v-if="showBalloonsMenuBadge" color="red" floating>
             {{ availableBalloons.length }}
           </q-badge>
         </q-tab>
-        <q-tab name="cars" icon="airport_shuttle" :label="$t('car')">
+        <q-tab name="cars" icon="airport_shuttle" :label="$t('car', 2)">
           <q-badge v-if="showCarsMenuBadge" color="red" floating>
             {{ availableCars.length }}
           </q-badge>
         </q-tab>
-        <q-tab name="people" icon="group" :label="$t('person')">
-          <q-badge v-if="showPeopleMenuBadge" color="red" floating>
-            {{ availableParticipants.length + availableSupervisor.length }}
+        <q-tab
+          name="supervisors"
+          icon="supervisor_account"
+          :label="$t('supervisor', 2)"
+        >
+          <q-badge v-if="showSupervisorsMenuBadge" color="red" floating>
+            {{ availableSupervisors.length }}
+          </q-badge>
+        </q-tab>
+        <q-tab name="participants" icon="group" :label="$t('participant', 2)">
+          <q-badge v-if="showParticiapntsMenuBadge" color="red" floating>
+            {{ availableParticipants.length }}
           </q-badge>
         </q-tab>
         <q-separator spaced inset color="white" />
@@ -40,129 +49,87 @@
           vertical
           class="no-wrap col-grow shadow-24"
         >
-          <q-tab-panel name="overview"> Overview</q-tab-panel>
+          <q-tab-panel style="display: none" name="overview"> Overview</q-tab-panel>
 
           <q-tab-panel name="balloons" class="column bg-grey-2">
             <q-scroll-area class="col-grow self-stretchs">
-              <h6>Balloons</h6>
-              <q-list dense bordered separator>
-                <!-- Empty List -->
-                <q-item v-if="availableBalloons.length === 0">
-                  <q-item-section>
-                    <q-item-label>
-                      {{ $t('list_empty') }}
-                    </q-item-label>
-                    <q-item-label caption>
-                      {{ $t('drop_here_or_create') }}
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-
-                <!-- Balloons -->
-                <draggable-item
-                  v-else
-                  :tag="QItem"
-                  v-for="element in availableBalloons"
-                  :key="element.id"
-                  :item="element"
-                >
-                  <q-item-section>
-                    {{ element.name }}
-                  </q-item-section>
-                  <q-item-section side>
-                    {{ element.capacity - 1 + ' + 1' }}
-                  </q-item-section>
-                </draggable-item>
-              </q-list>
-
-              <q-btn
-                class="q-ma-sm"
-                color="primary"
-                icon="add"
-                label="Add new item"
-                @click="dialogs.showCreateVehicle('type', flight);"
-              />
+              <editable-list
+                :title="$t('balloon', 2)"
+                :item-name="$t('balloon')"
+                :itens="availableBalloons"
+                @create="dialogs.showCreateVehicle('balloon', flight)"
+                @edit="(balloon) => dialogs.showEditVehicle(balloon, flight)"
+                @delete="(balloon) => dialogs.showDeleteVehicle(balloon, flight)"
+              >
+                <template #main="{ item }">
+                  {{ item.name }}
+                </template>
+                <template #side="{ item }">
+                  {{ item.capacity - 1 + ' + 1' }}
+                </template>
+              </editable-list>
             </q-scroll-area>
           </q-tab-panel>
 
           <q-tab-panel name="cars" class="column bg-grey-2">
             <q-scroll-area class="col-grow self-stretchs">
-              <h6>Cars</h6>
-              <q-list dense bordered separator>
-                <!-- Empty List -->
-                <q-item v-if="availableCars.length === 0">
-                  <q-item-section>
-                    <q-item-label>{{ $t('list_empty') }}</q-item-label>
-                    <q-item-label caption
-                      >{{ $t('drop_here_or_create') }}
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-
-                <!-- Balloons -->
-                <draggable-item
-                  v-else
-                  :tag="QItem"
-                  v-for="element in availableCars"
-                  :key="element.id"
-                  :item="element"
-                >
-                  <q-item-section>
-                    {{ element.name }}
-                  </q-item-section>
-                  <q-item-section side>
-                    {{ element.capacity - 1 + ' + 1' }}
-                  </q-item-section>
-                </draggable-item>
-              </q-list>
-
-              <q-btn
-                class="q-ma-sm"
-                color="primary"
-                icon="add"
-                label="Add new item"
-                @click="dialogs.showCreateVehicle('car', flight)"
-              />
+              <editable-list
+                :title="$t('car', 2)"
+                :item-name="$t('car')"
+                :itens="availableCars"
+                @create="dialogs.showCreateVehicle('car', flight)"
+                @edit="(car) => dialogs.showEditVehicle(car, flight)"
+                @delete="(car) => dialogs.showDeleteVehicle(car, flight)"
+              >
+                <template #main="{ item }">
+                  {{ item.name }}
+                </template>
+                <template #side="{ item }">
+                  {{ item.capacity - 1 + ' + 1' }}
+                </template>
+              </editable-list>
             </q-scroll-area>
           </q-tab-panel>
 
-          <q-tab-panel name="people" class="column bg-grey-2">
+          <q-tab-panel name="supervisors" class="column bg-grey-2">
             <q-scroll-area class="col-grow self-stretchs">
-              <h6>Participants</h6>
-              <q-list dense bordered separator>
-                <draggable-item
-                  :tag="QItem"
-                  v-for="participant in availableParticipants"
-                  :key="participant.id"
-                  :item="participant"
-                >
-                  <q-item-section>{{ participant.name }}</q-item-section>
-                  <q-item-section side>
-                    {{ participant.numberOfFlights }}
-                  </q-item-section>
-                </draggable-item>
-              </q-list>
-              <h6>Supervisors</h6>
-              <q-list dense bordered separator>
-                <draggable-item
-                  :tag="QItem"
-                  v-for="supervisor in availableSupervisor"
-                  :key="supervisor.id"
-                  :item="supervisor"
-                >
-                  <q-item-section>{{ supervisor.name }}</q-item-section>
-                  <q-item-section side>
-                    {{ supervisor.numberOfFlights }}
-                  </q-item-section>
-                </draggable-item>
-              </q-list>
-              <q-btn
-                class="q-ma-sm"
-                color="primary"
-                icon="add"
-                label="Add new item"
-                @click="dialogs.showCreatePerson(flight.people);"
-              />
+              <editable-list
+                :title="$t('supervisor', 2)"
+                :item-name="$t('supervisor')"
+                :itens="availableSupervisors"
+                @create="dialogs.showCreatePerson(flight.people)"
+                @edit="(person) => dialogs.showEditPerson(person)"
+                @delete="(person) => dialogs.showDeletePerson(person, flight)"
+                dense
+              >
+                <template #main="{ item }">
+                  {{ item.name }}
+                </template>
+                <template #side="{ item }">
+                  {{ item.numberOfFlights }}
+                </template>
+              </editable-list>
+            </q-scroll-area>
+          </q-tab-panel>
+
+          <q-tab-panel name="participants" class="column bg-grey-2">
+            <q-scroll-area class="col-grow self-stretchs">
+              <editable-list
+                :title="$t('participant', 2)"
+                :item-name="$t('participant')"
+                :itens="availableParticipants"
+                @create="dialogs.showCreatePerson(flight.people)"
+                @edit="(person) => dialogs.showEditPerson(person)"
+                @delete="(person) => dialogs.showDeletePerson(person, flight)"
+                dense
+              >
+                <template #main="{ item }">
+                  {{ item.name }}
+                </template>
+                <template #side="{ item }">
+                  {{ item.numberOfFlights }}
+                </template>
+              </editable-list>
             </q-scroll-area>
           </q-tab-panel>
 
@@ -172,7 +139,7 @@
     </div>
 
     <!-- Flight overview -->
-    <div class="col-grow flex">
+    <div v-if="showFlightView" class="col-grow flex">
       <base-flight
         :flight="flight"
         @balloon-add="onBalloonAdd"
@@ -193,9 +160,7 @@
               @passenger-add="(p) => onVehiclePersonAdd(group.balloon, p)"
               @passenger-remove="(p) => onVehiclePersonRemove(group.balloon, p)"
               @operator-add="(p) => onVehicleOperatorAdd(group.balloon, p)"
-              @operator-remove="
-                (p) => onVehicleOperatorRemove(group.balloon)
-              "
+              @operator-remove="(p) => onVehicleOperatorRemove(group.balloon)"
             />
           </template>
           <template #cars>
@@ -230,7 +195,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, Ref, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { QItem, QList, useQuasar } from 'quasar';
 import {
   onBeforeRouteUpdate,
@@ -245,8 +210,6 @@ import BaseFlight from 'components/BaseFlight.vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import BaseVehicle from 'components/BaseVehicle.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
-import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
-import EditVehicleDialog from 'components/dialog/EditVehicleDialog.vue';
 import {
   Balloon,
   Car,
@@ -255,14 +218,17 @@ import {
   Vehicle,
   VehicleGroup,
 } from 'src/lib/entities';
+import EditableList from 'components/EditableList.vue';
+import { useI18n } from 'vue-i18n';
 
 const menuTabs = ref('overview');
 
+const { t } = useI18n();
 const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
 const projectStore = useProjectStore();
-const dialogs = useDialogs($q);
+const dialogs = useDialogs($q, t);
 
 const flight = ref<Flight>();
 const { project } = storeToRefs(projectStore);
@@ -316,6 +282,11 @@ onBeforeRouteUpdate((to, from) => {
   return flight.value !== undefined;
 });
 
+function handleSwipe(details: any) {
+  // native Javascript event
+  console.log(details);
+}
+
 // TODO reduce above logic
 function onBalloonAdd(balloon: Balloon) {
   flight.value?.addVehicleGroup(balloon);
@@ -355,10 +326,11 @@ const showBalloonsMenuBadge = computed(() => {
 const showCarsMenuBadge = computed(() => {
   return availableCars.value.length > 0;
 });
-const showPeopleMenuBadge = computed(() => {
-  return (
-    availableParticipants.value.length + availableSupervisor.value.length > 0
-  );
+const showParticiapntsMenuBadge = computed(() => {
+  return availableParticipants.value.length;
+});
+const showSupervisorsMenuBadge = computed(() => {
+  return availableSupervisors.value.length > 0;
 });
 
 const availablePeople = ref(flight.value?.availablePeople() ?? []);
@@ -382,11 +354,23 @@ const availableParticipants = computed(() => {
     .sort((a, b) => a.name.localeCompare(b.name));
 });
 
-const availableSupervisor = computed(() => {
+const availableSupervisors = computed(() => {
   return availablePeople.value
     .filter((value) => value.supervisor)
     .sort((a, b) => a.name.localeCompare(b.name));
 });
+
+const showFlightView = computed(() => {
+  return !($q.screen.sm || $q.screen.xs) || menuTabs.value === 'overview';
+});
 </script>
 
-<style></style>
+<style>
+.q-tab__content {
+  width: 80px !important;
+}
+
+.q-tab .q-badge {
+  right: 0 !important;
+}
+</style>
