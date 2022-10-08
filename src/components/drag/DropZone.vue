@@ -32,7 +32,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: 'dropped', person: Identifyable): void;
+  (e: 'dropped', item: Identifyable): void;
 }>();
 
 const highlighted = ref(false);
