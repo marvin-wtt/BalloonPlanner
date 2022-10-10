@@ -132,12 +132,23 @@
 
           <q-tab-panel name="settings">
             <div class="q-py-md">
-              <a class="text-h6">
+              <div class="text-h6 q-py-md">
                 {{ $t('settings') }}
-              </a>
+              </div>
               <div class="q-gutter-sm">
-                <q-list>
-                  <q-item> Test </q-item>
+                <q-list bordered>
+                  <q-item tag="label" v-ripple>
+                    <q-item-section avatar top>
+                      <q-checkbox v-model="color" val="teal" color="primary" />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>
+                        Teal
+                      </q-item-label>
+                      <q-item-label caption>With description</q-item-label>
+
+                    </q-item-section>
+                  </q-item>
                 </q-list>
               </div>
             </div>
