@@ -1,35 +1,17 @@
+import { v4 as uuidv4 } from 'uuid';
+
 export abstract class Identifyable {
-  private static _ID_COUNTER = 0;
-  private static _GENERATE_NEW_IDS = true;
+  private _id: string;
 
-  private _id: number;
-
-  constructor(id?: number) {
-    this._id = id ?? Identifyable._ID_COUNTER++;
+  constructor(id?: string) {
+    this._id = id ?? uuidv4();
   }
 
-  static stopIdGeneration() {
-    this._GENERATE_NEW_IDS = false;
-  }
-
-  static startIdGeneration() {
-    this._GENERATE_NEW_IDS = true;
-  }
-
-  get id(): number {
+  get id(): string {
     return this._id;
   }
 
-  set id(value: number) {
-    if (Identifyable._ID_COUNTER < value) {
-      Identifyable._ID_COUNTER = value;
-    }
+  set id(value: string) {
     this._id = value;
   }
-}
-
-export function withoutIdGeneration(fn: () => void) {
-  Identifyable.stopIdGeneration();
-  fn();
-  Identifyable.startIdGeneration();
 }
