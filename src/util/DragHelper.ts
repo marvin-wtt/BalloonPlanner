@@ -11,7 +11,7 @@ export class DragHelper {
     }
 
     event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('id', element.id.toString());
+    event.dataTransfer.setData('id', element.id);
   }
 
   static endDrop() {
@@ -23,7 +23,7 @@ export class DragHelper {
   }
 
   static verifyDrop(event: DragEvent): boolean {
-    return event.dataTransfer?.getData('id') === this._element?.id.toString();
+    return event.dataTransfer?.getData('id') === this._element?.id;
   }
 
   static get element(): Identifyable | null {
