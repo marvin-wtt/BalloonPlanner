@@ -71,11 +71,10 @@ const personLabel = computed(() => {
 
   let label = props.person.name;
   if (props.editable) {
-    const flights =
-      props.vehicle instanceof Balloon
-        ? props.person.numberOfFlights - 1
-        : props.person.numberOfFlights;
-    label += ' (' + flights + ')';
+    const isBalloon = props.vehicle instanceof Balloon;
+    const flights = props.person.numberOfFlights;
+
+    label += isBalloon ? ` (${flights - 1})` : `(${flights})`;
   }
 
   return label;
