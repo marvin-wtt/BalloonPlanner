@@ -103,7 +103,7 @@ const emit = defineEmits<{
 
 const capacity = computed(() => {
   if (props.vehicle instanceof Car) {
-    return props.vehicle.capacity - props.vehicle.reseavedCapacity;
+    return props.vehicle.capacity - props.vehicle.reservedCapacity;
   }
 
   return props.vehicle.capacity;

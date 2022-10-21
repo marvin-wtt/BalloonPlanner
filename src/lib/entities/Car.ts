@@ -1,22 +1,22 @@
 import { Vehicle } from 'src/lib/entities/Vehicle';
 
 export class Car extends Vehicle {
-  private _reseavedCapacity = 0;
+  private _reservedCapacity = 0;
 
-  get reseavedCapacity(): number {
-    return this._reseavedCapacity;
+  get reservedCapacity(): number {
+    return this._reservedCapacity;
   }
 
-  set reseavedCapacity(value: number) {
-    this._reseavedCapacity = value;
+  set reservedCapacity(value: number) {
+    this._reservedCapacity = value;
   }
 
   isFull(): boolean {
-    return this.passengerCount() + this._reseavedCapacity >= this.capacity;
+    return this.passengerCount() + this._reservedCapacity >= this.capacity;
   }
 
   useableCapacity(): number {
-    return this.capacity - this._reseavedCapacity;
+    return this.capacity - this._reservedCapacity;
   }
 
   availableCapacity(): number {
@@ -32,7 +32,7 @@ export class Car extends Vehicle {
     car.id = this.id;
     car.passengers = this.passengers.slice();
     car.operator = this.operator;
-    car._reseavedCapacity = this._reseavedCapacity;
+    car._reservedCapacity = this._reservedCapacity;
     return car;
   }
 }
