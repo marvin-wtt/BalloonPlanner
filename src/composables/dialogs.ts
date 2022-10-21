@@ -1,6 +1,6 @@
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import { Balloon, Car, Flight, Person, Vehicle } from 'src/lib/entities';
-import { format, QVueGlobals } from 'quasar';
+import { QVueGlobals } from 'quasar';
 import EditVehicleDialog from 'components/dialog/EditVehicleDialog.vue';
 import { ComposerTranslation } from 'vue-i18n';
 
