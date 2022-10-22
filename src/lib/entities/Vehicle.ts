@@ -1,6 +1,5 @@
 import { Person } from 'src/lib/entities/Person';
 import { Identifyable } from 'src/lib/utils/Identifyable';
-import { Cloneable } from 'src/lib/utils/Cloneable';
 import { removeFromArray } from 'src/lib/utils/ArrayUtils';
 
 export abstract class Vehicle extends Identifyable {

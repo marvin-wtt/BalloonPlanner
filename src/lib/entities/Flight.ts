@@ -2,7 +2,6 @@ import { Balloon } from 'src/lib/entities/Balloon';
 import { VehicleGroup } from 'src/lib/entities/VehicleGroup';
 import { Person } from 'src/lib/entities/Person';
 import { Identifyable } from 'src/lib/utils/Identifyable';
-import { Cloneable } from 'src/lib/utils/Cloneable';
 import { Car } from 'src/lib/entities/Car';
 import { removeFromArray } from 'src/lib/utils/ArrayUtils';
 import { flightFromObject, flightToObject } from 'src/lib/utils/converter';

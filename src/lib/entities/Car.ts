@@ -22,5 +22,4 @@ export class Car extends Vehicle {
   availableCapacity(): number {
     return this.useableCapacity() - this.passengers.length;
   }
-
 }

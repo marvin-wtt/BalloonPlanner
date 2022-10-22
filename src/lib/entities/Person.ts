@@ -1,5 +1,4 @@
 import { Identifyable } from 'src/lib/utils/Identifyable';
-import { Cloneable } from 'src/lib/utils/Cloneable';
 
 export class Person extends Identifyable {
   private _name: string;
