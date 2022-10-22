@@ -4,6 +4,10 @@ import { Person } from 'src/lib/entities/Person';
 import { Car } from 'src/lib/entities/Car';
 import { shuffle } from 'src/lib/utils/ArrayUtils';
 
+export async function solve(flight: Flight): Promise<Flight> {
+  return new ParticipantsFirstSolver().solve(flight);
+}
+
 export class ParticipantsFirstSolver extends GerneralSolver {
   //  1. Create vehicle groups for each balloon
   //  2. Store each solution where every balloon has a valid pilot. Invalid solutions are ignored
@@ -18,7 +22,7 @@ export class ParticipantsFirstSolver extends GerneralSolver {
   //     Select the solution with the best score,
   //  8. Fill in all balloons and cars with the remaining participants.
 
-  solve(f: Flight): Flight | null {
+  async solve(f: Flight): Promise<Flight> {
     let flight = f.clone();
     let solutions: Flight[] = [];
 
@@ -28,21 +32,15 @@ export class ParticipantsFirstSolver extends GerneralSolver {
     // 2
     solutions = this.findPilotSolutions(flight);
     if (solutions.length == 0) {
-      return null;
+      throw new Error('not_enough_pilot');
     }
 
     // 3
     solutions.map((value) => this.findFirstFlightSolutions(value));
-    if (solutions.length == 0) {
-      return null;
-    }
 
     // 4
     for (const solution of solutions.slice()) {
       solutions.push(...this.findSupervisorSolution(solution));
-    }
-    if (solutions.length == 0) {
-      return null;
     }
 
     // 5
@@ -55,7 +53,7 @@ export class ParticipantsFirstSolver extends GerneralSolver {
       solutions.push(...this.findDriverSolution(solution));
     }
     if (solutions.length == 0) {
-      return null;
+      throw new Error('not_enough_driver');
     }
 
     // 7
@@ -69,6 +67,7 @@ export class ParticipantsFirstSolver extends GerneralSolver {
 
   protected createVehicleGroups(flight: Flight): Flight {
     for (const balloon of flight.availableBalloons()) {
+      console.log(balloon.name);
       flight.addVehicleGroup(balloon);
     }
 
@@ -82,25 +81,25 @@ export class ParticipantsFirstSolver extends GerneralSolver {
       return [flight];
     }
 
-    const balloon = flight.vehicleGroups[groupIndex].balloon;
-    if (balloon.operator !== undefined) {
+    let balloon = flight.vehicleGroups[groupIndex].balloon;
+    if (balloon.operator != null) {
       return this.findPilotSolutions(flight, groupIndex + 1);
     }
 
-    const availablePeople = flight.availablePeople();
-    const operators = balloon.allowedOperators.filter((value) =>
-      availablePeople.includes(value)
-    );
-    if (operators.length == 0) {
-      return [];
-    }
-
     // Check for all pilots
-    for (const pilot of operators) {
+    // The flight reference and all its children must be updated every interation as the flight is cloned an therefore
+    //  the reference changes
+    for (const pilot of balloon.allowedOperators) {
+      const availablePeople = flight.availablePeople();
+      if (!availablePeople.includes(pilot)) {
+        continue;
+      }
       balloon.operator = pilot;
-      const newFlight = flight.clone();
-      const childSolutions = this.findPilotSolutions(newFlight, groupIndex + 1);
+      const childSolutions = this.findPilotSolutions(flight, groupIndex + 1);
       solutions.push(...childSolutions);
+      // Prepare for next iteration
+      flight = flight.clone();
+      balloon = flight.vehicleGroups[groupIndex].balloon;
     }
 
     return solutions;
@@ -117,7 +116,7 @@ export class ParticipantsFirstSolver extends GerneralSolver {
       const balloon = group.balloon;
       while (balloon.availableCapacity() > 0 && participants.length > 0) {
         const person = participants.pop();
-        if (person !== undefined) {
+        if (person != null) {
           balloon.addPassenger(person);
         }
       }
@@ -163,7 +162,7 @@ export class ParticipantsFirstSolver extends GerneralSolver {
   protected findSmallestCarFit(cars: Car[], capacity: number): Car[] {
     cars.sort((a, b) => a.capacity - b.capacity);
     const car = cars.find((value) => value.capacity >= capacity);
-    if (car !== undefined) {
+    if (car != null) {
       return [car];
     }
 
@@ -174,7 +173,7 @@ export class ParticipantsFirstSolver extends GerneralSolver {
         (value, index) =>
           index != i && value.capacity >= capacity - firstCar.capacity
       );
-      if (secondCar !== undefined) {
+      if (secondCar != null) {
         return [firstCar, secondCar];
       }
     }
@@ -222,32 +221,31 @@ export class ParticipantsFirstSolver extends GerneralSolver {
     if (groupIndex === flight.vehicleGroups.length) {
       return [flight];
     }
+    // Goto next group if all cars are filled
     if (carIndex === flight.vehicleGroups[groupIndex].cars.length) {
       return this.findDriverSolution(flight, groupIndex + 1, 0);
     }
 
-    const car = flight.vehicleGroups[groupIndex].cars[carIndex];
-    if (car.operator !== undefined) {
+    let car = flight.vehicleGroups[groupIndex].cars[carIndex];
+    if (car.operator != null) {
       return this.findDriverSolution(flight, groupIndex, carIndex + 1);
     }
 
-    const operators = car.allowedOperators.filter((value) =>
-      flight.availablePeople().includes(value)
-    );
-    // One vehicle was found without a solution. Quit here
-    if (operators.length == 0) {
-      return [];
-    }
-
-    for (const driver of operators) {
+    for (const driver of car.allowedOperators) {
+      const availablePeople = flight.availablePeople();
+      if (!availablePeople.includes(driver)) {
+        continue;
+      }
       car.operator = driver;
-      const newFlight = flight.clone();
       const childSolutions = this.findDriverSolution(
-        newFlight,
+        flight,
         groupIndex,
         carIndex + 1
       );
       solutions.push(...childSolutions);
+      // Prepare for next iteration
+      flight = flight.clone();
+      car = flight.vehicleGroups[groupIndex].cars[carIndex];
     }
 
     return solutions;
@@ -326,15 +324,11 @@ export class ParticipantsFirstSolver extends GerneralSolver {
       const balloon = group.balloon;
       while (balloon.availableCapacity() > 0 && people.length > 0) {
         const person = people.pop();
-        if (person !== undefined) {
+        if (person != null) {
           balloon.addPassenger(person);
         }
       }
     }
-  }
-
-  private withoutTest(f: () => void): void {
-    f();
   }
 
   protected fillCars(flight: Flight, people: Person[]) {
@@ -354,7 +348,7 @@ export class ParticipantsFirstSolver extends GerneralSolver {
             continue;
           }
           const person = people.pop();
-          if (person !== undefined) {
+          if (person != null) {
             car.addPassenger(person);
           }
         }
