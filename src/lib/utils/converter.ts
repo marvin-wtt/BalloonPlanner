@@ -144,9 +144,14 @@ export function balloonsFromObject(
       obj.allowedOperators.includes(value.id)
     );
     const operator = people.find((value) => obj.operator === value.id);
+    const passengers = obj.passengers.map(pId => people.find(person =>  person.id === pId));
+    if (passengers.includes(undefined)) {
+      throw new Error('invalid_passenger_id');
+    }
     const balloon = new Balloon(obj.name, obj.capacity, allowedOperators);
     balloon.id = id;
     balloon.operator = operator;
+    balloon.passengers = passengers as Person[];
     balloons.push(balloon);
   }
 
@@ -189,10 +194,15 @@ export function carsFromObject(
       obj.allowedOperators.includes(value.id)
     );
     const operator = people.find((value) => obj.operator === value.id);
+    const passengers = obj.passengers.map(pId => people.find(person =>  person.id === pId));
+    if (passengers.includes(undefined)) {
+      throw new Error('invalid_passenger_id');
+    }
     const car = new Car(obj.name, obj.capacity, allowedOperators);
     car.id = id;
     car.reservedCapacity = obj.reservedCapacity;
     car.operator = operator;
+    car.passengers = passengers as Person[];
     cars.push(car);
   }
 
