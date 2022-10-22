@@ -3,17 +3,16 @@ import { VehicleGroup } from 'src/lib/entities/VehicleGroup';
 import { Person } from 'src/lib/entities/Person';
 import { Identifyable } from 'src/lib/utils/Identifyable';
 import { Cloneable } from 'src/lib/utils/Cloneable';
-import { GerneralSolver } from 'src/lib/solver/GerneralSolver';
-import { ParticipantsFirstSolver } from 'src/lib/solver/ParticipantsFirstSolver';
 import { Car } from 'src/lib/entities/Car';
 import { removeFromArray } from 'src/lib/utils/ArrayUtils';
+import { flightFromObject, flightToObject } from 'src/lib/utils/converter';
 
-export class Flight extends Identifyable implements Cloneable {
+export class Flight extends Identifyable {
+  private _timestamp: number;
   private _balloons: Balloon[];
   private _cars: Car[];
   private _people: Person[];
   private _vehicleGroups: VehicleGroup[];
-  private _solver: GerneralSolver;
 
   constructor(
     balloons: Balloon[],
@@ -26,7 +25,15 @@ export class Flight extends Identifyable implements Cloneable {
     this._cars = cars;
     this._people = people;
     this._vehicleGroups = groups ?? [];
-    this._solver = new ParticipantsFirstSolver();
+    this._timestamp = Date.now();
+  }
+
+  get timestamp(): number {
+    return this._timestamp;
+  }
+
+  set timestamp(value: number) {
+    this._timestamp = value;
   }
 
   get vehicleGroups(): VehicleGroup[] {
@@ -125,19 +132,7 @@ export class Flight extends Identifyable implements Cloneable {
   }
 
   clone(): Flight {
-    const flight = new Flight(this._balloons, this._cars, this._people);
-    flight._vehicleGroups = this._vehicleGroups.map((value) => value.clone());
-    return flight;
-  }
-
-  findSolution() {
-    Identifyable.stopIdGeneration();
-    const f: Flight | null = this._solver.solve(this);
-
-    if (f !== null) {
-      this._vehicleGroups = f.vehicleGroups;
-    }
-
-    Identifyable.startIdGeneration();
+    const obj = flightToObject(this);
+    return flightFromObject(obj);
   }
 }

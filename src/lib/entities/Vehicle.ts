@@ -3,7 +3,7 @@ import { Identifyable } from 'src/lib/utils/Identifyable';
 import { Cloneable } from 'src/lib/utils/Cloneable';
 import { removeFromArray } from 'src/lib/utils/ArrayUtils';
 
-export abstract class Vehicle extends Identifyable implements Cloneable {
+export abstract class Vehicle extends Identifyable {
   private _name: string;
   private _capacity: number;
   private _allowedOperators: Person[];
@@ -16,8 +16,6 @@ export abstract class Vehicle extends Identifyable implements Cloneable {
     this._capacity = capacity;
     this._allowedOperators = allowedOperators;
   }
-
-  abstract clone(): Vehicle;
 
   get name(): string {
     return this._name;
@@ -55,7 +53,7 @@ export abstract class Vehicle extends Identifyable implements Cloneable {
     return this._passengers;
   }
 
-  protected set passengers(value: Person[]) {
+  set passengers(value: Person[]) {
     this._passengers = value;
   }
 

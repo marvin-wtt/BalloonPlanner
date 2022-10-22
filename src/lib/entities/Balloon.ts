@@ -26,16 +26,4 @@ export class Balloon extends Vehicle {
     this.passengers.forEach((passenger) => passenger.decrementFlights());
     super.clearPassengers();
   }
-
-  clone(): Balloon {
-    const balloon = new Balloon(
-      this.name,
-      this.capacity,
-      this.allowedOperators.slice()
-    );
-    balloon.id = this.id;
-    balloon.passengers = this.passengers.slice();
-    balloon.operator = this.operator;
-    return balloon;
-  }
 }

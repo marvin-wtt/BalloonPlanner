@@ -23,16 +23,4 @@ export class Car extends Vehicle {
     return this.useableCapacity() - this.passengers.length;
   }
 
-  clone(): Car {
-    const car = new Car(
-      this.name,
-      this.capacity,
-      this.allowedOperators.slice()
-    );
-    car.id = this.id;
-    car.passengers = this.passengers.slice();
-    car.operator = this.operator;
-    car._reservedCapacity = this._reservedCapacity;
-    return car;
-  }
 }
