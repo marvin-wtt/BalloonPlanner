@@ -12,8 +12,20 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/login',
+    name: 'login',
+    component: () => import('layouts/LoginLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/LoginPage.vue'),
+      },
+    ],
+  },
+  {
     path: '/projects/:project',
     component: () => import('layouts/ProjectLayout.vue'),
+    meta: { requiresAuth: true },
     children: [
       // TODO
       // {
