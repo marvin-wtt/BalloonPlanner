@@ -215,7 +215,7 @@ export class FirebaseService extends PersistenceService {
       [`people.${person.id}`]: deleteField(),
     };
 
-    for (const group of this.flight!.vehicleGroups) {
+    for (const group of this.flight.vehicleGroups) {
       const result = this.removePersonFromVehicle(
         person,
         group.balloon,
@@ -350,6 +350,7 @@ export class FirebaseService extends PersistenceService {
 
     return this.updateFlightDocument({
       [`balloons.${balloon.id}`]: balloonToObject(balloon),
+      ...obj,
     });
   }
 
