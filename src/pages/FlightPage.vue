@@ -56,7 +56,7 @@
                 @create="dialogs.showCreateVehicle('balloon', flight)"
                 @edit="(balloon) => dialogs.showEditVehicle(balloon, flight)"
                 @delete="
-                  (balloon) => dialogs.showDeleteVehicle(balloon, flight)
+                  (balloon) => dialogs.showDeleteVehicle(balloon)
                 "
               >
                 <template #main="{ item }">
@@ -77,7 +77,7 @@
                 :itens="availableCars"
                 @create="dialogs.showCreateVehicle('car', flight)"
                 @edit="(car) => dialogs.showEditVehicle(car, flight)"
-                @delete="(car) => dialogs.showDeleteVehicle(car, flight)"
+                @delete="(car) => dialogs.showDeleteVehicle(car)"
               >
                 <template #main="{ item }">
                   {{ item.name }}
@@ -97,7 +97,7 @@
                 :itens="availableSupervisors"
                 @create="dialogs.showCreatePerson(flight.people)"
                 @edit="(person) => dialogs.showEditPerson(person)"
-                @delete="(person) => dialogs.showDeletePerson(person, flight)"
+                @delete="(person) => dialogs.showDeletePerson(person)"
               >
                 <template #main="{ item }">
                   {{ item.name }}
@@ -142,11 +142,8 @@
                       <q-checkbox v-model="color" val="teal" color="primary" />
                     </q-item-section>
                     <q-item-section>
-                      <q-item-label>
-                        Teal
-                      </q-item-label>
+                      <q-item-label> Teal</q-item-label>
                       <q-item-label caption>With description</q-item-label>
-
                     </q-item-section>
                   </q-item>
                 </q-list>
@@ -158,7 +155,8 @@
     </div>
 
     <!-- Flight overview -->
-    <div v-if="showFlightView" class="col-grow flex">
+    <!-- TODO FIXME add loader or skeleton -->
+    <div v-if="showFlightView && flight != null" class="col-grow flex">
       <base-flight
         :flight="flight"
         @balloon-add="onBalloonAdd"
@@ -175,11 +173,11 @@
               :key="group.balloon.id"
               type="balloon"
               :vehicle="group.balloon"
-              @balloon-remove="(b) => onBalloonRemove(group)"
-              @passenger-add="(p) => onVehiclePersonAdd(group.balloon, p)"
-              @passenger-remove="(p) => onVehiclePersonRemove(group.balloon, p)"
-              @operator-add="(p) => onVehicleOperatorAdd(group.balloon, p)"
-              @operator-remove="(p) => onVehicleOperatorRemove(group.balloon)"
+              @balloon-remove="(b) => onVehicleGroupRemove(group)"
+              @passenger-add="(p) => onBalloonPersonAdd(group.balloon, p)"
+              @passenger-remove="(p) => onBalloonPersonRemove(group.balloon, p)"
+              @operator-add="(p) => onBalloonOperatorAdd(group.balloon, p)"
+              @operator-remove="(p) => onBalloonOperatorRemove(group.balloon)"
             />
           </template>
           <template #cars>
@@ -189,10 +187,10 @@
               type="car"
               :vehicle="vehicle"
               @car-remove="(car) => onCarRemove(group, car)"
-              @passenger-add="(p) => onVehiclePersonAdd(vehicle, p)"
-              @passenger-remove="(p) => onVehiclePersonRemove(vehicle, p)"
-              @operator-add="(p) => onVehicleOperatorAdd(vehicle, p)"
-              @operator-remove="(p) => onVehicleOperatorRemove(vehicle)"
+              @passenger-add="(p) => onCarPersonAdd(vehicle, p)"
+              @passenger-remove="(p) => onCarPersonRemove(vehicle, p)"
+              @operator-add="(p) => onCarOperatorAdd(vehicle, p)"
+              @operator-remove="(p) => onCarOperatorRemove(vehicle)"
             />
           </template>
         </base-vehicle-group>
@@ -206,7 +204,6 @@
             :label="$t('actions.add_car')"
             icon="airport_shuttle"
             color="primary"
-            @click="onClick"
           />
           <q-fab-action
             external-label
@@ -214,7 +211,6 @@
             :label="$t('actions.add_balloon')"
             icon="mdi-airballoon"
             color="primary"
-            @click="onClick"
           />
           <q-fab-action
             external-label
@@ -222,7 +218,7 @@
             :label="$t('actions.smart_fill')"
             icon="fast_forward"
             color="accent"
-            @click="flight.findSolution()"
+            @click="onSmartFill"
           />
         </q-fab>
       </q-page-sticky>
@@ -231,14 +227,9 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue';
+import { computed, Ref, ref, watch } from 'vue';
 import { QItem, QList, useQuasar } from 'quasar';
-import {
-  onBeforeRouteUpdate,
-  RouteParams,
-  useRoute,
-  useRouter,
-} from 'vue-router';
+import { onBeforeRouteUpdate, RouteParams, useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import { useDialogs } from 'src/composables/dialogs';
@@ -250,66 +241,62 @@ import {
   Car,
   Flight,
   Person,
-  Vehicle,
+  Project,
   VehicleGroup,
 } from 'src/lib/entities';
 import EditableList from 'components/EditableList.vue';
 import { useI18n } from 'vue-i18n';
+import {
+  FirebaseService,
+  subscribe,
+} from 'src/services/persistence/FirebaseService';
+import { solve } from 'src/lib/solver/ParticipantsFirstSolver';
 
 const menuTabs = ref('overview');
 
 const { t } = useI18n();
 const $q = useQuasar();
 const route = useRoute();
-const router = useRouter();
 const projectStore = useProjectStore();
-const dialogs = useDialogs($q, t);
+
+const service = new FirebaseService();
+const dialogs = useDialogs($q, t, service);
 
 const flight = ref<Flight>();
-const { project } = storeToRefs(projectStore);
+// FIXME Convert correctly
+const { project }: { project: Ref<Project | null> } = storeToRefs(
+  projectStore
+) as any;
 
 function updateFlightPage(params: RouteParams) {
-  flight.value = undefined;
   if (Array.isArray(params.fligh)) return;
 
-  const flightId = Number(params.flight);
-  flight.value = project.value?.flights.find((value) => value.id == flightId);
+  const flightId = params.flight as string;
+
+  const f = project.value?.flights.find((value) => value.id == flightId);
+  flight.value = f;
+
+  subscribe(flight, flightId);
+
+  const unwatch = watch(flight, () => {
+    service.flight = flight.value;
+    unwatch();
+  });
 }
 
-function verifyProject() {
-  // TODO Check if id matches
-  if (project.value === null) {
-    $q.notify({
-      type: 'warning',
-      message: 'Invalid project.',
-    });
-    router.push({ name: 'projects' });
-    return;
-  }
-}
+watch(
+  flight,
+  () => {
+    // TODO maybe just redo the logic with computed
+    if (flight.value == null) return [];
+    availablePeople.value = flight.value.availablePeople();
+    availableBalloons.value = flight.value.availableBalloons();
+    availableCars.value = flight.value.availableCars();
+  },
+  { deep: true }
+);
 
-verifyProject();
-
-function loadFlight() {
-  if (Array.isArray(route.params.flight)) {
-    router.push({ name: 'projects' }); // TODO change route
-    return;
-  }
-
-  updateFlightPage(route.params);
-
-  if (flight.value === undefined) {
-    // TODO Maybe update the store?
-    $q.notify({
-      type: 'warning',
-      message: 'Flight does not exist.',
-    });
-    router.push({ name: 'projects' });
-    return;
-  }
-}
-
-loadFlight();
+updateFlightPage(route.params);
 
 onBeforeRouteUpdate((to, from) => {
   if (from.params.flight == to.params.flight) return false;
@@ -318,36 +305,98 @@ onBeforeRouteUpdate((to, from) => {
 });
 
 // TODO reduce above logic
-function onBalloonAdd(balloon: Balloon) {
-  flight.value?.addVehicleGroup(balloon);
+function onSmartFill() {
+  if (!flight.value) {
+    return;
+  }
+
+  const f = solve(flight.value);
+  const notif = $q.notify({
+    type: 'ongoing',
+    message: t('smart_fill_loading'),
+  });
+  f.then((value) => {
+    service.updateFLight(value);
+    notif({
+      type: 'positive',
+      message: t('smart_fill_success'),
+      timeout: 1000,
+    });
+  }).catch((reason) => {
+    notif({
+      type: 'warning',
+      message: t('smart_fill_error') + ': ' + reason,
+      timeout: 2000,
+    });
+  });
 }
 
-function onBalloonRemove(group: VehicleGroup) {
-  flight.value?.removeVehicleGroup(group);
+function monitorService(promise: Promise<void>) {
+  const notif = $q.notify({
+    type: 'ongoing',
+    message: t('saving_in_progress'),
+  });
+  promise.then(() => {
+    notif({
+      type: 'positive',
+      message: t('saving_success'),
+      timeout: 1000,
+    });
+  }).catch((reason) => {
+    notif({
+      type: 'warning',
+      message: t('saving_failed') + ': ' + reason,
+      timeout: 5000,
+    });
+  });
+}
+
+function onBalloonAdd(balloon: Balloon) {
+  monitorService(service.addVehicleGroup(new VehicleGroup(balloon)));
+}
+
+function onVehicleGroupRemove(group: VehicleGroup) {
+  monitorService(service.deleteVehicleGroup(group));
 }
 
 function onCarAdd(group: VehicleGroup, car: Car) {
-  group.addCar(car);
+  monitorService(service.addCarToVehicleGroup(car, group));
 }
 
 function onCarRemove(group: VehicleGroup, car: Car) {
-  group.removeCar(car);
+  monitorService(service.removeCarFromVehicleGroup(car, group));
 }
 
-function onVehicleOperatorAdd(vehicle: Vehicle, person: Person) {
-  vehicle.operator = person;
+function onBalloonOperatorAdd(balloon: Balloon, person: Person) {
+  monitorService(service.setBalloonOperator(person, balloon));
 }
 
-function onVehicleOperatorRemove(vehicle: Vehicle) {
-  vehicle.operator = undefined;
+function onCarOperatorAdd(car: Car, person: Person) {
+  monitorService(service.setCarOperator(person, car));
 }
 
-function onVehiclePersonAdd(vehicle: Vehicle, person: Person) {
-  vehicle.addPassenger(person);
+function onBalloonOperatorRemove(balloon: Balloon) {
+  monitorService(service.setBalloonOperator(undefined, balloon));
 }
 
-function onVehiclePersonRemove(vehicle: Vehicle, person: Person) {
-  vehicle.removePassenger(person);
+function onCarOperatorRemove(car: Car) {
+  monitorService(service.setCarOperator(undefined, car));
+}
+
+function onBalloonPersonAdd(balloon: Balloon, person: Person) {
+  monitorService(service.addBalloonPassenger(person, balloon));
+}
+
+function onCarPersonAdd(car: Car, person: Person) {
+  monitorService(service.addCarPassenger(person, car));
+}
+
+function onBalloonPersonRemove(balloon: Balloon, person: Person) {
+  monitorService(service.removeBalloonPassenger(person, balloon));
+}
+
+function onCarPersonRemove(car: Car, person: Person) {
+  monitorService(service.removeCarPassenger(person, car));
 }
 
 const showBalloonsMenuBadge = computed<boolean>(() => {
@@ -366,17 +415,6 @@ const showSupervisorsMenuBadge = computed<boolean>(() => {
 const availablePeople = ref(flight.value?.availablePeople() ?? []);
 const availableBalloons = ref(flight.value?.availableBalloons() ?? []);
 const availableCars = ref(flight.value?.availableCars() ?? []);
-watch(
-  flight,
-  (value) => {
-    // TODO maybe just redo the logic with computed
-    if (value === undefined) return [];
-    availablePeople.value = value.availablePeople();
-    availableBalloons.value = value.availableBalloons();
-    availableCars.value = value.availableCars();
-  },
-  { deep: true }
-);
 
 const availableParticipants = computed(() => {
   return availablePeople.value

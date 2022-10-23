@@ -3,9 +3,14 @@ import { Balloon, Car, Flight, Person, Vehicle } from 'src/lib/entities';
 import { QVueGlobals } from 'quasar';
 import EditVehicleDialog from 'components/dialog/EditVehicleDialog.vue';
 import { ComposerTranslation } from 'vue-i18n';
+import { PersistenceService } from 'src/services/persistence/PersistenceService';
 
-export function useDialogs($q: QVueGlobals, t: ComposerTranslation) {
-  function showCreatePerson(people: Person[]) {
+export function useDialogs(
+  $q: QVueGlobals,
+  t: ComposerTranslation,
+  s: PersistenceService
+) {
+  function showCreatePerson() {
     $q.dialog({
       component: EditPersonDialog,
       componentProps: {
@@ -18,7 +23,7 @@ export function useDialogs($q: QVueGlobals, t: ComposerTranslation) {
         payload.supervisor,
         payload.flights
       );
-      people.push(person);
+      s.addPersom(person);
     });
   }
 
@@ -30,14 +35,18 @@ export function useDialogs($q: QVueGlobals, t: ComposerTranslation) {
         mode: 'edit',
       },
     }).onOk((payload) => {
-      person.name = payload.name;
-      person.nation = payload.nation;
-      person.numberOfFlights = payload.flights;
-      person.supervisor = payload.supervisor;
+      const p = new Person(
+        payload.name,
+        payload.nation,
+        payload.supervisor,
+        payload.flights
+      );
+      p.id = person.id;
+      s.updatePersom(p);
     });
   }
 
-  function showDeletePerson(person: Person, flight: Flight) {
+  function showDeletePerson(person: Person) {
     $q.dialog({
       title: t('dialog.person.delete.confirm.title'),
       message: t('dialog.person.delete.confirm.message', { name: person.name }),
@@ -52,7 +61,7 @@ export function useDialogs($q: QVueGlobals, t: ComposerTranslation) {
       },
       persistent: true,
     }).onOk(() => {
-      flight.removePerson(person);
+      s.deletePersom(person);
     });
   }
 
@@ -65,9 +74,28 @@ export function useDialogs($q: QVueGlobals, t: ComposerTranslation) {
         people: flight.people,
       },
     }).onOk((payload) => {
-      vehicle.name = payload.name;
-      vehicle.capacity = payload.capacity;
-      vehicle.allowedOperators = payload.allowedOperators;
+      if (vehicle instanceof Balloon) {
+        const balloon = new Balloon(
+          payload.name,
+          payload.capacity,
+          payload.allowedOperators
+        );
+        balloon.id = vehicle.id;
+        balloon.operator = vehicle.operator;
+        balloon.passengers = vehicle.passengers;
+        s.updateBalloon(balloon);
+      } else if (vehicle instanceof Car) {
+        const car = new Car(
+          payload.name,
+          payload.capacity,
+          payload.allowedOperators
+        );
+        car.id = vehicle.id;
+        car.operator = vehicle.operator;
+        car.passengers = vehicle.passengers;
+        car.reservedCapacity = vehicle.reservedCapacity;
+        s.updateCar(car);
+      }
     });
   }
 
@@ -85,7 +113,7 @@ export function useDialogs($q: QVueGlobals, t: ComposerTranslation) {
           payload.capacity,
           payload.allowedOperators
         );
-        flight.balloons.push(balloon);
+        s.addBalloon(balloon);
       }
 
       if (type === 'car') {
@@ -94,12 +122,12 @@ export function useDialogs($q: QVueGlobals, t: ComposerTranslation) {
           payload.capacity,
           payload.allowedOperators
         );
-        flight.cars.push(car);
+        s.addCar(car);
       }
     });
   }
 
-  function showDeleteVehicle(vehicle: Vehicle, flight: Flight) {
+  function showDeleteVehicle(vehicle: Vehicle) {
     $q.dialog({
       title: t('dialog.vehicle.delete.confirm.title'),
       message: t('dialog.vehicle.delete.confirm.message', {
@@ -117,9 +145,9 @@ export function useDialogs($q: QVueGlobals, t: ComposerTranslation) {
       persistent: true,
     }).onOk(() => {
       if (vehicle instanceof Balloon) {
-        flight.removeBalloon(vehicle);
+        s.deleteBalloon(vehicle);
       } else if (vehicle instanceof Car) {
-        flight.removeCar(vehicle);
+        s.deleteCar(vehicle);
       }
     });
   }
