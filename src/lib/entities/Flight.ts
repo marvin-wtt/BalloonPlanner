@@ -132,6 +132,8 @@ export class Flight extends Identifyable {
 
   clone(): Flight {
     const obj = flightToObject(this);
-    return flightFromObject(obj);
+    const flight = flightFromObject(obj);
+    flight.id = this.id;
+    return flight;
   }
 }
