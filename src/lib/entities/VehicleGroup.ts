@@ -55,7 +55,8 @@ export class VehicleGroup extends Identifyable {
   private reserveCapacity() {
     let remaingCapacity = this._balloon.capacity + 1;
     for (const car of this._cars) {
-      const reserved = car.capacity >= remaingCapacity ? remaingCapacity : car.capacity;
+      const reserved =
+        car.capacity >= remaingCapacity ? remaingCapacity : car.capacity;
       remaingCapacity -= reserved;
       car.reservedCapacity = reserved;
     }

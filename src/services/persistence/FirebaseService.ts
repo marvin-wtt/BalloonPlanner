@@ -47,7 +47,7 @@ export function subscribe(
       flight.value = doc.data();
     }
   });
-  
+
   return unsub;
 }
 

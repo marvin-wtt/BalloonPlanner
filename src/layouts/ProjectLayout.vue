@@ -41,9 +41,7 @@
             v-close-popup
             :to="'/projects/' + project.id + '/flights/' + flight.id"
           >
-            <q-item-section>
-              {{ $t('flight') }} {{ index }}
-            </q-item-section>
+            <q-item-section> {{ $t('flight') }} {{ index }} </q-item-section>
           </q-item>
         </q-btn-dropdown>
         <q-separator dark vertical />
@@ -84,8 +82,6 @@ store.loadProject();
 function addFlight() {
   const pid = store.project?.id;
   const fid = store.createFlight();
-
-
 
   router.push({
     path: '/projects/' + pid + '/flights/' + fid,

@@ -55,9 +55,7 @@
                 :itens="availableBalloons"
                 @create="dialogs.showCreateVehicle('balloon', flight)"
                 @edit="(balloon) => dialogs.showEditVehicle(balloon, flight)"
-                @delete="
-                  (balloon) => dialogs.showDeleteVehicle(balloon)
-                "
+                @delete="(balloon) => dialogs.showDeleteVehicle(balloon)"
               >
                 <template #main="{ item }">
                   {{ item.name }}
@@ -336,19 +334,21 @@ function monitorService(promise: Promise<void>) {
     type: 'ongoing',
     message: t('saving_in_progress'),
   });
-  promise.then(() => {
-    notif({
-      type: 'positive',
-      message: t('saving_success'),
-      timeout: 1000,
+  promise
+    .then(() => {
+      notif({
+        type: 'positive',
+        message: t('saving_success'),
+        timeout: 1000,
+      });
+    })
+    .catch((reason) => {
+      notif({
+        type: 'warning',
+        message: t('saving_failed') + ': ' + reason,
+        timeout: 5000,
+      });
     });
-  }).catch((reason) => {
-    notif({
-      type: 'warning',
-      message: t('saving_failed') + ': ' + reason,
-      timeout: 5000,
-    });
-  });
 }
 
 function onBalloonAdd(balloon: Balloon) {
