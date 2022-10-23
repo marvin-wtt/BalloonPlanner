@@ -52,6 +52,9 @@ export function flightFromObject(obj: FlightObject): Flight {
   );
 
   const flight = new Flight(balloons, cars, people, vehicleGroups);
+  if (flightId != null) {
+    flight.id = flightId;
+  }
   flight.timestamp = obj.timestamp;
 
   return flight;
