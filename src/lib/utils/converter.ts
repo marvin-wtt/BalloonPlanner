@@ -33,7 +33,7 @@ type VehicleGroupObject = {
   cars: string[];
 };
 
-type FlightObject = {
+export type FlightObject = {
   timestamp: number;
   balloons: MapObject<BalloonObject>;
   cars: MapObject<CarObject>;
@@ -41,7 +41,7 @@ type FlightObject = {
   vehicleGroups: MapObject<VehicleGroupObject>;
 };
 
-export function flightFromObject(obj: FlightObject): Flight {
+export function flightFromObject(obj: FlightObject, flightId?: string): Flight {
   const people = peopleFromObject(obj.people);
   const balloons = balloonsFromObject(obj.balloons, people);
   const cars = carsFromObject(obj.cars, people);
@@ -147,7 +147,9 @@ export function balloonsFromObject(
       obj.allowedOperators.includes(value.id)
     );
     const operator = people.find((value) => obj.operator === value.id);
-    const passengers = obj.passengers.map(pId => people.find(person =>  person.id === pId));
+    const passengers = obj.passengers.map((pId) =>
+      people.find((person) => person.id === pId)
+    );
     if (passengers.includes(undefined)) {
       throw new Error('invalid_passenger_id');
     }
@@ -197,7 +199,9 @@ export function carsFromObject(
       obj.allowedOperators.includes(value.id)
     );
     const operator = people.find((value) => obj.operator === value.id);
-    const passengers = obj.passengers.map(pId => people.find(person =>  person.id === pId));
+    const passengers = obj.passengers.map((pId) =>
+      people.find((person) => person.id === pId)
+    );
     if (passengers.includes(undefined)) {
       throw new Error('invalid_passenger_id');
     }
@@ -241,7 +245,7 @@ export function vehicleGroupFromObject(
     return [];
   }
 
-  const vehicleGroups: VehicleGroup[] = [];
+  let vehicleGroups: VehicleGroup[] = [];
   for (const id of Object.keys(data)) {
     const obj = data[id];
 
@@ -254,6 +258,7 @@ export function vehicleGroupFromObject(
     vehicleGroup.cars = cars.filter((value) => obj.cars.includes(value.id));
     vehicleGroups.push(vehicleGroup);
   }
+  vehicleGroups = vehicleGroups.sort((a, b) => a.id.localeCompare(b.id));
 
   return vehicleGroups;
 }
