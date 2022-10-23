@@ -1,9 +1,8 @@
 import { Balloon } from 'src/lib/entities/Balloon';
 import { Car } from 'src/lib/entities/Car';
 import { Identifyable } from 'src/lib/utils/Identifyable';
-import { Cloneable } from 'src/lib/utils/Cloneable';
 
-export class VehicleGroup extends Identifyable implements Cloneable {
+export class VehicleGroup extends Identifyable {
   private _balloon: Balloon;
   private _cars: Car[] = [];
 
@@ -54,26 +53,11 @@ export class VehicleGroup extends Identifyable implements Cloneable {
   }
 
   private reserveCapacity() {
-    if (this._balloon === undefined) {
-      return;
-    }
-
     let remaingCapacity = this._balloon.capacity + 1;
     for (const car of this._cars) {
-      if (car.capacity >= remaingCapacity) {
-        car.reservedCapacity = remaingCapacity;
-        remaingCapacity = 0;
-        // Do not exit here because all remaing cars remaining capacity should be set to zero
-      } else {
-        car.reservedCapacity = car.capacity;
-        remaingCapacity -= car.capacity;
-      }
+      const reserved = car.capacity >= remaingCapacity ? remaingCapacity : car.capacity;
+      remaingCapacity -= reserved;
+      car.reservedCapacity = reserved;
     }
-  }
-
-  clone(): VehicleGroup {
-    const group = new VehicleGroup(this.balloon.clone());
-    group._cars = this._cars.map((value) => value.clone());
-    return group;
   }
 }
