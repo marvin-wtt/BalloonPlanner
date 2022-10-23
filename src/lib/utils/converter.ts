@@ -247,6 +247,7 @@ export function vehicleGroupFromObject(
       throw new Error('Failed to map balloon with id ' + id);
     }
     const vehicleGroup = new VehicleGroup(balloon);
+    vehicleGroup.id = id;
     vehicleGroup.cars = cars.filter((value) => obj.cars.includes(value.id));
     vehicleGroups.push(vehicleGroup);
   }
