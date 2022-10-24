@@ -332,26 +332,37 @@ export class ParticipantsFirstSolver extends GerneralSolver {
   }
 
   protected fillCars(flight: Flight, people: Person[]) {
-    // TODO Check that there are actuvally enough soaces, or is this already ensured?
     // Fill cars so that each crew is the same size
-    for (let i = 1; people.length > 0; i++) {
+    // i represents the amount of people of the crew
+    for (let crewSize = 1; people.length > 0; crewSize++) {
+      // Remember if the last iteration added a passenger to avoid infinity loops if the capacity of all cars are not
+      //  sufficient.
+      let filled = false;
       for (const group of flight.vehicleGroups) {
-        if (group.balloon.passengers.length >= i) {
+        const balloonPassengerCount = group.balloon.passengers.length;
+        if (balloonPassengerCount >= crewSize) {
+          filled = true;
           continue;
         }
-        const passengerCount = i - group.balloon.passengers.length;
+        // Amount of passengers for current crew size
+        const passengerCount = crewSize - balloonPassengerCount;
         for (const car of group.cars) {
           if (
-            car.passengers.length >= passengerCount &&
+            car.passengers.length >= passengerCount ||
             car.availableCapacity() === 0
           ) {
             continue;
           }
           const person = people.pop();
-          if (person != null) {
-            car.addPassenger(person);
+          if (person == null) {
+            return;
           }
+          car.addPassenger(person);
+          filled = true;
         }
+      }
+      if (!filled) {
+        throw new Error('not_enough_capacity');
       }
     }
   }
