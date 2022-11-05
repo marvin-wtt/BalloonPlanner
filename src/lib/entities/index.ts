@@ -5,5 +5,6 @@ import { Car } from 'src/lib/entities/Car';
 import { VehicleGroup } from 'src/lib/entities/VehicleGroup';
 import { Flight } from 'src/lib/entities/Flight';
 import { Project } from 'src/lib/entities/Project';
+import { User } from 'src/lib/entities/User';
 
-export { Balloon, Car, Flight, Person, Project, Vehicle, VehicleGroup };
+export { Balloon, Car, Flight, Person, Project, Vehicle, VehicleGroup, User };

@@ -4,22 +4,50 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  onAuthStateChanged
 } from 'firebase/auth';
 import { User } from 'firebase/auth';
+import { User as LocalUser } from 'src/lib/entities';
+import { Identifyable } from 'src/lib/utils/Identifyable';
 
 export const useAuthStore = defineStore('auth', () => {
-  const username = ref<string>();
-  const email = ref<string>();
-  const local = ref<boolean>(false);
+  const user = ref<LocalUser>();
 
-  async function authenticated() {
-    return local.value || username.value !== undefined;
+  let initialized = false;
+
+  function initialize() {
+    if (initialized) {
+      return;
+    }
+
+    const auth = getAuth();
+    onAuthStateChanged(auth, (authUser) => {
+      if (authUser) {
+        setUserCredentials(authUser);
+      } else {
+        auth.signOut();
+        user.value = undefined;
+      }
+    });
+
+    initialized = true;
   }
 
-  function setUserCredentials(user: User) {
-    email.value = user.email || '';
-    username.value = user.displayName ?? user.uid;
-    local.value = false;
+  function authenticated(): boolean {
+    return user.value?.local === true || user.value?.id != null;
+  }
+
+  function setUserCredentials(authUser: User) {
+    // User is signed in, see docs for a list of available properties
+    // https://firebase.google.com/docs/reference/js/firebase.User
+    const username = authUser.displayName ?? 'User';
+
+    user.value = new LocalUser(
+      authUser.uid,
+      username,
+      user.value?.email ?? '',
+      false
+    );
   }
 
   async function register(u: string, e: string, p: string) {
@@ -28,10 +56,10 @@ export const useAuthStore = defineStore('auth', () => {
       createUserWithEmailAndPassword(auth, e, p)
         .then((userCredential) => {
           // Signed in
-          const user = userCredential.user;
-          setUserCredentials(user);
+          const authUser = userCredential.user;
+          setUserCredentials(authUser);
 
-          resolve({ username: username.value });
+          resolve({ username: user.value?.name });
         })
         .catch((error) => {
           reject(error);
@@ -55,23 +83,19 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function loginLocal(): void {
-    username.value = 'Local';
-    local.value = true;
+    user.value = new LocalUser(Identifyable.generateNewId(), 'Local', '', true);
   }
 
   function logout(): void {
     const auth = getAuth();
     auth.signOut();
 
-    username.value = undefined;
-    email.value = undefined;
-    local.value = false;
+    user.value = undefined;
   }
 
   return {
-    username,
-    email,
-    local,
+    user,
+    initialize,
     register,
     authenticated,
     loginEmail,
