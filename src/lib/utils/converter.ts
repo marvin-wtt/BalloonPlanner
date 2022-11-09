@@ -147,6 +147,8 @@ export function balloonsFromObject(
       obj.allowedOperators.includes(value.id)
     );
     const operator = people.find((value) => obj.operator === value.id);
+    // Decrement number of flights because setter will increment is again
+    operator?.decrementFlights();
     const passengers = obj.passengers.map((pId) =>
       people.find((person) => person.id === pId)
     );
