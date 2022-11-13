@@ -8,6 +8,7 @@ import {
   arrayRemove,
   increment,
   updateDoc,
+  FieldValue,
 } from 'firebase/firestore';
 import { db } from 'src/boot/firebase';
 import { throttle } from 'src/util/debounce-throttle';
@@ -28,9 +29,7 @@ import {
   vehcileGroupToObject,
   FlightObject,
 } from 'src/lib/utils/converter';
-import firebase from 'firebase/compat';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
-import FieldValue = firebase.firestore.FieldValue;
 
 type UpdateObject = {
   [key: string]: null | boolean | number | string | string[] | FieldValue;
