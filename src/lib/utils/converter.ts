@@ -41,6 +41,7 @@ type VehicleGroupObject = {
 };
 
 export type FlightObject = {
+  projectId?: string;
   timestamp: number;
   balloons: MapObject<BalloonObject>;
   cars: MapObject<CarObject>;
@@ -105,8 +106,9 @@ export function flightFromObject(obj: FlightObject, flightId?: string): Flight {
   return flight;
 }
 
-export function flightToObject(flight: Flight): FlightObject {
+export function flightToObject(flight: Flight, projectId?: string): FlightObject {
   return {
+    projectId: projectId,
     timestamp: flight.timestamp,
     balloons: balloonsToObject(flight.balloons),
     cars: carsToObject(flight.cars),
