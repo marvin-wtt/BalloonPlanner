@@ -1,4 +1,11 @@
-import { Balloon, Car, Flight, Person, VehicleGroup } from 'src/lib/entities';
+import {
+  Balloon,
+  Car,
+  Flight,
+  Person,
+  Project,
+  VehicleGroup,
+} from 'src/lib/entities';
 
 type MapObject<T> = {
   [key: string]: T;
@@ -40,6 +47,44 @@ export type FlightObject = {
   people: MapObject<PersonObject>;
   vehicleGroups: MapObject<VehicleGroupObject>;
 };
+
+export type ProjectObject = {
+  name: string;
+  description: string;
+  collaborators: string[];
+  flights: string[];
+};
+
+export function projectFromObject(
+  obj: ProjectObject,
+  projectId: string
+): Project {
+  const name = obj.name;
+  const description = obj.description;
+
+  const flights: Flight[] = obj.flights.map((value) => {
+    const flight = new Flight([], [],[]);
+    flight.id = value;
+
+    return flight;
+  });
+
+  const project = new Project(name, description, flights);
+  if (projectId != null) {
+    project.id = projectId;
+  }
+
+  return  project;
+}
+
+export function projectToObject(project: Project): ProjectObject {
+  return {
+    name: project.name,
+    description: project.desciption,
+    flights: project.flights.map(value => value.id),
+    collaborators: project.collaborators.map(value => value.id),
+  };
+}
 
 export function flightFromObject(obj: FlightObject, flightId?: string): Flight {
   const people = peopleFromObject(obj.people);
