@@ -1,4 +1,4 @@
-import { Balloon, Car, Flight, Person } from 'src/lib/entities';
+import { Car, Flight, Person } from 'src/lib/entities';
 import { shuffle } from 'src/lib/utils/ArrayUtils';
 
 export interface SolvingOptions {
@@ -79,19 +79,19 @@ function findPilotSolutions(baseFlight: Flight, groupIndex = 0): Flight[] {
     return [baseFlight];
   }
 
-  let balloon = baseFlight.vehicleGroups[groupIndex].balloon;
-  if (balloon.operator != null) {
+  const baseBalloon = baseFlight.vehicleGroups[groupIndex].balloon;
+  if (baseBalloon.operator != null) {
     return findPilotSolutions(baseFlight, groupIndex + 1);
   }
 
   // Check for all pilots
   // The flight reference and all its children must be updated every interation as the flight is cloned an therefore
   //  the reference changes
-  for (const basePilot of balloon.allowedOperators) {
+  for (const basePilot of baseBalloon.allowedOperators) {
     // Always use a fresh clone of the base-flight
     // All objects, which are not effectifly immuteable need to be rereferenced
     const solutionFlight = baseFlight.clone();
-    balloon = solutionFlight.vehicleGroups[groupIndex].balloon;
+
 
     const availablePeople = solutionFlight.availablePeople();
     const pilot = availablePeople.find((value) => value.id === basePilot.id);
@@ -100,7 +100,7 @@ function findPilotSolutions(baseFlight: Flight, groupIndex = 0): Flight[] {
     }
 
     // Set the current operator and fill the next group
-    balloon.operator = pilot;
+    solutionFlight.vehicleGroups[groupIndex].balloon.operator = pilot;
     const childSolutions = findPilotSolutions(solutionFlight, groupIndex + 1);
     solutions.push(...childSolutions);
   }
@@ -213,37 +213,38 @@ function findSupervisorSolution(flight: Flight, amount = 1): Flight[] {
 }
 
 function findDriverSolution(
-  flight: Flight,
+  baseFlight: Flight,
   groupIndex = 0,
   carIndex = 0
 ): Flight[] {
   const solutions: Flight[] = [];
 
   // If the end is reached the solution is accepted and can be returned
-  if (groupIndex === flight.vehicleGroups.length) {
-    return [flight];
+  if (groupIndex === baseFlight.vehicleGroups.length) {
+    return [baseFlight];
   }
   // Goto next group if all cars are filled
-  if (carIndex === flight.vehicleGroups[groupIndex].cars.length) {
-    return findDriverSolution(flight, groupIndex + 1, 0);
+  if (carIndex === baseFlight.vehicleGroups[groupIndex].cars.length) {
+    return findDriverSolution(baseFlight, groupIndex + 1, 0);
   }
 
-  let car = flight.vehicleGroups[groupIndex].cars[carIndex];
-  if (car.operator != null) {
-    return findDriverSolution(flight, groupIndex, carIndex + 1);
+  const baseCar = baseFlight.vehicleGroups[groupIndex].cars[carIndex];
+  if (baseCar.operator != null) {
+    return findDriverSolution(baseFlight, groupIndex, carIndex + 1);
   }
 
-  for (const driver of car.allowedOperators) {
-    const availablePeople = flight.availablePeople();
-    if (!availablePeople.includes(driver)) {
+  for (const baseDriver of baseCar.allowedOperators) {
+    const solutionFlight = baseFlight.clone();
+
+    const availablePeople = solutionFlight.availablePeople();
+    const solutionDriver = availablePeople.find(value => value.id === baseDriver.id);
+    if (!solutionDriver) {
       continue;
     }
-    car.operator = driver;
-    const childSolutions = findDriverSolution(flight, groupIndex, carIndex + 1);
+    solutionFlight.vehicleGroups[groupIndex].cars[carIndex].operator = solutionDriver;
+
+    const childSolutions = findDriverSolution(solutionFlight, groupIndex, carIndex + 1);
     solutions.push(...childSolutions);
-    // Prepare for next iteration
-    flight = flight.clone();
-    car = flight.vehicleGroups[groupIndex].cars[carIndex];
   }
 
   return solutions;

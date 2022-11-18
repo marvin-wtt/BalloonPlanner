@@ -1,72 +1,95 @@
-import { defineStore } from 'pinia';
+import { defineStore, getActivePinia } from 'pinia';
 import { Project } from 'src/lib/entities/Project';
 import { ref } from 'vue';
-import { Balloon, Car, Flight, Person } from 'src/lib/entities';
+import { Flight } from 'src/lib/entities';
+import { PersistenceService } from 'src/services/persistence/PersistenceService';
+import { RouteParams, useRoute } from 'vue-router';
+import { useAuthStore } from 'stores/auth';
+import { FirebaseService } from 'src/services/persistence/FirebaseService';
+import { LocalStorageService } from 'src/services/persistence/LocalStorageService';
 
 export const useProjectStore = defineStore('project', () => {
+  // TODO UseRoute must only be called inside setup
+  // https://github.com/vuejs/pinia/discussions/1717
+  const route = useRoute();
+
   const project = ref<Project | null>();
+  const flight = ref<Flight | null>();
+  const service = ref<PersistenceService | null>();
+
   const error = ref<boolean>(false);
 
-  async function loadProject() {
-    // const people: Person[] = [];
-    // people.push(new Person('Thomas', 'fr', false));
-    // people.push(new Person('Oliver', 'fr'));
-    // people.push(new Person('Daniel', 'fr'));
-    // people.push(new Person('Ethan', 'fr'));
-    // people.push(new Person('Samuel', 'fr', true));
-    //
-    // people.push(new Person('Sophie', 'fr'));
-    // people.push(new Person('Jessica', 'fr'));
-    // people.push(new Person('Chloe', 'fr'));
-    // people.push(new Person('Ruby', 'fr'));
-    // people.push(new Person('Charlotte', 'fr', true));
-    //
-    // people.push(new Person('Harry', 'de'));
-    // people.push(new Person('William', 'de'));
-    // people.push(new Person('Joseph', 'de'));
-    // people.push(new Person('Leo', 'de'));
-    // people.push(new Person('Adam', 'de', true));
-    //
-    // people.push(new Person('Amelia', 'de'));
-    // people.push(new Person('Sophie', 'de'));
-    // people.push(new Person('Jessica', 'de'));
-    // people.push(new Person('Olivia', 'de'));
-    // people.push(new Person('Ella', 'de', true));
-    //
-    // const balloons: Balloon[] = [];
-    // balloons.push(new Balloon('F-OABC', 4, [people[4], people[9]]));
-    // balloons.push(new Balloon('D-OABC', 3, [people[14]]));
-    //
-    // const cars: Car[] = [];
-    // cars.push(new Car('M-AA-111', 10, [people[4], people[9]]));
-    // cars.push(new Car('F-BB-222', 10, [people[19]]));
-    //
-    // const flight = new Flight(balloons, cars, people);
-    // flight.id = '1';
-    //
-    // project.value = new Project();
-    // project.value.flights.push(flight);
+  function initializeService() {
+    const auth = useAuthStore();
+    service.value = auth.authenticated()
+      ? new FirebaseService()
+      : new LocalStorageService();
   }
 
-  function createFlight(): string {
-    if (!project.value) {
-      return '';
+  function load(params?: RouteParams) {
+    params = params ?? route.params;
+
+    if (service.value == null) {
+      initializeService();
     }
 
-    let flight = null;
-
-    if (project.value.flights.length > 0) {
-      const lastIndex = project.value?.flights.length - 1;
-      const last = project.value?.flights[lastIndex];
-
-      flight = new Flight(last?.balloons, last?.cars, last?.people);
-    } else {
-      flight = new Flight([], [], []);
+    const projectId = params.project as string;
+    if (projectId) {
+      loadProject(projectId);
     }
 
-    project.value?.flights.push(flight);
-    return flight.id;
+    const flightId = params.flight as string;
+    loadFlight(flightId);
   }
 
-  return { project, error, loadProject, createFlight };
+  function loadProject(projectId: string): void {
+    if (projectId == null) {
+      project.value = null;
+      service.value?.unloadProject();
+      return;
+    }
+
+    if (projectId == project.value?.id) {
+      return;
+    }
+
+    service.value?.loadProject(projectId, (newProject) => {
+      project.value = newProject;
+    });
+  }
+
+  function loadFlight(flightId: string): void {
+    if (flightId == null) {
+      flight.value = null;
+      service.value?.unloadFlight();
+      return;
+    }
+
+    if (flightId == flight.value?.id) {
+      return;
+    }
+
+    service.value?.loadFlight(flightId, (newFlight) => {
+      flight.value = newFlight;
+    });
+  }
+
+  async function createFlight(): Promise<Flight> {
+    if (!service.value) {
+      throw new Error('No serive set.');
+    }
+
+    return service.value.createFlight();
+  }
+
+  return {
+    service,
+    flight,
+    project,
+    error,
+    createFlight,
+    load,
+    loadProject,
+    loadFlight,
+  };
 });

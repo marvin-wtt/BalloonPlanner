@@ -61,7 +61,7 @@
                   {{ item.name }}
                 </template>
                 <template #side="{ item }">
-                  {{ item.capacity - 1 + ' + 1' }}
+                  {{ item.capacity + ' + 1' }}
                 </template>
               </editable-list>
             </q-scroll-area>
@@ -81,7 +81,7 @@
                   {{ item.name }}
                 </template>
                 <template #side="{ item }">
-                  {{ item.capacity - 1 + ' + 1' }}
+                  {{ item.capacity + ' + 1' }}
                 </template>
               </editable-list>
             </q-scroll-area>
@@ -225,7 +225,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, Ref, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, Ref, ref, watch } from 'vue';
 import { QItem, QList, useQuasar } from 'quasar';
 import { onBeforeRouteUpdate, RouteParams, useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
@@ -244,11 +244,8 @@ import {
 } from 'src/lib/entities';
 import EditableList from 'components/EditableList.vue';
 import { useI18n } from 'vue-i18n';
-import {
-  FirebaseService,
-  subscribe,
-} from 'src/services/persistence/FirebaseService';
-import { solve } from 'src/lib/solver/ParticipantsFirstSolver';
+import { solve } from 'src/lib/solver/solver';
+import { PersistenceService } from 'src/services/persistence/PersistenceService';
 
 const menuTabs = ref('overview');
 
@@ -257,30 +254,29 @@ const $q = useQuasar();
 const route = useRoute();
 const projectStore = useProjectStore();
 
-const service = new FirebaseService();
-const dialogs = useDialogs($q, t, service);
-
-const flight = ref<Flight>();
+// let service = projectStore.service as PersistenceService;
+// const flight = projectStore.flight;
 // FIXME Convert correctly
-const { project }: { project: Ref<Project | null> } = storeToRefs(
-  projectStore
-) as any;
+// const { service }: { service: Ref<PersistenceService | null> } = storeToRefs(
+//   projectStore
+// ) as any;
+// const { flight }: {} = storeToRefs(projectStore) as any;
+const {
+  project,
+  flight,
+  service,
+}: {
+  project: Ref<Project | null>;
+  flight: Ref<Flight | null>;
+  service: Ref<PersistenceService | null>;
+} = storeToRefs(projectStore) as any;
 
-function updateFlightPage(params: RouteParams) {
-  if (Array.isArray(params.fligh)) return;
+const dialogs = useDialogs($q, t);
 
-  const flightId = params.flight as string;
-
-  const f = project.value?.flights.find((value) => value.id == flightId);
-  flight.value = f;
-
-  subscribe(flight, flightId);
-
-  const unwatch = watch(flight, () => {
-    service.flight = flight.value;
-    unwatch();
-  });
-}
+onMounted(() => {
+  // TODO This should be done async with error handling
+  projectStore.load();
+});
 
 watch(
   flight,
@@ -294,15 +290,11 @@ watch(
   { deep: true }
 );
 
-updateFlightPage(route.params);
-
 onBeforeRouteUpdate((to, from) => {
-  if (from.params.flight == to.params.flight) return false;
-  updateFlightPage(to.params);
-  return flight.value !== undefined;
+  // TODO This should be done async with error handling
+  projectStore.load(to.params);
 });
 
-// TODO reduce above logic
 function onSmartFill() {
   if (!flight.value) {
     return;
@@ -314,7 +306,7 @@ function onSmartFill() {
     message: t('smart_fill_loading'),
   });
   f.then((value) => {
-    service.updateFLight(value);
+    service.value?.updateFLight(value);
     notif({
       type: 'positive',
       message: t('smart_fill_success'),
@@ -329,7 +321,18 @@ function onSmartFill() {
   });
 }
 
-function monitorService(promise: Promise<void>) {
+function monitorService(
+  cb: (service: PersistenceService) => Promise<void>
+): void {
+  if (!service.value) {
+    $q.notify({
+      type: 'negative',
+      message: t('service_not_available'),
+    });
+    return;
+  }
+
+  const promise = cb(service.value);
   const notif = $q.notify({
     type: 'ongoing',
     message: t('saving_in_progress'),
@@ -352,51 +355,53 @@ function monitorService(promise: Promise<void>) {
 }
 
 function onBalloonAdd(balloon: Balloon) {
-  monitorService(service.addVehicleGroup(new VehicleGroup(balloon)));
+  monitorService((service) =>
+    service.addVehicleGroup(new VehicleGroup(balloon))
+  );
 }
 
 function onVehicleGroupRemove(group: VehicleGroup) {
-  monitorService(service.deleteVehicleGroup(group));
+  monitorService((service) => service.deleteVehicleGroup(group));
 }
 
 function onCarAdd(group: VehicleGroup, car: Car) {
-  monitorService(service.addCarToVehicleGroup(car, group));
+  monitorService((service) => service.addCarToVehicleGroup(car, group));
 }
 
 function onCarRemove(group: VehicleGroup, car: Car) {
-  monitorService(service.removeCarFromVehicleGroup(car, group));
+  monitorService((service) => service.removeCarFromVehicleGroup(car, group));
 }
 
 function onBalloonOperatorAdd(balloon: Balloon, person: Person) {
-  monitorService(service.setBalloonOperator(person, balloon));
+  monitorService((service) => service.setBalloonOperator(person, balloon));
 }
 
 function onCarOperatorAdd(car: Car, person: Person) {
-  monitorService(service.setCarOperator(person, car));
+  monitorService((service) => service.setCarOperator(person, car));
 }
 
 function onBalloonOperatorRemove(balloon: Balloon) {
-  monitorService(service.setBalloonOperator(undefined, balloon));
+  monitorService((service) => service.setBalloonOperator(undefined, balloon));
 }
 
 function onCarOperatorRemove(car: Car) {
-  monitorService(service.setCarOperator(undefined, car));
+  monitorService((service) => service.setCarOperator(undefined, car));
 }
 
 function onBalloonPersonAdd(balloon: Balloon, person: Person) {
-  monitorService(service.addBalloonPassenger(person, balloon));
+  monitorService((service) => service.addBalloonPassenger(person, balloon));
 }
 
 function onCarPersonAdd(car: Car, person: Person) {
-  monitorService(service.addCarPassenger(person, car));
+  monitorService((service) => service.addCarPassenger(person, car));
 }
 
 function onBalloonPersonRemove(balloon: Balloon, person: Person) {
-  monitorService(service.removeBalloonPassenger(person, balloon));
+  monitorService((service) => service.removeBalloonPassenger(person, balloon));
 }
 
 function onCarPersonRemove(car: Car, person: Person) {
-  monitorService(service.removeCarPassenger(person, car));
+  monitorService((service) => service.removeCarPassenger(person, car));
 }
 
 const showBalloonsMenuBadge = computed<boolean>(() => {

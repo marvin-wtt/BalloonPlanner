@@ -294,7 +294,7 @@ export function vehicleGroupFromObject(
     return [];
   }
 
-  let vehicleGroups: VehicleGroup[] = [];
+  const vehicleGroups: VehicleGroup[] = [];
   for (const id of Object.keys(data)) {
     const obj = data[id];
 
@@ -307,7 +307,8 @@ export function vehicleGroupFromObject(
     vehicleGroup.cars = cars.filter((value) => obj.cars.includes(value.id));
     vehicleGroups.push(vehicleGroup);
   }
-  vehicleGroups = vehicleGroups.sort((a, b) => a.id.localeCompare(b.id));
+  // FIXME Sorting is forbidden here. It breaks the solver
+  // vehicleGroups = vehicleGroups.sort((a, b) => a.id.localeCompare(b.id));
 
   return vehicleGroups;
 }

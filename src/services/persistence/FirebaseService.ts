@@ -1,6 +1,7 @@
 import { Ref } from 'vue';
 import {
   doc,
+  getDoc,
   setDoc,
   onSnapshot,
   deleteField,
@@ -8,15 +9,18 @@ import {
   arrayRemove,
   increment,
   updateDoc,
+  runTransaction,
   FieldValue,
 } from 'firebase/firestore';
 import { db } from 'src/boot/firebase';
-import { throttle } from 'src/util/debounce-throttle';
+import { useAuthStore } from 'stores/auth';
 import {
   Balloon,
   Car,
   Flight,
   Person,
+  Project,
+  User,
   Vehicle,
   VehicleGroup,
 } from 'src/lib/entities';
@@ -28,6 +32,9 @@ import {
   personToObject,
   vehcileGroupToObject,
   FlightObject,
+  projectToObject,
+  projectFromObject,
+  ProjectObject,
 } from 'src/lib/utils/converter';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
 
@@ -35,37 +42,163 @@ type UpdateObject = {
   [key: string]: null | boolean | number | string | string[] | FieldValue;
 };
 
-export function subscribe(
-  flight: Ref<Flight | undefined>,
-  flightId: string
-): () => void {
-  const ref = getDocumentReference(flightId);
-
-  const unsub = onSnapshot(ref, (doc) => {
-    if (doc.exists()) {
-      flight.value = doc.data();
-    }
-  });
-
-  return unsub;
-}
-
-function getDocumentReference(flightId: string) {
-  const document = doc(db, 'flights', flightId);
-  const ref = document.withConverter<Flight>({
-    toFirestore: (flight: Flight) => {
-      return flightToObject(flight);
-    },
-    fromFirestore: (snapshot, options) => {
-      const data = snapshot.data(options);
-      return flightFromObject(data as FlightObject, flightId);
-    },
-  });
-  return ref;
-}
-
 export class FirebaseService extends PersistenceService {
+  private _unsubscribeFlight?: () => void;
+  private _unsubscribeProject?: () => void;
+
+  unloadProject() {
+    super.unloadProject();
+
+    if (this._unsubscribeProject != null) {
+      this._unsubscribeProject();
+      this._unsubscribeProject = undefined;
+    }
+  }
+
+  unloadFlight() {
+    super.unloadFlight();
+
+    if (this._unsubscribeFlight != null) {
+      this._unsubscribeFlight();
+      this._unsubscribeFlight = undefined;
+    }
+  }
+
+  loadProject(projectId: string | null, cb: (project: Project) => void): void {
+    if (this._unsubscribeProject != null) {
+      this._unsubscribeProject();
+    }
+
+    if (projectId == null) {
+      return;
+    }
+
+    const ref = this.getProjectReference(projectId);
+
+    this._unsubscribeProject = onSnapshot(ref, (doc) => {
+      if (doc.exists()) {
+        this.project = doc.data();
+        cb(this.project);
+      }
+    });
+  }
+
+  async createProject(project: Project): Promise<void> {
+    this.project = project;
+
+    if (project.local) {
+      throw new Error('Cannot write local project to database');
+    }
+
+    const authStore = useAuthStore();
+
+    if (!authStore.authenticated() || authStore.user == null) {
+      throw new Error('not_authenticated');
+      return;
+    }
+
+    if (
+      project.collaborators.find((value) => value.id === authStore.user?.id) ==
+      null
+    ) {
+      project.collaborators.push(authStore.user as User);
+    }
+
+    return this.updateProject(project);
+  }
+
+  async createFlight(): Promise<Flight> {
+    if (!this.project) {
+      throw new Error('No project loaded.');
+    }
+
+    const lastIndex = this.project.flights.length - 1;
+    // TODO Write as transaction
+    // Create a new, clean flight if the project holds no flights or if the flight id is invalid for some reason.
+    let flight = new Flight([], [], []);
+    if (lastIndex >= 0) {
+      // Flight needs to be loaded first as all flights only hold the id of the flight
+      const lastFlight = this.project.flights[lastIndex];
+
+      const flightRef = this.getFlightReference(lastFlight?.id);
+      const flightSnap = await getDoc(flightRef);
+      if (flightSnap.exists()) {
+        const baseFlight = flightSnap.data();
+        flight = new Flight(
+          baseFlight.balloons.map(
+            (value) =>
+              new Balloon(value.name, value.capacity, value.allowedOperators)
+          ),
+          baseFlight.cars.map(
+            (value) =>
+              new Car(value.name, value.capacity, value.allowedOperators)
+          ),
+          baseFlight.people
+        );
+      }
+    }
+
+    this.addFlight(flight);
+
+    return flight;
+  }
+
+  async addFlight(flight: Flight): Promise<void> {
+    if (this.project == null) {
+      throw new Error('no_project');
+    }
+
+    return runTransaction(db, async (transation) => {
+      const updateFlight = this.updateFLight(flight);
+      // FIXME This should be done by firebase cloud functions - SECURITY RISK
+      const updateProhect = this.updateProjectDocument({
+        [`flights`]: arrayUnion(flight.id),
+      });
+
+      return new Promise((resolve, reject) => {
+        Promise.all([updateFlight, updateProhect])
+          .then((value) => resolve())
+          .catch((reason) => reject(reason));
+      });
+    });
+  }
+
+  async updateProject(project: Project): Promise<void> {
+    // TODO
+    return Promise.resolve(undefined);
+  }
+
+  loadFlight(flightId: string | null, cb: (flight: Flight) => void): void {
+    if (this._unsubscribeFlight != null) {
+      this._unsubscribeFlight();
+    }
+
+    if (flightId == null) {
+      return;
+    }
+
+    const ref = this.getFlightReference(flightId);
+
+    this._unsubscribeFlight = onSnapshot(ref, (doc) => {
+      if (doc.exists()) {
+        this.flight = doc.data();
+        cb(this.flight);
+      }
+    });
+  }
+
+  async updateProjectDocument(obj: object): Promise<void> {
+    if (this.project == null) {
+      throw new Error('Cannot update project. No project set.');
+    }
+
+    return updateDoc(doc(db, 'projects', this.project.id), obj);
+  }
+
   async updateFlightDocument(obj: object): Promise<void> {
+    const store = useAuthStore();
+    const auth = await store.user;
+
     if (this.flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
     }
@@ -111,7 +244,7 @@ export class FirebaseService extends PersistenceService {
       : vehicleGroup.balloon.capacity + 1;
     for (let car of vehicleGroup.cars) {
       if (mode === 'excöude' && car.id === extra?.id) {
-        obj[`cars.${car.id}.reservedCapacity`] = 0;
+        // obj[`cars.${car.id}.reservedCapacity`] = 0;
         continue;
       }
       if (mode === 'with' && extra instanceof Car && extra?.id === car.id) {
@@ -323,9 +456,19 @@ export class FirebaseService extends PersistenceService {
     person: Person | undefined,
     balloon: Balloon
   ): Promise<void> {
-    return this.updateFlightDocument({
+    const obj: UpdateObject = {
       [`balloons.${balloon.id}.operator`]: person?.id ?? null,
-    });
+    };
+
+    if (balloon.operator) {
+      obj[`people.${balloon.operator.id}.flights`] = increment(-1);
+    }
+
+    if (person) {
+      obj[`people.${person.id}.flights`] = increment(1);
+    }
+
+    return this.updateFlightDocument(obj);
   }
 
   async setCarOperator(person: Person | undefined, car: Car): Promise<void> {
@@ -376,7 +519,7 @@ export class FirebaseService extends PersistenceService {
   async updateFLight(flight: Flight): Promise<void> {
     this.flight = flight;
 
-    const ref = getDocumentReference(flight.id);
+    const ref = this.getFlightReference(flight.id);
     return setDoc(ref, flight);
   }
 
@@ -384,5 +527,41 @@ export class FirebaseService extends PersistenceService {
     return this.updateFlightDocument({
       [`people.${person.id}`]: personToObject(person),
     });
+  }
+
+  getFlightReference(flightId: string) {
+    const document = doc(db, 'flights', flightId);
+    const ref = document.withConverter<Flight>({
+      toFirestore: (flight: Flight) => {
+        return flightToObject(flight, this.project?.id ?? '');
+      },
+      fromFirestore: (snapshot, options) => {
+        const data = snapshot.data(options) as FlightObject;
+        // Sort vehicle group by ID
+        // TODO is there a better solution?
+        data.vehicleGroups = Object.keys(data.vehicleGroups)
+          .sort()
+          .reduce((obj: any, key) => {
+            obj[key] = data.vehicleGroups[key];
+            return obj;
+          }, {});
+        return flightFromObject(data, flightId);
+      },
+    });
+    return ref;
+  }
+
+  getProjectReference(projectId: string) {
+    const document = doc(db, 'projects', projectId);
+    const ref = document.withConverter<Project>({
+      toFirestore: (project: Project) => {
+        return projectToObject(project);
+      },
+      fromFirestore: (snapshot, options) => {
+        const data = snapshot.data(options);
+        return projectFromObject(data as ProjectObject, projectId);
+      },
+    });
+    return ref;
   }
 }

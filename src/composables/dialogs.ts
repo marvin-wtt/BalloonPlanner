@@ -4,12 +4,20 @@ import { QVueGlobals } from 'quasar';
 import EditVehicleDialog from 'components/dialog/EditVehicleDialog.vue';
 import { ComposerTranslation } from 'vue-i18n';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
+import { useProjectStore } from 'stores/project';
+import { Ref } from 'vue';
+import { storeToRefs } from 'pinia';
 
 export function useDialogs(
   $q: QVueGlobals,
-  t: ComposerTranslation,
-  s: PersistenceService
+  t: ComposerTranslation
 ) {
+  const projectStore = useProjectStore();
+  const { service }: { service: Ref<PersistenceService | null> } = storeToRefs(
+    projectStore
+  ) as any;
+
+
   function showCreatePerson() {
     $q.dialog({
       component: EditPersonDialog,
@@ -23,11 +31,16 @@ export function useDialogs(
         payload.supervisor,
         payload.flights
       );
-      s.addPersom(person);
+      service.value!.addPersom(person);
     });
   }
 
   function showEditPerson(person: Person) {
+    const projectStore = useProjectStore();
+    const { service }: { service: Ref<PersistenceService | null> } = storeToRefs(
+      projectStore
+    ) as any;
+
     $q.dialog({
       component: EditPersonDialog,
       componentProps: {
@@ -42,7 +55,7 @@ export function useDialogs(
         payload.flights
       );
       p.id = person.id;
-      s.updatePersom(p);
+      service.value!.updatePersom(p);
     });
   }
 
@@ -61,7 +74,7 @@ export function useDialogs(
       },
       persistent: true,
     }).onOk(() => {
-      s.deletePersom(person);
+      service.value!.deletePersom(person);
     });
   }
 
@@ -83,7 +96,7 @@ export function useDialogs(
         balloon.id = vehicle.id;
         balloon.operator = vehicle.operator;
         balloon.passengers = vehicle.passengers;
-        s.updateBalloon(balloon);
+        service.value!.updateBalloon(balloon);
       } else if (vehicle instanceof Car) {
         const car = new Car(
           payload.name,
@@ -94,7 +107,7 @@ export function useDialogs(
         car.operator = vehicle.operator;
         car.passengers = vehicle.passengers;
         car.reservedCapacity = vehicle.reservedCapacity;
-        s.updateCar(car);
+        service.value!.updateCar(car);
       }
     });
   }
@@ -113,7 +126,7 @@ export function useDialogs(
           payload.capacity,
           payload.allowedOperators
         );
-        s.addBalloon(balloon);
+        service.value!.addBalloon(balloon);
       }
 
       if (type === 'car') {
@@ -122,7 +135,7 @@ export function useDialogs(
           payload.capacity,
           payload.allowedOperators
         );
-        s.addCar(car);
+        service.value!.addCar(car);
       }
     });
   }
@@ -145,9 +158,9 @@ export function useDialogs(
       persistent: true,
     }).onOk(() => {
       if (vehicle instanceof Balloon) {
-        s.deleteBalloon(vehicle);
+        service.value!.deleteBalloon(vehicle);
       } else if (vehicle instanceof Car) {
-        s.deleteCar(vehicle);
+        service.value!.deleteCar(vehicle);
       }
     });
   }

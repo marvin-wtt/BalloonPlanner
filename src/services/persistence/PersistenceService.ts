@@ -27,6 +27,30 @@ export abstract class PersistenceService {
     this._project = value;
   }
 
+  abstract createFlight(): Promise<Flight>;
+
+  abstract addFlight(flight: Flight): Promise<void>;
+
+  abstract loadProject(
+    projectId: string | null,
+    cb: (project: Project) => void
+  ): void;
+
+  unloadProject() {
+    this.project = undefined;
+  }
+
+  abstract updateProject(project: Project): Promise<void>;
+
+  abstract loadFlight(
+    flightId: string | null,
+    cb: (flight: Flight) => void
+  ): void;
+
+  unloadFlight() {
+    this.flight = undefined;
+  }
+
   abstract updateFLight(flight: Flight): Promise<void>;
 
   abstract addBalloon(balloon: Balloon): Promise<void>;

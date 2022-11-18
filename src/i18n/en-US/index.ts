@@ -96,6 +96,18 @@ export default {
     },
   },
 
+  login: {
+    validation: {
+      email: {
+        required: 'Please enter an email address',
+        type: 'Please enter a valid email address',
+      },
+      password: {
+        required: 'Please enter a password',
+      },
+    },
+  },
+
   edit: 'Edit',
 
   flight: 'Flight | Flights',
@@ -113,6 +125,7 @@ export default {
   participant: 'Participant | Participants',
 
   person: 'Person | People',
+  pilot_index: 'P',
 
   remove: 'Remvoe',
 

@@ -39,7 +39,7 @@ export class Flight extends Identifyable {
     return this._vehicleGroups;
   }
 
-  private set vehicleGroups(value: VehicleGroup[]) {
+  set vehicleGroups(value: VehicleGroup[]) {
     this._vehicleGroups = value;
   }
 
@@ -75,14 +75,20 @@ export class Flight extends Identifyable {
   }
 
   removePerson(person: Person) {
+    // TODO remove person from vehicel
+
     removeFromArray(this._people, person);
   }
 
   removeBalloon(balloon: Balloon) {
+    // TODO Remove vehicle group
+
     removeFromArray(this._balloons, balloon);
   }
 
   removeCar(car: Car) {
+    // TODO Remove car from group
+
     removeFromArray(this._cars, car);
   }
 
