@@ -2,7 +2,7 @@
   <drop-zone
     :accepted="isDropAccepted"
     @dropped="drop"
-    class="q-ma-md vehicle-group"
+    class="q-ma-md bg-grey-6 rounded-borders"
   >
     <div class="relative-position">
       <q-badge v-if="reservedCapacityWarning" color="warning" floating rounded>
@@ -63,9 +63,4 @@ function drop(element: Car) {
 }
 </script>
 
-<style scoped>
-.vehicle-group {
-  border: 1px solid #1976d2;
-  border-radius: 10px;
-}
-</style>
+<style scoped></style>

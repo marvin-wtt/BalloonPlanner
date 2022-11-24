@@ -30,23 +30,30 @@
         </q-toolbar-title>
         <q-space />
 
-        <q-btn stretch flat icon="add" :loading="addFlightLoading" @click="addFlight" v-if="isEditor()" />
-        <q-separator dark vertical />
-        <q-btn-dropdown stretch flat :label="t('flights')">
-          <!-- TODO Fix list style -->
-          <q-item
-            v-for="(flight, index) in project.flights"
-            :key="flight.id"
-            clickable
-            v-close-popup
-            :to="'/projects/' + project.id + '/flights/' + flight.id"
-          >
-            <q-item-section>{{ $t('flight') }} {{ index + 1 }}</q-item-section>
-          </q-item>
-        </q-btn-dropdown>
+        <template v-if="project != null">
+          <q-btn stretch flat icon="add" :loading="addFlightLoading" @click="addFlight" v-if="isEditor()" />
+          <q-separator dark vertical />
+          <q-btn-dropdown stretch flat :label="t('flights')">
+            <!-- TODO Fix list style -->
+            <q-item
+              v-for="(flight, index) in project.flights"
+              :key="flight.id"
+              clickable
+              v-close-popup
+              :to="'/projects/' + project.id + '/flights/' + flight.id"
+            >
+              <q-item-section>{{ $t('flight') }} {{ index + 1 }}</q-item-section>
+            </q-item>
+          </q-btn-dropdown>
+          <q-separator dark vertical />
+        </template>
+
+        <q-btn stretch flat label="Projects" v-if="loggedIn" />
+
         <q-separator dark vertical />
 
-        <q-btn stretch flat label="Projects" v-if="isLoggedIn()" />
+        <q-btn stretch flat :label="$t('login')" v-if="!loggedIn" />
+        <q-btn stretch flat :label="user?.name" icon="account_circle" v-if="loggedIn" />
       </q-toolbar>
     </q-header>
 
@@ -65,9 +72,9 @@ import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProjectStore } from 'stores/project';
 import { storeToRefs } from 'pinia';
-import { useQuasar } from 'quasar';
 import { useAuthStore } from 'stores/auth';
 import { useI18n } from 'vue-i18n';
+import { minimize, toggleMaximize, closeApp } from 'src/composables/windowAPI';
 
 const router = useRouter();
 const projectStore = useProjectStore();
@@ -75,6 +82,7 @@ const authStore = useAuthStore();
 const { t } = useI18n();
 
 const { project } = storeToRefs(projectStore);
+const { user } = storeToRefs(authStore);
 
 const leftDrawerOpen = ref(false);
 const addFlightLoading = ref(false);
@@ -87,21 +95,19 @@ onMounted(() => {
   projectStore.load();
 });
 
+const loggedIn = computed(() => {
+  return user.value != null;
+});
 
 function isEditor(): boolean {
   // TODO
   return true;
 }
 
-function isLoggedIn(): boolean {
-  return authStore.authenticated();
-}
-
 function addFlight() {
   addFlightLoading.value = true;
 
   const pid = projectStore.project?.id;
-  console.log('Test');
   projectStore.createFlight().then((flight) => {
     router.push({
       path: `/projects/${pid}/flights/${flight.id}`,
@@ -111,23 +117,5 @@ function addFlight() {
   }).finally(() => {
     addFlightLoading.value = false;
   });
-}
-
-function minimize() {
-  if (process.env.MODE === 'electron') {
-    window.windowAPI.minimize();
-  }
-}
-
-function toggleMaximize() {
-  if (process.env.MODE === 'electron') {
-    window.windowAPI.toggleMaximize();
-  }
-}
-
-function closeApp() {
-  if (process.env.MODE === 'electron') {
-    window.windowAPI.close();
-  }
 }
 </script>

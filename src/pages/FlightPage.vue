@@ -1,233 +1,257 @@
 <template>
   <q-page class="full-width row justify-start no-wrap">
-    <!-- Menu -->
-    <div class="self-stretch row no-wrap" :class="menuClasses">
-      <q-tabs
-        v-model="menuTabs"
-        vertical
-        active-bg-color="grey-6"
-        class="bg-grey-10 text-white"
-      >
-        <q-tab name="overview" icon="home" :label="$t('overview')" />
-        <q-separator spaced inset color="white" />
-        <q-tab name="balloons" icon="mdi-airballoon" :label="$t('balloon', 2)">
-          <q-badge v-if="showBalloonsMenuBadge" color="red" floating>
-            {{ availableBalloons.length }}
-          </q-badge>
-        </q-tab>
-        <q-tab name="cars" icon="airport_shuttle" :label="$t('car', 2)">
-          <q-badge v-if="showCarsMenuBadge" color="red" floating>
-            {{ availableCars.length }}
-          </q-badge>
-        </q-tab>
-        <q-tab
-          name="supervisors"
-          icon="supervisor_account"
-          :label="$t('supervisor', 2)"
-        >
-          <q-badge v-if="showSupervisorsMenuBadge" color="red" floating>
-            {{ availableSupervisors.length }}
-          </q-badge>
-        </q-tab>
-        <q-tab name="participants" icon="group" :label="$t('participant', 2)">
-          <q-badge v-if="showParticiapntsMenuBadge" color="red" floating>
-            {{ availableParticipants.length }}
-          </q-badge>
-        </q-tab>
-        <q-separator spaced inset color="white" />
-        <q-tab name="settings" icon="settings" :label="$t('settings')" />
-      </q-tabs>
-
-      <div class="col-grow self-stretch column" v-if="menuTabs !== 'overview'">
-        <q-tab-panels
+    <template v-if="!flightNotFOund && !flightLoading">
+      <!-- Menu -->
+      <div class="self-stretch row no-wrap" :class="menuClasses">
+        <q-tabs
           v-model="menuTabs"
-          animated
-          transition-next="jump-up"
-          transition-prev="jump-down"
           vertical
-          class="no-wrap col-grow shadow-24"
+          active-bg-color="grey-6"
+          class="bg-grey-10 text-white"
         >
-          <q-tab-panel name="balloons" class="column bg-grey-2">
-            <q-scroll-area class="col-grow self-stretchs">
-              <editable-list
-                :title="$t('balloon', 2)"
-                :item-name="$t('balloon')"
-                :itens="availableBalloons"
-                @create="dialogs.showCreateVehicle('balloon', flight)"
-                @edit="(balloon) => dialogs.showEditVehicle(balloon, flight)"
-                @delete="(balloon) => dialogs.showDeleteVehicle(balloon)"
-              >
-                <template #main="{ item }">
-                  {{ item.name }}
-                </template>
-                <template #side="{ item }">
-                  {{ item.capacity + ' + 1' }}
-                </template>
-              </editable-list>
-            </q-scroll-area>
-          </q-tab-panel>
-
-          <q-tab-panel name="cars" class="column bg-grey-2">
-            <q-scroll-area class="col-grow self-stretchs">
-              <editable-list
-                :title="$t('car', 2)"
-                :item-name="$t('car')"
-                :itens="availableCars"
-                @create="dialogs.showCreateVehicle('car', flight)"
-                @edit="(car) => dialogs.showEditVehicle(car, flight)"
-                @delete="(car) => dialogs.showDeleteVehicle(car)"
-              >
-                <template #main="{ item }">
-                  {{ item.name }}
-                </template>
-                <template #side="{ item }">
-                  {{ item.capacity + ' + 1' }}
-                </template>
-              </editable-list>
-            </q-scroll-area>
-          </q-tab-panel>
-
-          <q-tab-panel name="supervisors" class="column bg-grey-2">
-            <q-scroll-area class="col-grow self-stretchs">
-              <editable-list
-                :title="$t('supervisor', 2)"
-                :item-name="$t('supervisor')"
-                :itens="availableSupervisors"
-                @create="dialogs.showCreatePerson(flight.people)"
-                @edit="(person) => dialogs.showEditPerson(person)"
-                @delete="(person) => dialogs.showDeletePerson(person)"
-              >
-                <template #main="{ item }">
-                  {{ item.name }}
-                </template>
-                <template #side="{ item }">
-                  {{ item.numberOfFlights }}
-                </template>
-              </editable-list>
-            </q-scroll-area>
-          </q-tab-panel>
-
-          <q-tab-panel name="participants" class="column bg-grey-2">
-            <q-scroll-area class="col-grow self-stretchs">
-              <editable-list
-                :title="$t('participant', 2)"
-                :item-name="$t('participant')"
-                :itens="availableParticipants"
-                @create="dialogs.showCreatePerson(flight.people)"
-                @edit="(person) => dialogs.showEditPerson(person)"
-                @delete="(person) => dialogs.showDeletePerson(person, flight)"
-                :dense="availableParticipants.length > 10"
-              >
-                <template #main="{ item }">
-                  {{ item.name }}
-                </template>
-                <template #side="{ item }">
-                  {{ item.numberOfFlights }}
-                </template>
-              </editable-list>
-            </q-scroll-area>
-          </q-tab-panel>
-
-          <q-tab-panel name="settings">
-            <div class="q-py-md">
-              <div class="text-h6 q-py-md">
-                {{ $t('settings') }}
-              </div>
-              <div class="q-gutter-sm">
-                <q-list bordered>
-                  <q-item tag="label" v-ripple>
-                    <q-item-section avatar top>
-                      <q-checkbox v-model="color" val="teal" color="primary" />
-                    </q-item-section>
-                    <q-item-section>
-                      <q-item-label> Teal</q-item-label>
-                      <q-item-label caption>With description</q-item-label>
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </div>
-            </div>
-          </q-tab-panel>
-        </q-tab-panels>
-      </div>
-    </div>
-
-    <!-- Flight overview -->
-    <!-- TODO FIXME add loader or skeleton -->
-    <div v-if="showFlightView && flight != null" class="col-grow flex">
-      <base-flight
-        :flight="flight"
-        @balloon-add="onBalloonAdd"
-        class="col-grow content-stretch bg-grey-5"
-      >
-        <base-vehicle-group
-          v-for="group in flight.vehicleGroups"
-          :key="group.id"
-          :group="group"
-          @car-add="(car) => onCarAdd(group, car)"
-        >
-          <template #balloon>
-            <base-vehicle
-              :key="group.balloon.id"
-              type="balloon"
-              :vehicle="group.balloon"
-              @balloon-remove="(b) => onVehicleGroupRemove(group)"
-              @passenger-add="(p) => onBalloonPersonAdd(group.balloon, p)"
-              @passenger-remove="(p) => onBalloonPersonRemove(group.balloon, p)"
-              @operator-add="(p) => onBalloonOperatorAdd(group.balloon, p)"
-              @operator-remove="(p) => onBalloonOperatorRemove(group.balloon)"
-            />
-          </template>
-          <template #cars>
-            <base-vehicle
-              v-for="vehicle in group.cars"
-              :key="vehicle.id"
-              type="car"
-              :vehicle="vehicle"
-              @car-remove="(car) => onCarRemove(group, car)"
-              @passenger-add="(p) => onCarPersonAdd(vehicle, p)"
-              @passenger-remove="(p) => onCarPersonRemove(vehicle, p)"
-              @operator-add="(p) => onCarOperatorAdd(vehicle, p)"
-              @operator-remove="(p) => onCarOperatorRemove(vehicle)"
-            />
-          </template>
-        </base-vehicle-group>
-      </base-flight>
-
-      <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-fab icon="add" direction="up" color="primary" external-label>
-          <q-fab-action
-            external-label
-            label-position="left"
-            :label="$t('actions.add_car')"
-            icon="airport_shuttle"
-            color="primary"
-          />
-          <q-fab-action
-            external-label
-            label-position="left"
-            :label="$t('actions.add_balloon')"
+          <q-tab name="overview" icon="home" :label="$t('overview')" />
+          <q-separator spaced inset color="white" />
+          <q-tab
+            name="balloons"
             icon="mdi-airballoon"
-            color="primary"
-          />
-          <q-fab-action
-            external-label
-            label-position="left"
-            :label="$t('actions.smart_fill')"
-            icon="fast_forward"
-            color="accent"
-            @click="onSmartFill"
-          />
-        </q-fab>
-      </q-page-sticky>
-    </div>
+            :label="$t('balloon', 2)"
+          >
+            <q-badge v-if="showBalloonsMenuBadge" color="red" floating>
+              {{ availableBalloons.length }}
+            </q-badge>
+          </q-tab>
+          <q-tab name="cars" icon="airport_shuttle" :label="$t('car', 2)">
+            <q-badge v-if="showCarsMenuBadge" color="red" floating>
+              {{ availableCars.length }}
+            </q-badge>
+          </q-tab>
+          <q-tab
+            name="supervisors"
+            icon="supervisor_account"
+            :label="$t('supervisor', 2)"
+          >
+            <q-badge v-if="showSupervisorsMenuBadge" color="red" floating>
+              {{ availableSupervisors.length }}
+            </q-badge>
+          </q-tab>
+          <q-tab name="participants" icon="group" :label="$t('participant', 2)">
+            <q-badge v-if="showParticiapntsMenuBadge" color="red" floating>
+              {{ availableParticipants.length }}
+            </q-badge>
+          </q-tab>
+          <q-separator spaced inset color="white" />
+          <q-tab name="settings" icon="settings" :label="$t('settings')" />
+        </q-tabs>
+
+        <div
+          class="col-grow self-stretch column"
+          v-if="menuTabs !== 'overview'"
+        >
+          <q-tab-panels
+            v-model="menuTabs"
+            animated
+            transition-next="jump-up"
+            transition-prev="jump-down"
+            vertical
+            class="no-wrap col-grow shadow-24"
+          >
+            <q-tab-panel name="balloons" class="column bg-grey-2">
+              <q-scroll-area class="col-grow self-stretchs">
+                <editable-list
+                  :title="$t('balloon', 2)"
+                  :item-name="$t('balloon')"
+                  :itens="availableBalloons"
+                  @create="dialogs.showCreateVehicle('balloon', flight)"
+                  @edit="(balloon) => dialogs.showEditVehicle(balloon, flight)"
+                  @delete="(balloon) => dialogs.showDeleteVehicle(balloon)"
+                >
+                  <template #main="{ item }">
+                    {{ item.name }}
+                  </template>
+                  <template #side="{ item }">
+                    {{ (item.capacity - 1) + ' + 1' }}
+                  </template>
+                </editable-list>
+              </q-scroll-area>
+            </q-tab-panel>
+
+            <q-tab-panel name="cars" class="column bg-grey-2">
+              <q-scroll-area class="col-grow self-stretchs">
+                <editable-list
+                  :title="$t('car', 2)"
+                  :item-name="$t('car')"
+                  :itens="availableCars"
+                  @create="dialogs.showCreateVehicle('car', flight)"
+                  @edit="(car) => dialogs.showEditVehicle(car, flight)"
+                  @delete="(car) => dialogs.showDeleteVehicle(car)"
+                >
+                  <template #main="{ item }">
+                    {{ item.name }}
+                  </template>
+                  <template #side="{ item }">
+                    {{ (item.capacity - 1) + ' + 1' }}
+                  </template>
+                </editable-list>
+              </q-scroll-area>
+            </q-tab-panel>
+
+            <q-tab-panel name="supervisors" class="column bg-grey-2">
+              <q-scroll-area class="col-grow self-stretchs">
+                <editable-list
+                  :title="$t('supervisor', 2)"
+                  :item-name="$t('supervisor')"
+                  :itens="availableSupervisors"
+                  @create="dialogs.showCreatePerson(flight.people)"
+                  @edit="(person) => dialogs.showEditPerson(person)"
+                  @delete="(person) => dialogs.showDeletePerson(person)"
+                >
+                  <template #main="{ item }">
+                    {{ item.name }}
+                  </template>
+                  <template #side="{ item }">
+                    {{ item.numberOfFlights }}
+                  </template>
+                </editable-list>
+              </q-scroll-area>
+            </q-tab-panel>
+
+            <q-tab-panel name="participants" class="column bg-grey-2">
+              <q-scroll-area class="col-grow self-stretchs">
+                <editable-list
+                  :title="$t('participant', 2)"
+                  :item-name="$t('participant')"
+                  :itens="availableParticipants"
+                  @create="dialogs.showCreatePerson(flight.people)"
+                  @edit="(person) => dialogs.showEditPerson(person)"
+                  @delete="(person) => dialogs.showDeletePerson(person, flight)"
+                  :dense="availableParticipants.length > 10"
+                >
+                  <template #main="{ item }">
+                    {{ item.name }}
+                  </template>
+                  <template #side="{ item }">
+                    {{ item.numberOfFlights }}
+                  </template>
+                </editable-list>
+              </q-scroll-area>
+            </q-tab-panel>
+
+            <q-tab-panel name="settings">
+              <div class="q-py-md">
+                <div class="text-h6 q-py-md">
+                  {{ $t('settings') }}
+                </div>
+                <div class="q-gutter-sm">
+                  <q-list bordered>
+                    <q-item tag="label" v-ripple>
+                      <q-item-section avatar top>
+                        <q-checkbox
+                          v-model="color"
+                          val="teal"
+                          color="primary"
+                        />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label> Teal</q-item-label>
+                        <q-item-label caption>With description</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </q-list>
+                </div>
+              </div>
+            </q-tab-panel>
+          </q-tab-panels>
+        </div>
+      </div>
+
+      <!-- Flight overview -->
+      <!-- TODO FIXME add loader or skeleton -->
+      <div v-if="showFlightView" class="col-grow flex">
+        <base-flight
+          :flight="flight"
+          @balloon-add="onBalloonAdd"
+          class="col-grow content-stretch bg-grey-5"
+        >
+          <base-vehicle-group
+            v-for="group in flight.vehicleGroups"
+            :key="group.id"
+            :group="group"
+            @car-add="(car) => onCarAdd(group, car)"
+          >
+            <template #balloon>
+              <base-vehicle
+                :key="group.balloon.id"
+                type="balloon"
+                :vehicle="group.balloon"
+                @balloon-remove="(b) => onVehicleGroupRemove(group)"
+                @passenger-add="(p) => onBalloonPersonAdd(group.balloon, p)"
+                @passenger-remove="
+                  (p) => onBalloonPersonRemove(group.balloon, p)
+                "
+                @operator-add="(p) => onBalloonOperatorAdd(group.balloon, p)"
+                @operator-remove="(p) => onBalloonOperatorRemove(group.balloon)"
+              />
+            </template>
+            <template #cars>
+              <base-vehicle
+                v-for="vehicle in group.cars"
+                :key="vehicle.id"
+                type="car"
+                :vehicle="vehicle"
+                @car-remove="(car) => onCarRemove(group, car)"
+                @passenger-add="(p) => onCarPersonAdd(vehicle, p)"
+                @passenger-remove="(p) => onCarPersonRemove(vehicle, p)"
+                @operator-add="(p) => onCarOperatorAdd(vehicle, p)"
+                @operator-remove="(p) => onCarOperatorRemove(vehicle)"
+              />
+            </template>
+          </base-vehicle-group>
+        </base-flight>
+
+        <q-page-sticky position="bottom-right" :offset="[18, 18]">
+          <q-fab icon="add" direction="up" color="primary" external-label>
+            <q-fab-action
+              external-label
+              label-position="left"
+              :label="$t('actions.add_car')"
+              icon="airport_shuttle"
+              color="primary"
+            />
+            <q-fab-action
+              external-label
+              label-position="left"
+              :label="$t('actions.add_balloon')"
+              icon="mdi-airballoon"
+              color="primary"
+            />
+            <q-fab-action
+              external-label
+              label-position="left"
+              :label="$t('actions.smart_fill')"
+              icon="fast_forward"
+              color="accent"
+              @click="onSmartFill"
+            />
+          </q-fab>
+        </q-page-sticky>
+      </div>
+    </template>
+
+    <template v-if="flightLoading">
+      Loading...
+    </template>
+
+    <template v-if="flightNotFOund">
+      <!-- TODO -->
+      Flight not Found
+    </template>
   </q-page>
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, Ref, ref, watch } from 'vue';
+import { computed, onMounted, Ref, ref, watch } from 'vue';
 import { QItem, QList, useQuasar } from 'quasar';
-import { onBeforeRouteUpdate, RouteParams, useRoute } from 'vue-router';
+import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import { useDialogs } from 'src/composables/dialogs';
@@ -251,16 +275,9 @@ const menuTabs = ref('overview');
 
 const { t } = useI18n();
 const $q = useQuasar();
-const route = useRoute();
 const projectStore = useProjectStore();
 
-// let service = projectStore.service as PersistenceService;
-// const flight = projectStore.flight;
 // FIXME Convert correctly
-// const { service }: { service: Ref<PersistenceService | null> } = storeToRefs(
-//   projectStore
-// ) as any;
-// const { flight }: {} = storeToRefs(projectStore) as any;
 const {
   project,
   flight,
@@ -290,7 +307,7 @@ watch(
   { deep: true }
 );
 
-onBeforeRouteUpdate((to, from) => {
+onBeforeRouteUpdate((to) => {
   // TODO This should be done async with error handling
   projectStore.load(to.params);
 });
@@ -403,6 +420,14 @@ function onBalloonPersonRemove(balloon: Balloon, person: Person) {
 function onCarPersonRemove(car: Car, person: Person) {
   monitorService((service) => service.removeCarPassenger(person, car));
 }
+
+const flightNotFOund = computed<boolean>(() => {
+  return flight.value === null;
+});
+
+const flightLoading = computed<boolean>(() => {
+  return flight.value === undefined;
+});
 
 const showBalloonsMenuBadge = computed<boolean>(() => {
   return availableBalloons.value.length > 0;

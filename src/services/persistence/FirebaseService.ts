@@ -1,4 +1,3 @@
-import { Ref } from 'vue';
 import {
   doc,
   getDoc,
@@ -9,7 +8,6 @@ import {
   arrayRemove,
   increment,
   updateDoc,
-  runTransaction,
   FieldValue,
 } from 'firebase/firestore';
 import { db } from 'src/boot/firebase';
@@ -37,6 +35,7 @@ import {
   ProjectObject,
 } from 'src/lib/utils/converter';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
+import firebase from 'firebase/compat';
 
 type UpdateObject = {
   [key: string]: null | boolean | number | string | string[] | FieldValue;
@@ -73,7 +72,7 @@ export class FirebaseService extends PersistenceService {
       return;
     }
 
-    const ref = this.getProjectReference(projectId);
+    const ref = this.getProjectConverterReference(projectId);
 
     this._unsubscribeProject = onSnapshot(ref, (doc) => {
       if (doc.exists()) {
@@ -120,7 +119,7 @@ export class FirebaseService extends PersistenceService {
       // Flight needs to be loaded first as all flights only hold the id of the flight
       const lastFlight = this.project.flights[lastIndex];
 
-      const flightRef = this.getFlightReference(lastFlight?.id);
+      const flightRef = this.getFlightConverterReference(lastFlight?.id);
       const flightSnap = await getDoc(flightRef);
       if (flightSnap.exists()) {
         const baseFlight = flightSnap.data();
@@ -148,18 +147,10 @@ export class FirebaseService extends PersistenceService {
       throw new Error('no_project');
     }
 
-    return runTransaction(db, async (transation) => {
-      const updateFlight = this.updateFLight(flight);
-      // FIXME This should be done by firebase cloud functions - SECURITY RISK
-      const updateProhect = this.updateProjectDocument({
-        [`flights`]: arrayUnion(flight.id),
-      });
-
-      return new Promise((resolve, reject) => {
-        Promise.all([updateFlight, updateProhect])
-          .then((value) => resolve())
-          .catch((reason) => reject(reason));
-      });
+    await this.updateFLight(flight);
+    // FIXME This should be done by firebase cloud functions - SECURITY RISK
+    return this.updateProjectDocument({
+      ['flights']: arrayUnion(flight.id),
     });
   }
 
@@ -168,22 +159,20 @@ export class FirebaseService extends PersistenceService {
     return Promise.resolve(undefined);
   }
 
-  loadFlight(flightId: string | null, cb: (flight: Flight) => void): void {
+  loadFlight(flightId: string | null, cb: (flight: Flight | null) => void): void {
     if (this._unsubscribeFlight != null) {
       this._unsubscribeFlight();
     }
 
     if (flightId == null) {
-      return;
+      throw 'invalid_flight';
     }
 
-    const ref = this.getFlightReference(flightId);
+    const ref = this.getFlightConverterReference(flightId);
 
     this._unsubscribeFlight = onSnapshot(ref, (doc) => {
-      if (doc.exists()) {
-        this.flight = doc.data();
-        cb(this.flight);
-      }
+      this.flight = doc.data();
+      cb(this.flight ?? null);
     });
   }
 
@@ -197,10 +186,13 @@ export class FirebaseService extends PersistenceService {
 
   async updateFlightDocument(obj: object): Promise<void> {
     const store = useAuthStore();
-    const auth = await store.user;
+
+    if (store.user == null) {
+      throw 'Cannot update flight. Not authenticated.';
+    }
 
     if (this.flight == null) {
-      throw new Error('Cannot update flight. No flight is set.');
+      throw 'Cannot update flight. No flight is set.';
     }
 
     return updateDoc(doc(db, 'flights', this.flight.id), obj);
@@ -518,8 +510,7 @@ export class FirebaseService extends PersistenceService {
 
   async updateFLight(flight: Flight): Promise<void> {
     this.flight = flight;
-
-    const ref = this.getFlightReference(flight.id);
+    const ref = this.getFlightConverterReference(flight.id);
     return setDoc(ref, flight);
   }
 
@@ -529,9 +520,9 @@ export class FirebaseService extends PersistenceService {
     });
   }
 
-  getFlightReference(flightId: string) {
-    const document = doc(db, 'flights', flightId);
-    const ref = document.withConverter<Flight>({
+  getFlightConverterReference(flightId: string) {
+    const document = this.getFlightReference(flightId);
+    return document.withConverter<Flight>({
       toFirestore: (flight: Flight) => {
         return flightToObject(flight, this.project?.id ?? '');
       },
@@ -548,12 +539,15 @@ export class FirebaseService extends PersistenceService {
         return flightFromObject(data, flightId);
       },
     });
-    return ref;
   }
 
-  getProjectReference(projectId: string) {
-    const document = doc(db, 'projects', projectId);
-    const ref = document.withConverter<Project>({
+  getFlightReference(flightId: string) {
+    return doc(db, 'flights', flightId);
+  }
+
+  getProjectConverterReference(projectId: string) {
+    const document = this.getProjectReference(projectId);
+    return document.withConverter<Project>({
       toFirestore: (project: Project) => {
         return projectToObject(project);
       },
@@ -562,6 +556,9 @@ export class FirebaseService extends PersistenceService {
         return projectFromObject(data as ProjectObject, projectId);
       },
     });
-    return ref;
+  }
+
+  getProjectReference(projectId: string) {
+    return doc(db, 'projects', projectId);
   }
 }

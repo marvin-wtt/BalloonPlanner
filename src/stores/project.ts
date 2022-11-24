@@ -1,4 +1,4 @@
-import { defineStore, getActivePinia } from 'pinia';
+import { defineStore } from 'pinia';
 import { Project } from 'src/lib/entities/Project';
 import { ref } from 'vue';
 import { Flight } from 'src/lib/entities';
@@ -13,24 +13,25 @@ export const useProjectStore = defineStore('project', () => {
   // https://github.com/vuejs/pinia/discussions/1717
   const route = useRoute();
 
-  const project = ref<Project | null>();
-  const flight = ref<Flight | null>();
+  const project = ref<Project | undefined | null>();
+  const flight = ref<Flight | undefined | null>();
   const service = ref<PersistenceService | null>();
 
   const error = ref<boolean>(false);
 
-  function initializeService() {
+  async function initializeService() {
     const auth = useAuthStore();
-    service.value = auth.authenticated()
+
+    service.value = (await auth.authenticated())
       ? new FirebaseService()
       : new LocalStorageService();
   }
 
-  function load(params?: RouteParams) {
+  async function load(params?: RouteParams) {
     params = params ?? route.params;
 
     if (service.value == null) {
-      initializeService();
+      await initializeService();
     }
 
     const projectId = params.project as string;
@@ -59,13 +60,13 @@ export const useProjectStore = defineStore('project', () => {
   }
 
   function loadFlight(flightId: string): void {
-    if (flightId == null) {
-      flight.value = null;
-      service.value?.unloadFlight();
+    if (flightId == flight.value?.id) {
       return;
     }
 
-    if (flightId == flight.value?.id) {
+    if (flightId == null) {
+      flight.value = null;
+      service.value?.unloadFlight();
       return;
     }
 
@@ -81,6 +82,11 @@ export const useProjectStore = defineStore('project', () => {
 
     return service.value.createFlight();
   }
+
+  // TODO
+  // async function loadProjects(): Promise<Project[]> {
+  //
+  // }
 
   return {
     service,

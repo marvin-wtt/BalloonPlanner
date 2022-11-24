@@ -79,6 +79,6 @@ function onDrop(event: DragEvent) {
 
 <style scoped>
 .highlighted {
-  background-color: v-bind(highlightColor);
+  background-color: v-bind(highlightColor) !important;
 }
 </style>

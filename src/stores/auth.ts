@@ -9,8 +9,11 @@ import {
 import { User } from 'firebase/auth';
 import { User as LocalUser } from 'src/lib/entities';
 import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Router, useRoute } from 'vue-router';
+import { getActivePinia } from 'pinia'
 
 export const useAuthStore = defineStore('auth', () => {
+
   const user = ref<LocalUser>();
 
   let initialized = false;
@@ -28,19 +31,29 @@ export const useAuthStore = defineStore('auth', () => {
         auth.signOut();
         user.value = undefined;
       }
-    });
 
-    initialized = true;
+      initialized = true;
+    });
   }
 
-  function authenticated(): boolean {
-    return user.value?.local === true || user.value?.id != null;
+  async function authenticated(): Promise<boolean> {
+    if (initialized) {
+      return user.value?.local === true || user.value?.id != null;
+    }
+    // TODO Handle local
+    return new Promise<boolean>((resolve, reject) => {
+      const auth = getAuth();
+      const unsubscribe = onAuthStateChanged(auth, (authUser) => {
+        unsubscribe();
+        resolve(authUser != null);
+      });
+    });
   }
 
   function setUserCredentials(authUser: User) {
     // User is signed in, see docs for a list of available properties
     // https://firebase.google.com/docs/reference/js/firebase.User
-    const username = authUser.displayName ?? 'User';
+    const username = authUser.displayName ?? authUser.email?.split('@')[0] ?? 'User';
 
     user.value = new LocalUser(
       authUser.uid,

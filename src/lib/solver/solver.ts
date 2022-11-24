@@ -133,10 +133,10 @@ function findCarsSolution(flight: Flight): boolean {
     const balloon = group.balloon;
 
     const existingCapacity = group.cars.reduce(
-      (prev, curr) => prev + curr.capacity,
+      (prev, curr) => prev + curr.capacity - 1,
       0
     );
-    if (existingCapacity >= balloon.capacity + 1) {
+    if (existingCapacity >= balloon.capacity) {
       continue;
     }
 
@@ -146,7 +146,7 @@ function findCarsSolution(flight: Flight): boolean {
       return false;
     }
 
-    const c = findSmallestCarFit(cars, balloon.capacity + 1 - existingCapacity);
+    const c = findSmallestCarFit(cars, balloon.capacity - existingCapacity);
     if (c.length == 0) {
       return false;
     }

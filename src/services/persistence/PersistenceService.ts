@@ -44,7 +44,7 @@ export abstract class PersistenceService {
 
   abstract loadFlight(
     flightId: string | null,
-    cb: (flight: Flight) => void
+    cb: (flight: Flight | null) => void
   ): void;
 
   unloadFlight() {

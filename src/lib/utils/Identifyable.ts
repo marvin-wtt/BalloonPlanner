@@ -4,14 +4,7 @@ export abstract class Identifyable {
   private _id: string;
 
   static generateNewId(): string {
-    let result = '';
-    const characters =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const charactersLength = characters.length;
-    for (let i = 0; i < 16; i++) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return result;
+    return uuidv4();
   }
 
   constructor(id?: string) {

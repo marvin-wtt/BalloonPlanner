@@ -12,11 +12,11 @@ export class Car extends Vehicle {
   }
 
   isFull(): boolean {
-    return this.passengerCount() + this._reservedCapacity >= this.capacity;
+    return this.passengerCount() + this._reservedCapacity + 1 >= this.capacity;
   }
 
   useableCapacity(): number {
-    return this.capacity - this._reservedCapacity;
+    return this.capacity - this._reservedCapacity - 1;
   }
 
   availableCapacity(): number {

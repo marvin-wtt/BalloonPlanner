@@ -17,7 +17,6 @@ export function useDialogs(
     projectStore
   ) as any;
 
-
   function showCreatePerson() {
     $q.dialog({
       component: EditPersonDialog,

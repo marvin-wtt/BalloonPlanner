@@ -27,12 +27,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('layouts/ProjectLayout.vue'),
     meta: { requiresAuth: true },
     children: [
-      // TODO
-      // {
-      //   path: '',
-      //   name: 'projects',
-      //   component: () => import('pages/ProjectSelectionPage.vue'),
-      // },
+      {
+        path: '',
+        name: 'projects',
+        component: () => import('pages/ProjectSelectionPage.vue'),
+      },
       {
         path: 'flights/:flight',
         name: 'flights',
