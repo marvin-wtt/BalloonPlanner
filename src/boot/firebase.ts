@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { useAuthStore } from 'stores/auth';
 
 const firebaseConfig = {
@@ -16,7 +16,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-export { app, db };
+enableIndexedDbPersistence(db).catch((error) => {
+  console.error(error);
+});
 
-const authStore = useAuthStore();
-authStore.initialize();
+export { app, db };

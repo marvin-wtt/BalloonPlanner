@@ -69,7 +69,7 @@
                     {{ item.name }}
                   </template>
                   <template #side="{ item }">
-                    {{ (item.capacity - 1) + ' + 1' }}
+                    {{ item.capacity - 1 + ' + 1' }}
                   </template>
                 </editable-list>
               </q-scroll-area>
@@ -89,7 +89,7 @@
                     {{ item.name }}
                   </template>
                   <template #side="{ item }">
-                    {{ (item.capacity - 1) + ' + 1' }}
+                    {{ item.capacity - 1 + ' + 1' }}
                   </template>
                 </editable-list>
               </q-scroll-area>
@@ -237,9 +237,7 @@
       </div>
     </template>
 
-    <template v-if="flightLoading">
-      Loading...
-    </template>
+    <template v-if="flightLoading"> Loading... </template>
 
     <template v-if="flightNotFOund">
       <!-- TODO -->
@@ -270,23 +268,28 @@ import EditableList from 'components/EditableList.vue';
 import { useI18n } from 'vue-i18n';
 import { solve } from 'src/lib/solver/solver';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
+import { useServiceStore } from 'stores/service';
 
 const menuTabs = ref('overview');
 
 const { t } = useI18n();
 const $q = useQuasar();
 const projectStore = useProjectStore();
+const serviceStore = useServiceStore();
 
 // FIXME Convert correctly
 const {
   project,
   flight,
-  service,
 }: {
   project: Ref<Project | null>;
   flight: Ref<Flight | null>;
-  service: Ref<PersistenceService | null>;
 } = storeToRefs(projectStore) as any;
+const {
+  dataService,
+}: {
+  dataService: Ref<PersistenceService | null>;
+} = storeToRefs(serviceStore) as any;
 
 const dialogs = useDialogs($q, t);
 
@@ -323,7 +326,7 @@ function onSmartFill() {
     message: t('smart_fill_loading'),
   });
   f.then((value) => {
-    service.value?.updateFLight(value);
+    dataService.value?.updateFLight(value);
     notif({
       type: 'positive',
       message: t('smart_fill_success'),
@@ -341,7 +344,7 @@ function onSmartFill() {
 function monitorService(
   cb: (service: PersistenceService) => Promise<void>
 ): void {
-  if (!service.value) {
+  if (!dataService.value) {
     $q.notify({
       type: 'negative',
       message: t('service_not_available'),
@@ -349,7 +352,7 @@ function monitorService(
     return;
   }
 
-  const promise = cb(service.value);
+  const promise = cb(dataService.value);
   const notif = $q.notify({
     type: 'ongoing',
     message: t('saving_in_progress'),

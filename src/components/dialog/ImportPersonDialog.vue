@@ -4,7 +4,7 @@
       <q-form @reset="onReset" @submit="onSubmit" class="q-gutter-md">
         <q-card-section>
           <div class="text-h6">
-            {{ $t('dialog.person.title') }}
+            {{ $t('dialog.import_person.title') }}
           </div>
         </q-card-section>
 

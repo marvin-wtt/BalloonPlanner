@@ -4,6 +4,7 @@ import {
   Flight,
   Person,
   Project,
+  User,
   VehicleGroup,
 } from 'src/lib/entities';
 
@@ -11,14 +12,15 @@ type MapObject<T> = {
   [key: string]: T;
 };
 
-type PersonObject = {
+export type PersonObject = {
   name: string;
   flights: number;
   nation: string;
   supervisor: boolean;
+  firstFlight: boolean;
 };
 
-type BalloonObject = {
+export type BalloonObject = {
   name: string;
   capacity: number;
   operator: string | null;
@@ -26,7 +28,7 @@ type BalloonObject = {
   passengers: string[];
 };
 
-type CarObject = {
+export type CarObject = {
   name: string;
   capacity: number;
   reservedCapacity: number;
@@ -35,7 +37,7 @@ type CarObject = {
   passengers: string[];
 };
 
-type VehicleGroupObject = {
+export type VehicleGroupObject = {
   balloon: string;
   cars: string[];
 };
@@ -56,6 +58,21 @@ export type ProjectObject = {
   flights: string[];
 };
 
+// TODO Refactor
+export type UserObject = {
+  projects: string[];
+};
+
+export function userFromObject(obj: UserObject, userId: string): User {
+  return new User(userId, '', '', false, obj.projects);
+}
+
+export function userToObject(user: User): UserObject {
+  return {
+    projects: user.projects,
+  };
+}
+
 export function projectFromObject(
   obj: ProjectObject,
   projectId: string
@@ -64,7 +81,7 @@ export function projectFromObject(
   const description = obj.description;
 
   const flights: Flight[] = obj.flights.map((value) => {
-    const flight = new Flight([], [],[]);
+    const flight = new Flight([], [], []);
     flight.id = value;
 
     return flight;
@@ -75,15 +92,15 @@ export function projectFromObject(
     project.id = projectId;
   }
 
-  return  project;
+  return project;
 }
 
 export function projectToObject(project: Project): ProjectObject {
   return {
     name: project.name,
     description: project.desciption,
-    flights: project.flights.map(value => value.id),
-    collaborators: project.collaborators.map(value => value.id),
+    flights: project.flights.map((value) => value.id),
+    collaborators: project.collaborators.map((value) => value.id),
   };
 }
 
@@ -106,7 +123,10 @@ export function flightFromObject(obj: FlightObject, flightId?: string): Flight {
   return flight;
 }
 
-export function flightToObject(flight: Flight, projectId?: string): FlightObject {
+export function flightToObject(
+  flight: Flight,
+  projectId?: string
+): FlightObject {
   return {
     projectId: projectId,
     timestamp: flight.timestamp,
@@ -123,6 +143,7 @@ export function personToObject(person: Person): PersonObject {
     flights: person.numberOfFlights,
     nation: person.nation,
     supervisor: person.supervisor,
+    firstFlight: person.firstTime,
   };
 }
 
@@ -148,7 +169,8 @@ export function peopleFromObject(data: MapObject<PersonObject>): Person[] {
       obj.name,
       obj.nation,
       obj.supervisor,
-      obj.flights
+      obj.flights,
+      obj.firstFlight
     );
     person.id = id;
     people.push(person);

@@ -137,7 +137,26 @@ it.todo('throws error if the capacity is not sufficiant for everyone');
 
 it.todo('increments the flight for every person inside a balloon');
 
-it.todo('prioritises participants who never flew before');
+it('prioritises participants who never flew before', async () => {
+  const p1 = new Person(faker.name.firstName(), faker.locale, true, 0, false);
+  const p2 = new Person(faker.name.firstName(), faker.locale, true, 0, false);
+  const p3 = new Person(faker.name.firstName(), faker.locale, false, 0, false);
+  const p4 = new Person(faker.name.firstName(), faker.locale, false, 0, false);
+  const p5 = new Person(faker.name.firstName(), faker.locale, false, 0, false);
+  const p6 = new Person(faker.name.firstName(), faker.locale, false, 0, true);
+  const p7 = new Person(faker.name.firstName(), faker.locale, false, 0, true);
+
+  const b1 = new Balloon('D-OAAA', 3, [p1]);
+
+  const c1 = new Car('Car1', 9, [p2]);
+
+  const f = new Flight([b1], [c1], [p1, p2, p3, p4, p5, p6, p7]);
+
+  const result = await solve(f);
+
+  expect(result.vehicleGroups[0].balloon.passengers.find(value => value.id === p6.id)).toBeDefined();
+  expect(result.vehicleGroups[0].balloon.passengers.find(value => value.id === p7.id)).toBeDefined();
+});
 
 it.todo('prioritises participants with frewer flights');
 

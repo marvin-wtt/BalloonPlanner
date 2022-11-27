@@ -33,6 +33,9 @@ import {
   projectToObject,
   projectFromObject,
   ProjectObject,
+  userToObject,
+  userFromObject,
+  UserObject,
 } from 'src/lib/utils/converter';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
 import firebase from 'firebase/compat';
@@ -41,12 +44,45 @@ type UpdateObject = {
   [key: string]: null | boolean | number | string | string[] | FieldValue;
 };
 
-export class FirebaseService extends PersistenceService {
+export class FirestoreDataService implements PersistenceService {
   private _unsubscribeFlight?: () => void;
   private _unsubscribeProject?: () => void;
+  private _unsubscribeUser?: () => void;
+
+  private _flight?: Flight;
+  private _project?: Project;
+  private _user?: User;
+
+  loadUser(userId: string | null, cb: (user: User) => void) {
+    if (this._unsubscribeUser != null) {
+      this._unsubscribeUser();
+    }
+
+    if (userId == null) {
+      return;
+    }
+
+    const ref = this.getUserConverterReference(userId);
+
+    this._unsubscribeProject = onSnapshot(ref, (doc) => {
+      if (doc.exists()) {
+        this._user = doc.data();
+        cb(this._user);
+      }
+    });
+  }
+
+  unloadUser() {
+    this._user = undefined;
+
+    if (this._unsubscribeUser != null) {
+      this._unsubscribeUser();
+      this._unsubscribeUser = undefined;
+    }
+  }
 
   unloadProject() {
-    super.unloadProject();
+    this._project = undefined;
 
     if (this._unsubscribeProject != null) {
       this._unsubscribeProject();
@@ -55,7 +91,7 @@ export class FirebaseService extends PersistenceService {
   }
 
   unloadFlight() {
-    super.unloadFlight();
+    this._flight = undefined;
 
     if (this._unsubscribeFlight != null) {
       this._unsubscribeFlight();
@@ -76,14 +112,14 @@ export class FirebaseService extends PersistenceService {
 
     this._unsubscribeProject = onSnapshot(ref, (doc) => {
       if (doc.exists()) {
-        this.project = doc.data();
-        cb(this.project);
+        this._project = doc.data();
+        cb(this._project);
       }
     });
   }
 
   async createProject(project: Project): Promise<void> {
-    this.project = project;
+    this._project = project;
 
     if (project.local) {
       throw new Error('Cannot write local project to database');
@@ -107,17 +143,17 @@ export class FirebaseService extends PersistenceService {
   }
 
   async createFlight(): Promise<Flight> {
-    if (!this.project) {
+    if (!this._project) {
       throw new Error('No project loaded.');
     }
 
-    const lastIndex = this.project.flights.length - 1;
+    const lastIndex = this._project.flights.length - 1;
     // TODO Write as transaction
     // Create a new, clean flight if the project holds no flights or if the flight id is invalid for some reason.
     let flight = new Flight([], [], []);
     if (lastIndex >= 0) {
       // Flight needs to be loaded first as all flights only hold the id of the flight
-      const lastFlight = this.project.flights[lastIndex];
+      const lastFlight = this._project.flights[lastIndex];
 
       const flightRef = this.getFlightConverterReference(lastFlight?.id);
       const flightSnap = await getDoc(flightRef);
@@ -143,7 +179,7 @@ export class FirebaseService extends PersistenceService {
   }
 
   async addFlight(flight: Flight): Promise<void> {
-    if (this.project == null) {
+    if (this._project == null) {
       throw new Error('no_project');
     }
 
@@ -171,17 +207,17 @@ export class FirebaseService extends PersistenceService {
     const ref = this.getFlightConverterReference(flightId);
 
     this._unsubscribeFlight = onSnapshot(ref, (doc) => {
-      this.flight = doc.data();
-      cb(this.flight ?? null);
+      this._flight = doc.data();
+      cb(this._flight ?? null);
     });
   }
 
   async updateProjectDocument(obj: object): Promise<void> {
-    if (this.project == null) {
+    if (this._project == null) {
       throw new Error('Cannot update project. No project set.');
     }
 
-    return updateDoc(doc(db, 'projects', this.project.id), obj);
+    return updateDoc(doc(db, 'projects', this._project.id), obj);
   }
 
   async updateFlightDocument(obj: object): Promise<void> {
@@ -191,11 +227,11 @@ export class FirebaseService extends PersistenceService {
       throw 'Cannot update flight. Not authenticated.';
     }
 
-    if (this.flight == null) {
+    if (this._flight == null) {
       throw 'Cannot update flight. No flight is set.';
     }
 
-    return updateDoc(doc(db, 'flights', this.flight.id), obj);
+    return updateDoc(doc(db, 'flights', this._flight.id), obj);
   }
 
   async addBalloon(balloon: Balloon): Promise<void> {
@@ -281,7 +317,7 @@ export class FirebaseService extends PersistenceService {
   }
 
   async deleteBalloon(balloon: Balloon): Promise<void> {
-    if (this.flight == null) {
+    if (this._flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
     }
 
@@ -289,7 +325,7 @@ export class FirebaseService extends PersistenceService {
       [`balloons.${balloon.id}`]: deleteField(),
     };
 
-    const group = this.flight.vehicleGroups.find(
+    const group = this._flight.vehicleGroups.find(
       (value) => value.balloon.id === balloon.id
     );
     if (group != null) {
@@ -307,12 +343,12 @@ export class FirebaseService extends PersistenceService {
   }
 
   async deleteCar(car: Car): Promise<void> {
-    if (this.flight == null) {
+    if (this._flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
     }
 
     let obj: UpdateObject = {};
-    for (const vehicleGroup of this.flight.vehicleGroups) {
+    for (const vehicleGroup of this._flight.vehicleGroups) {
       const c = vehicleGroup.cars.find((value) => value.id === car.id);
       if (c == null) {
         continue;
@@ -331,7 +367,7 @@ export class FirebaseService extends PersistenceService {
   }
 
   async deletePersom(person: Person): Promise<void> {
-    if (this.flight == null) {
+    if (this._flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
     }
 
@@ -339,7 +375,7 @@ export class FirebaseService extends PersistenceService {
       [`people.${person.id}`]: deleteField(),
     };
 
-    for (const group of this.flight.vehicleGroups) {
+    for (const group of this._flight.vehicleGroups) {
       const result = this.removePersonFromVehicle(
         person,
         group.balloon,
@@ -470,12 +506,12 @@ export class FirebaseService extends PersistenceService {
   }
 
   async updateBalloon(balloon: Balloon): Promise<void> {
-    if (this.flight == null) {
+    if (this._flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
     }
 
     let obj = {};
-    for (const group of this.flight.vehicleGroups) {
+    for (const group of this._flight.vehicleGroups) {
       if (group.balloon.id === balloon.id) {
         obj = this.updateReservedCapacities(group, 'with', balloon);
         break;
@@ -489,12 +525,12 @@ export class FirebaseService extends PersistenceService {
   }
 
   async updateCar(car: Car): Promise<void> {
-    if (this.flight == null) {
+    if (this._flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
     }
 
     let obj = {};
-    for (const group of this.flight.vehicleGroups) {
+    for (const group of this._flight.vehicleGroups) {
       const c = group.cars.find((value) => value.id === car.id);
       if (c != null) {
         obj = this.updateReservedCapacities(group, 'with', car);
@@ -509,7 +545,7 @@ export class FirebaseService extends PersistenceService {
   }
 
   async updateFLight(flight: Flight): Promise<void> {
-    this.flight = flight;
+    this._flight = flight;
     const ref = this.getFlightConverterReference(flight.id);
     return setDoc(ref, flight);
   }
@@ -524,7 +560,7 @@ export class FirebaseService extends PersistenceService {
     const document = this.getFlightReference(flightId);
     return document.withConverter<Flight>({
       toFirestore: (flight: Flight) => {
-        return flightToObject(flight, this.project?.id ?? '');
+        return flightToObject(flight, this._project?.id ?? '');
       },
       fromFirestore: (snapshot, options) => {
         const data = snapshot.data(options) as FlightObject;
@@ -560,5 +596,22 @@ export class FirebaseService extends PersistenceService {
 
   getProjectReference(projectId: string) {
     return doc(db, 'projects', projectId);
+  }
+
+  getUserConverterReference(userId: string) {
+    const document = this.getUserReference(userId);
+    return document.withConverter<User>({
+      toFirestore: (user: User) => {
+        return userToObject(user);
+      },
+      fromFirestore: (snapshot, options) => {
+        const data = snapshot.data(options);
+        return userFromObject(data as UserObject, userId);
+      },
+    });
+  }
+
+  getUserReference(userId: string) {
+    return doc(db, 'users', userId);
   }
 }

@@ -1,15 +1,53 @@
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
-import { Balloon, Car, Flight, Person, VehicleGroup } from 'src/lib/entities';
+import { Balloon, Car, Flight, Person, Project, User, VehicleGroup } from 'src/lib/entities';
 
-export class LocalStorageService extends PersistenceService {
+export class LocalStorageService implements PersistenceService {
+  private _flight?: Flight;
+  private _project?: Project;
+
+
+  addFlight(flight: Flight): Promise<void> {
+    throw 'not_implemented';
+  }
+
+  createFlight(): Promise<Flight> {
+    throw 'not_implemented';
+  }
+
+  loadFlight(flightId: string | null, cb: (flight: (Flight | null)) => void): void {
+    throw 'not_implemented';
+  }
+
+  loadProject(projectId: string | null, cb: (project: Project) => void): void {
+    throw 'not_implemented';
+  }
+
+  loadUser(userId: string | null, cb: (user: User) => void): void {
+    throw 'not_implemented';
+  }
+
+  unloadFlight(): void {
+    this._flight = undefined;
+  }
+
+  unloadProject(): void {
+    this._project = undefined;
+  }
+
+  unloadUser(): void {
+    throw 'not_implemented';
+  }
+
+  updateProject(project: Project): Promise<void> {
+    throw 'not_implemented';
+  }
+
   private write(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      reject();
-    });
+    throw 'not_implemented';
   }
 
   addBalloon(balloon: Balloon): Promise<void> {
-    this.flight?.balloons.push(balloon);
+    this._flight?.balloons.push(balloon);
     return this.write();
   }
 
@@ -19,7 +57,7 @@ export class LocalStorageService extends PersistenceService {
   }
 
   addCar(car: Car): Promise<void> {
-    this.flight?.cars.push(car);
+    this._flight?.cars.push(car);
     return this.write();
   }
 
@@ -34,32 +72,32 @@ export class LocalStorageService extends PersistenceService {
   }
 
   addPersom(person: Person): Promise<void> {
-    this.flight?.people.push(person);
+    this._flight?.people.push(person);
     return this.write();
   }
 
   addVehicleGroup(vehicleGroup: VehicleGroup): Promise<void> {
-    this.flight?.vehicleGroups.push(vehicleGroup);
+    this._flight?.vehicleGroups.push(vehicleGroup);
     return this.write();
   }
 
   deleteBalloon(balloon: Balloon): Promise<void> {
-    this.flight?.removeBalloon(balloon);
+    this._flight?.removeBalloon(balloon);
     return this.write();
   }
 
   deleteCar(car: Car): Promise<void> {
-    this.flight?.removeCar(car);
+    this._flight?.removeCar(car);
     return this.write();
   }
 
   deletePersom(person: Person): Promise<void> {
-    this.flight?.removePerson(person);
+    this._flight?.removePerson(person);
     return this.write();
   }
 
   deleteVehicleGroup(vehicleGroup: VehicleGroup): Promise<void> {
-    this.flight?.removeVehicleGroup(vehicleGroup);
+    this._flight?.removeVehicleGroup(vehicleGroup);
     return this.write();
   }
 
@@ -95,11 +133,11 @@ export class LocalStorageService extends PersistenceService {
   }
 
   updateBalloon(balloon: Balloon): Promise<void> {
-    const oldBalloon = this.flight?.balloons.find(
+    const oldBalloon = this._flight?.balloons.find(
       (value) => value.id === balloon.id
     );
     if (oldBalloon == null) {
-      this.flight?.balloons.push(balloon);
+      this._flight?.balloons.push(balloon);
       return this.write();
     }
 
@@ -110,9 +148,9 @@ export class LocalStorageService extends PersistenceService {
   }
 
   updateCar(car: Car): Promise<void> {
-    const oldCar = this.flight?.balloons.find((value) => value.id === car.id);
+    const oldCar = this._flight?.balloons.find((value) => value.id === car.id);
     if (oldCar == null) {
-      this.flight?.cars.push(car);
+      this._flight?.cars.push(car);
       return this.write();
     }
 
@@ -123,17 +161,17 @@ export class LocalStorageService extends PersistenceService {
   }
 
   updateFLight(flight: Flight): Promise<void> {
-    this.flight = flight;
+    this._flight = flight;
     return this.write();
     // TODO How to trigger reload?
   }
 
   updatePersom(person: Person): Promise<void> {
-    const oldPerson = this.flight?.people.find(
+    const oldPerson = this._flight?.people.find(
       (value) => value.id === person.id
     );
     if (oldPerson == null) {
-      this.flight?.people.push(person);
+      this._flight?.people.push(person);
       return this.write();
     }
 

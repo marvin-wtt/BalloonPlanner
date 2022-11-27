@@ -5,18 +5,21 @@ export class Person extends Identifyable {
   private _numberOfFlights: number;
   private _nation: string;
   private _supervisor: boolean;
+  private _firstTime: boolean;
 
   constructor(
     name: string,
     nation: string,
     supervisor?: boolean,
-    flights?: number
+    flights?: number,
+    firstTime?: boolean
   ) {
     super();
     this._name = name;
     this._nation = nation;
     this._supervisor = supervisor ?? false;
     this._numberOfFlights = flights ?? 0;
+    this._firstTime = firstTime ?? false;
   }
 
   get nation(): string {
@@ -41,6 +44,14 @@ export class Person extends Identifyable {
 
   set numberOfFlights(value: number) {
     this._numberOfFlights = value;
+  }
+
+  set firstTime(value: boolean) {
+    this._firstTime = value;
+  }
+
+  get firstTime(): boolean {
+    return this._firstTime;
   }
 
   get supervisor(): boolean {

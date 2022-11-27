@@ -34,7 +34,10 @@ export async function solve(
     throw new Error('not_enough_pilots');
   }
 
-  // 3
+  // 3a
+  solutions.map((value) => findFirstTimeSolution(value));
+
+  // 3b
   solutions.map((value) => findFirstFlightSolutions(value));
 
   // 4
@@ -72,6 +75,26 @@ function createVehicleGroups(flight: Flight): Flight {
   return flight;
 }
 
+function findFirstTimeSolution(flight: Flight): Flight {
+  const participants = flight
+    .availablePeople()
+    .filter((value) => !value.supervisor && value.firstTime);
+
+  shuffle<Person>(participants);
+
+  for (const group of flight.vehicleGroups) {
+    const balloon = group.balloon;
+    while (balloon.availableCapacity() > 0 && participants.length > 0) {
+      const person = participants.pop();
+      if (person != null) {
+        balloon.addPassenger(person);
+      }
+    }
+  }
+
+  return flight;
+}
+
 function findPilotSolutions(baseFlight: Flight, groupIndex = 0): Flight[] {
   const solutions: Flight[] = [];
 
@@ -91,7 +114,6 @@ function findPilotSolutions(baseFlight: Flight, groupIndex = 0): Flight[] {
     // Always use a fresh clone of the base-flight
     // All objects, which are not effectifly immuteable need to be rereferenced
     const solutionFlight = baseFlight.clone();
-
 
     const availablePeople = solutionFlight.availablePeople();
     const pilot = availablePeople.find((value) => value.id === basePilot.id);
@@ -237,13 +259,20 @@ function findDriverSolution(
     const solutionFlight = baseFlight.clone();
 
     const availablePeople = solutionFlight.availablePeople();
-    const solutionDriver = availablePeople.find(value => value.id === baseDriver.id);
+    const solutionDriver = availablePeople.find(
+      (value) => value.id === baseDriver.id
+    );
     if (!solutionDriver) {
       continue;
     }
-    solutionFlight.vehicleGroups[groupIndex].cars[carIndex].operator = solutionDriver;
+    solutionFlight.vehicleGroups[groupIndex].cars[carIndex].operator =
+      solutionDriver;
 
-    const childSolutions = findDriverSolution(solutionFlight, groupIndex, carIndex + 1);
+    const childSolutions = findDriverSolution(
+      solutionFlight,
+      groupIndex,
+      carIndex + 1
+    );
     solutions.push(...childSolutions);
   }
 
