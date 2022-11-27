@@ -38,7 +38,7 @@ import {
   UserObject,
 } from 'src/lib/utils/converter';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
-import firebase from 'firebase/compat';
+import { useProjectStore } from 'stores/project';
 
 type UpdateObject = {
   [key: string]: null | boolean | number | string | string[] | FieldValue;
@@ -99,22 +99,29 @@ export class FirestoreDataService implements PersistenceService {
     }
   }
 
-  loadProject(projectId: string | null, cb: (project: Project) => void): void {
-    if (this._unsubscribeProject != null) {
-      this._unsubscribeProject();
-    }
-
-    if (projectId == null) {
-      return;
-    }
-
-    const ref = this.getProjectConverterReference(projectId);
-
-    this._unsubscribeProject = onSnapshot(ref, (doc) => {
-      if (doc.exists()) {
-        this._project = doc.data();
-        cb(this._project);
+  loadProject(projectId: string | null): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      if (this._unsubscribeProject != null) {
+        this._unsubscribeProject();
       }
+
+      if (projectId == null) {
+        reject('invalid_project_id');
+        return;
+      }
+
+      let callPromise = true;
+      const ref = this.getProjectConverterReference(projectId);
+      this._unsubscribeProject = onSnapshot(ref, (doc) => {
+        const project = doc.data();
+        const projectStore = useProjectStore();
+        projectStore.project = project;
+
+        if (callPromise) {
+          callPromise = false;
+          resolve();
+        }
+      });
     });
   }
 
@@ -195,20 +202,29 @@ export class FirestoreDataService implements PersistenceService {
     return Promise.resolve(undefined);
   }
 
-  loadFlight(flightId: string | null, cb: (flight: Flight | null) => void): void {
-    if (this._unsubscribeFlight != null) {
-      this._unsubscribeFlight();
-    }
+  loadFlight(flightId: string | null): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      if (this._unsubscribeFlight != null) {
+        this._unsubscribeFlight();
+      }
 
-    if (flightId == null) {
-      throw 'invalid_flight';
-    }
+      if (flightId == null) {
+        reject('invalid_flight');
+        return;
+      }
 
-    const ref = this.getFlightConverterReference(flightId);
+      let callPromise = true;
+      const ref = this.getFlightConverterReference(flightId);
+      this._unsubscribeFlight = onSnapshot(ref, (doc) => {
+        this._flight = doc.data();
+        const projectStore = useProjectStore();
+        projectStore.flight = this._flight;
 
-    this._unsubscribeFlight = onSnapshot(ref, (doc) => {
-      this._flight = doc.data();
-      cb(this._flight ?? null);
+        if (callPromise) {
+          resolve();
+          callPromise = false;
+        }
+      });
     });
   }
 

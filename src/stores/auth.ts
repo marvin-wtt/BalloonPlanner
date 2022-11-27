@@ -2,8 +2,6 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { User } from 'src/lib/entities';
 import { Identifyable } from 'src/lib/utils/Identifyable';
-import { Router, useRoute } from 'vue-router';
-import { getActivePinia } from 'pinia';
 import { useServiceStore } from 'stores/service';
 
 export const useAuthStore = defineStore('auth', () => {
@@ -15,8 +13,8 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function loadUser(authUser: User) {
+    user.value = authUser;
     serviceStore.loadDataService(authUser.provider);
-
     serviceStore.dataService?.loadUser(authUser.id, (u) => {
       authUser.projects = u.projects;
       user.value = authUser;

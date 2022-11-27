@@ -13,10 +13,7 @@ export interface PersistenceService {
 
   unloadUser(): void;
 
-  loadProject(
-    projectId: string | null,
-    cb: (project: Project) => void
-  ): void;
+  loadProject(projectId: string | null): Promise<void>;
 
   updateProject(project: Project): Promise<void>;
 
@@ -26,10 +23,7 @@ export interface PersistenceService {
 
   addFlight(flight: Flight): Promise<void>;
 
-  loadFlight(
-    flightId: string | null,
-    cb: (flight: Flight | null) => void
-  ): void;
+  loadFlight(flightId: string | null): Promise<void>;
 
   unloadFlight(): void;
 
@@ -57,10 +51,7 @@ export interface PersistenceService {
 
   deleteVehicleGroup(vehicleGroup: VehicleGroup): Promise<void>;
 
-  addCarToVehicleGroup(
-    car: Car,
-    vehicleGroup: VehicleGroup
-  ): Promise<void>;
+  addCarToVehicleGroup(car: Car, vehicleGroup: VehicleGroup): Promise<void>;
 
   setBalloonOperator(
     person: Person | undefined,
@@ -69,10 +60,7 @@ export interface PersistenceService {
 
   addBalloonPassenger(person: Person, balloon: Balloon): Promise<void>;
 
-  removeBalloonPassenger(
-    person: Person,
-    balloon: Balloon
-  ): Promise<void>;
+  removeBalloonPassenger(person: Person, balloon: Balloon): Promise<void>;
 
   removeCarFromVehicleGroup(
     car: Car,

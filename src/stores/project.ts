@@ -20,19 +20,19 @@ export const useProjectStore = defineStore('project', () => {
 
   const error = ref<boolean>(false);
 
-  async function load(params?: RouteParams) {
+  async function load(params?: RouteParams): Promise<void> {
     params = params ?? route.params;
 
     const projectId = params.project as string;
     if (projectId) {
-      loadProject(projectId);
+      await loadProject(projectId);
     }
 
     const flightId = params.flight as string;
-    loadFlight(flightId);
+    await loadFlight(flightId);
   }
 
-  function loadProject(projectId: string): void {
+  async function loadProject(projectId: string): Promise<void> {
     if (projectId == null) {
       project.value = null;
       serviceStore.dataService?.unloadProject();
@@ -43,12 +43,10 @@ export const useProjectStore = defineStore('project', () => {
       return;
     }
 
-    serviceStore.dataService?.loadProject(projectId, (newProject) => {
-      project.value = newProject;
-    });
+    await serviceStore.dataService?.loadProject(projectId);
   }
 
-  function loadFlight(flightId: string): void {
+  async function loadFlight(flightId: string): Promise<void> {
     if (flightId == flight.value?.id) {
       return;
     }
@@ -59,9 +57,7 @@ export const useProjectStore = defineStore('project', () => {
       return;
     }
 
-    serviceStore.dataService?.loadFlight(flightId, (newFlight) => {
-      flight.value = newFlight;
-    });
+    await serviceStore.dataService?.loadFlight(flightId);
   }
 
   async function createFlight(): Promise<Flight> {

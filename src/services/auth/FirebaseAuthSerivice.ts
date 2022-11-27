@@ -22,7 +22,7 @@ export class FirebaseAuthSerivice implements AuthenticationService {
     }
 
     this.initialize();
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>((resolve) => {
       const auth = getAuth();
       const unsubscribe = onAuthStateChanged(auth, (authUser) => {
         unsubscribe();
