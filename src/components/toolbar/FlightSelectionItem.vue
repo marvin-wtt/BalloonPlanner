@@ -1,0 +1,61 @@
+<template>
+  <template v-if="project != null">
+    <q-btn stretch flat icon="add" :loading="addFlightLoading" @click="addFlight" v-if="isEditor()" />
+    <q-separator dark vertical />
+    <q-btn-dropdown stretch flat :label="t('flights')">
+      <!-- TODO Fix list style -->
+      <q-item
+        v-for="(flight, index) in project.flights"
+        :key="flight.id"
+        clickable
+        v-close-popup
+        :to="'/projects/' + project.id + '/flights/' + flight.id"
+      >
+        <q-item-section>{{ $t('flight') }} {{ index + 1 }}</q-item-section>
+      </q-item>
+    </q-btn-dropdown>
+    <q-separator dark vertical />
+  </template>
+</template>
+
+<script lang="ts" setup>
+import { ref } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useProjectStore } from 'stores/project';
+import { useRouter } from 'vue-router';
+import { Project } from 'src/lib/entities';
+import { useI18n } from 'vue-i18n';
+
+const router = useRouter();
+const projectStore = useProjectStore();
+const { t } = useI18n();
+
+const { project } = storeToRefs(projectStore);
+const addFlightLoading = ref(false);
+
+function isEditor(): boolean {
+  // TODO
+  return true;
+}
+
+function addFlight() {
+  addFlightLoading.value = true;
+
+  const projectPath = project.value ? `/projects/${project.value!.id}` : '';
+  projectStore.createFlight().then((flight) => {
+    console.log("Loading " + flight.id);
+    router.push({
+      path: `${projectPath}/flights/${flight.id}`,
+    });
+  }).catch(() => {
+    // TODO error
+  }).finally(() => {
+    addFlightLoading.value = false;
+  });
+}
+
+</script>
+
+<style scoped>
+
+</style>

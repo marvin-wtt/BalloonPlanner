@@ -49,31 +49,48 @@ export class FirestoreDataService implements PersistenceService {
   private _unsubscribeProject?: () => void;
   private _unsubscribeUser?: () => void;
 
-  private _flight?: Flight;
-  private _project?: Project;
-  private _user?: User;
-
-  loadUser(userId: string | null, cb: (user: User) => void) {
+  loadUser(userId: string | null): Promise<void> {
     if (this._unsubscribeUser != null) {
       this._unsubscribeUser();
     }
 
     if (userId == null) {
-      return;
+      return Promise.reject('invalid_user_id');
     }
 
     const ref = this.getUserConverterReference(userId);
+    let callPromise = true;
 
-    this._unsubscribeProject = onSnapshot(ref, (doc) => {
-      if (doc.exists()) {
-        this._user = doc.data();
-        cb(this._user);
-      }
+    return new Promise<void>((resolve, reject) => {
+      this._unsubscribeProject = onSnapshot(ref, (doc) => {
+        const authStore = useAuthStore();
+
+        if (!authStore.user) {
+          if (callPromise) {
+            reject('authstore_not_ready');
+            callPromise = false;
+          }
+          return;
+        }
+
+        if (doc.exists()) {
+          const data =  doc.data();
+          authStore.user.projects = data.projects;
+        } else {
+          this.unloadUser();
+        }
+
+        if (callPromise) {
+          resolve();
+          callPromise = false;
+        }
+      });
     });
   }
 
   unloadUser() {
-    this._user = undefined;
+    const authStore = useAuthStore();
+    authStore.user = undefined;
 
     if (this._unsubscribeUser != null) {
       this._unsubscribeUser();
@@ -82,7 +99,8 @@ export class FirestoreDataService implements PersistenceService {
   }
 
   unloadProject() {
-    this._project = undefined;
+    const projectStore = useProjectStore();
+    projectStore.project = undefined;
 
     if (this._unsubscribeProject != null) {
       this._unsubscribeProject();
@@ -91,7 +109,8 @@ export class FirestoreDataService implements PersistenceService {
   }
 
   unloadFlight() {
-    this._flight = undefined;
+    const projectStore = useProjectStore();
+    projectStore.flight = undefined;
 
     if (this._unsubscribeFlight != null) {
       this._unsubscribeFlight();
@@ -100,18 +119,18 @@ export class FirestoreDataService implements PersistenceService {
   }
 
   loadProject(projectId: string | null): Promise<void> {
+    if (this._unsubscribeProject != null) {
+      this._unsubscribeProject();
+    }
+
+    if (projectId == null) {
+      return Promise.reject('invalid_project_id');
+    }
+
+    let callPromise = true;
+    const ref = this.getProjectConverterReference(projectId);
+
     return new Promise<void>((resolve, reject) => {
-      if (this._unsubscribeProject != null) {
-        this._unsubscribeProject();
-      }
-
-      if (projectId == null) {
-        reject('invalid_project_id');
-        return;
-      }
-
-      let callPromise = true;
-      const ref = this.getProjectConverterReference(projectId);
       this._unsubscribeProject = onSnapshot(ref, (doc) => {
         const project = doc.data();
         const projectStore = useProjectStore();
@@ -125,8 +144,9 @@ export class FirestoreDataService implements PersistenceService {
     });
   }
 
-  async createProject(project: Project): Promise<void> {
-    this._project = project;
+  createProject(project: Project): Promise<void> {
+    const projectStore = useProjectStore();
+    projectStore.project = project;
 
     if (project.local) {
       throw new Error('Cannot write local project to database');
@@ -136,7 +156,6 @@ export class FirestoreDataService implements PersistenceService {
 
     if (!authStore.authenticated() || authStore.user == null) {
       throw new Error('not_authenticated');
-      return;
     }
 
     if (
@@ -150,17 +169,19 @@ export class FirestoreDataService implements PersistenceService {
   }
 
   async createFlight(): Promise<Flight> {
-    if (!this._project) {
+    const projectStore = useProjectStore();
+    const project = projectStore.project;
+
+    if (!project) {
       throw new Error('No project loaded.');
     }
 
-    const lastIndex = this._project.flights.length - 1;
-    // TODO Write as transaction
+    const lastIndex = project.flights.length - 1;
     // Create a new, clean flight if the project holds no flights or if the flight id is invalid for some reason.
     let flight = new Flight([], [], []);
     if (lastIndex >= 0) {
       // Flight needs to be loaded first as all flights only hold the id of the flight
-      const lastFlight = this._project.flights[lastIndex];
+      const lastFlight = project.flights[lastIndex];
 
       const flightRef = this.getFlightConverterReference(lastFlight?.id);
       const flightSnap = await getDoc(flightRef);
@@ -186,23 +207,32 @@ export class FirestoreDataService implements PersistenceService {
   }
 
   async addFlight(flight: Flight): Promise<void> {
-    if (this._project == null) {
+    const projectStore = useProjectStore();
+    if (projectStore.project == null) {
       throw new Error('no_project');
     }
 
-    await this.updateFLight(flight);
+    const ref = this.getFlightConverterReference(flight.id);
+    await setDoc(ref, flight);
+
     // FIXME This should be done by firebase cloud functions - SECURITY RISK
-    return this.updateProjectDocument({
+    await this.updateProjectDocument({
       ['flights']: arrayUnion(flight.id),
     });
   }
 
-  async updateProject(project: Project): Promise<void> {
+  updateProject(project: Project): Promise<void> {
     // TODO
     return Promise.resolve(undefined);
   }
 
   loadFlight(flightId: string | null): Promise<void> {
+    const projectStore = useProjectStore();
+    const flight = projectStore.flight;
+    if (flight && flight.id === flightId) {
+      return Promise.resolve();
+    }
+
     return new Promise<void>((resolve, reject) => {
       if (this._unsubscribeFlight != null) {
         this._unsubscribeFlight();
@@ -216,60 +246,62 @@ export class FirestoreDataService implements PersistenceService {
       let callPromise = true;
       const ref = this.getFlightConverterReference(flightId);
       this._unsubscribeFlight = onSnapshot(ref, (doc) => {
-        this._flight = doc.data();
         const projectStore = useProjectStore();
-        projectStore.flight = this._flight;
+        projectStore.flight = doc.data();
 
         if (callPromise) {
-          resolve();
           callPromise = false;
+          doc.exists() ? resolve() : reject('flight_not_found');
         }
       });
     });
   }
 
-  async updateProjectDocument(obj: object): Promise<void> {
-    if (this._project == null) {
+  updateProjectDocument(obj: object): Promise<void> {
+    const projectStore = useProjectStore();
+    const project = projectStore.project;
+    if (project == null) {
       throw new Error('Cannot update project. No project set.');
     }
 
-    return updateDoc(doc(db, 'projects', this._project.id), obj);
+    return updateDoc(doc(db, 'projects', project.id), obj);
   }
 
-  async updateFlightDocument(obj: object): Promise<void> {
-    const store = useAuthStore();
+  updateFlightDocument(obj: object): Promise<void> {
+    const authStore = useAuthStore();
+    const projectStore = useProjectStore();
 
-    if (store.user == null) {
+    if (authStore.user == null) {
       throw 'Cannot update flight. Not authenticated.';
     }
 
-    if (this._flight == null) {
+    if (projectStore.flight == null) {
       throw 'Cannot update flight. No flight is set.';
     }
 
-    return updateDoc(doc(db, 'flights', this._flight.id), obj);
+    return updateDoc(doc(db, 'flights', projectStore.flight.id), obj);
   }
 
-  async addBalloon(balloon: Balloon): Promise<void> {
+  addBalloon(balloon: Balloon): Promise<void> {
     return this.updateFlightDocument({
       [`balloons.${balloon.id}`]: balloonToObject(balloon),
     });
   }
 
-  async addBalloonPassenger(person: Person, balloon: Balloon): Promise<void> {
+  addBalloonPassenger(person: Person, balloon: Balloon): Promise<void> {
     return this.updateFlightDocument({
       [`balloons.${balloon.id}.passengers`]: arrayUnion(person.id),
       [`people.${person.id}.flights`]: increment(1),
     });
   }
 
-  async addCar(car: Car): Promise<void> {
+  addCar(car: Car): Promise<void> {
     return this.updateFlightDocument({
       [`cars.${car.id}`]: carToObject(car),
     });
   }
 
-  async addCarPassenger(person: Person, car: Car): Promise<void> {
+  addCarPassenger(person: Person, car: Car): Promise<void> {
     return this.updateFlightDocument({
       [`cars.${car.id}.passengers`]: arrayUnion(person.id),
     });
@@ -310,7 +342,7 @@ export class FirestoreDataService implements PersistenceService {
     return obj;
   }
 
-  async addCarToVehicleGroup(
+  addCarToVehicleGroup(
     car: Car,
     vehicleGroup: VehicleGroup
   ): Promise<void> {
@@ -320,20 +352,23 @@ export class FirestoreDataService implements PersistenceService {
     });
   }
 
-  async addPersom(person: Person): Promise<void> {
+  addPersom(person: Person): Promise<void> {
     return this.updateFlightDocument({
       [`people.${person.id}`]: personToObject(person),
     });
   }
 
-  async addVehicleGroup(vehicleGroup: VehicleGroup): Promise<void> {
+  addVehicleGroup(vehicleGroup: VehicleGroup): Promise<void> {
     return this.updateFlightDocument({
       [`vehicleGroups.${vehicleGroup.id}`]: vehcileGroupToObject(vehicleGroup),
     });
   }
 
-  async deleteBalloon(balloon: Balloon): Promise<void> {
-    if (this._flight == null) {
+  deleteBalloon(balloon: Balloon): Promise<void> {
+    const projectStore = useProjectStore();
+    const flight = projectStore.flight;
+
+    if (flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
     }
 
@@ -341,7 +376,7 @@ export class FirestoreDataService implements PersistenceService {
       [`balloons.${balloon.id}`]: deleteField(),
     };
 
-    const group = this._flight.vehicleGroups.find(
+    const group = flight.vehicleGroups.find(
       (value) => value.balloon.id === balloon.id
     );
     if (group != null) {
@@ -358,13 +393,16 @@ export class FirestoreDataService implements PersistenceService {
     return this.updateFlightDocument(obj);
   }
 
-  async deleteCar(car: Car): Promise<void> {
-    if (this._flight == null) {
+  deleteCar(car: Car): Promise<void> {
+    const projectStore = useProjectStore();
+    const flight = projectStore.flight as Flight;
+
+    if (flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
     }
 
     let obj: UpdateObject = {};
-    for (const vehicleGroup of this._flight.vehicleGroups) {
+    for (const vehicleGroup of flight.vehicleGroups) {
       const c = vehicleGroup.cars.find((value) => value.id === car.id);
       if (c == null) {
         continue;
@@ -382,8 +420,11 @@ export class FirestoreDataService implements PersistenceService {
     });
   }
 
-  async deletePersom(person: Person): Promise<void> {
-    if (this._flight == null) {
+  deletePersom(person: Person): Promise<void> {
+    const projectStore = useProjectStore();
+    const flight = projectStore.flight as Flight;
+
+    if (flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
     }
 
@@ -391,7 +432,7 @@ export class FirestoreDataService implements PersistenceService {
       [`people.${person.id}`]: deleteField(),
     };
 
-    for (const group of this._flight.vehicleGroups) {
+    for (const group of flight.vehicleGroups) {
       const result = this.removePersonFromVehicle(
         person,
         group.balloon,
@@ -443,7 +484,7 @@ export class FirestoreDataService implements PersistenceService {
     return null;
   }
 
-  async deleteVehicleGroup(vehicleGroup: VehicleGroup): Promise<void> {
+  deleteVehicleGroup(vehicleGroup: VehicleGroup): Promise<void> {
     const obj: UpdateObject = {
       [`vehicleGroups.${vehicleGroup.id}`]: deleteField(),
     };
@@ -469,7 +510,7 @@ export class FirestoreDataService implements PersistenceService {
     return this.updateFlightDocument(obj);
   }
 
-  async removeBalloonPassenger(
+  removeBalloonPassenger(
     person: Person,
     balloon: Balloon
   ): Promise<void> {
@@ -478,7 +519,7 @@ export class FirestoreDataService implements PersistenceService {
     });
   }
 
-  async removeCarFromVehicleGroup(
+  removeCarFromVehicleGroup(
     car: Car,
     vehicleGroup: VehicleGroup
   ): Promise<void> {
@@ -490,13 +531,13 @@ export class FirestoreDataService implements PersistenceService {
     });
   }
 
-  async removeCarPassenger(person: Person, car: Car): Promise<void> {
+  removeCarPassenger(person: Person, car: Car): Promise<void> {
     return this.updateFlightDocument({
       [`cars.${car.id}.passengers`]: arrayRemove(person.id),
     });
   }
 
-  async setBalloonOperator(
+  setBalloonOperator(
     person: Person | undefined,
     balloon: Balloon
   ): Promise<void> {
@@ -515,19 +556,22 @@ export class FirestoreDataService implements PersistenceService {
     return this.updateFlightDocument(obj);
   }
 
-  async setCarOperator(person: Person | undefined, car: Car): Promise<void> {
+  setCarOperator(person: Person | undefined, car: Car): Promise<void> {
     return this.updateFlightDocument({
       [`cars.${car.id}.operator`]: person?.id ?? null,
     });
   }
 
-  async updateBalloon(balloon: Balloon): Promise<void> {
-    if (this._flight == null) {
+  updateBalloon(balloon: Balloon): Promise<void> {
+    const projectStore = useProjectStore();
+    const flight = projectStore.flight as Flight;
+
+    if (flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
     }
 
     let obj = {};
-    for (const group of this._flight.vehicleGroups) {
+    for (const group of flight.vehicleGroups) {
       if (group.balloon.id === balloon.id) {
         obj = this.updateReservedCapacities(group, 'with', balloon);
         break;
@@ -540,13 +584,16 @@ export class FirestoreDataService implements PersistenceService {
     });
   }
 
-  async updateCar(car: Car): Promise<void> {
-    if (this._flight == null) {
+  updateCar(car: Car): Promise<void> {
+    const projectStore = useProjectStore();
+    const flight = projectStore.flight as Flight;
+
+    if (flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
     }
 
     let obj = {};
-    for (const group of this._flight.vehicleGroups) {
+    for (const group of flight.vehicleGroups) {
       const c = group.cars.find((value) => value.id === car.id);
       if (c != null) {
         obj = this.updateReservedCapacities(group, 'with', car);
@@ -560,23 +607,27 @@ export class FirestoreDataService implements PersistenceService {
     });
   }
 
-  async updateFLight(flight: Flight): Promise<void> {
-    this._flight = flight;
-    const ref = this.getFlightConverterReference(flight.id);
-    return setDoc(ref, flight);
-  }
-
-  async updatePersom(person: Person): Promise<void> {
+  updatePersom(person: Person): Promise<void> {
     return this.updateFlightDocument({
       [`people.${person.id}`]: personToObject(person),
     });
   }
 
+  async updateFLight(flight: Flight): Promise<void> {
+    const projectStore = useProjectStore();
+
+    const ref = this.getFlightConverterReference(flight.id);
+    await setDoc(ref, flight);
+
+    projectStore.flight = flight;
+  }
+
   getFlightConverterReference(flightId: string) {
+    const projectStore = useProjectStore();
     const document = this.getFlightReference(flightId);
     return document.withConverter<Flight>({
       toFirestore: (flight: Flight) => {
-        return flightToObject(flight, this._project?.id ?? '');
+        return flightToObject(flight, projectStore.project?.id ?? '');
       },
       fromFirestore: (snapshot, options) => {
         const data = snapshot.data(options) as FlightObject;

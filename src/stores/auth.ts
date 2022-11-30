@@ -15,10 +15,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function loadUser(authUser: User) {
     user.value = authUser;
     serviceStore.loadDataService(authUser.provider);
-    serviceStore.dataService?.loadUser(authUser.id, (u) => {
-      authUser.projects = u.projects;
-      user.value = authUser;
-    });
+    await serviceStore.dataService?.loadUser(authUser.id);
   }
 
   async function register(email: string, password: string) {

@@ -9,7 +9,7 @@ import {
 } from 'src/lib/entities';
 
 export interface PersistenceService {
-  loadUser(userId: string | null, cb: (user: User) => void): void;
+  loadUser(userId: string | null): Promise<void>;
 
   unloadUser(): void;
 

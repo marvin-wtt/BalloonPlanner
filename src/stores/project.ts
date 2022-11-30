@@ -3,7 +3,7 @@ import { Project } from 'src/lib/entities/Project';
 import { ref } from 'vue';
 import { Flight } from 'src/lib/entities';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
-import { RouteParams, useRoute } from 'vue-router';
+import { RouteParams, useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from 'stores/auth';
 import { FirestoreDataService } from 'src/services/persistence/FirestoreDataService';
 import { LocalStorageService } from 'src/services/persistence/LocalStorageService';
@@ -60,7 +60,7 @@ export const useProjectStore = defineStore('project', () => {
     await serviceStore.dataService?.loadFlight(flightId);
   }
 
-  async function createFlight(): Promise<Flight> {
+  function createFlight(redirect = true): Promise<Flight> {
     if (!serviceStore.dataService) {
       throw 'service_invalid';
     }

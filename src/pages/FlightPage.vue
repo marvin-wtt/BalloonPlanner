@@ -1,5 +1,5 @@
 <template>
-  <q-page class="full-width row justify-start no-wrap">
+  <q-page class="full-width row justify-start no-wrap bg-grey-5">
     <template v-if="!flightNotFOund && !flightLoading">
       <!-- Menu -->
       <div class="self-stretch row no-wrap" :class="menuClasses">
@@ -170,7 +170,7 @@
         <base-flight
           :flight="flight"
           @balloon-add="onBalloonAdd"
-          class="col-grow content-stretch bg-grey-5"
+          class="col-grow content-stretch"
         >
           <base-vehicle-group
             v-for="group in flight.vehicleGroups"
@@ -270,8 +270,6 @@ import { solve } from 'src/lib/solver/solver';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
 import { useServiceStore } from 'stores/service';
 
-const menuTabs = ref('overview');
-
 const { t } = useI18n();
 const $q = useQuasar();
 const projectStore = useProjectStore();
@@ -293,9 +291,16 @@ const {
 
 const dialogs = useDialogs($q, t);
 
-onMounted(() => {
-  // TODO This should be done async with error handling
-  projectStore.load();
+const menuTabs = ref('overview');
+const flightLoading = ref(true);
+const flightNotFOund = ref(false);
+
+onMounted(async () => {
+  projectStore.load().catch(() => {
+    flightNotFOund.value = true;
+  }).finally(() => {
+    flightLoading.value = false;
+  });
 });
 
 watch(
@@ -311,8 +316,15 @@ watch(
 );
 
 onBeforeRouteUpdate((to) => {
-  // TODO This should be done async with error handling
-  projectStore.load(to.params);
+  flightNotFOund.value = false;
+  flightLoading.value = true;
+
+  projectStore.load(to.params).catch(() => {
+    console.log("Error");
+    flightNotFOund.value = true;
+  }).finally(() => {
+    flightLoading.value = false;
+  });
 });
 
 function onSmartFill() {
@@ -423,14 +435,6 @@ function onBalloonPersonRemove(balloon: Balloon, person: Person) {
 function onCarPersonRemove(car: Car, person: Person) {
   monitorService((service) => service.removeCarPassenger(person, car));
 }
-
-const flightNotFOund = computed<boolean>(() => {
-  return flight.value === null;
-});
-
-const flightLoading = computed<boolean>(() => {
-  return flight.value === undefined;
-});
 
 const showBalloonsMenuBadge = computed<boolean>(() => {
   return availableBalloons.value.length > 0;
