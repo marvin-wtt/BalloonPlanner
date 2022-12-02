@@ -2,11 +2,7 @@ import { defineStore } from 'pinia';
 import { Project } from 'src/lib/entities/Project';
 import { ref } from 'vue';
 import { Flight } from 'src/lib/entities';
-import { PersistenceService } from 'src/services/persistence/PersistenceService';
-import { RouteParams, useRoute, useRouter } from 'vue-router';
-import { useAuthStore } from 'stores/auth';
-import { FirestoreDataService } from 'src/services/persistence/FirestoreDataService';
-import { LocalStorageService } from 'src/services/persistence/LocalStorageService';
+import { RouteParams, useRoute } from 'vue-router';
 import { useServiceStore } from 'stores/service';
 
 export const useProjectStore = defineStore('project', () => {
@@ -60,11 +56,12 @@ export const useProjectStore = defineStore('project', () => {
     await serviceStore.dataService?.loadFlight(flightId);
   }
 
-  function createFlight(redirect = true): Promise<Flight> {
+  function createFlight(): Promise<Flight> {
     if (!serviceStore.dataService) {
       throw 'service_invalid';
     }
-    return serviceStore.dataService.createFlight()!;
+
+    return serviceStore.dataService.createFlight();
   }
 
   return {

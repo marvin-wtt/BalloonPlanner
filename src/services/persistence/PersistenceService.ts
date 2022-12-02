@@ -4,7 +4,6 @@ import {
   Flight,
   Person,
   Project,
-  User,
   VehicleGroup,
 } from 'src/lib/entities';
 

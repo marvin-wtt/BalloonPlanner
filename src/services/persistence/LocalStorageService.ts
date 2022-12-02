@@ -14,15 +14,15 @@ export class LocalStorageService implements PersistenceService {
     throw 'not_implemented';
   }
 
-  loadFlight(flightId: string | null, cb: (flight: (Flight | null)) => void): void {
+  loadFlight(flightId: string | null): Promise<void> {
     throw 'not_implemented';
   }
 
-  loadProject(projectId: string | null, cb: (project: Project) => void): void {
+  loadProject(projectId: string | null): Promise<void> {
     throw 'not_implemented';
   }
 
-  loadUser(userId: string | null, cb: (user: User) => void): void {
+  loadUser(userId: string | null): Promise<void> {
     throw 'not_implemented';
   }
 
