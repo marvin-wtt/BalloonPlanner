@@ -8,10 +8,10 @@ export interface SolvingOptions {
 //  1. Create vehicle groups for each balloon
 //  2. Store each solution where every balloon has a valid pilot. Invalid solutions are ignored
 //  3. For each solution, fill the balloon with participants who have never flown yet.
-//  4. Afterwards, if there is still space left, try to fit in one teamer with zero flights.
-//     If a solution with 1 teamer was found, increment the amount of teamer and repeat 5) until no solution is found for this iteration,
+//  4. Afterwards, if there is still space left, try to fit in one supervisor with zero flights.
+//     If a solution with 1 supervisor was found, increment the amount of supervisor and repeat 5) until no solution is found for this iteration,
 //  5. Fill all groups with cars so that the available spaces are best.
-//  6. Than fill all cars with operators.
+//  6. Then fill all cars with operators.
 //     If a required car remains without a driver, the solution is invalid.
 //  7. Calculate a score for each solution.
 //     Punish unfair pilot flight distribution
@@ -23,7 +23,7 @@ export async function solve(
   options?: SolvingOptions
 ): Promise<Flight> {
   let flight = f.clone();
-  let solutions: Flight[] = [];
+  let solutions: Flight[];
 
   // 1
   createVehicleGroups(flight);
@@ -108,11 +108,11 @@ function findPilotSolutions(baseFlight: Flight, groupIndex = 0): Flight[] {
   }
 
   // Check for all pilots
-  // The flight reference and all its children must be updated every interation as the flight is cloned an therefore
+  // The flight reference and all its children must be updated every interaction as the flight is cloned an therefore
   //  the reference changes
   for (const basePilot of baseBalloon.allowedOperators) {
     // Always use a fresh clone of the base-flight
-    // All objects, which are not effectifly immuteable need to be rereferenced
+    // All objects, which are not effectively immutable need to be referenced
     const solutionFlight = baseFlight.clone();
 
     const availablePeople = solutionFlight.availablePeople();
