@@ -1,5 +1,6 @@
 import { Policy } from 'src/lib/solver/policies/Policy';
 import { Flight } from 'src/lib/entities';
+import { SolverStage } from 'src/lib/solver/SolverStage';
 
 export class SufficientCarCapacity extends Policy {
   apply(flight: Flight): boolean | number {
@@ -21,5 +22,9 @@ export class SufficientCarCapacity extends Policy {
 
   name(): string {
     return 'sufficient car capacity';
+  }
+
+  stage(): SolverStage {
+    return SolverStage.CARS_ASSIGNED;
   }
 }

@@ -23,7 +23,6 @@ import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import { useRouter } from 'vue-router';
-import { Project } from 'src/lib/entities';
 import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
@@ -43,7 +42,6 @@ function addFlight() {
 
   const projectPath = project.value ? `/projects/${project.value!.id}` : '';
   projectStore.createFlight().then((flight) => {
-    console.log("Loading " + flight.id);
     router.push({
       path: `${projectPath}/flights/${flight.id}`,
     });

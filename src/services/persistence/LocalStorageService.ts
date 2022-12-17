@@ -71,7 +71,7 @@ export class LocalStorageService implements PersistenceService {
     return this.write();
   }
 
-  addPersom(person: Person): Promise<void> {
+  addPerson(person: Person): Promise<void> {
     this._flight?.people.push(person);
     return this.write();
   }
@@ -91,7 +91,7 @@ export class LocalStorageService implements PersistenceService {
     return this.write();
   }
 
-  deletePersom(person: Person): Promise<void> {
+  deletePerson(person: Person): Promise<void> {
     this._flight?.removePerson(person);
     return this.write();
   }
@@ -166,7 +166,7 @@ export class LocalStorageService implements PersistenceService {
     // TODO How to trigger reload?
   }
 
-  updatePersom(person: Person): Promise<void> {
+  updatePerson(person: Person): Promise<void> {
     const oldPerson = this._flight?.people.find(
       (value) => value.id === person.id
     );

@@ -1,4 +1,5 @@
 import { Flight } from 'src/lib/entities';
+import { SolverStage } from 'src/lib/solver/SolverStage';
 
 abstract class Policy {
   private _scoreMultiplier = 1;
@@ -14,6 +15,10 @@ abstract class Policy {
   abstract name(): string;
 
   abstract apply(flight: Flight): boolean | number;
+
+  stage(): SolverStage {
+    return SolverStage.PASSENGERS_ASSIGNED;
+  }
 }
 
 export { Policy };

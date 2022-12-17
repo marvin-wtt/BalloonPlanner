@@ -1,14 +1,14 @@
 import {
-  doc,
-  getDoc,
-  setDoc,
-  onSnapshot,
-  deleteField,
-  arrayUnion,
   arrayRemove,
-  increment,
-  updateDoc,
+  arrayUnion,
+  deleteField,
+  doc,
   FieldValue,
+  getDoc,
+  increment,
+  onSnapshot,
+  setDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from 'src/boot/firebase';
 import { useAuthStore } from 'stores/auth';
@@ -26,16 +26,16 @@ import {
   balloonToObject,
   carToObject,
   flightFromObject,
+  FlightObject,
   flightToObject,
   personToObject,
-  vehcileGroupToObject,
-  FlightObject,
-  projectToObject,
   projectFromObject,
   ProjectObject,
-  userToObject,
+  projectToObject,
   userFromObject,
   UserObject,
+  userToObject,
+  vehcileGroupToObject,
 } from 'src/lib/utils/converter';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
 import { useProjectStore } from 'stores/project';
@@ -201,7 +201,7 @@ export class FirestoreDataService implements PersistenceService {
       }
     }
 
-    this.addFlight(flight);
+    await this.addFlight(flight);
 
     return flight;
   }
@@ -309,17 +309,17 @@ export class FirestoreDataService implements PersistenceService {
 
   private updateReservedCapacities(
     vehicleGroup: VehicleGroup,
-    mode?: 'excöude' | 'include' | 'with',
+    mode?: 'exclude' | 'include' | 'with',
     extra?: Car | Balloon
   ): object {
     const obj: UpdateObject = {};
     const withBalloon =
       mode === 'with' && extra != null && extra instanceof Balloon;
-    let remaingCapacity = withBalloon
+    let remainingCapacity = withBalloon
       ? extra?.capacity + 1
       : vehicleGroup.balloon.capacity + 1;
     for (let car of vehicleGroup.cars) {
-      if (mode === 'excöude' && car.id === extra?.id) {
+      if (mode === 'exclude' && car.id === extra?.id) {
         // obj[`cars.${car.id}.reservedCapacity`] = 0;
         continue;
       }
@@ -328,15 +328,16 @@ export class FirestoreDataService implements PersistenceService {
       }
 
       const reserved =
-        car.capacity >= remaingCapacity ? remaingCapacity : car.capacity;
-      remaingCapacity -= reserved;
+        car.capacity >= remainingCapacity ? remainingCapacity : car.capacity;
+      remainingCapacity -= reserved;
       obj[`cars.${car.id}.reservedCapacity`] = reserved;
     }
 
     if (mode === 'include' && extra != null) {
-      const reserved =
-        extra.capacity >= remaingCapacity ? remaingCapacity : extra.capacity;
-      obj[`cars.${extra.id}.reservedCapacity`] = reserved;
+      obj[`cars.${extra.id}.reservedCapacity`] =
+        extra.capacity >= remainingCapacity
+          ? remainingCapacity
+          : extra.capacity;
     }
 
     return obj;
@@ -352,7 +353,7 @@ export class FirestoreDataService implements PersistenceService {
     });
   }
 
-  addPersom(person: Person): Promise<void> {
+  addPerson(person: Person): Promise<void> {
     return this.updateFlightDocument({
       [`people.${person.id}`]: personToObject(person),
     });
@@ -409,7 +410,7 @@ export class FirestoreDataService implements PersistenceService {
       }
       obj = {
         [`vehicleGroups.${vehicleGroup.id}.cars`]: arrayRemove(car.id),
-        ...this.updateReservedCapacities(vehicleGroup, 'excöude', car),
+        ...this.updateReservedCapacities(vehicleGroup, 'exclude', car),
       };
       break;
     }
@@ -420,7 +421,7 @@ export class FirestoreDataService implements PersistenceService {
     });
   }
 
-  deletePersom(person: Person): Promise<void> {
+  deletePerson(person: Person): Promise<void> {
     const projectStore = useProjectStore();
     const flight = projectStore.flight as Flight;
 
@@ -527,7 +528,7 @@ export class FirestoreDataService implements PersistenceService {
       [`vehicleGroups.${vehicleGroup.id}.cars`]: arrayRemove(car.id),
       [`cars.${car.id}.passengers`]: [],
       [`cars.${car.id}.operator`]: null,
-      ...this.updateReservedCapacities(vehicleGroup, 'excöude', car),
+      ...this.updateReservedCapacities(vehicleGroup, 'exclude', car),
     });
   }
 
@@ -607,7 +608,7 @@ export class FirestoreDataService implements PersistenceService {
     });
   }
 
-  updatePersom(person: Person): Promise<void> {
+  updatePerson(person: Person): Promise<void> {
     return this.updateFlightDocument({
       [`people.${person.id}`]: personToObject(person),
     });

@@ -237,7 +237,7 @@
       </div>
     </template>
 
-    <template v-if="flightLoading"> Loading... </template>
+    <template v-if="flightLoading"> Loading...</template>
 
     <template v-if="flightNotFOund">
       <!-- TODO -->
@@ -249,7 +249,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, Ref, ref, watch } from 'vue';
 import { QItem, QList, useQuasar } from 'quasar';
-import { onBeforeRouteUpdate, useRoute } from 'vue-router';
+import { onBeforeRouteUpdate } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import { useDialogs } from 'src/composables/dialogs';
@@ -269,6 +269,7 @@ import { useI18n } from 'vue-i18n';
 import { solve } from 'src/lib/solver/solver';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
 import { useServiceStore } from 'stores/service';
+import { solveX } from 'src/lib/solver/policySolver';
 
 const { t } = useI18n();
 const $q = useQuasar();
@@ -296,11 +297,32 @@ const flightLoading = ref(true);
 const flightNotFOund = ref(false);
 
 onMounted(async () => {
-  projectStore.load().catch(() => {
-    flightNotFOund.value = true;
-  }).finally(() => {
-    flightLoading.value = false;
-  });
+  projectStore
+    .load()
+    .catch(() => {
+      flightNotFOund.value = true;
+    })
+    .finally(() => {
+      flightLoading.value = false;
+
+      const flights = solveX(flight.value!);
+
+      function myLoop(i = 0) {
+        setTimeout(() => {
+          flight.value = flights[i];
+
+          if (i + 1 < flights.length) {
+            myLoop(i + 1);
+          } else {
+            flight.value!.clear();
+            flight.value!.vehicleGroups = [];
+          }
+        }, 500);
+      }
+      if (flights.length > 0) {
+        myLoop();
+      }
+    });
 });
 
 watch(
@@ -319,12 +341,14 @@ onBeforeRouteUpdate((to) => {
   flightNotFOund.value = false;
   flightLoading.value = true;
 
-  projectStore.load(to.params).catch(() => {
-    console.log("Error");
-    flightNotFOund.value = true;
-  }).finally(() => {
-    flightLoading.value = false;
-  });
+  projectStore
+    .load(to.params)
+    .catch(() => {
+      flightNotFOund.value = true;
+    })
+    .finally(() => {
+      flightLoading.value = false;
+    });
 });
 
 function onSmartFill() {

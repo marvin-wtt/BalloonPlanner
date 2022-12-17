@@ -7,14 +7,15 @@ import { PersistenceService } from 'src/services/persistence/PersistenceService'
 import { useProjectStore } from 'stores/project';
 import { Ref } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useServiceStore } from 'stores/service';
 
 export function useDialogs(
   $q: QVueGlobals,
   t: ComposerTranslation
 ) {
-  const projectStore = useProjectStore();
-  const { service }: { service: Ref<PersistenceService | null> } = storeToRefs(
-    projectStore
+  const serviceStore = useServiceStore();
+  const { dataService }: { dataService: Ref<PersistenceService | null> } = storeToRefs(
+    serviceStore
   ) as any;
 
   function showCreatePerson() {
@@ -30,7 +31,7 @@ export function useDialogs(
         payload.supervisor,
         payload.flights
       );
-      service.value!.addPersom(person);
+      dataService.value!.addPerson(person);
     });
   }
 
@@ -54,7 +55,7 @@ export function useDialogs(
         payload.flights
       );
       p.id = person.id;
-      service.value!.updatePersom(p);
+      dataService.value!.updatePerson(p);
     });
   }
 
@@ -73,7 +74,7 @@ export function useDialogs(
       },
       persistent: true,
     }).onOk(() => {
-      service.value!.deletePersom(person);
+      dataService.value!.deletePerson(person);
     });
   }
 
@@ -95,7 +96,7 @@ export function useDialogs(
         balloon.id = vehicle.id;
         balloon.operator = vehicle.operator;
         balloon.passengers = vehicle.passengers;
-        service.value!.updateBalloon(balloon);
+        dataService.value!.updateBalloon(balloon);
       } else if (vehicle instanceof Car) {
         const car = new Car(
           payload.name,
@@ -106,7 +107,7 @@ export function useDialogs(
         car.operator = vehicle.operator;
         car.passengers = vehicle.passengers;
         car.reservedCapacity = vehicle.reservedCapacity;
-        service.value!.updateCar(car);
+        dataService.value!.updateCar(car);
       }
     });
   }
@@ -125,7 +126,7 @@ export function useDialogs(
           payload.capacity,
           payload.allowedOperators
         );
-        service.value!.addBalloon(balloon);
+        dataService.value!.addBalloon(balloon);
       }
 
       if (type === 'car') {
@@ -134,7 +135,7 @@ export function useDialogs(
           payload.capacity,
           payload.allowedOperators
         );
-        service.value!.addCar(car);
+        dataService.value!.addCar(car);
       }
     });
   }
@@ -157,9 +158,9 @@ export function useDialogs(
       persistent: true,
     }).onOk(() => {
       if (vehicle instanceof Balloon) {
-        service.value!.deleteBalloon(vehicle);
+        dataService.value!.deleteBalloon(vehicle);
       } else if (vehicle instanceof Car) {
-        service.value!.deleteCar(vehicle);
+        dataService.value!.deleteCar(vehicle);
       }
     });
   }

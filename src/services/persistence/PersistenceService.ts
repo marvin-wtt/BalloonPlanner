@@ -32,19 +32,19 @@ export interface PersistenceService {
 
   addCar(car: Car): Promise<void>;
 
-  addPersom(person: Person): Promise<void>;
+  addPerson(person: Person): Promise<void>;
 
   updateBalloon(balloon: Balloon): Promise<void>;
 
   updateCar(car: Car): Promise<void>;
 
-  updatePersom(person: Person): Promise<void>;
+  updatePerson(person: Person): Promise<void>;
 
   deleteBalloon(balloon: Balloon): Promise<void>;
 
   deleteCar(car: Car): Promise<void>;
 
-  deletePersom(person: Person): Promise<void>;
+  deletePerson(person: Person): Promise<void>;
 
   addVehicleGroup(vehicleGroup: VehicleGroup): Promise<void>;
 

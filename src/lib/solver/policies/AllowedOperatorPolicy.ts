@@ -1,5 +1,6 @@
 import { Policy } from 'src/lib/solver/policies/Policy';
 import { Flight, Vehicle } from 'src/lib/entities';
+import { SolverStage } from 'src/lib/solver/SolverStage';
 
 function checkVehicleOperator(vehicle: Vehicle): boolean {
   if (!vehicle.operator) {
@@ -34,5 +35,9 @@ export class AllowedOperatorPolicy extends Policy {
 
   name(): string {
     return 'allowed operator policy';
+  }
+
+  stage(): SolverStage {
+    return SolverStage.OPERATORS_ASSIGNED;
   }
 }

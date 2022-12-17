@@ -75,7 +75,7 @@ export class Flight extends Identifyable {
   }
 
   removePerson(person: Person) {
-    // TODO remove person from vehicel
+    // TODO remove person from vehicle
 
     removeFromArray(this._people, person);
   }

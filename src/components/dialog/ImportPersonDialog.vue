@@ -9,6 +9,81 @@
         </q-card-section>
 
         <q-card-section class="q-pt-none">
+          <q-stepper
+            v-model="step"
+            ref="stepper"
+            color="primary"
+            animated
+          >
+            <q-step
+              :name="1"
+              title="Select input method"
+              icon="radio_button_unchecked"
+              :done="step > 1"
+            >
+              <q-list>
+                <q-item tag="label" v-ripple>
+                  <q-item-section avatar>
+                    <q-radio v-model="method" val="online" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>Online from Ballaeron</q-item-label>
+                    <q-item-label caption>Requires login credentials</q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <q-item tag="label" v-ripple>
+                  <q-item-section avatar>
+                    <q-radio v-model="method" val="csv" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>CSV</q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <q-item tag="label" v-ripple>
+                  <q-item-section avatar>
+                    <q-radio v-model="method" val="json" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>JSON</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-step>
+
+            <q-step
+              :name="2"
+              title="Load data"
+              icon="cloud_upload"
+              :done="step > 2"
+            >
+              TODO Select upload method
+            </q-step>
+
+            <q-step
+              :name="3"
+              title=""
+              icon="cloud_upload"
+              :done="step > 3"
+            >
+              TODO Select upload method
+            </q-step>
+
+            <q-step
+              :name="4"
+              title="Load data"
+              icon="cloud_upload"
+              :done="step > 4"
+            >
+              TODO Select upload method
+            </q-step>
+
+
+
+          </q-stepper>
+
+
           <!-- TODO unique rule -->
           <q-input
             v-model="name"
@@ -95,6 +170,10 @@ defineEmits([...useDialogPluginComponent.emits]);
 const { t } = useI18n();
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
+
+const step = ref(1);
+
+const method = ref<string>();
 
 const name = ref(props.person?.name ?? null);
 const nation = ref(props.person?.nation ?? null);
