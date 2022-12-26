@@ -1,4 +1,4 @@
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 
 export { shuffle, swap, removeFromArray, permutations };
 
@@ -10,7 +10,7 @@ function shuffle<Type>(a: Array<Type>): Array<Type> {
   return a;
 }
 
-function removeFromArray<Type extends Identifyable>(
+function removeFromArray<Type extends Identifiable>(
   a: Array<Type>,
   e: Type
 ): boolean {

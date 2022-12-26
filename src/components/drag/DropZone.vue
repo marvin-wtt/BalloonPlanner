@@ -15,10 +15,10 @@
 <script lang="ts" setup>
 import { DragHelper } from 'src/util/DragHelper';
 import { ref } from 'vue';
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 
 interface Props {
-  accepted?: (element: Identifyable) => boolean;
+  accepted?: (element: Identifiable) => boolean;
   highlight?: boolean;
   highlightColor?: string;
   tag?: string | object;
@@ -32,7 +32,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: 'dropped', item: Identifyable): void;
+  (e: 'dropped', item: Identifiable): void;
 }>();
 
 const highlighted = ref(false);
@@ -73,7 +73,7 @@ function onDrop(event: DragEvent) {
   }
 
   // Typecasting is safe as type safety is previously ensured
-  emit('dropped', element as Identifyable);
+  emit('dropped', element as Identifiable);
 }
 </script>
 

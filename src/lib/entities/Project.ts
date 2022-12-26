@@ -1,19 +1,19 @@
 import { Flight, User } from 'src/lib/entities';
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 
-export class Project extends Identifyable {
+export class Project extends Identifiable {
   private _flights: Flight[];
   private _name: string;
-  private _desciption: string;
-  private _collaborators: User[];
+  private _description: string;
+  private _collaborators: string[];
   private _local: boolean;
   private _path?: string;
 
-  constructor(name: string, desciption?: string, flights?: Flight[], collaborators?: User[], local?: boolean) {
+  constructor(name: string, description?: string, flights?: Flight[], collaborators?: string[], local?: boolean) {
     super();
     this._flights = flights ?? [];
     this._name = name;
-    this._desciption = desciption ?? '';
+    this._description = description ?? '';
     this._collaborators = collaborators ?? [];
     this._local = local ?? true;
   }
@@ -30,11 +30,11 @@ export class Project extends Identifyable {
     return this._name;
   }
 
-  get desciption(): string {
-    return this._desciption;
+  get description(): string {
+    return this._description;
   }
 
-  get collaborators(): User[] {
+  get collaborators(): string[] {
     return this._collaborators;
   }
 

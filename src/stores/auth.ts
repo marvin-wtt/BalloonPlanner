@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { User } from 'src/lib/entities';
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 import { useServiceStore } from 'stores/service';
 
 export const useAuthStore = defineStore('auth', () => {
@@ -15,7 +15,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function loadUser(authUser: User) {
     user.value = authUser;
     serviceStore.loadDataService(authUser.provider);
-    await serviceStore.dataService?.loadUser(authUser.id);
+    await serviceStore.dataService?.loadUserData(user.value);
   }
 
   async function register(email: string, password: string) {
@@ -35,10 +35,22 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function loginLocal(): void {
-    user.value = new User(Identifyable.generateNewId(), 'LOCAL', 'Local', true);
+    user.value = new User(Identifiable.generateNewId(), 'LOCAL', 'Local', true);
   }
 
-  function logout(): void {
+  async function logout(): Promise<void> {
+    if (!serviceStore.authService) {
+      throw 'auth_service_unavailable';
+    }
+
+    await serviceStore.authService.logout();
+
+    if (serviceStore.dataService) {
+      await serviceStore.dataService.unloadUser();
+      await serviceStore.dataService.unloadFlight();
+      await serviceStore.dataService.unloadProject();
+    }
+
     user.value = undefined;
   }
 

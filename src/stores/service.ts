@@ -4,12 +4,12 @@ import { PersistenceService } from 'src/services/persistence/PersistenceService'
 import { FirestoreDataService } from 'src/services/persistence/FirestoreDataService';
 import { LocalStorageService } from 'src/services/persistence/LocalStorageService';
 import { AuthenticationService } from 'src/services/auth/AuthenticationService';
-import { FirebaseAuthSerivice } from 'src/services/auth/FirebaseAuthSerivice';
+import { FirebaseAuthService } from 'src/services/auth/FirebaseAuthService';
 
 export const useServiceStore = defineStore('service', () => {
   const dataService = ref<PersistenceService | null>();
   const authService = ref<AuthenticationService | null>(
-    new FirebaseAuthSerivice()
+    new FirebaseAuthService()
   );
 
   function loadDataService(provider?: string) {

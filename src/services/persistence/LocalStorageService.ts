@@ -22,7 +22,7 @@ export class LocalStorageService implements PersistenceService {
     throw 'not_implemented';
   }
 
-  loadUser(userId: string | null): Promise<void> {
+  loadUserData(user: User): Promise<void> {
     throw 'not_implemented';
   }
 
@@ -34,7 +34,7 @@ export class LocalStorageService implements PersistenceService {
     this._project = undefined;
   }
 
-  unloadUser(): void {
+  unloadUserData(): void {
     throw 'not_implemented';
   }
 

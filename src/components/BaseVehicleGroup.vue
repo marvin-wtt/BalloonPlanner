@@ -5,10 +5,10 @@
     class="q-ma-md bg-grey-6 rounded-borders"
   >
     <div class="relative-position">
-      <q-badge v-if="reservedCapacityWarning" color="warning" floating rounded>
+      <q-badge v-if="showWarning" color="warning" floating rounded>
         <q-icon name="warning" color="white" size="1rem" />
         <q-tooltip>
-          {{ $t('tooltip_insufficient_capacity') }}
+          {{ warningText }}
         </q-tooltip>
       </q-badge>
       <slot name="balloon" />
@@ -21,8 +21,11 @@
 import DropZone from 'components/drag/DropZone.vue';
 
 import { Car, VehicleGroup } from 'src/lib/entities';
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 interface Props {
   group: VehicleGroup;
@@ -37,6 +40,22 @@ const emit = defineEmits<{
   (e: 'carAdd', person: Car): void;
 }>();
 
+const showWarning = computed(() => {
+  return trailerHitchWarning.value || reservedCapacityWarning.value;
+});
+
+const warningText = computed(() => {
+  return trailerHitchWarning.value
+    ? t('tooltip_missing_trailer_hitch')
+    : reservedCapacityWarning.value
+    ? t('tooltip_insufficient_capacity')
+    : '';
+});
+
+const trailerHitchWarning = computed(() => {
+  return !props.group.cars.some((value) => value.trailerHitch);
+});
+
 const reservedCapacityWarning = computed(() => {
   const availableCapacity = props.group.cars.reduce(
     (prev, curr) => prev + curr.capacity - 1,
@@ -46,7 +65,7 @@ const reservedCapacityWarning = computed(() => {
   return props.group.balloon.capacity > availableCapacity;
 });
 
-function isDropAccepted(element: Identifyable): boolean {
+function isDropAccepted(element: Identifiable): boolean {
   if (!(element instanceof Car)) {
     return false;
   }

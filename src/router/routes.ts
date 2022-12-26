@@ -23,7 +23,7 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/projects/:project',
+    path: '/projects',
     component: () => import('layouts/ProjectLayout.vue'),
     meta: { requiresAuth: true },
     children: [
@@ -33,8 +33,24 @@ const routes: RouteRecordRaw[] = [
         component: () => import('pages/ProjectSelectionPage.vue'),
       },
       {
-        path: 'flights/:flight',
+        path: 'create',
+        component: () => import('pages/ProjectCreationPage.vue'),
+      },
+      {
+        path: ':project',
+        component: () => undefined,
+      },
+      {
+        path: ':project/edit',
+        component: () => undefined,
+      },
+      {
+        path: ':project/flights',
         name: 'flights',
+        component: () => undefined,
+      },
+      {
+        path: ':project/flights/:flight',
         component: () => import('pages/FlightPage.vue'),
       },
     ],

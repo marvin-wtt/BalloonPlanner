@@ -1,18 +1,20 @@
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 
-export class Person extends Identifyable {
+export class Person extends Identifiable {
   private _name: string;
   private _numberOfFlights: number;
   private _nation: string;
   private _supervisor: boolean;
   private _firstTime: boolean;
+  private _weight: number;
 
   constructor(
     name: string,
     nation: string,
     supervisor?: boolean,
     flights?: number,
-    firstTime?: boolean
+    firstTime?: boolean,
+    weight?: number
   ) {
     super();
     this._name = name;
@@ -20,6 +22,7 @@ export class Person extends Identifyable {
     this._supervisor = supervisor ?? false;
     this._numberOfFlights = flights ?? 0;
     this._firstTime = firstTime ?? false;
+    this._weight = weight ?? Number.MAX_VALUE;
   }
 
   get nation(): string {
@@ -60,6 +63,14 @@ export class Person extends Identifyable {
 
   set supervisor(value: boolean) {
     this._supervisor = value;
+  }
+
+  get weight(): number {
+    return this._weight;
+  }
+
+  set weight(value: number) {
+    this._weight = value;
   }
 
   incrementFlights() {

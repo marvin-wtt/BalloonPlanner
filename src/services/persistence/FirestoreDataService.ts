@@ -9,6 +9,10 @@ import {
   onSnapshot,
   setDoc,
   updateDoc,
+  where,
+  query,
+  collection,
+  getDocs,
 } from 'firebase/firestore';
 import { db } from 'src/boot/firebase';
 import { useAuthStore } from 'stores/auth';
@@ -32,9 +36,6 @@ import {
   projectFromObject,
   ProjectObject,
   projectToObject,
-  userFromObject,
-  UserObject,
-  userToObject,
   vehcileGroupToObject,
 } from 'src/lib/utils/converter';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
@@ -49,20 +50,24 @@ export class FirestoreDataService implements PersistenceService {
   private _unsubscribeProject?: () => void;
   private _unsubscribeUser?: () => void;
 
-  loadUser(userId: string | null): Promise<void> {
-    if (this._unsubscribeUser != null) {
-      this._unsubscribeUser();
+  async loadUserData(user: User): Promise<void> {
+    if (user.id == null) {
+      throw 'invalid_user_id';
     }
 
-    if (userId == null) {
-      return Promise.reject('invalid_user_id');
-    }
+    const ref = this.getProjectsCollectionReference();
+    const q = query(ref, where('collaborators', 'array-contains', user.id));
+    // const querySnapshot = await getDocs(q);
+    //
+    // querySnapshot.forEach((result) => {
+    //   const data = result.data() as Project;
+    //   user.projects.push(data);
+    // });
 
-    const ref = this.getUserConverterReference(userId);
     let callPromise = true;
 
     return new Promise<void>((resolve, reject) => {
-      this._unsubscribeProject = onSnapshot(ref, (doc) => {
+      this._unsubscribeProject = onSnapshot(q, (querySnapshot) => {
         const authStore = useAuthStore();
 
         if (!authStore.user) {
@@ -73,12 +78,18 @@ export class FirestoreDataService implements PersistenceService {
           return;
         }
 
-        if (doc.exists()) {
-          const data =  doc.data();
-          authStore.user.projects = data.projects;
-        } else {
-          this.unloadUser();
-        }
+        const projects: Project[] = [];
+        querySnapshot.forEach((doc) => {
+          if (!doc.exists()) {
+            return;
+          }
+
+          const data = doc.data() as Project;
+          data.id = doc.id;
+          // TODO Data validation => maybe use converter
+          projects.push(data);
+        });
+        authStore.user.projects = projects;
 
         if (callPromise) {
           resolve();
@@ -88,14 +99,10 @@ export class FirestoreDataService implements PersistenceService {
     });
   }
 
-  unloadUser() {
+  unloadUserData() {
+    // TODO This should be removed, no?
     const authStore = useAuthStore();
     authStore.user = undefined;
-
-    if (this._unsubscribeUser != null) {
-      this._unsubscribeUser();
-      this._unsubscribeUser = undefined;
-    }
   }
 
   unloadProject() {
@@ -130,7 +137,7 @@ export class FirestoreDataService implements PersistenceService {
     let callPromise = true;
     const ref = this.getProjectConverterReference(projectId);
 
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>((resolve) => {
       this._unsubscribeProject = onSnapshot(ref, (doc) => {
         const project = doc.data();
         const projectStore = useProjectStore();
@@ -149,7 +156,7 @@ export class FirestoreDataService implements PersistenceService {
     projectStore.project = project;
 
     if (project.local) {
-      throw new Error('Cannot write local project to database');
+      project.local = false;
     }
 
     const authStore = useAuthStore();
@@ -158,12 +165,11 @@ export class FirestoreDataService implements PersistenceService {
       throw new Error('not_authenticated');
     }
 
-    if (
-      project.collaborators.find((value) => value.id === authStore.user?.id) ==
-      null
-    ) {
-      project.collaborators.push(authStore.user as User);
+    if (!project.collaborators.includes(authStore.user.id)) {
+      project.collaborators.push(authStore.user.id);
     }
+
+    // TODO add flight
 
     return this.updateProject(project);
   }
@@ -343,10 +349,7 @@ export class FirestoreDataService implements PersistenceService {
     return obj;
   }
 
-  addCarToVehicleGroup(
-    car: Car,
-    vehicleGroup: VehicleGroup
-  ): Promise<void> {
+  addCarToVehicleGroup(car: Car, vehicleGroup: VehicleGroup): Promise<void> {
     return this.updateFlightDocument({
       [`vehicleGroups.${vehicleGroup.id}.cars`]: arrayUnion(car.id),
       ...this.updateReservedCapacities(vehicleGroup, 'include', car),
@@ -511,10 +514,7 @@ export class FirestoreDataService implements PersistenceService {
     return this.updateFlightDocument(obj);
   }
 
-  removeBalloonPassenger(
-    person: Person,
-    balloon: Balloon
-  ): Promise<void> {
+  removeBalloonPassenger(person: Person, balloon: Balloon): Promise<void> {
     return this.updateFlightDocument({
       [`balloons.${balloon.id}.passengers`]: arrayRemove(person.id),
     });
@@ -666,20 +666,7 @@ export class FirestoreDataService implements PersistenceService {
     return doc(db, 'projects', projectId);
   }
 
-  getUserConverterReference(userId: string) {
-    const document = this.getUserReference(userId);
-    return document.withConverter<User>({
-      toFirestore: (user: User) => {
-        return userToObject(user);
-      },
-      fromFirestore: (snapshot, options) => {
-        const data = snapshot.data(options);
-        return userFromObject(data as UserObject, userId);
-      },
-    });
-  }
-
-  getUserReference(userId: string) {
-    return doc(db, 'users', userId);
+  getProjectsCollectionReference() {
+    return collection(db, 'projects');
   }
 }

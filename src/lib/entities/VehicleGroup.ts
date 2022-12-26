@@ -1,8 +1,8 @@
 import { Balloon } from 'src/lib/entities/Balloon';
 import { Car } from 'src/lib/entities/Car';
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 
-export class VehicleGroup extends Identifyable {
+export class VehicleGroup extends Identifiable {
   private _balloon: Balloon;
   private _cars: Car[] = [];
 

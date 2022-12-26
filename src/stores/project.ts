@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { Project } from 'src/lib/entities/Project';
-import { ref } from 'vue';
+import { computed, ref } from "vue";
 import { Flight } from 'src/lib/entities';
 import { RouteParams, useRoute } from 'vue-router';
 import { useServiceStore } from 'stores/service';

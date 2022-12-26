@@ -1,8 +1,12 @@
 <template>
   <q-page class="full-width row justify-start no-wrap bg-grey-5">
-    <template v-if="!flightNotFOund && !flightLoading">
+    <template v-if="!flightNotFound && !flightLoading">
       <!-- Menu -->
-      <div class="self-stretch row no-wrap" :class="menuClasses">
+      <div
+        v-if="editable"
+        class="self-stretch row no-wrap"
+        :class="menuClasses"
+      >
         <q-tabs
           v-model="menuTabs"
           vertical
@@ -35,7 +39,7 @@
             </q-badge>
           </q-tab>
           <q-tab name="participants" icon="group" :label="$t('participant', 2)">
-            <q-badge v-if="showParticiapntsMenuBadge" color="red" floating>
+            <q-badge v-if="showParticipantsMenuBadge" color="red" floating>
               {{ availableParticipants.length }}
             </q-badge>
           </q-tab>
@@ -56,7 +60,7 @@
             class="no-wrap col-grow shadow-24"
           >
             <q-tab-panel name="balloons" class="column bg-grey-2">
-              <q-scroll-area class="col-grow self-stretchs">
+              <q-scroll-area class="col-grow self-stretch">
                 <editable-list
                   :title="$t('balloon', 2)"
                   :item-name="$t('balloon')"
@@ -76,7 +80,7 @@
             </q-tab-panel>
 
             <q-tab-panel name="cars" class="column bg-grey-2">
-              <q-scroll-area class="col-grow self-stretchs">
+              <q-scroll-area class="col-grow self-stretch">
                 <editable-list
                   :title="$t('car', 2)"
                   :item-name="$t('car')"
@@ -96,12 +100,12 @@
             </q-tab-panel>
 
             <q-tab-panel name="supervisors" class="column bg-grey-2">
-              <q-scroll-area class="col-grow self-stretchs">
+              <q-scroll-area class="col-grow self-stretch">
                 <editable-list
                   :title="$t('supervisor', 2)"
                   :item-name="$t('supervisor')"
                   :itens="availableSupervisors"
-                  @create="dialogs.showCreatePerson(flight.people)"
+                  @create="dialogs.showCreatePerson(flight.value.people)"
                   @edit="(person) => dialogs.showEditPerson(person)"
                   @delete="(person) => dialogs.showDeletePerson(person)"
                 >
@@ -116,14 +120,14 @@
             </q-tab-panel>
 
             <q-tab-panel name="participants" class="column bg-grey-2">
-              <q-scroll-area class="col-grow self-stretchs">
+              <q-scroll-area class="col-grow self-stretch">
                 <editable-list
                   :title="$t('participant', 2)"
                   :item-name="$t('participant')"
                   :itens="availableParticipants"
-                  @create="dialogs.showCreatePerson(flight.people)"
+                  @create="dialogs.showCreatePerson(flight.value.people)"
                   @edit="(person) => dialogs.showEditPerson(person)"
-                  @delete="(person) => dialogs.showDeletePerson(person, flight)"
+                  @delete="(person) => dialogs.showDeletePerson(person)"
                   :dense="availableParticipants.length > 10"
                 >
                   <template #main="{ item }">
@@ -136,29 +140,52 @@
               </q-scroll-area>
             </q-tab-panel>
 
-            <q-tab-panel name="settings">
-              <div class="q-py-md">
-                <div class="text-h6 q-py-md">
-                  {{ $t('settings') }}
+            <q-tab-panel name="settings" class="column bg-grey-2">
+              <q-scroll-area class="col-grow self-stretch">
+                <div class="q-py-md">
+                  <div class="text-h6 q-py-md">
+                    {{ $t('settings') }}
+                  </div>
+                  <div class="q-gutter-sm">
+                    <q-list bordered separator>
+                      <q-item tag="label" v-ripple>
+                        <q-item-section avatar top>
+                          <q-checkbox
+                            v-model="labeledVehicle"
+                            val="label"
+                            color="primary"
+                          />
+                        </q-item-section>
+                        <q-item-section>
+                          <q-item-label>
+                            {{ $t('settings_vehicles_labeled') }}
+                          </q-item-label>
+                          <q-item-label caption>
+                            {{ $t('settings_vehicles_labeled_caption') }}
+                          </q-item-label>
+                        </q-item-section>
+                      </q-item>
+                      <q-item tag="indexed" v-ripple>
+                        <q-item-section avatar top>
+                          <q-checkbox
+                            v-model="indexedVehicle"
+                            val="indexed"
+                            color="primary"
+                          />
+                        </q-item-section>
+                        <q-item-section>
+                          <q-item-label>
+                            {{ $t('settings_vehicles_indexed') }}
+                          </q-item-label>
+                          <q-item-label caption>
+                            {{ $t('settings_vehicles_indexed_caption') }}
+                          </q-item-label>
+                        </q-item-section>
+                      </q-item>
+                    </q-list>
+                  </div>
                 </div>
-                <div class="q-gutter-sm">
-                  <q-list bordered>
-                    <q-item tag="label" v-ripple>
-                      <q-item-section avatar top>
-                        <q-checkbox
-                          v-model="color"
-                          val="teal"
-                          color="primary"
-                        />
-                      </q-item-section>
-                      <q-item-section>
-                        <q-item-label> Teal</q-item-label>
-                        <q-item-label caption>With description</q-item-label>
-                      </q-item-section>
-                    </q-item>
-                  </q-list>
-                </div>
-              </div>
+              </q-scroll-area>
             </q-tab-panel>
           </q-tab-panels>
         </div>
@@ -190,6 +217,8 @@
                 "
                 @operator-add="(p) => onBalloonOperatorAdd(group.balloon, p)"
                 @operator-remove="(p) => onBalloonOperatorRemove(group.balloon)"
+                :indexed="indexedVehicle"
+                :labeled="labeledVehicle"
               />
             </template>
             <template #cars>
@@ -203,12 +232,18 @@
                 @passenger-remove="(p) => onCarPersonRemove(vehicle, p)"
                 @operator-add="(p) => onCarOperatorAdd(vehicle, p)"
                 @operator-remove="(p) => onCarOperatorRemove(vehicle)"
+                :indexed="indexedVehicle"
+                :labeled="labeledVehicle"
               />
             </template>
           </base-vehicle-group>
         </base-flight>
 
-        <q-page-sticky position="bottom-right" :offset="[18, 18]">
+        <q-page-sticky
+          position="bottom-right"
+          :offset="[18, 18]"
+          v-if="editable"
+        >
           <q-fab icon="add" direction="up" color="primary" external-label>
             <q-fab-action
               external-label
@@ -239,7 +274,7 @@
 
     <template v-if="flightLoading"> Loading...</template>
 
-    <template v-if="flightNotFOund">
+    <template v-if="flightNotFound">
       <!-- TODO -->
       Flight not Found
     </template>
@@ -269,12 +304,15 @@ import { useI18n } from 'vue-i18n';
 import { solve } from 'src/lib/solver/solver';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
 import { useServiceStore } from 'stores/service';
-import { solveX } from 'src/lib/solver/policySolver';
+import { useSettingsStore } from 'stores/settings';
+import { useAuthStore } from 'stores/auth';
 
 const { t } = useI18n();
 const $q = useQuasar();
+const authStore = useAuthStore();
 const projectStore = useProjectStore();
 const serviceStore = useServiceStore();
+const settingsStore = useSettingsStore();
 
 // FIXME Convert correctly
 const {
@@ -289,39 +327,22 @@ const {
 }: {
   dataService: Ref<PersistenceService | null>;
 } = storeToRefs(serviceStore) as any;
+const { indexedVehicle, labeledVehicle } = storeToRefs(settingsStore);
 
 const dialogs = useDialogs($q, t);
 
 const menuTabs = ref('overview');
 const flightLoading = ref(true);
-const flightNotFOund = ref(false);
+const flightNotFound = ref(false);
 
 onMounted(async () => {
   projectStore
     .load()
     .catch(() => {
-      flightNotFOund.value = true;
+      flightNotFound.value = true;
     })
     .finally(() => {
       flightLoading.value = false;
-
-      const flights = solveX(flight.value!);
-
-      function myLoop(i = 0) {
-        setTimeout(() => {
-          flight.value = flights[i];
-
-          if (i + 1 < flights.length) {
-            myLoop(i + 1);
-          } else {
-            flight.value!.clear();
-            flight.value!.vehicleGroups = [];
-          }
-        }, 500);
-      }
-      if (flights.length > 0) {
-        myLoop();
-      }
     });
 });
 
@@ -338,13 +359,13 @@ watch(
 );
 
 onBeforeRouteUpdate((to) => {
-  flightNotFOund.value = false;
+  flightNotFound.value = false;
   flightLoading.value = true;
 
   projectStore
     .load(to.params)
     .catch(() => {
-      flightNotFOund.value = true;
+      flightNotFound.value = true;
     })
     .finally(() => {
       flightLoading.value = false;
@@ -357,19 +378,19 @@ function onSmartFill() {
   }
 
   const f = solve(flight.value);
-  const notif = $q.notify({
+  const notify = $q.notify({
     type: 'ongoing',
     message: t('smart_fill_loading'),
   });
   f.then((value) => {
     dataService.value?.updateFLight(value);
-    notif({
+    notify({
       type: 'positive',
       message: t('smart_fill_success'),
       timeout: 1000,
     });
   }).catch((reason) => {
-    notif({
+    notify({
       type: 'warning',
       message: t('smart_fill_error') + ': ' + reason,
       timeout: 2000,
@@ -389,20 +410,20 @@ function monitorService(
   }
 
   const promise = cb(dataService.value);
-  const notif = $q.notify({
+  const notify = $q.notify({
     type: 'ongoing',
     message: t('saving_in_progress'),
   });
   promise
     .then(() => {
-      notif({
+      notify({
         type: 'positive',
         message: t('saving_success'),
         timeout: 1000,
       });
     })
     .catch((reason) => {
-      notif({
+      notify({
         type: 'warning',
         message: t('saving_failed') + ': ' + reason,
         timeout: 5000,
@@ -460,13 +481,22 @@ function onCarPersonRemove(car: Car, person: Person) {
   monitorService((service) => service.removeCarPassenger(person, car));
 }
 
+const editable = computed<boolean>(() => {
+  if (!authStore.user || !project.value) {
+    return false;
+  }
+
+  const userId = authStore.user.email ?? authStore.user.id;
+  return project.value.collaborators.includes(userId);
+});
+
 const showBalloonsMenuBadge = computed<boolean>(() => {
   return availableBalloons.value.length > 0;
 });
 const showCarsMenuBadge = computed<boolean>(() => {
   return availableCars.value.length > 0;
 });
-const showParticiapntsMenuBadge = computed<boolean>(() => {
+const showParticipantsMenuBadge = computed<boolean>(() => {
   return availableParticipants.value.length > 0;
 });
 const showSupervisorsMenuBadge = computed<boolean>(() => {

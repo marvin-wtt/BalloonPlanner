@@ -1,8 +1,8 @@
 import { Person } from 'src/lib/entities/Person';
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 import { removeFromArray } from 'src/lib/utils/ArrayUtils';
 
-export abstract class Vehicle extends Identifyable {
+export abstract class Vehicle extends Identifiable {
   private _name: string;
   private _capacity: number;
   private _allowedOperators: Person[];
@@ -73,7 +73,7 @@ export abstract class Vehicle extends Identifyable {
   }
 
   isFull(): boolean {
-    return this._passengers.length >= this._capacity;
+    return this._passengers.length + 1 >= this._capacity;
   }
 
   clear() {

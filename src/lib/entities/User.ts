@@ -1,19 +1,19 @@
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 import { Project } from 'src/lib/entities/Project';
 
-export class User extends Identifyable {
+export class User extends Identifiable {
   private _provider: string;
   private _name: string;
   private _email?: string;
   private _local: boolean;
-  private _projects: string[];
+  private _projects: Project[];
 
   constructor(
     id: string,
     provider: string,
     name: string,
     local: boolean,
-    projects?: string[]
+    projects?: Project[]
   ) {
     super(id);
     this._provider = provider;
@@ -30,20 +30,20 @@ export class User extends Identifyable {
     this._provider = value;
   }
 
-  get projects(): string[] {
+  get projects(): Project[] {
     return this._projects;
   }
 
-  set projects(value: string[]) {
+  set projects(value: Project[]) {
     this._projects = value;
   }
 
   addProject(project: Project) {
-    this._projects.push(project.id);
+    this._projects.push(project);
   }
 
   removeProject(project: Project) {
-    this._projects = this._projects.filter((value) => value != project.id);
+    this._projects = this._projects.filter((value) => value.id !== project.id);
   }
 
   get name(): string {

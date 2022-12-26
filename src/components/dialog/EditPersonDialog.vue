@@ -4,7 +4,7 @@
       <q-form @reset="onReset" @submit="onSubmit" class="q-gutter-md">
         <q-card-section>
           <div class="text-h6">
-            {{ $t('dialog.person.title') }}
+            {{ $t(`dialog.person.${mode}.title`) }}
           </div>
         </q-card-section>
 
@@ -119,6 +119,7 @@ function onSubmit() {
     nation: nation.value,
     flights: flights.value,
     supervisor: supervisor.value,
+    firstTime: firstTime.value
   });
 }
 
@@ -127,6 +128,7 @@ function onReset() {
   nation.value = null;
   flights.value = 0;
   supervisor.value = false;
+  firstTime.value = false;
   onDialogCancel();
 }
 </script>

@@ -9,7 +9,7 @@ import {
 import { useAuthStore } from 'stores/auth';
 import { User as FirebaseUser } from 'firebase/auth';
 
-export class FirebaseAuthSerivice implements AuthenticationService {
+export class FirebaseAuthService implements AuthenticationService {
   static PROVIDER_NAME = 'FIRESTORE';
 
   private _unsubscribeStateChange?: () => void;
@@ -18,7 +18,7 @@ export class FirebaseAuthSerivice implements AuthenticationService {
 
   authenticated(): Promise<boolean> {
     if (this._initialized) {
-      return new Promise(resolve => resolve(this._authenticated));
+      return Promise.resolve(this._authenticated);
     }
 
     this.initialize();
@@ -75,8 +75,8 @@ export class FirebaseAuthSerivice implements AuthenticationService {
 
   createUser(firebaseUser: FirebaseUser): User {
     return new User(
-      firebaseUser.uid,
-      FirebaseAuthSerivice.PROVIDER_NAME,
+      firebaseUser.email ?? firebaseUser.uid,
+      FirebaseAuthService.PROVIDER_NAME,
       firebaseUser.displayName ?? firebaseUser.email ?? firebaseUser.uid,
       false
     );

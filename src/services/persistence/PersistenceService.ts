@@ -4,15 +4,18 @@ import {
   Flight,
   Person,
   Project,
+  User,
   VehicleGroup,
 } from 'src/lib/entities';
 
 export interface PersistenceService {
-  loadUser(userId: string | null): Promise<void>;
+  loadUserData(user: User): Promise<void>;
 
-  unloadUser(): void;
+  unloadUserData(): void;
 
   loadProject(projectId: string | null): Promise<void>;
+
+  createProject(project: Project): Promise<void>;
 
   updateProject(project: Project): Promise<void>;
 

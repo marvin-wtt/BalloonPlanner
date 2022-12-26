@@ -5,14 +5,14 @@
         {{ project.name }}
       </div>
       <div class="text-subtitle2">
-        {{ project.desciption }}
+        {{ project.description }}
       </div>
     </q-card-section>
 
     <q-list>
       <q-item>
         <q-item-section avatar>
-          <q-icon name="groups" />
+          <q-icon name="flight" />
         </q-item-section>
 
         <q-item-section>
@@ -25,7 +25,7 @@
       </q-item>
       <q-item>
         <q-item-section avatar>
-          <q-icon name="flight" />
+          <q-icon name="groups" />
         </q-item-section>
 
         <q-item-section>
@@ -41,8 +41,12 @@
     <q-separator dark />
 
     <q-card-actions align="right">
-      <q-btn flat>{{ $t('edit') }}</q-btn>
-      <q-btn flat>{{ $t('open') }}</q-btn>
+      <q-btn flat :to="`/projects/${project.id}/edit`">
+        {{ $t('edit') }}
+      </q-btn>
+      <q-btn flat :to="`/projects/${project.id}/flights`">
+        {{ $t('open') }}
+      </q-btn>
     </q-card-actions>
   </q-card>
 </template>

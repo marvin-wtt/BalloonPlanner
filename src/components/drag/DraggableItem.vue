@@ -12,11 +12,11 @@
 
 <script lang="ts" setup>
 import { DragHelper } from 'src/util/DragHelper';
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 import { ref } from 'vue';
 
 interface Props {
-  item: Identifyable;
+  item: Identifiable;
   tag?: string | object;
 }
 
@@ -25,9 +25,9 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: 'cancel', element: Identifyable): void;
-  (e: 'move', element: Identifyable): void;
-  (e: 'remove', element: Identifyable): void;
+  (e: 'cancel', element: Identifiable): void;
+  (e: 'move', element: Identifiable): void;
+  (e: 'remove', element: Identifiable): void;
 }>();
 
 const dragged = ref(false);

@@ -35,7 +35,7 @@
 import { Balloon, Person, Vehicle } from 'src/lib/entities';
 import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import { useDialogs } from 'src/composables/dialogs';
 import { useQuasar } from 'quasar';
@@ -80,7 +80,7 @@ const personLabel = computed(() => {
   return label;
 });
 
-function isDropAllowed(element: Identifyable): boolean {
+function isDropAllowed(element: Identifiable): boolean {
   if (!(element instanceof Person)) {
     return false;
   }

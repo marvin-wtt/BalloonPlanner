@@ -2,15 +2,35 @@
   <q-page padding>
     <div class="q-pa-md">
       <div class="q-gutter-sm row">
-        <project-card :project="project" class="project-card"></project-card>
+        <project-card
+          v-for="project in user.projects"
+          :project="project"
+          :key="project.id"
+          class="project-card"
+        />
 
-
-        <q-card class="project-card" v-if="local">
-          <q-btn class="add-btn" icon="folder_open" size="md" stack>{{ $t('open_project') }}</q-btn>
+        <q-card class="project-card" v-if="user.local">
+          <q-btn
+            class="add-btn"
+            icon="folder_open"
+            size="md"
+            stack
+            @click="createProject()"
+          >
+            {{ $t('open_project') }}
+          </q-btn>
         </q-card>
 
         <q-card class="project-card">
-          <q-btn class="add-btn" icon="add" size="md" stack>{{ $t('add_project') }}</q-btn>
+          <q-btn
+            class="add-btn"
+            icon="add"
+            size="md"
+            stack
+            to="/projects/create"
+          >
+            {{ $t('add_project') }}
+          </q-btn>
         </q-card>
       </div>
     </div>
@@ -21,11 +41,29 @@
 
 <script lang="ts" setup>
 import ProjectCard from 'components/ProjectCard.vue';
-import { Project } from 'src/lib/entities';
+import { User } from 'src/lib/entities';
+import { useAuthStore } from 'stores/auth';
+import { Ref } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useServiceStore } from 'stores/service';
 
-const local = true;
+const authStore = useAuthStore();
+const serviceStore = useServiceStore();
 
-const project = new Project('Test', 'Description', [], []);
+// FIXME Convert correctly
+const {
+  user,
+}: {
+  user: Ref<User>;
+} = storeToRefs(authStore) as any;
+
+function createProject() {
+  if (!serviceStore.dataService) {
+    return;
+  }
+
+  // serviceStore.dataService.
+}
 </script>
 
 <style>

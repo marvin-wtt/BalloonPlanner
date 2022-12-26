@@ -7,7 +7,7 @@
       @dragleave.stop
     >
       <q-badge v-if="overfilled" color="negative" floating rounded>
-        <q-icon name="warning" color="white" size="1rem" />
+        <q-icon name="warning" color="white" size="1rem"/>
         <q-tooltip>
           {{ $t('tooltip_overfilled') }}
         </q-tooltip>
@@ -41,10 +41,11 @@
           </q-menu>
         </th>
         <th class="vehicle-index" v-if="indexed">
-          {{ $t('pilot_index', 'P') }}
+          {{ type === 'balloon' ? $t('pilot_index', 'P') : $t('driver_index', 'D') }}
         </th>
         <base-vehicle-person-cell
           class="vehicle-person"
+          :class="props.indexed ? 'vehicle-person__indexed' : ''"
           :editable="props.editable"
           :person="props.vehicle.operator"
           :vehicle="props.vehicle"
@@ -60,6 +61,7 @@
         </td>
         <base-vehicle-person-cell
           class="vehicle-person"
+          :class="props.indexed ? 'vehicle-person__indexed' : ''"
           :editable="props.editable"
           :person="props.vehicle.passengers[c - 1]"
           :vehicle="props.vehicle"
@@ -75,8 +77,8 @@
 import BaseVehiclePersonCell from 'components/BaseVehiclePersonCell.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 
-import { Car, Person, Vehicle } from 'src/lib/entities';
-import { computed } from 'vue';
+import {Car, Person, Vehicle} from 'src/lib/entities';
+import {computed} from 'vue';
 
 interface Props {
   vehicle: Vehicle;
@@ -128,8 +130,12 @@ function onVehicleRemoved() {
   background-color: white;
   margin: 20px;
   border-collapse: collapse;
-  border: 1px solid;
+  /*border: 1px solid;*/
   border-radius: 10px;
+}
+
+.vehicle-table tr:last-child * {
+  border-bottom: none;
 }
 
 .vehicle-label {
@@ -139,6 +145,7 @@ function onVehicleRemoved() {
   border: 0;
   background-color: darkgray;
   color: white;
+  border-radius: 10px 0 0 10px;
 }
 
 .vehicle-label span {
@@ -164,6 +171,9 @@ th {
   min-width: 120px;
   height: 30px;
   padding: 0 0.5em;
+}
+
+.vehicle-person__indexed {
   border-left: 2px solid;
 }
 

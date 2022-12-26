@@ -93,12 +93,12 @@
 <script lang="ts" setup>
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import { QItem } from 'quasar';
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 import { ref } from 'vue';
 
 interface Props {
   title: string;
-  itens: Identifyable[];
+  itens: Identifiable[];
   itemName?: string;
   dense?: boolean;
 }
@@ -110,8 +110,8 @@ withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'create'): void;
-  (e: 'edit', item: Identifyable): void;
-  (e: 'delete', item: Identifyable): void;
+  (e: 'edit', item: Identifiable): void;
+  (e: 'delete', item: Identifiable): void;
 }>();
 
 const editable = ref(false);
@@ -122,11 +122,11 @@ function toggleEditable() {
   settingsIcon.value = editable.value ? 'done' : 'settings';
 }
 
-function editItem(item: Identifyable) {
+function editItem(item: Identifiable) {
   emit('edit', item);
 }
 
-function deleteItem(item: Identifyable) {
+function deleteItem(item: Identifiable) {
   emit('delete', item);
 }
 

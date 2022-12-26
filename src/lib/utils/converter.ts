@@ -4,7 +4,6 @@ import {
   Flight,
   Person,
   Project,
-  User,
   VehicleGroup,
 } from 'src/lib/entities';
 
@@ -30,6 +29,7 @@ export type BalloonObject = {
 
 export type CarObject = {
   name: string;
+  trailerHitch: boolean;
   capacity: number;
   reservedCapacity: number;
   operator: string | null;
@@ -58,20 +58,7 @@ export type ProjectObject = {
   flights: string[];
 };
 
-// TODO Refactor
-export type UserObject = {
-  projects: string[];
-};
-
-export function userFromObject(obj: UserObject, userId: string): User {
-  return new User(userId, '', '', false, obj.projects);
-}
-
-export function userToObject(user: User): UserObject {
-  return {
-    projects: user.projects,
-  };
-}
+// TODO Validate input
 
 export function projectFromObject(
   obj: ProjectObject,
@@ -79,15 +66,17 @@ export function projectFromObject(
 ): Project {
   const name = obj.name;
   const description = obj.description;
+  const collaborators = obj.collaborators;
 
   const flights: Flight[] = obj.flights.map((value) => {
+    // TODO Maybe this flight can be lazy loading?
     const flight = new Flight([], [], []);
     flight.id = value;
 
     return flight;
   });
 
-  const project = new Project(name, description, flights);
+  const project = new Project(name, description, flights, collaborators);
   if (projectId != null) {
     project.id = projectId;
   }
@@ -98,9 +87,9 @@ export function projectFromObject(
 export function projectToObject(project: Project): ProjectObject {
   return {
     name: project.name,
-    description: project.desciption,
+    description: project.description,
     flights: project.flights.map((value) => value.id),
-    collaborators: project.collaborators.map((value) => value.id),
+    collaborators: project.collaborators,
   };
 }
 
@@ -237,6 +226,7 @@ export function balloonsFromObject(
 export function carToObject(car: Car): CarObject {
   return {
     name: car.name,
+    trailerHitch: car.trailerHitch,
     capacity: car.capacity,
     reservedCapacity: car.reservedCapacity,
     operator: car.operator?.id ?? null,

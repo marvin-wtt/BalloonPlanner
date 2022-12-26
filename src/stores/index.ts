@@ -1,5 +1,5 @@
 import { store } from 'quasar/wrappers';
-import { createPinia, PiniaCustomProperties } from 'pinia';
+import { createPinia } from 'pinia';
 import { Router } from 'vue-router';
 
 /*

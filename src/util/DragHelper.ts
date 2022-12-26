@@ -1,9 +1,9 @@
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 
 export class DragHelper {
-  private static _element: Identifyable | null;
+  private static _element: Identifiable | null;
 
-  static startDrag(event: DragEvent, element: Identifyable) {
+  static startDrag(event: DragEvent, element: Identifiable) {
     DragHelper._element = element;
 
     if (event.dataTransfer === null || element === undefined) {
@@ -26,7 +26,7 @@ export class DragHelper {
     return event.dataTransfer?.getData('id') === this._element?.id;
   }
 
-  static get element(): Identifyable | null {
+  static get element(): Identifiable | null {
     return this._element;
   }
 }

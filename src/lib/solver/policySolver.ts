@@ -1,8 +1,10 @@
-import { Flight } from 'src/lib/entities';
+import { Balloon, Flight, Person } from 'src/lib/entities';
 
 export function solveX(flight: Flight): Flight[] {
   let results: Flight[] = [];
-  const groups = createVehicleGroups(flight).sort((a, b) => b.vehicleGroups.length - a.vehicleGroups.length);
+  const groups = createVehicleGroups(flight).sort(
+    (a, b) => b.vehicleGroups.length - a.vehicleGroups.length
+  );
 
   type Solver = (flight: Flight) => Flight[];
   const solver: Solver[] = [];
@@ -11,10 +13,12 @@ export function solveX(flight: Flight): Flight[] {
   solver.push(assignCarOperators);
   // solver.push(assignBalloonPassengers);
 
-  groups.some(value => {
+  flight.vehicleGroups;
+
+  groups.some((value) => {
     results = [value];
     solver.every((s) => {
-      results = results.flatMap(value => s(value));
+      results = results.flatMap((value) => s(value));
       return results.length > 0;
     });
 
@@ -48,6 +52,7 @@ function createVehicleGroups(flight: Flight): Flight[] {
  * @param flight The flight to update.
  */
 function assignCars(flight: Flight): Flight[] {
+  // TODO At least one car needs to have a trailer hitch
   let results: Flight[] = [flight];
   for (let g = 0; g < flight.vehicleGroups.length; g++) {
     results = results

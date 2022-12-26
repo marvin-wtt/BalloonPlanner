@@ -1,12 +1,12 @@
 import { Balloon } from 'src/lib/entities/Balloon';
 import { VehicleGroup } from 'src/lib/entities/VehicleGroup';
 import { Person } from 'src/lib/entities/Person';
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 import { Car } from 'src/lib/entities/Car';
 import { removeFromArray } from 'src/lib/utils/ArrayUtils';
 import { flightFromObject, flightToObject } from 'src/lib/utils/converter';
 
-export class Flight extends Identifyable {
+export class Flight extends Identifiable {
   private _timestamp: number;
   private _balloons: Balloon[];
   private _cars: Car[];

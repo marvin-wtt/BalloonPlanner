@@ -19,7 +19,7 @@
 <script lang="ts" setup>
 import { Balloon, Flight, Person } from 'src/lib/entities';
 import DropZone from 'components/drag/DropZone.vue';
-import { Identifyable } from 'src/lib/utils/Identifyable';
+import { Identifiable } from 'src/lib/utils/Identifiable';
 import { computed } from 'vue';
 
 interface Props {
@@ -36,7 +36,7 @@ const empty = computed(() => {
   return props.flight.vehicleGroups.length === 0;
 });
 
-function isDropAllowed(element: Identifyable): boolean {
+function isDropAllowed(element: Identifiable): boolean {
   if (element instanceof Person) {
     return true;
   }
@@ -48,7 +48,7 @@ function isDropAllowed(element: Identifyable): boolean {
   return false;
 }
 
-function flightContainsElement(element: Identifyable): boolean {
+function flightContainsElement(element: Identifiable): boolean {
   return (
     props.flight.vehicleGroups.findIndex(
       (value) => value.balloon.id === element.id
