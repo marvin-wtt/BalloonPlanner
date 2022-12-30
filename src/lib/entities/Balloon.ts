@@ -2,7 +2,6 @@ import { Vehicle } from 'src/lib/entities/Vehicle';
 import { Person } from 'src/lib/entities/Person';
 
 export class Balloon extends Vehicle {
-
   private _maxWeight?: number;
 
   // TODO Override constuctor

@@ -23,7 +23,10 @@ export class ParticipantsFirstPolicy extends Policy {
 
     const minFlights = Math.min(...participantsFlights);
 
-    return supervisors.filter(value => value.numberOfFlights > minFlights).length == 0;
+    return (
+      supervisors.filter((value) => value.numberOfFlights > minFlights)
+        .length == 0
+    );
   }
 
   name(): string {

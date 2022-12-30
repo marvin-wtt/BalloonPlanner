@@ -20,10 +20,13 @@ export class EqualFlightsPolicy extends Policy {
       throw 'score multiplier is exponential and should be greater than one';
     }
 
-    return -1 * flights
-      .filter((value) => value > min + 1)
-      .map((value) => Math.pow(this.scoreMultiplier, value - (min + 1)))
-      .reduce((totalScore, value) => totalScore + value, 0);
+    return (
+      -1 *
+      flights
+        .filter((value) => value > min + 1)
+        .map((value) => Math.pow(this.scoreMultiplier, value - (min + 1)))
+        .reduce((totalScore, value) => totalScore + value, 0)
+    );
   }
 
   name(): string {

@@ -1,6 +1,6 @@
 import { Person } from 'src/lib/entities';
 
-export async function loadJson(file: File): Promise<any> {
+export async function loadJson(file: File): Promise<Person[]> {
   const content = await readFile(file);
   const json = JSON.parse(content);
 

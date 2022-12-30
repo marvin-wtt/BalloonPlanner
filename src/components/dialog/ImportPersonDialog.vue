@@ -9,12 +9,7 @@
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          <q-stepper
-            v-model="step"
-            ref="stepper"
-            color="primary"
-            animated
-          >
+          <q-stepper v-model="step" ref="stepper" color="primary" animated>
             <q-step
               :name="1"
               title="Select input method"
@@ -28,7 +23,9 @@
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>Online from Ballaeron</q-item-label>
-                    <q-item-label caption>Requires login credentials</q-item-label>
+                    <q-item-label caption
+                      >Requires login credentials</q-item-label
+                    >
                   </q-item-section>
                 </q-item>
 
@@ -61,12 +58,7 @@
               TODO Select upload method
             </q-step>
 
-            <q-step
-              :name="3"
-              title=""
-              icon="cloud_upload"
-              :done="step > 3"
-            >
+            <q-step :name="3" title="" icon="cloud_upload" :done="step > 3">
               TODO Select upload method
             </q-step>
 
@@ -78,11 +70,7 @@
             >
               TODO Select upload method
             </q-step>
-
-
-
           </q-stepper>
-
 
           <!-- TODO unique rule -->
           <q-input
@@ -179,7 +167,7 @@ const name = ref(props.person?.name ?? null);
 const nation = ref(props.person?.nation ?? null);
 const flights = ref(props.person?.numberOfFlights ?? 0);
 const supervisor = ref(props.person?.supervisor ?? false);
-const firstTime = ref(props.person?.firstTime ?? false)
+const firstTime = ref(props.person?.firstTime ?? false);
 
 const nations = [
   {

@@ -1,4 +1,4 @@
-import { Balloon, Flight, Person } from 'src/lib/entities';
+import { Flight } from 'src/lib/entities';
 
 export function solveX(flight: Flight): Flight[] {
   let results: Flight[] = [];

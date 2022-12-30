@@ -95,7 +95,6 @@ function permutations<T>(array: T[]) {
 
   let next: T[] | undefined = array;
   while (next !== undefined) {
-
     next = generator();
   }
 }

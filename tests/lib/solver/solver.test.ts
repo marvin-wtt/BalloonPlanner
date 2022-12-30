@@ -154,8 +154,16 @@ it('prioritises participants who never flew before', async () => {
 
   const result = await solve(f);
 
-  expect(result.vehicleGroups[0].balloon.passengers.find(value => value.id === p6.id)).toBeDefined();
-  expect(result.vehicleGroups[0].balloon.passengers.find(value => value.id === p7.id)).toBeDefined();
+  expect(
+    result.vehicleGroups[0].balloon.passengers.find(
+      (value) => value.id === p6.id
+    )
+  ).toBeDefined();
+  expect(
+    result.vehicleGroups[0].balloon.passengers.find(
+      (value) => value.id === p7.id
+    )
+  ).toBeDefined();
 });
 
 it.todo('prioritises participants with frewer flights');

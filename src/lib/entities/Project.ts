@@ -9,7 +9,13 @@ export class Project extends Identifiable {
   private _local: boolean;
   private _path?: string;
 
-  constructor(name: string, description?: string, flights?: Flight[], collaborators?: string[], local?: boolean) {
+  constructor(
+    name: string,
+    description?: string,
+    flights?: Flight[],
+    collaborators?: string[],
+    local?: boolean
+  ) {
     super();
     this._flights = flights ?? [];
     this._name = name;

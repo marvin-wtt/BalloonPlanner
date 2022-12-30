@@ -1,10 +1,17 @@
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
-import { Balloon, Car, Flight, Person, Project, User, VehicleGroup } from 'src/lib/entities';
+import {
+  Balloon,
+  Car,
+  Flight,
+  Person,
+  Project,
+  User,
+  VehicleGroup,
+} from 'src/lib/entities';
 
 export class LocalStorageService implements PersistenceService {
   private _flight?: Flight;
   private _project?: Project;
-
 
   addFlight(flight: Flight): Promise<void> {
     throw 'not_implemented';

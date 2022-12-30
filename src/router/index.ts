@@ -39,7 +39,7 @@ export default route(function (/* { store, ssrContext } */) {
     const requiresAuth = to.meta.requiresAuth;
     const authStore = useAuthStore();
     if (requiresAuth && !(await authStore.authenticated())) {
-      next({path :'/login', query: { origin: to.fullPath }});
+      next({ path: '/login', query: { origin: to.fullPath } });
       // next({ name: 'login', query: { origin: to.fullPath } });
     } else {
       next();

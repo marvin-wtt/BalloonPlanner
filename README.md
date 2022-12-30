@@ -22,7 +22,7 @@ See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-
 
 ### Project
 
-A project is a collection of multiple flights. 
+A project is a collection of multiple flights.
 A project has collaborators who can edit all flights.
 When a new flight is created, the amount of flights is copied from the last flight.
 
@@ -34,42 +34,43 @@ A vehicle group describes the combination of one balloon and multiple cars which
 
 ### Balloon
 
-| Field | Type | Descirption | Example |
-| --- | --- | --- | --- |
-| Name | string | A unique meaningfull identification of the balloon. | D-OABC |
-| Capacity | number | The amount of maximum passengers excluding the pilot | 3 | 
-| Allowed Operators | Person[] | A list of people who are allowed to fly this balloon | |
-| Operator | Person | The pilot which is asigned to this balloon | |
-| Passengers | Person[] | A list of passengers who fly with this balloon | |
+| Field             | Type     | Descirption                                          | Example |
+| ----------------- | -------- | ---------------------------------------------------- | ------- |
+| Name              | string   | A unique meaningfull identification of the balloon.  | D-OABC  |
+| Capacity          | number   | The amount of maximum passengers excluding the pilot | 3       |
+| Allowed Operators | Person[] | A list of people who are allowed to fly this balloon |         |
+| Operator          | Person   | The pilot which is asigned to this balloon           |         |
+| Passengers        | Person[] | A list of passengers who fly with this balloon       |         |
 
 ### Car
 
-| Field | Type | Descirption                                                                     |
-| --- | --- |---------------------------------------------------------------------------------|
-| Name | string | A unique meaningfull identification of the car.                                 | 
-| Capacity | number | The amount of maximum passengers excluding the pilot                            |
+| Field             | Type     | Descirption                                                                     |
+| ----------------- | -------- | ------------------------------------------------------------------------------- |
+| Name              | string   | A unique meaningfull identification of the car.                                 |
+| Capacity          | number   | The amount of maximum passengers excluding the pilot                            |
 | Allowed Operators | Person[] | A list of people who are allowed to drive this car                              |
-| Operator | Person | The driver who is asigned to this car                                           |
-| Passengers | Person[] | A list of passengers who drive with this car                                    |
-| Reserved Capacity | number | The amount of passengers which are blocked for balloon passengers and the pilot |
+| Operator          | Person   | The driver who is asigned to this car                                           |
+| Passengers        | Person[] | A list of passengers who drive with this car                                    |
+| Reserved Capacity | number   | The amount of passengers which are blocked for balloon passengers and the pilot |
 
 ## Solver
 
 The solver is an algorithm which tries to find an optimal solution for a flight.  
-NOTE: The solver only searches for one solution. 
+NOTE: The solver only searches for one solution.
 There might be other solutions which are evaluated the same.
 
 ### Group structure
 
-* Each balloon must have an operator.
-* Each group must have enough cars to carry all balloon passengers and the operator.
-* Each car must have an operator.
-* [Optional] Each crew of a group is evenly distributed.
-* Minimize the amount of needed cars.
+- Each balloon must have an operator.
+- Each group must have enough cars to carry all balloon passengers and the operator.
+- Each car must have an operator.
+- [Optional] Each crew of a group is evenly distributed.
+- Minimize the amount of needed cars.
 
 ### Balloon passengers
 
 Balloon passengers are selegted after the following order:
+
 1. Participants, who never flew in a hot air balloon before.
 2. Participants, who never flew in this project before.
 3. [Optional] Teamer, who never flew before.
