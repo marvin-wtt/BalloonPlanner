@@ -54,7 +54,7 @@
 <script lang="ts" setup>
 import { Car, Person } from 'src/lib/entities';
 import { useQuasar } from 'quasar';
-import EditVehicleDialog from 'components/dialog/EditVehicleDialog.vue';
+import EditCarDialog from 'components/dialog/EditCarDialog.vue';
 
 const q = useQuasar();
 
@@ -130,15 +130,18 @@ function showDeleteCar(car: Car) {
 
 function showEditCar(car: Car) {
   q.dialog({
-    component: EditVehicleDialog,
+    component: EditCarDialog,
     componentProps: {
-      type: 'car',
       vehicle: car,
       people: props.people,
     },
   }).onOk((payload) => {
-    const c = new Car(payload.name, payload.capacity, payload.allowedOperators);
-    // TODO trailer hitch
+    const c = new Car(
+      payload.name,
+      payload.capacity,
+      payload.allowedOperators,
+      payload.trailerHitch
+    );
     c.id = car.id;
 
     const cars = props.modelValue.filter((value) => value.id !== car.id);
@@ -148,18 +151,17 @@ function showEditCar(car: Car) {
 
 function showCreateCar() {
   q.dialog({
-    component: EditVehicleDialog,
+    component: EditCarDialog,
     componentProps: {
-      type: 'car',
       people: props.people,
     },
   }).onOk((payload) => {
     const car = new Car(
       payload.name,
       payload.capacity,
-      payload.allowedOperators
+      payload.allowedOperators,
+      payload.trailerHitch
     );
-    // TODO Add trailer hitch
     emit('update:modelValue', [...props.modelValue, car]);
   });
 }

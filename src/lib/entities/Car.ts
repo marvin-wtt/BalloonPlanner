@@ -1,11 +1,16 @@
 import { Vehicle } from 'src/lib/entities/Vehicle';
-import { Person } from "src/lib/entities/Person";
+import { Person } from 'src/lib/entities/Person';
 
 export class Car extends Vehicle {
   private _reservedCapacity = 0;
   private _trailerHitch = false;
 
-  constructor(name: string, capacity: number, allowedOperators: Person[], trailerHitch?: boolean) {
+  constructor(
+    name: string,
+    capacity: number,
+    allowedOperators: Person[],
+    trailerHitch?: boolean
+  ) {
     super(name, capacity, allowedOperators);
     this._trailerHitch = trailerHitch ?? false;
   }
@@ -23,7 +28,7 @@ export class Car extends Vehicle {
   }
 
   set trailerHitch(value: boolean) {
-    this,this._trailerHitch = value;
+    this, (this._trailerHitch = value);
   }
 
   isFull(): boolean {

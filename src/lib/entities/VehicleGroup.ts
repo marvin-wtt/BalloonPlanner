@@ -53,12 +53,14 @@ export class VehicleGroup extends Identifiable {
   }
 
   private reserveCapacity() {
-    let remaingCapacity = this._balloon.capacity;
+    let remainingCapacity = this._balloon.capacity;
     for (const car of this._cars) {
+      const capacity = car.capacity - 1;
       const reserved =
-        car.capacity >= remaingCapacity ? remaingCapacity : car.capacity;
-      remaingCapacity -= reserved;
+        capacity >= remainingCapacity ? remainingCapacity : capacity;
+      remainingCapacity -= reserved;
       car.reservedCapacity = reserved;
+      if (remainingCapacity == 0) break;
     }
   }
 }

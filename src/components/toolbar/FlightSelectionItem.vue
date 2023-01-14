@@ -60,7 +60,7 @@ const editable = computed<boolean>(() => {
 function addFlight() {
   addFlightLoading.value = true;
 
-  const projectPath = project.value ? `/projects/${project.value!.id}` : '';
+  const projectPath = project.value ? `/projects/${project.value.id}` : '';
   projectStore
     .createFlight()
     .then((flight) => {

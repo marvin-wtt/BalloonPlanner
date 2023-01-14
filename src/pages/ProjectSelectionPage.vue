@@ -1,7 +1,7 @@
 <template>
   <q-page padding>
     <div class="q-pa-md">
-      <div class="q-gutter-sm row">
+      <div class="q-gutter-sm row" v-if="user">
         <project-card
           v-for="project in user.projects"
           :project="project"
@@ -41,21 +41,14 @@
 
 <script lang="ts" setup>
 import ProjectCard from 'components/ProjectCard.vue';
-import { User } from 'src/lib/entities';
 import { useAuthStore } from 'stores/auth';
-import { Ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useServiceStore } from 'stores/service';
 
 const authStore = useAuthStore();
 const serviceStore = useServiceStore();
 
-// FIXME Convert correctly
-const {
-  user,
-}: {
-  user: Ref<User>;
-} = storeToRefs(authStore) as any;
+const { user } = storeToRefs(authStore);
 
 function createProject() {
   if (!serviceStore.dataService) {

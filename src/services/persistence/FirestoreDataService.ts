@@ -12,7 +12,6 @@ import {
   where,
   query,
   collection,
-  getDocs,
 } from 'firebase/firestore';
 import { db } from 'src/boot/firebase';
 import { useAuthStore } from 'stores/auth';
@@ -36,7 +35,7 @@ import {
   projectFromObject,
   ProjectObject,
   projectToObject,
-  vehcileGroupToObject,
+  vehicleGroupToObject,
 } from 'src/lib/utils/converter';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
 import { useProjectStore } from 'stores/project';
@@ -57,15 +56,8 @@ export class FirestoreDataService implements PersistenceService {
 
     const ref = this.getProjectsCollectionReference();
     const q = query(ref, where('collaborators', 'array-contains', user.id));
-    // const querySnapshot = await getDocs(q);
-    //
-    // querySnapshot.forEach((result) => {
-    //   const data = result.data() as Project;
-    //   user.projects.push(data);
-    // });
 
     let callPromise = true;
-
     return new Promise<void>((resolve, reject) => {
       this._unsubscribeProject = onSnapshot(q, (querySnapshot) => {
         const authStore = useAuthStore();
@@ -151,7 +143,7 @@ export class FirestoreDataService implements PersistenceService {
     });
   }
 
-  createProject(project: Project): Promise<void> {
+  async createProject(project: Project): Promise<void> {
     const projectStore = useProjectStore();
     projectStore.project = project;
 
@@ -161,17 +153,21 @@ export class FirestoreDataService implements PersistenceService {
 
     const authStore = useAuthStore();
 
-    if (!authStore.authenticated() || authStore.user == null) {
-      throw new Error('not_authenticated');
+    if (authStore.user == null) {
+      throw 'not_authenticated';
     }
 
     if (!project.collaborators.includes(authStore.user.id)) {
       project.collaborators.push(authStore.user.id);
     }
 
-    // TODO add flight
+    for (const flight of project.flights) {
+      const flightRef = this.getFlightConverterReference(flight.id);
+      await setDoc(flightRef, flight);
+    }
 
-    return this.updateProject(project);
+    const projectRef = this.getProjectConverterReference(project.id);
+    await setDoc(projectRef, project);
   }
 
   async createFlight(): Promise<Flight> {
@@ -322,8 +318,8 @@ export class FirestoreDataService implements PersistenceService {
     const withBalloon =
       mode === 'with' && extra != null && extra instanceof Balloon;
     let remainingCapacity = withBalloon
-      ? extra?.capacity + 1
-      : vehicleGroup.balloon.capacity + 1;
+      ? extra?.capacity
+      : vehicleGroup.balloon.capacity;
     for (let car of vehicleGroup.cars) {
       if (mode === 'exclude' && car.id === extra?.id) {
         // obj[`cars.${car.id}.reservedCapacity`] = 0;
@@ -333,17 +329,18 @@ export class FirestoreDataService implements PersistenceService {
         car = extra;
       }
 
+      const capacity = car.capacity - 1;
       const reserved =
-        car.capacity >= remainingCapacity ? remainingCapacity : car.capacity;
+        capacity >= remainingCapacity ? remainingCapacity : capacity;
       remainingCapacity -= reserved;
       obj[`cars.${car.id}.reservedCapacity`] = reserved;
     }
 
     if (mode === 'include' && extra != null) {
       obj[`cars.${extra.id}.reservedCapacity`] =
-        extra.capacity >= remainingCapacity
+        extra.capacity - 1 >= remainingCapacity
           ? remainingCapacity
-          : extra.capacity;
+          : extra.capacity - 1;
     }
 
     return obj;
@@ -364,7 +361,7 @@ export class FirestoreDataService implements PersistenceService {
 
   addVehicleGroup(vehicleGroup: VehicleGroup): Promise<void> {
     return this.updateFlightDocument({
-      [`vehicleGroups.${vehicleGroup.id}`]: vehcileGroupToObject(vehicleGroup),
+      [`vehicleGroups.${vehicleGroup.id}`]: vehicleGroupToObject(vehicleGroup),
     });
   }
 
@@ -517,6 +514,7 @@ export class FirestoreDataService implements PersistenceService {
   removeBalloonPassenger(person: Person, balloon: Balloon): Promise<void> {
     return this.updateFlightDocument({
       [`balloons.${balloon.id}.passengers`]: arrayRemove(person.id),
+      [`people.${person.id}.flights`]: increment(-1),
     });
   }
 

@@ -29,6 +29,10 @@ export class LocalStorageService implements PersistenceService {
     throw 'not_implemented';
   }
 
+  createProject(project: Project): Promise<void> {
+    throw 'not_implemented';
+  }
+
   loadUserData(user: User): Promise<void> {
     throw 'not_implemented';
   }

@@ -6,17 +6,17 @@
       @dragover.stop
       @dragleave.stop
     >
-      <q-badge v-if="overfilled" color="negative" floating rounded>
-        <q-icon name="warning" color="white" size="1rem"/>
+      <q-badge v-if="error" color="negative" floating rounded>
+        <q-icon name="warning" color="white" size="1rem" />
         <q-tooltip>
-          {{ $t('tooltip_overfilled') }}
+          {{ errorMessage }}
         </q-tooltip>
       </q-badge>
 
       <tr>
         <th
           class="vehicle-label"
-          :rowspan="props.vehicle.capacity + 1"
+          :rowspan="capacity + 1"
           v-if="props.labeled"
         >
           <span>
@@ -25,8 +25,8 @@
           <q-menu touch-position context-menu>
             <q-list dense style="min-width: 100px">
               <q-item clickable v-close-popup>
-                <q-item-section>
-                  {{ $t('edit') }}
+                <q-item-section @click="onVehicleEdit()">
+                  {{ t('edit') }}
                 </q-item-section>
               </q-item>
               <q-item clickable v-close-popup>
@@ -34,14 +34,16 @@
                   @click="onVehicleRemoved()"
                   class="text-negative"
                 >
-                  {{ $t('remove') }}
+                  {{ t('remove') }}
                 </q-item-section>
               </q-item>
             </q-list>
           </q-menu>
         </th>
         <th class="vehicle-index" v-if="indexed">
-          {{ type === 'balloon' ? $t('pilot_index', 'P') : $t('driver_index', 'D') }}
+          {{
+            type === 'balloon' ? t('pilot_index', 'P') : t('driver_index', 'D')
+          }}
         </th>
         <base-vehicle-person-cell
           class="vehicle-person"
@@ -50,8 +52,9 @@
           :person="props.vehicle.operator"
           :vehicle="props.vehicle"
           operator
-          @operator-add="(p) => $emit('operatorAdd', p)"
-          @operator-remove="(p) => $emit('operatorRemove', p)"
+          @add="(p) => emit('operatorAdd', p)"
+          @remove="emit('operatorRemove', props.vehicle.operator)"
+          @edit="emit('personEdit', props.vehicle.operator)"
         />
       </tr>
 
@@ -65,8 +68,9 @@
           :editable="props.editable"
           :person="props.vehicle.passengers[c - 1]"
           :vehicle="props.vehicle"
-          @passenger-add="(p) => $emit('passengerAdd', p)"
-          @passenger-remove="(p) => $emit('passengerRemove', p)"
+          @add="(p) => emit('passengerAdd', p)"
+          @remove="emit('passengerRemove', props.vehicle.passengers[c - 1])"
+          @edit="emit('personEdit', props.vehicle.passengers[c - 1])"
         />
       </tr>
     </table>
@@ -77,8 +81,11 @@
 import BaseVehiclePersonCell from 'components/BaseVehiclePersonCell.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 
-import {Car, Person, Vehicle} from 'src/lib/entities';
-import {computed} from 'vue';
+import { Car, Person, Vehicle } from 'src/lib/entities';
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 interface Props {
   vehicle: Vehicle;
@@ -86,47 +93,90 @@ interface Props {
   indexed?: boolean;
   labeled?: boolean;
   editable?: boolean;
+  hideEmpty?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  indexed: true,
+  indexed: true, 
   labeled: true,
   editable: true,
+  hideEmpty: false,
 });
 
 const emit = defineEmits<{
-  (e: 'carRemove', vehicle: Vehicle): void;
-  (e: 'balloonRemove', vehicle: Vehicle): void;
+  (e: 'remove'): void;
+  (e: 'edit'): void;
   (e: 'operatorAdd', person: Person): void;
   (e: 'operatorRemove', person: Person): void;
   (e: 'passengerAdd', person: Person): void;
   (e: 'passengerRemove', person: Person): void;
+  (e: 'personEdit', person: Person): void;
 }>();
 
 const capacity = computed(() => {
-  if (props.vehicle instanceof Car) {
-    return props.vehicle.capacity - props.vehicle.reservedCapacity;
+  let capacity: number = props.vehicle.capacity - 1;
+
+  if (vehicleIsCar(props.vehicle)) {
+    capacity -= props.vehicle.reservedCapacity;
   }
 
-  return props.vehicle.capacity;
+  if (capacity < 0) {
+    capacity = 0;
+  }
+
+  return props.hideEmpty ? props.vehicle.passengers.length : capacity;
+});
+
+function vehicleIsCar(vehicle: Vehicle): vehicle is Car {
+  return vehicle instanceof Car;
+}
+
+const error = computed<boolean>(() => {
+  return (
+    overfilled.value || tooMuchReservedCapacity.value || invalidOperator.value
+  );
+});
+
+const errorMessage = computed<string>(() => {
+  return overfilled.value
+    ? t('tooltip_overfilled')
+    : tooMuchReservedCapacity.value
+    ? t('tooltip_too_much_reserved_capacity')
+    : invalidOperator.value
+    ? t('tooltip_invalid_operator')
+    : '';
+});
+
+const tooMuchReservedCapacity = computed<boolean>(() => {
+  return (
+    vehicleIsCar(props.vehicle) &&
+    props.vehicle.capacity <= props.vehicle.reservedCapacity
+  );
 });
 
 const overfilled = computed(() => {
   return props.vehicle.passengers.length > capacity.value;
 });
 
+const invalidOperator = computed<boolean>(() => {
+  return (
+    props.vehicle.operator !== undefined &&
+    !props.vehicle.allowedOperators.includes(props.vehicle.operator)
+  );
+});
+
 function onVehicleRemoved() {
-  if (props.type === 'balloon') {
-    emit('balloonRemove', props.vehicle);
-  } else {
-    emit('carRemove', props.vehicle);
-  }
+  emit('remove');
+}
+
+function onVehicleEdit() {
+  emit('edit');
 }
 </script>
 
 <style scoped>
 .vehicle-table {
-  /* TODO use default bg color */
+  /* TODO use default bg color -- support dark mode later */
   background-color: white;
   margin: 20px;
   border-collapse: collapse;

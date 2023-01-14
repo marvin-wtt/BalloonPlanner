@@ -4,7 +4,7 @@
     :accepted="isDropAllowed"
     @dropped="onDrop"
   >
-    <div v-if="empty" class="drop-hint col-12 text-center text-body1">
+    <div v-if="empty" class="col-12 text-center text-body1">
       Drop a balloon here to start.
     </div>
 
@@ -36,32 +36,40 @@ const empty = computed(() => {
   return props.flight.vehicleGroups.length === 0;
 });
 
+function elementIsBalloon(element: Identifiable): element is Balloon {
+  return element instanceof Balloon;
+}
+
+function elementIsPerson(element: Identifiable): element is Person {
+  return element instanceof Person;
+}
+
 function isDropAllowed(element: Identifiable): boolean {
-  if (element instanceof Person) {
+  if (elementIsPerson(element)) {
     return true;
   }
 
-  if (element instanceof Balloon && !flightContainsElement(element)) {
+  if (elementIsBalloon(element) && !flightContainsBalloon(element)) {
     return true;
   }
 
   return false;
 }
 
-function flightContainsElement(element: Identifiable): boolean {
+function flightContainsBalloon(balloon: Balloon): boolean {
   return (
     props.flight.vehicleGroups.findIndex(
-      (value) => value.balloon.id === element.id
+      (value) => value.balloon.id === balloon.id
     ) >= 0
   );
 }
 
-function onDrop(element: Balloon) {
-  if (!(element instanceof Balloon)) {
+function onDrop(element: Identifiable) {
+  if (!elementIsBalloon(element)) {
     return;
   }
 
-  if (flightContainsElement(element)) {
+  if (flightContainsBalloon(element)) {
     return;
   }
 

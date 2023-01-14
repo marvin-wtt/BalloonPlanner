@@ -58,8 +58,6 @@ export type ProjectObject = {
   flights: string[];
 };
 
-// TODO Validate input
-
 export function projectFromObject(
   obj: ProjectObject,
   projectId: string
@@ -122,7 +120,7 @@ export function flightToObject(
     balloons: balloonsToObject(flight.balloons),
     cars: carsToObject(flight.cars),
     people: peopleToObject(flight.people),
-    vehicleGroups: vehcileGroupsToObject(flight.vehicleGroups),
+    vehicleGroups: vehicleGroupsToObject(flight.vehicleGroups),
   };
 }
 
@@ -266,7 +264,12 @@ export function carsFromObject(
     if (passengers.includes(undefined)) {
       throw new Error('invalid_passenger_id');
     }
-    const car = new Car(obj.name, obj.capacity, allowedOperators);
+    const car = new Car(
+      obj.name,
+      obj.capacity,
+      allowedOperators,
+      obj.trailerHitch
+    );
     car.id = id;
     car.reservedCapacity = obj.reservedCapacity;
     car.operator = operator;
@@ -277,7 +280,7 @@ export function carsFromObject(
   return cars;
 }
 
-export function vehcileGroupToObject(
+export function vehicleGroupToObject(
   vehicleGroup: VehicleGroup
 ): VehicleGroupObject {
   return {
@@ -286,12 +289,12 @@ export function vehcileGroupToObject(
   };
 }
 
-export function vehcileGroupsToObject(
+export function vehicleGroupsToObject(
   vehicleGroups: VehicleGroup[]
 ): MapObject<VehicleGroupObject> {
   const result: MapObject<VehicleGroupObject> = {};
   for (const vehicleGroup of vehicleGroups) {
-    result[vehicleGroup.id] = vehcileGroupToObject(vehicleGroup);
+    result[vehicleGroup.id] = vehicleGroupToObject(vehicleGroup);
   }
 
   return result;

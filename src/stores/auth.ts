@@ -46,7 +46,7 @@ export const useAuthStore = defineStore('auth', () => {
     await serviceStore.authService.logout();
 
     if (serviceStore.dataService) {
-      await serviceStore.dataService.unloadUser();
+      await serviceStore.dataService.unloadUserData();
       await serviceStore.dataService.unloadFlight();
       await serviceStore.dataService.unloadProject();
     }

@@ -1,5 +1,6 @@
 <template>
   <q-card class="bg-grey text-white">
+    <!-- TODO add delete option -->
     <q-card-section>
       <div class="text-h6">
         {{ project.name }}
@@ -58,7 +59,7 @@ interface Props {
   project: Project;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 </script>
 
 <style scoped></style>

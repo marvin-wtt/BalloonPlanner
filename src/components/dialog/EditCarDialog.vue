@@ -4,35 +4,19 @@
       <q-form @reset="onReset" @submit="onSubmit" class="q-gutter-md">
         <q-card-section>
           <div class="text-h6">
-            {{ $t('dialog.vehicle.title') }}
+            {{ t(`dialog.car.title.${mode}`) }}
           </div>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          <q-select
-            v-if="type === undefined"
-            v-model="vehicleType"
-            :options="vehicleTypes"
-            :label="$t('dialog.vehicle.type.label')"
-            :rules="[
-              (val) =>
-                (val && vehicleTypes.map((val) => val.value).includes(val)) ||
-                $t('dialog.vehicle.validation.required'),
-            ]"
-            emit-value
-            map-options
-            filled
-          />
-
-          <!-- TODO unique rule -->
           <q-input
             v-model="name"
-            :label="$t('dialog.vehicle.name.label')"
+            :label="t('dialog.car.name.label')"
             lazy-rules
             :rules="[
               (val) =>
                 (val && val.length > 0) ||
-                $t('dialog.vehicle.name.validation.required'),
+                t('dialog.car.name.validation.required'),
             ]"
             filled
           />
@@ -40,20 +24,26 @@
           <q-input
             v-model.number="capacity"
             type="number"
-            :label="$t('dialog.vehicle.capacity.label')"
-            :hint="$t('dialog.vehicle.capacity.hint')"
+            :label="t('dialog.car.capacity.label')"
+            :hint="t('dialog.car.capacity.hint')"
             lazy-rules
             :rules="[
               (val) =>
                 (val !== null && val !== '' && val > 0) ||
-                $t('dialog.vehicle.capacity.validation.number'),
+                t('dialog.car.capacity.validation.number'),
             ]"
             filled
           />
 
+          <q-checkbox
+            v-model="trailerHitch"
+            :label="$t('dialog.car.trailer_hitch.label')"
+            :hint="$t('dialog.car.trailer_hitch.hint')"
+          />
+
           <q-select
             v-model="allowedOperators"
-            :label="$t('dialog.vehicle.allowed_operators.label')"
+            :label="t('dialog.car.allowed_operators.label')"
             use-input
             use-chips
             multiple
@@ -71,11 +61,11 @@
           <q-btn
             type="reset"
             color="primary"
-            :label="$t('cancel')"
+            :label="t('cancel')"
             v-close-popup
             flat
           />
-          <q-btn type="submit" color="primary" :label="$t('create')" />
+          <q-btn type="submit" color="primary" :label="t(mode)" />
         </q-card-actions>
       </q-form>
     </q-card>
@@ -83,8 +73,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
-import { Person, Vehicle } from 'src/lib/entities';
+import { computed, ref } from 'vue';
+import { Car, Person } from 'src/lib/entities';
 import { useI18n } from 'vue-i18n';
 import { useDialogPluginComponent } from 'quasar';
 
@@ -93,8 +83,7 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
 interface Props {
-  type?: 'balloon' | 'car';
-  vehicle?: Vehicle;
+  car?: Car;
   people: Person[];
 }
 
@@ -102,28 +91,31 @@ const props = defineProps<Props>();
 
 defineEmits([...useDialogPluginComponent.emits]);
 
-const name = ref(props.vehicle?.name);
-const capacity = ref(props.vehicle?.capacity);
-const allowedOperators = ref(props.vehicle?.allowedOperators);
+const name = ref<string | undefined>(props.car?.name);
+const capacity = ref<number | undefined>(props.car?.capacity);
+const trailerHitch = ref<boolean>(props.car?.trailerHitch ?? false);
+const allowedOperators = ref<Person[]>(props.car?.allowedOperators ?? []);
+const options = [...props.people]
+  .sort((a, b) => a.name.localeCompare(b.name))
+  .sort((a, b) => (a.supervisor == b.supervisor ? 0 : a.supervisor ? -1 : 1))
+  .map((value) => {
+    return {
+      label: value.name,
+      value: value,
+    };
+  });
+const filterOptions = ref(options);
 
-const filterOptions = ref();
-const vehicleType = ref(props.type);
-const vehicleTypes = [
-  {
-    label: t('balloon'),
-    value: 'balloon',
-  },
-  {
-    label: t('car'),
-    value: 'car',
-  },
-];
+const mode = computed<'create' | 'edit'>(() => {
+  return props.car ? 'edit' : 'create';
+});
 
 function onSubmit() {
   onDialogOK({
     name: name.value,
     capacity: capacity.value,
     allowedOperators: allowedOperators.value,
+    trailerHitch: trailerHitch.value,
   });
 }
 
@@ -131,32 +123,16 @@ function onReset() {
   name.value = undefined;
   capacity.value = undefined;
   allowedOperators.value = [];
+  trailerHitch.value = false;
   onDialogCancel();
 }
 
 function filterFn(val: string, update: (a: () => void) => void) {
   update(() => {
-    let filter: Person[];
-    if (val === '') {
-      filter = props.people;
-    } else {
-      const needle = val.toLowerCase();
-      filter = props.people.filter(
-        (v) => v.name.toLowerCase().indexOf(needle) > -1
-      );
-    }
-
-    filter.sort((a, b) => a.name.localeCompare(b.name));
-    filter.sort((a, b) =>
-      a.supervisor == b.supervisor ? 0 : a.supervisor ? -1 : 1
+    const needle = val.toLowerCase();
+    filterOptions.value = options.filter(
+      (value) => value.label.toLowerCase().indexOf(needle) > -1
     );
-
-    filterOptions.value = filter.map((value) => {
-      return {
-        label: value.name,
-        value: value,
-      };
-    });
   });
 }
 </script>

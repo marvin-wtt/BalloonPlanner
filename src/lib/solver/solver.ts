@@ -23,22 +23,21 @@ export async function solve(
   options?: SolvingOptions
 ): Promise<Flight> {
   let flight = f.clone();
-  let solutions: Flight[];
 
   // 1
   createVehicleGroups(flight);
 
   // 2
-  solutions = findPilotSolutions(flight);
+  let solutions = findPilotSolutions(flight);
   if (solutions.length == 0) {
     throw new Error('not_enough_pilots');
   }
 
   // 3a
-  solutions.map((value) => findFirstTimeSolution(value));
+  solutions.forEach((value) => findFirstTimeSolution(value));
 
   // 3b
-  solutions.map((value) => findFirstFlightSolutions(value));
+  solutions.forEach((value) => findFirstFlightSolutions(value));
 
   // 4
   for (const solution of solutions.slice()) {
@@ -46,16 +45,11 @@ export async function solve(
   }
 
   // 5
-  solutions.filter((value) => findCarsSolution(value));
+  solutions = solutions.filter((value) => findCarsSolution(value));
 
-  // 6
-  const s = solutions.slice();
-  solutions = [];
-  for (const solution of s) {
-    solutions.push(...findDriverSolution(solution));
-  }
+  solutions = solutions.flatMap((value) => findDriverSolution(value.clone()));
   if (solutions.length == 0) {
-    throw new Error('not_enough_driver');
+    throw 'not_enough_driver';
   }
 
   // 7
@@ -80,12 +74,19 @@ function findFirstTimeSolution(flight: Flight): Flight {
     .availablePeople()
     .filter((value) => !value.supervisor && value.firstTime);
 
-  shuffle<Person>(participants);
+  return fillBalloonPassengers(flight, participants);
+}
+
+function fillBalloonPassengers(flight: Flight, passengers: Person[]): Flight {
+  shuffle<Person>(passengers);
 
   for (const group of flight.vehicleGroups) {
     const balloon = group.balloon;
-    while (balloon.availableCapacity() > 0 && participants.length > 0) {
-      const person = participants.pop();
+    while (
+      balloon.passengers.length < balloon.capacity - 1 &&
+      passengers.length > 0
+    ) {
+      const person = passengers.pop();
       if (person != null) {
         balloon.addPassenger(person);
       }
@@ -135,19 +136,7 @@ function findFirstFlightSolutions(flight: Flight): Flight {
     .availablePeople()
     .filter((value) => !value.supervisor && value.numberOfFlights === 0);
 
-  shuffle<Person>(participants);
-
-  for (const group of flight.vehicleGroups) {
-    const balloon = group.balloon;
-    while (balloon.availableCapacity() > 0 && participants.length > 0) {
-      const person = participants.pop();
-      if (person != null) {
-        balloon.addPassenger(person);
-      }
-    }
-  }
-
-  return flight;
+  return fillBalloonPassengers(flight, participants);
 }
 
 function findCarsSolution(flight: Flight): boolean {
@@ -212,7 +201,10 @@ function findSupervisorSolution(flight: Flight, amount = 1): Flight[] {
 
   for (const supervisor of supervisors) {
     for (let g = 0; g < flight.vehicleGroups.length; g++) {
-      if (flight.vehicleGroups[g].balloon.availableCapacity() <= 0) {
+      if (
+        flight.vehicleGroups[g].balloon.passengers.length >=
+        flight.vehicleGroups[g].balloon.capacity - 1
+      ) {
         continue;
       }
 
@@ -350,7 +342,10 @@ function fillVehicles(flight: Flight) {
 function fillBalloons(flight: Flight, people: Person[]) {
   for (const group of flight.vehicleGroups) {
     const balloon = group.balloon;
-    while (balloon.availableCapacity() > 0 && people.length > 0) {
+    while (
+      balloon.passengers.length < balloon.capacity - 1 &&
+      people.length > 0
+    ) {
       const person = people.pop();
       if (person != null) {
         balloon.addPassenger(person);
@@ -390,7 +385,7 @@ function fillCars(flight: Flight, people: Person[]) {
       }
     }
     if (!filled) {
-      throw new Error('not_enough_capacity');
+      throw 'not_enough_capacity';
     }
   }
 }

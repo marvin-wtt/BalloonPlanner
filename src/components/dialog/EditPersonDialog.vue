@@ -100,7 +100,7 @@ const name = ref(props.person?.name ?? null);
 const nation = ref(props.person?.nation ?? null);
 const flights = ref(props.person?.numberOfFlights ?? 0);
 const supervisor = ref(props.person?.supervisor ?? false);
-const firstTime = ref(props.person?.firstTime ?? false)
+const firstTime = ref(props.person?.firstTime ?? false);
 
 const nations = [
   {
@@ -119,7 +119,7 @@ function onSubmit() {
     nation: nation.value,
     flights: flights.value,
     supervisor: supervisor.value,
-    firstTime: firstTime.value
+    firstTime: firstTime.value,
   });
 }
 

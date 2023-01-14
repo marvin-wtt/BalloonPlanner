@@ -17,7 +17,7 @@
 
       <q-list bordered separator :dense="dense">
         <!-- Empty List -->
-        <q-item v-if="itens.length === 0">
+        <q-item v-if="items.length === 0">
           <q-item-section>
             <q-item-label>
               {{
@@ -36,7 +36,7 @@
         <draggable-item
           v-else-if="!editable"
           :tag="QItem"
-          v-for="element in itens"
+          v-for="element in items"
           :key="element.id"
           :item="element"
         >
@@ -49,7 +49,7 @@
         </draggable-item>
 
         <!-- Editable -->
-        <QItem v-else v-for="element in itens" :key="element.id">
+        <QItem v-else v-for="element in items" :key="element.id">
           <q-item-section>
             <slot name="main" :item="element" />
           </q-item-section>
@@ -98,7 +98,7 @@ import { ref } from 'vue';
 
 interface Props {
   title: string;
-  itens: Identifiable[];
+  items: Identifiable[];
   itemName?: string;
   dense?: boolean;
 }

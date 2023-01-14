@@ -42,12 +42,12 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: ':project/edit',
-        component: () => undefined,
+        component: () => import('pages/ProjectEditPage.vue'),
       },
       {
         path: ':project/flights',
         name: 'flights',
-        component: () => undefined,
+        component: () => import('pages/ProjectFlightsPage.vue'),
       },
       {
         path: ':project/flights/:flight',

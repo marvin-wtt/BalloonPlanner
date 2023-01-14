@@ -3,19 +3,19 @@
     :tag="operator ? 'th' : 'td'"
     v-if="person !== undefined"
     :item="person"
-    @remove="onDragEnd"
+    @remove="onDragEnd()"
   >
     {{ personLabel }}
 
     <q-menu touch-position context-menu>
       <q-list dense style="min-width: 100px">
         <q-item clickable v-close-popup>
-          <q-item-section @click="dialogs.showEditPerson(person)">
+          <q-item-section @click="onEdit()">
             {{ $t('edit') }}
           </q-item-section>
         </q-item>
         <q-item clickable v-close-popup>
-          <q-item-section @click="onDragEnd(person)" class="text-negative">
+          <q-item-section @click="onDragEnd()" class="text-negative">
             {{ $t('remove') }}
           </q-item-section>
         </q-item>
@@ -37,9 +37,6 @@ import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
 import { Identifiable } from 'src/lib/utils/Identifiable';
 import DraggableItem from 'components/drag/DraggableItem.vue';
-import { useDialogs } from 'src/composables/dialogs';
-import { useQuasar } from 'quasar';
-import { useI18n } from 'vue-i18n';
 
 interface Props {
   person: Person;
@@ -53,22 +50,13 @@ const props = withDefaults(defineProps<Props>(), {
   editable: true,
 });
 
-const $q = useQuasar();
-const { t } = useI18n();
-const dialogs = useDialogs($q, t);
-
 const emit = defineEmits<{
-  (e: 'operatorAdd', person: Person): void;
-  (e: 'operatorRemove', person: Person): void;
-  (e: 'passengerAdd', person: Person): void;
-  (e: 'passengerRemove', person: Person): void;
+  (e: 'add', person: Person): void;
+  (e: 'edit'): void;
+  (e: 'remove'): void;
 }>();
 
 const personLabel = computed(() => {
-  if (props.person === undefined) {
-    return '';
-  }
-
   let label = props.person.name;
   if (props.editable) {
     const isBalloon = props.vehicle instanceof Balloon;
@@ -93,19 +81,15 @@ function isDropAllowed(element: Identifiable): boolean {
 }
 
 function onDrop(element: Person) {
-  if (props.operator) {
-    emit('operatorAdd', element);
-  } else {
-    emit('passengerAdd', element);
-  }
+  emit('add', element);
 }
 
-function onDragEnd(element: Person) {
-  if (props.operator) {
-    emit('operatorRemove', element);
-  } else {
-    emit('passengerRemove', element);
-  }
+function onDragEnd() {
+  emit('remove');
+}
+
+function onEdit() {
+  emit('edit');
 }
 </script>
 

@@ -62,7 +62,7 @@
 <script lang="ts" setup>
 import { Balloon, Person } from 'src/lib/entities';
 import { useQuasar } from 'quasar';
-import EditVehicleDialog from 'components/dialog/EditVehicleDialog.vue';
+import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue.vue';
 
 const q = useQuasar();
 
@@ -131,9 +131,8 @@ function showDeleteBalloon(balloon: Balloon) {
 
 function showEditBalloon(balloon: Balloon) {
   q.dialog({
-    component: EditVehicleDialog,
+    component: EditBalloonDialog,
     componentProps: {
-      type: 'balloon',
       vehicle: balloon,
       people: props.people,
     },
@@ -154,9 +153,8 @@ function showEditBalloon(balloon: Balloon) {
 
 function showCreateBalloon() {
   q.dialog({
-    component: EditVehicleDialog,
+    component: EditBalloonDialog,
     componentProps: {
-      type: 'balloon',
       people: props.people,
     },
   }).onOk((payload) => {

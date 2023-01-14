@@ -1,4 +1,4 @@
-import { Flight, User } from 'src/lib/entities';
+import { Flight } from 'src/lib/entities';
 import { Identifiable } from 'src/lib/utils/Identifiable';
 
 export class Project extends Identifiable {
