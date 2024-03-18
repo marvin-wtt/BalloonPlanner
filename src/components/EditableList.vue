@@ -15,18 +15,22 @@
         @click="toggleEditable()"
       />
 
-      <q-list bordered separator :dense="dense">
+      <q-list
+        bordered
+        separator
+        :dense="dense"
+      >
         <!-- Empty List -->
         <q-item v-if="items.length === 0">
           <q-item-section>
             <q-item-label>
               {{
-                $t('list.empty.label', { name: itemName.toLowerCase() + 's' })
+                t('list.empty.label', { name: itemName.toLowerCase() + 's' })
               }}
             </q-item-label>
             <q-item-label caption>
               {{
-                $t('list.empty.caption', { name: itemName.toLowerCase() + 's' })
+                t('list.empty.caption', { name: itemName.toLowerCase() + 's' })
               }}
             </q-item-label>
           </q-item-section>
@@ -41,42 +45,56 @@
           :item="element"
         >
           <q-item-section>
-            <slot name="main" :item="element" />
+            <slot
+              name="main"
+              :item="element"
+            />
           </q-item-section>
           <q-item-section side>
-            <slot name="side" :item="element" />
+            <slot
+              name="side"
+              :item="element"
+            />
           </q-item-section>
         </draggable-item>
 
         <!-- Editable -->
-        <QItem v-else v-for="element in items" :key="element.id">
-          <q-item-section>
-            <slot name="main" :item="element" />
-          </q-item-section>
+        <template v-else>
+          <q-item
+            v-for="element in items"
+            :key="element.id"
+          >
+            <q-item-section>
+              <slot
+                name="main"
+                :item="element"
+              />
+            </q-item-section>
 
-          <q-item-section side>
-            <div class="q-gutter-xs">
-              <q-btn
-                round
-                outline
-                size="sm"
-                padding="xs"
-                color="warning"
-                icon="edit"
-                @click="editItem(element)"
-              />
-              <q-btn
-                round
-                outline
-                size="sm"
-                padding="xs"
-                color="negative"
-                icon="delete"
-                @click="deleteItem(element)"
-              />
-            </div>
-          </q-item-section>
-        </QItem>
+            <q-item-section side>
+              <div class="q-gutter-xs">
+                <q-btn
+                  round
+                  outline
+                  size="sm"
+                  padding="xs"
+                  color="warning"
+                  icon="edit"
+                  @click="editItem(element)"
+                />
+                <q-btn
+                  round
+                  outline
+                  size="sm"
+                  padding="xs"
+                  color="negative"
+                  icon="delete"
+                  @click="deleteItem(element)"
+                />
+              </div>
+            </q-item-section>
+          </q-item>
+        </template>
       </q-list>
       <q-btn
         v-if="editable"
@@ -90,15 +108,18 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script lang="ts" generic="T extends Identifiable" setup>
+import { Identifiable } from 'src/lib/utils/Identifiable';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import { QItem } from 'quasar';
-import { Identifiable } from 'src/lib/utils/Identifiable';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 interface Props {
   title: string;
-  items: Identifiable[];
+  items: T[];
   itemName?: string;
   dense?: boolean;
 }
@@ -110,8 +131,8 @@ withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'create'): void;
-  (e: 'edit', item: Identifiable): void;
-  (e: 'delete', item: Identifiable): void;
+  (e: 'edit', item: T): void;
+  (e: 'delete', item: T): void;
 }>();
 
 const editable = ref(false);
@@ -122,11 +143,11 @@ function toggleEditable() {
   settingsIcon.value = editable.value ? 'done' : 'settings';
 }
 
-function editItem(item: Identifiable) {
+function editItem(item: T) {
   emit('edit', item);
 }
 
-function deleteItem(item: Identifiable) {
+function deleteItem(item: T) {
   emit('delete', item);
 }
 

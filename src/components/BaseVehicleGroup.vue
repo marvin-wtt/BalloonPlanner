@@ -1,12 +1,21 @@
 <template>
   <drop-zone
     :accepted="isDropAccepted"
-    @dropped="drop"
     class="q-ma-md bg-grey-6 rounded-borders"
+    @dropped="drop"
   >
     <div class="relative-position">
-      <q-badge v-if="showWarning" color="warning" floating rounded>
-        <q-icon name="warning" color="white" size="1rem" />
+      <q-badge
+        v-if="showWarning"
+        color="warning"
+        floating
+        rounded
+      >
+        <q-icon
+          name="warning"
+          color="white"
+          size="1rem"
+        />
         <q-tooltip>
           {{ warningText }}
         </q-tooltip>
@@ -48,8 +57,8 @@ const warningText = computed(() => {
   return trailerHitchWarning.value
     ? t('tooltip_missing_trailer_hitch')
     : reservedCapacityWarning.value
-    ? t('tooltip_insufficient_capacity')
-    : '';
+      ? t('tooltip_insufficient_capacity')
+      : '';
 });
 
 const trailerHitchWarning = computed(() => {
@@ -59,7 +68,7 @@ const trailerHitchWarning = computed(() => {
 const reservedCapacityWarning = computed(() => {
   const availableCapacity = props.group.cars.reduce(
     (prev, curr) => prev + curr.capacity - 1,
-    0
+    0,
   );
 
   return props.group.balloon.capacity > availableCapacity;
@@ -70,15 +79,11 @@ function isDropAccepted(element: Identifiable): boolean {
     return false;
   }
 
-  if (props.group.cars.includes(element)) {
-    return false;
-  }
-
-  return true;
+  return !props.group.cars.includes(element);
 }
 
-function drop(element: Car) {
-  emit('carAdd', element);
+function drop(element: Identifiable) {
+  emit('carAdd', element as Car);
 }
 </script>
 

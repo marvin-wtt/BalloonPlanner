@@ -1,5 +1,6 @@
 {
   "singleQuote": true,
   "semi": true,
-  "endOfLine": "crlf"
+  "endOfLine": "auto",
+  "singleAttributePerLine": true
 }

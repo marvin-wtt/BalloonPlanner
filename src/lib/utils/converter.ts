@@ -7,11 +7,9 @@ import {
   VehicleGroup,
 } from 'src/lib/entities';
 
-type MapObject<T> = {
-  [key: string]: T;
-};
+type MapObject<T> = Record<string, T>;
 
-export type PersonObject = {
+export type IPerson = {
   name: string;
   flights: number;
   nation: string;
@@ -19,7 +17,7 @@ export type PersonObject = {
   firstFlight: boolean;
 };
 
-export type BalloonObject = {
+export type IBalloon = {
   name: string;
   capacity: number;
   operator: string | null;
@@ -27,7 +25,7 @@ export type BalloonObject = {
   passengers: string[];
 };
 
-export type CarObject = {
+export type ICar = {
   name: string;
   trailerHitch: boolean;
   capacity: number;
@@ -37,31 +35,28 @@ export type CarObject = {
   passengers: string[];
 };
 
-export type VehicleGroupObject = {
+export type IVehicleGroup = {
   balloon: string;
   cars: string[];
 };
 
-export type FlightObject = {
+export type IFlight = {
   projectId?: string;
   timestamp: number;
-  balloons: MapObject<BalloonObject>;
-  cars: MapObject<CarObject>;
-  people: MapObject<PersonObject>;
-  vehicleGroups: MapObject<VehicleGroupObject>;
+  balloons: MapObject<IBalloon>;
+  cars: MapObject<ICar>;
+  people: MapObject<IPerson>;
+  vehicleGroups: MapObject<IVehicleGroup>;
 };
 
-export type ProjectObject = {
+export type IProject = {
   name: string;
   description: string;
   collaborators: string[];
   flights: string[];
 };
 
-export function projectFromObject(
-  obj: ProjectObject,
-  projectId: string
-): Project {
+export function projectFromObject(obj: IProject, projectId: string): Project {
   const name = obj.name;
   const description = obj.description;
   const collaborators = obj.collaborators;
@@ -82,7 +77,7 @@ export function projectFromObject(
   return project;
 }
 
-export function projectToObject(project: Project): ProjectObject {
+export function projectToObject(project: Project): IProject {
   return {
     name: project.name,
     description: project.description,
@@ -91,14 +86,14 @@ export function projectToObject(project: Project): ProjectObject {
   };
 }
 
-export function flightFromObject(obj: FlightObject, flightId?: string): Flight {
+export function flightFromObject(obj: IFlight, flightId?: string): Flight {
   const people = peopleFromObject(obj.people);
   const balloons = balloonsFromObject(obj.balloons, people);
   const cars = carsFromObject(obj.cars, people);
   const vehicleGroups = vehicleGroupFromObject(
     obj.vehicleGroups,
     balloons,
-    cars
+    cars,
   );
 
   const flight = new Flight(balloons, cars, people, vehicleGroups);
@@ -110,10 +105,7 @@ export function flightFromObject(obj: FlightObject, flightId?: string): Flight {
   return flight;
 }
 
-export function flightToObject(
-  flight: Flight,
-  projectId?: string
-): FlightObject {
+export function flightToObject(flight: Flight, projectId?: string): IFlight {
   return {
     projectId: projectId,
     timestamp: flight.timestamp,
@@ -124,7 +116,7 @@ export function flightToObject(
   };
 }
 
-export function personToObject(person: Person): PersonObject {
+export function personToObject(person: Person): IPerson {
   return {
     name: person.name,
     flights: person.numberOfFlights,
@@ -134,8 +126,8 @@ export function personToObject(person: Person): PersonObject {
   };
 }
 
-export function peopleToObject(people: Person[]): MapObject<PersonObject> {
-  const result: MapObject<PersonObject> = {};
+export function peopleToObject(people: Person[]): MapObject<IPerson> {
+  const result: MapObject<IPerson> = {};
 
   for (const person of people) {
     result[person.id] = personToObject(person);
@@ -144,7 +136,7 @@ export function peopleToObject(people: Person[]): MapObject<PersonObject> {
   return result;
 }
 
-export function peopleFromObject(data: MapObject<PersonObject>): Person[] {
+export function peopleFromObject(data: MapObject<IPerson>): Person[] {
   if (data == null) {
     return [];
   }
@@ -157,7 +149,7 @@ export function peopleFromObject(data: MapObject<PersonObject>): Person[] {
       obj.nation,
       obj.supervisor,
       obj.flights,
-      obj.firstFlight
+      obj.firstFlight,
     );
     person.id = id;
     people.push(person);
@@ -166,7 +158,7 @@ export function peopleFromObject(data: MapObject<PersonObject>): Person[] {
   return people;
 }
 
-export function balloonToObject(balloon: Balloon): BalloonObject {
+export function balloonToObject(balloon: Balloon): IBalloon {
   return {
     name: balloon.name,
     capacity: balloon.capacity,
@@ -176,10 +168,8 @@ export function balloonToObject(balloon: Balloon): BalloonObject {
   };
 }
 
-export function balloonsToObject(
-  balloons: Balloon[]
-): MapObject<BalloonObject> {
-  const result: MapObject<BalloonObject> = {};
+export function balloonsToObject(balloons: Balloon[]): MapObject<IBalloon> {
+  const result: MapObject<IBalloon> = {};
   for (const balloon of balloons) {
     result[balloon.id] = balloonToObject(balloon);
   }
@@ -188,8 +178,8 @@ export function balloonsToObject(
 }
 
 export function balloonsFromObject(
-  data: MapObject<BalloonObject>,
-  people: Person[]
+  data: MapObject<IBalloon>,
+  people: Person[],
 ): Balloon[] {
   if (data == null) {
     return [];
@@ -200,13 +190,13 @@ export function balloonsFromObject(
     const obj = data[id];
 
     const allowedOperators = people.filter((value) =>
-      obj.allowedOperators.includes(value.id)
+      obj.allowedOperators.includes(value.id),
     );
     const operator = people.find((value) => obj.operator === value.id);
     // Decrement number of flights because setter will increment is again
     operator?.decrementFlights();
     const passengers = obj.passengers.map((pId) =>
-      people.find((person) => person.id === pId)
+      people.find((person) => person.id === pId),
     );
     if (passengers.includes(undefined)) {
       throw new Error('invalid_passenger_id');
@@ -221,7 +211,7 @@ export function balloonsFromObject(
   return balloons;
 }
 
-export function carToObject(car: Car): CarObject {
+export function carToObject(car: Car): ICar {
   return {
     name: car.name,
     trailerHitch: car.trailerHitch,
@@ -233,8 +223,8 @@ export function carToObject(car: Car): CarObject {
   };
 }
 
-export function carsToObject(cars: Car[]): MapObject<CarObject> {
-  const result: MapObject<CarObject> = {};
+export function carsToObject(cars: Car[]): MapObject<ICar> {
+  const result: MapObject<ICar> = {};
   for (const car of cars) {
     result[car.id] = carToObject(car);
   }
@@ -242,10 +232,7 @@ export function carsToObject(cars: Car[]): MapObject<CarObject> {
   return result;
 }
 
-export function carsFromObject(
-  data: MapObject<CarObject>,
-  people: Person[]
-): Car[] {
+export function carsFromObject(data: MapObject<ICar>, people: Person[]): Car[] {
   if (data == null) {
     return [];
   }
@@ -255,11 +242,11 @@ export function carsFromObject(
     const obj = data[id];
 
     const allowedOperators = people.filter((value) =>
-      obj.allowedOperators.includes(value.id)
+      obj.allowedOperators.includes(value.id),
     );
     const operator = people.find((value) => obj.operator === value.id);
     const passengers = obj.passengers.map((pId) =>
-      people.find((person) => person.id === pId)
+      people.find((person) => person.id === pId),
     );
     if (passengers.includes(undefined)) {
       throw new Error('invalid_passenger_id');
@@ -268,7 +255,7 @@ export function carsFromObject(
       obj.name,
       obj.capacity,
       allowedOperators,
-      obj.trailerHitch
+      obj.trailerHitch,
     );
     car.id = id;
     car.reservedCapacity = obj.reservedCapacity;
@@ -281,8 +268,8 @@ export function carsFromObject(
 }
 
 export function vehicleGroupToObject(
-  vehicleGroup: VehicleGroup
-): VehicleGroupObject {
+  vehicleGroup: VehicleGroup,
+): IVehicleGroup {
   return {
     balloon: vehicleGroup.balloon.id,
     cars: vehicleGroup.cars.map((value) => value.id),
@@ -290,9 +277,9 @@ export function vehicleGroupToObject(
 }
 
 export function vehicleGroupsToObject(
-  vehicleGroups: VehicleGroup[]
-): MapObject<VehicleGroupObject> {
-  const result: MapObject<VehicleGroupObject> = {};
+  vehicleGroups: VehicleGroup[],
+): MapObject<IVehicleGroup> {
+  const result: MapObject<IVehicleGroup> = {};
   for (const vehicleGroup of vehicleGroups) {
     result[vehicleGroup.id] = vehicleGroupToObject(vehicleGroup);
   }
@@ -301,9 +288,9 @@ export function vehicleGroupsToObject(
 }
 
 export function vehicleGroupFromObject(
-  data: MapObject<VehicleGroupObject>,
+  data: MapObject<IVehicleGroup>,
   balloons: Balloon[],
-  cars: Car[]
+  cars: Car[],
 ): VehicleGroup[] {
   if (data == null) {
     return [];

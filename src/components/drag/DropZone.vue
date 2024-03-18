@@ -37,12 +37,12 @@ const emit = defineEmits<{
 
 const highlighted = ref(false);
 
-function accepted(): boolean {
+function isAccepted(): boolean {
   return DragHelper.element !== null && props.accepted(DragHelper.element);
 }
 
 function onDragEnter(event: DragEvent) {
-  if (!accepted()) {
+  if (!isAccepted()) {
     return;
   }
 
@@ -51,7 +51,7 @@ function onDragEnter(event: DragEvent) {
 }
 
 function onDragOver(event: DragEvent) {
-  if (!accepted()) {
+  if (!isAccepted()) {
     return;
   }
 
@@ -68,7 +68,7 @@ function onDrop(event: DragEvent) {
   highlighted.value = false;
 
   const element = DragHelper.element;
-  if (!accepted() || !DragHelper.verifyDrop(event)) {
+  if (!isAccepted() || !DragHelper.verifyDrop(event)) {
     return;
   }
 

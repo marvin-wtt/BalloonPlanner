@@ -1,10 +1,17 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide">
+  <q-dialog
+    ref="dialogRef"
+    @hide="onDialogHide"
+  >
     <q-card>
-      <q-form @reset="onReset" @submit="onSubmit" class="q-gutter-md">
+      <q-form
+        @reset="onReset"
+        @submit="onSubmit"
+        class="q-gutter-md"
+      >
         <q-card-section>
           <div class="text-h6">
-            {{ $t(`dialog.person.${mode}.title`) }}
+            {{ t(`dialog.person.${mode}.title`) }}
           </div>
         </q-card-section>
 
@@ -12,12 +19,12 @@
           <!-- TODO unique rule -->
           <q-input
             v-model="name"
-            :label="$t('dialog.person.name.label')"
+            :label="t('dialog.person.name.label')"
             lazy-rules
             :rules="[
-              (val) =>
+              (val: string | undefined) =>
                 (val && val.length > 0) ||
-                $t('dialog.person.name_validation.required'),
+                t('dialog.person.name_validation.required'),
             ]"
             filled
           />
@@ -25,12 +32,12 @@
           <q-input
             v-model.number="flights"
             type="number"
-            :label="$t('dialog.person.flights.label')"
-            :hint="$t('dialog.person.flights.hint')"
+            :label="t('dialog.person.flights.label')"
+            :hint="t('dialog.person.flights.hint')"
             lazy-rules
             :rules="[
-              (val) =>
-                (val !== null && val !== '' && val >= 0) ||
+              (val: number | undefined) =>
+                (val !== undefined && val >= 0) ||
                 $t('dialog.person.validation.flights'),
             ]"
             filled
@@ -38,18 +45,18 @@
 
           <q-checkbox
             v-model="firstTime"
-            :label="$t('dialog.person.first_flight.label')"
-            :hint="$t('dialog.person.first_flight.hint')"
+            :label="t('dialog.person.first_flight.label')"
+            :hint="t('dialog.person.first_flight.hint')"
           />
 
           <q-select
             v-model="nation"
             :options="nations"
-            :label="$t('nationality')"
+            :label="t('nationality')"
             :rules="[
-              (val) =>
+              (val: string | undefined) =>
                 (val && nations.map((val) => val.value).includes(val)) ||
-                $t('dialog.person.nationality.validation.type'),
+                t('dialog.person.nationality.validation.type'),
             ]"
             emit-value
             map-options
@@ -58,19 +65,26 @@
 
           <q-checkbox
             v-model="supervisor"
-            :label="$t('dialog.person.supervisor.label')"
+            :label="t('dialog.person.supervisor.label')"
           />
         </q-card-section>
 
-        <q-card-actions align="right" class="text-primary">
+        <q-card-actions
+          align="right"
+          class="text-primary"
+        >
           <q-btn
             type="reset"
             color="primary"
-            :label="$t('cancel')"
+            :label="t('cancel')"
             v-close-popup
             flat
           />
-          <q-btn type="submit" color="primary" :label="$t('create')" />
+          <q-btn
+            type="submit"
+            color="primary"
+            :label="t('create')"
+          />
         </q-card-actions>
       </q-form>
     </q-card>

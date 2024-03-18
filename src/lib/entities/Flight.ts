@@ -11,19 +11,19 @@ export class Flight extends Identifiable {
   private _balloons: Balloon[];
   private _cars: Car[];
   private _people: Person[];
-  private _vehicleGroups: VehicleGroup[];
+  public vehicleGroups: VehicleGroup[];
 
   constructor(
     balloons: Balloon[],
     cars: Car[],
     people: Person[],
-    groups?: VehicleGroup[]
+    groups?: VehicleGroup[],
   ) {
     super();
     this._balloons = balloons;
     this._cars = cars;
     this._people = people;
-    this._vehicleGroups = groups ?? [];
+    this.vehicleGroups = groups ?? [];
     this._timestamp = Date.now();
   }
 
@@ -33,14 +33,6 @@ export class Flight extends Identifiable {
 
   set timestamp(value: number) {
     this._timestamp = value;
-  }
-
-  get vehicleGroups(): VehicleGroup[] {
-    return this._vehicleGroups;
-  }
-
-  set vehicleGroups(value: VehicleGroup[]) {
-    this._vehicleGroups = value;
   }
 
   get balloons(): Balloon[] {
@@ -58,7 +50,7 @@ export class Flight extends Identifiable {
   pilots(): Person[] {
     const pilots: Person[] = [];
 
-    for (const group of this._vehicleGroups) {
+    for (const group of this.vehicleGroups) {
       pilots.push(...group.balloon.allowedOperators);
     }
 
@@ -66,12 +58,12 @@ export class Flight extends Identifiable {
   }
 
   addVehicleGroup(balloon: Balloon) {
-    this._vehicleGroups.push(new VehicleGroup(balloon));
+    this.vehicleGroups.push(new VehicleGroup(balloon));
   }
 
   removeVehicleGroup(group: VehicleGroup) {
     group.clear();
-    removeFromArray(this._vehicleGroups, group);
+    removeFromArray(this.vehicleGroups, group);
   }
 
   removePerson(person: Person) {
@@ -94,15 +86,15 @@ export class Flight extends Identifiable {
 
   availablePeople(): Person[] {
     let people: Person[] = this._people;
-    for (const group of this._vehicleGroups) {
+    for (const group of this.vehicleGroups) {
       people = people.filter(
         (value) =>
           value !== group.balloon.operator &&
-          !group.balloon.passengers.includes(value)
+          !group.balloon.passengers.includes(value),
       );
       for (const car of group.cars) {
         people = people.filter(
-          (value) => value !== car.operator && !car.passengers.includes(value)
+          (value) => value !== car.operator && !car.passengers.includes(value),
         );
       }
     }
@@ -111,7 +103,7 @@ export class Flight extends Identifiable {
 
   availableBalloons(): Balloon[] {
     let balloons: Balloon[] = this._balloons;
-    for (const group of this._vehicleGroups) {
+    for (const group of this.vehicleGroups) {
       balloons = balloons.filter((value) => value.id !== group.balloon.id);
     }
     return balloons;
@@ -119,7 +111,7 @@ export class Flight extends Identifiable {
 
   availableCars(): Car[] {
     let cars: Car[] = this._cars;
-    for (const group of this._vehicleGroups) {
+    for (const group of this.vehicleGroups) {
       for (const car of group.cars) {
         cars = cars.filter((value) => value.id !== car.id);
       }
@@ -128,7 +120,7 @@ export class Flight extends Identifiable {
   }
 
   clear() {
-    for (const group of this._vehicleGroups) {
+    for (const group of this.vehicleGroups) {
       group.balloon.clear();
       for (const car of group.cars) {
         car.clear();

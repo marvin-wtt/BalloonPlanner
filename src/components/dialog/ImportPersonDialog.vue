@@ -1,15 +1,27 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide">
+  <q-dialog
+    ref="dialogRef"
+    @hide="onDialogHide"
+  >
     <q-card>
-      <q-form @reset="onReset" @submit="onSubmit" class="q-gutter-md">
+      <q-form
+        @reset="onReset"
+        @submit="onSubmit"
+        class="q-gutter-md"
+      >
         <q-card-section>
           <div class="text-h6">
-            {{ $t('dialog.import_person.title') }}
+            {{ t('dialog.import_person.title') }}
           </div>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          <q-stepper v-model="step" ref="stepper" color="primary" animated>
+          <q-stepper
+            v-model="step"
+            ref="stepper"
+            color="primary"
+            animated
+          >
             <q-step
               :name="1"
               title="Select input method"
@@ -17,30 +29,48 @@
               :done="step > 1"
             >
               <q-list>
-                <q-item tag="label" v-ripple>
+                <q-item
+                  tag="label"
+                  v-ripple
+                >
                   <q-item-section avatar>
-                    <q-radio v-model="method" val="online" />
+                    <q-radio
+                      v-model="method"
+                      val="online"
+                    />
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>Online from Ballaeron</q-item-label>
                     <q-item-label caption
-                      >Requires login credentials</q-item-label
-                    >
+                      >Requires login credentials
+                    </q-item-label>
                   </q-item-section>
                 </q-item>
 
-                <q-item tag="label" v-ripple>
+                <q-item
+                  tag="label"
+                  v-ripple
+                >
                   <q-item-section avatar>
-                    <q-radio v-model="method" val="csv" />
+                    <q-radio
+                      v-model="method"
+                      val="csv"
+                    />
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>CSV</q-item-label>
                   </q-item-section>
                 </q-item>
 
-                <q-item tag="label" v-ripple>
+                <q-item
+                  tag="label"
+                  v-ripple
+                >
                   <q-item-section avatar>
-                    <q-radio v-model="method" val="json" />
+                    <q-radio
+                      v-model="method"
+                      val="json"
+                    />
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>JSON</q-item-label>
@@ -58,7 +88,12 @@
               TODO Select upload method
             </q-step>
 
-            <q-step :name="3" title="" icon="cloud_upload" :done="step > 3">
+            <q-step
+              :name="3"
+              title=""
+              icon="cloud_upload"
+              :done="step > 3"
+            >
               TODO Select upload method
             </q-step>
 
@@ -75,12 +110,12 @@
           <!-- TODO unique rule -->
           <q-input
             v-model="name"
-            :label="$t('dialog.person.name.label')"
+            :label="t('dialog.person.name.label')"
             lazy-rules
             :rules="[
-              (val) =>
+              (val: string | undefined) =>
                 (val && val.length > 0) ||
-                $t('dialog.person.name_validation.required'),
+                t('dialog.person.name_validation.required'),
             ]"
             filled
           />
@@ -88,52 +123,59 @@
           <q-input
             v-model.number="flights"
             type="number"
-            :label="$t('dialog.person.flights.label')"
-            :hint="$t('dialog.person.flights.hint')"
+            :label="t('dialog.person.flights.label')"
+            :hint="t('dialog.person.flights.hint')"
             lazy-rules
             :rules="[
-              (val) =>
-                (val !== null && val !== '' && val >= 0) ||
-                $t('dialog.person.validation.flights'),
+              (val: number | undefined) =>
+                (val !== undefined && val >= 0) ||
+                t('dialog.person.validation.flights'),
             ]"
             filled
           />
 
           <q-checkbox
             v-model="firstTime"
-            :label="$t('dialog.person.first_flight.label')"
-            :hint="$t('dialog.person.first_flight.hint')"
+            :label="t('dialog.person.first_flight.label')"
+            :hint="t('dialog.person.first_flight.hint')"
           />
 
           <q-select
             v-model="nation"
             :options="nations"
-            :label="$t('nationality')"
+            :label="t('nationality')"
             :rules="[
-              (val) =>
+              (val: string | undefined) =>
                 (val && nations.map((val) => val.value).includes(val)) ||
-                $t('dialog.person.nationality.validation.type'),
+                t('dialog.person.nationality.validation.type'),
             ]"
-            emit-value
+            emit-vaue
             map-options
             filled
           />
 
           <q-checkbox
             v-model="supervisor"
-            :label="$t('dialog.person.supervisor.label')"
+            :label="t('dialog.person.supervisor.label')"
           />
         </q-card-section>
 
-        <q-card-actions align="right" class="text-primary">
+        <q-card-actions
+          align="right"
+          class="text-primary"
+        >
           <q-btn
             type="reset"
             color="primary"
-            :label="$t('cancel')"
+            :label="t('cancel')"
             v-close-popup
             flat
           />
-          <q-btn type="submit" color="primary" :label="$t('create')" />
+          <q-btn
+            type="submit"
+            color="primary"
+            :label="t('create')"
+          />
         </q-card-actions>
       </q-form>
     </q-card>

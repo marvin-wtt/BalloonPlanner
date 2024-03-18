@@ -1,13 +1,26 @@
 <template>
-  <draggable-item :item="props.vehicle" @remove="onVehicleRemoved" class="row">
+  <draggable-item
+    :item="props.vehicle"
+    class="row"
+    @remove="onVehicleRemoved"
+  >
     <table
       class="vehicle-table shadow-2 relative-position"
       @dragenter.stop
       @dragover.stop
       @dragleave.stop
     >
-      <q-badge v-if="error" color="negative" floating rounded>
-        <q-icon name="warning" color="white" size="1rem" />
+      <q-badge
+        v-if="error"
+        color="negative"
+        floating
+        rounded
+      >
+        <q-icon
+          name="warning"
+          color="white"
+          size="1rem"
+        />
         <q-tooltip>
           {{ errorMessage }}
         </q-tooltip>
@@ -15,24 +28,36 @@
 
       <tr>
         <th
+          v-if="props.labeled"
           class="vehicle-label"
           :rowspan="capacity + 1"
-          v-if="props.labeled"
         >
           <span>
             {{ props.vehicle.name }}
           </span>
-          <q-menu touch-position context-menu>
-            <q-list dense style="min-width: 100px">
-              <q-item clickable v-close-popup>
+          <q-menu
+            touch-position
+            context-menu
+          >
+            <q-list
+              dense
+              style="min-width: 100px"
+            >
+              <q-item
+                clickable
+                v-close-popup
+              >
                 <q-item-section @click="onVehicleEdit()">
                   {{ t('edit') }}
                 </q-item-section>
               </q-item>
-              <q-item clickable v-close-popup>
+              <q-item
+                clickable
+                v-close-popup
+              >
                 <q-item-section
-                  @click="onVehicleRemoved()"
                   class="text-negative"
+                  @click="onVehicleRemoved()"
                 >
                   {{ t('remove') }}
                 </q-item-section>
@@ -40,7 +65,10 @@
             </q-list>
           </q-menu>
         </th>
-        <th class="vehicle-index" v-if="indexed">
+        <th
+          v-if="indexed"
+          class="vehicle-index"
+        >
           {{
             type === 'balloon' ? t('pilot_index', 'P') : t('driver_index', 'D')
           }}
@@ -53,13 +81,27 @@
           :vehicle="props.vehicle"
           operator
           @add="(p) => emit('operatorAdd', p)"
-          @remove="emit('operatorRemove', props.vehicle.operator)"
-          @edit="emit('personEdit', props.vehicle.operator)"
+          @remove="
+            props.vehicle.operator
+              ? emit('operatorRemove', props.vehicle.operator)
+              : undefined
+          "
+          @edit="
+            props.vehicle.operator
+              ? emit('personEdit', props.vehicle.operator)
+              : undefined
+          "
         />
       </tr>
 
-      <tr v-for="c in capacity" :key="c">
-        <td class="vehicle-index" v-if="props.indexed">
+      <tr
+        v-for="c in capacity"
+        :key="c"
+      >
+        <td
+          class="vehicle-index"
+          v-if="props.indexed"
+        >
           {{ c }}
         </td>
         <base-vehicle-person-cell
@@ -97,7 +139,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  indexed: true, 
+  indexed: true,
   labeled: true,
   editable: true,
   hideEmpty: false,
@@ -141,10 +183,10 @@ const errorMessage = computed<string>(() => {
   return overfilled.value
     ? t('tooltip_overfilled')
     : tooMuchReservedCapacity.value
-    ? t('tooltip_too_much_reserved_capacity')
-    : invalidOperator.value
-    ? t('tooltip_invalid_operator')
-    : '';
+      ? t('tooltip_too_much_reserved_capacity')
+      : invalidOperator.value
+        ? t('tooltip_invalid_operator')
+        : '';
 });
 
 const tooMuchReservedCapacity = computed<boolean>(() => {

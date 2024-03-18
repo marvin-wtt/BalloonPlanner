@@ -29,16 +29,18 @@ import {
   balloonToObject,
   carToObject,
   flightFromObject,
-  FlightObject,
+  IFlight,
   flightToObject,
   personToObject,
   projectFromObject,
-  ProjectObject,
+  IProject,
   projectToObject,
+  IVehicleGroup,
   vehicleGroupToObject,
 } from 'src/lib/utils/converter';
 import { PersistenceService } from 'src/services/persistence/PersistenceService';
 import { useProjectStore } from 'stores/project';
+import { MapObject } from 'read-excel-file/types';
 
 type UpdateObject = {
   [key: string]: null | boolean | number | string | string[] | FieldValue;
@@ -192,13 +194,13 @@ export class FirestoreDataService implements PersistenceService {
         flight = new Flight(
           baseFlight.balloons.map(
             (value) =>
-              new Balloon(value.name, value.capacity, value.allowedOperators)
+              new Balloon(value.name, value.capacity, value.allowedOperators),
           ),
           baseFlight.cars.map(
             (value) =>
-              new Car(value.name, value.capacity, value.allowedOperators)
+              new Car(value.name, value.capacity, value.allowedOperators),
           ),
-          baseFlight.people
+          baseFlight.people,
         );
       }
     }
@@ -312,7 +314,7 @@ export class FirestoreDataService implements PersistenceService {
   private updateReservedCapacities(
     vehicleGroup: VehicleGroup,
     mode?: 'exclude' | 'include' | 'with',
-    extra?: Car | Balloon
+    extra?: Car | Balloon,
   ): object {
     const obj: UpdateObject = {};
     const withBalloon =
@@ -378,7 +380,7 @@ export class FirestoreDataService implements PersistenceService {
     };
 
     const group = flight.vehicleGroups.find(
-      (value) => value.balloon.id === balloon.id
+      (value) => value.balloon.id === balloon.id,
     );
     if (group != null) {
       obj[`vehicleGroups.${group.id}`] = deleteField();
@@ -437,7 +439,7 @@ export class FirestoreDataService implements PersistenceService {
       const result = this.removePersonFromVehicle(
         person,
         group.balloon,
-        'balloons'
+        'balloons',
       );
       if (result !== null) {
         obj = { ...obj, ...result };
@@ -464,7 +466,7 @@ export class FirestoreDataService implements PersistenceService {
   private removePersonFromVehicle(
     person: Person,
     vehicle: Vehicle,
-    list: 'balloons' | 'cars'
+    list: 'balloons' | 'cars',
   ): object | null {
     if (vehicle.operator?.id === person.id) {
       return {
@@ -520,7 +522,7 @@ export class FirestoreDataService implements PersistenceService {
 
   removeCarFromVehicleGroup(
     car: Car,
-    vehicleGroup: VehicleGroup
+    vehicleGroup: VehicleGroup,
   ): Promise<void> {
     return this.updateFlightDocument({
       [`vehicleGroups.${vehicleGroup.id}.cars`]: arrayRemove(car.id),
@@ -538,7 +540,7 @@ export class FirestoreDataService implements PersistenceService {
 
   setBalloonOperator(
     person: Person | undefined,
-    balloon: Balloon
+    balloon: Balloon,
   ): Promise<void> {
     const obj: UpdateObject = {
       [`balloons.${balloon.id}.operator`]: person?.id ?? null,
@@ -629,15 +631,18 @@ export class FirestoreDataService implements PersistenceService {
         return flightToObject(flight, projectStore.project?.id ?? '');
       },
       fromFirestore: (snapshot, options) => {
-        const data = snapshot.data(options) as FlightObject;
+        const data = snapshot.data(options) as IFlight;
         // Sort vehicle group by ID
         // TODO is there a better solution?
         data.vehicleGroups = Object.keys(data.vehicleGroups)
           .sort()
-          .reduce((obj: any, key) => {
-            obj[key] = data.vehicleGroups[key];
-            return obj;
-          }, {});
+          .reduce(
+            (obj, key) => {
+              obj[key] = data.vehicleGroups[key];
+              return obj;
+            },
+            {} as Record<string, IVehicleGroup>,
+          );
         return flightFromObject(data, flightId);
       },
     });
@@ -655,7 +660,7 @@ export class FirestoreDataService implements PersistenceService {
       },
       fromFirestore: (snapshot, options) => {
         const data = snapshot.data(options);
-        return projectFromObject(data as ProjectObject, projectId);
+        return projectFromObject(data as IProject, projectId);
       },
     });
   }

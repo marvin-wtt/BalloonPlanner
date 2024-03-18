@@ -1,22 +1,37 @@
 <template>
   <draggable-item
     :tag="operator ? 'th' : 'td'"
-    v-if="person !== undefined"
+    v-if="person"
     :item="person"
     @remove="onDragEnd()"
   >
     {{ personLabel }}
 
-    <q-menu touch-position context-menu>
-      <q-list dense style="min-width: 100px">
-        <q-item clickable v-close-popup>
+    <q-menu
+      touch-position
+      context-menu
+    >
+      <q-list
+        dense
+        style="min-width: 100px"
+      >
+        <q-item
+          clickable
+          v-close-popup
+        >
           <q-item-section @click="onEdit()">
-            {{ $t('edit') }}
+            {{ t('edit') }}
           </q-item-section>
         </q-item>
-        <q-item clickable v-close-popup>
-          <q-item-section @click="onDragEnd()" class="text-negative">
-            {{ $t('remove') }}
+        <q-item
+          clickable
+          v-close-popup
+        >
+          <q-item-section
+            @click="onDragEnd()"
+            class="text-negative"
+          >
+            {{ t('remove') }}
           </q-item-section>
         </q-item>
       </q-list>
@@ -37,6 +52,9 @@ import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
 import { Identifiable } from 'src/lib/utils/Identifiable';
 import DraggableItem from 'components/drag/DraggableItem.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 interface Props {
   person: Person;
@@ -80,8 +98,8 @@ function isDropAllowed(element: Identifiable): boolean {
   return !props.vehicle.passengers.includes(element);
 }
 
-function onDrop(element: Person) {
-  emit('add', element);
+function onDrop(element: Identifiable) {
+  emit('add', element as Person);
 }
 
 function onDragEnd() {

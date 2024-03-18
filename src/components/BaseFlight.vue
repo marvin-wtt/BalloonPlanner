@@ -5,6 +5,7 @@
     @dropped="onDrop"
   >
     <div v-if="empty" class="col-12 text-center text-body1">
+      <!-- TODO Add translation -->
       Drop a balloon here to start.
     </div>
 
@@ -49,17 +50,13 @@ function isDropAllowed(element: Identifiable): boolean {
     return true;
   }
 
-  if (elementIsBalloon(element) && !flightContainsBalloon(element)) {
-    return true;
-  }
-
-  return false;
+  return elementIsBalloon(element) && !flightContainsBalloon(element);
 }
 
 function flightContainsBalloon(balloon: Balloon): boolean {
   return (
     props.flight.vehicleGroups.findIndex(
-      (value) => value.balloon.id === balloon.id
+      (value) => value.balloon.id === balloon.id,
     ) >= 0
   );
 }

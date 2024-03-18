@@ -1,7 +1,14 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide">
+  <q-dialog
+    ref="dialogRef"
+    @hide="onDialogHide"
+  >
     <q-card>
-      <q-form @reset="onReset" @submit="onSubmit" class="q-gutter-md">
+      <q-form
+        @reset="onReset"
+        @submit="onSubmit"
+        class="q-gutter-md"
+      >
         <q-card-section>
           <div class="text-h6">
             {{ t(`dialog.car.title.${mode}`) }}
@@ -14,7 +21,7 @@
             :label="t('dialog.car.name.label')"
             lazy-rules
             :rules="[
-              (val) =>
+              (val: string | undefined) =>
                 (val && val.length > 0) ||
                 t('dialog.car.name.validation.required'),
             ]"
@@ -28,8 +35,8 @@
             :hint="t('dialog.car.capacity.hint')"
             lazy-rules
             :rules="[
-              (val) =>
-                (val !== null && val !== '' && val > 0) ||
+              (val: number | undefined) =>
+                (val !== undefined && val > 0) ||
                 t('dialog.car.capacity.validation.number'),
             ]"
             filled
@@ -57,7 +64,10 @@
           />
         </q-card-section>
 
-        <q-card-actions align="right" class="text-primary">
+        <q-card-actions
+          align="right"
+          class="text-primary"
+        >
           <q-btn
             type="reset"
             color="primary"
@@ -65,7 +75,11 @@
             v-close-popup
             flat
           />
-          <q-btn type="submit" color="primary" :label="t(mode)" />
+          <q-btn
+            type="submit"
+            color="primary"
+            :label="t(mode)"
+          />
         </q-card-actions>
       </q-form>
     </q-card>
@@ -131,7 +145,7 @@ function filterFn(val: string, update: (a: () => void) => void) {
   update(() => {
     const needle = val.toLowerCase();
     filterOptions.value = options.filter(
-      (value) => value.label.toLowerCase().indexOf(needle) > -1
+      (value) => value.label.toLowerCase().indexOf(needle) > -1,
     );
   });
 }

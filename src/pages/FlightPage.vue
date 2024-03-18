@@ -1,6 +1,6 @@
 <template>
   <q-page class="full-width row justify-start no-wrap bg-grey-5">
-    <template v-if="!flightNotFound && !flightLoading">
+    <template v-if="flight && !flightNotFound && !flightLoading">
       <!-- Menu -->
       <div
         v-if="editable"
@@ -13,15 +13,39 @@
           active-bg-color="grey-6"
           class="bg-grey-10 text-white"
         >
-          <q-tab name="overview" icon="home" :label="t('overview')" />
-          <q-separator spaced inset color="white" />
-          <q-tab name="balloons" icon="mdi-airballoon" :label="t('balloon', 2)">
-            <q-badge v-if="showBalloonsMenuBadge" color="red" floating>
+          <q-tab
+            name="overview"
+            icon="home"
+            :label="t('overview')"
+          />
+          <q-separator
+            spaced
+            inset
+            color="white"
+          />
+          <q-tab
+            name="balloons"
+            icon="mdi-airballoon"
+            :label="t('balloon', 2)"
+          >
+            <q-badge
+              v-if="showBalloonsMenuBadge"
+              color="red"
+              floating
+            >
               {{ availableBalloons.length }}
             </q-badge>
           </q-tab>
-          <q-tab name="cars" icon="airport_shuttle" :label="t('car', 2)">
-            <q-badge v-if="showCarsMenuBadge" color="red" floating>
+          <q-tab
+            name="cars"
+            icon="airport_shuttle"
+            :label="t('car', 2)"
+          >
+            <q-badge
+              v-if="showCarsMenuBadge"
+              color="red"
+              floating
+            >
               {{ availableCars.length }}
             </q-badge>
           </q-tab>
@@ -30,17 +54,37 @@
             icon="supervisor_account"
             :label="t('supervisor', 2)"
           >
-            <q-badge v-if="showSupervisorsMenuBadge" color="red" floating>
+            <q-badge
+              v-if="showSupervisorsMenuBadge"
+              color="red"
+              floating
+            >
               {{ availableSupervisors.length }}
             </q-badge>
           </q-tab>
-          <q-tab name="participants" icon="group" :label="t('participant', 2)">
-            <q-badge v-if="showParticipantsMenuBadge" color="red" floating>
+          <q-tab
+            name="participants"
+            icon="group"
+            :label="t('participant', 2)"
+          >
+            <q-badge
+              v-if="showParticipantsMenuBadge"
+              color="red"
+              floating
+            >
               {{ availableParticipants.length }}
             </q-badge>
           </q-tab>
-          <q-separator spaced inset color="white" />
-          <q-tab name="settings" icon="settings" :label="t('settings')" />
+          <q-separator
+            spaced
+            inset
+            color="white"
+          />
+          <q-tab
+            name="settings"
+            icon="settings"
+            :label="t('settings')"
+          />
         </q-tabs>
 
         <div
@@ -55,7 +99,10 @@
             vertical
             class="no-wrap col-grow shadow-24"
           >
-            <q-tab-panel name="balloons" class="column bg-grey-2">
+            <q-tab-panel
+              name="balloons"
+              class="column bg-grey-2"
+            >
               <q-scroll-area class="col-grow self-stretch">
                 <editable-list
                   :title="t('balloon', 2)"
@@ -66,16 +113,19 @@
                   @delete="(balloon) => showDeleteBalloon(balloon)"
                 >
                   <template #main="{ item }">
-                    {{ item.name }}
+                    {{ (item as Balloon).name }}
                   </template>
                   <template #side="{ item }">
-                    {{ item.capacity - 1 + ' + 1' }}
+                    {{ (item as Balloon).capacity - 1 + ' + 1' }}
                   </template>
                 </editable-list>
               </q-scroll-area>
             </q-tab-panel>
 
-            <q-tab-panel name="cars" class="column bg-grey-2">
+            <q-tab-panel
+              name="cars"
+              class="column bg-grey-2"
+            >
               <q-scroll-area class="col-grow self-stretch">
                 <editable-list
                   :title="t('car', 2)"
@@ -86,16 +136,19 @@
                   @delete="(car) => showDeleteCar(car)"
                 >
                   <template #main="{ item }">
-                    {{ item.name }}
+                    {{ (item as Car).name }}
                   </template>
                   <template #side="{ item }">
-                    {{ item.capacity - 1 + ' + 1' }}
+                    {{ (item as Car).capacity - 1 + ' + 1' }}
                   </template>
                 </editable-list>
               </q-scroll-area>
             </q-tab-panel>
 
-            <q-tab-panel name="supervisors" class="column bg-grey-2">
+            <q-tab-panel
+              name="supervisors"
+              class="column bg-grey-2"
+            >
               <q-scroll-area class="col-grow self-stretch">
                 <editable-list
                   :title="t('supervisor', 2)"
@@ -106,16 +159,19 @@
                   @delete="(person) => showDeletePerson(person)"
                 >
                   <template #main="{ item }">
-                    {{ item.name }}
+                    {{ (item as Person).name }}
                   </template>
                   <template #side="{ item }">
-                    {{ item.numberOfFlights }}
+                    {{ (item as Person).numberOfFlights }}
                   </template>
                 </editable-list>
               </q-scroll-area>
             </q-tab-panel>
 
-            <q-tab-panel name="participants" class="column bg-grey-2">
+            <q-tab-panel
+              name="participants"
+              class="column bg-grey-2"
+            >
               <q-scroll-area class="col-grow self-stretch">
                 <editable-list
                   :title="t('participant', 2)"
@@ -127,25 +183,37 @@
                   :dense="availableParticipants.length > 10"
                 >
                   <template #main="{ item }">
-                    {{ item.name }}
+                    {{ (item as Person).name }}
                   </template>
                   <template #side="{ item }">
-                    {{ item.numberOfFlights }}
+                    {{ (item as Person).numberOfFlights }}
                   </template>
                 </editable-list>
               </q-scroll-area>
             </q-tab-panel>
 
-            <q-tab-panel name="settings" class="column bg-grey-2">
+            <q-tab-panel
+              name="settings"
+              class="column bg-grey-2"
+            >
               <q-scroll-area class="col-grow self-stretch">
                 <div class="q-py-md">
                   <div class="text-h6 q-py-md">
                     {{ t('settings') }}
                   </div>
                   <div class="q-gutter-sm">
-                    <q-list bordered separator>
-                      <q-item tag="label" v-ripple>
-                        <q-item-section avatar top>
+                    <q-list
+                      bordered
+                      separator
+                    >
+                      <q-item
+                        tag="label"
+                        v-ripple
+                      >
+                        <q-item-section
+                          avatar
+                          top
+                        >
                           <q-checkbox
                             v-model="labeledVehicle"
                             val="label"
@@ -161,8 +229,14 @@
                           </q-item-label>
                         </q-item-section>
                       </q-item>
-                      <q-item tag="indexed" v-ripple>
-                        <q-item-section avatar top>
+                      <q-item
+                        tag="indexed"
+                        v-ripple
+                      >
+                        <q-item-section
+                          avatar
+                          top
+                        >
                           <q-checkbox
                             v-model="indexedVehicle"
                             val="indexed"
@@ -189,17 +263,20 @@
 
       <!-- Flight overview -->
       <!-- TODO add loader or skeleton -->
-      <div v-if="showFlightView" class="col-grow flex">
+      <div
+        v-if="showFlightView"
+        class="col-grow flex"
+      >
         <base-flight
           :flight="flight"
           @balloonAdd="onBalloonAdd"
           class="col-grow content-stretch"
         >
           <base-vehicle-group
-            v-for="group in flight.vehicleGroups"
+            v-for="group in (flight as Flight).vehicleGroups"
             :key="group.id"
             :group="group"
-            @carAdd="(car) => onCarAdd(group, car)"
+            @car-add="(car) => onCarAdd(group, car)"
           >
             <template #balloon>
               <base-vehicle
@@ -209,7 +286,7 @@
                 @remove="onVehicleGroupRemove(group)"
                 @edit="showEditBalloon(group.balloon)"
                 @passenger-add="(p) => onBalloonPersonAdd(group.balloon, p)"
-                @passenge-remove="
+                @passenger-remove="
                   (p) => onBalloonPersonRemove(group.balloon, p)
                 "
                 @operator-add="(p) => onBalloonOperatorAdd(group.balloon, p)"
@@ -244,7 +321,12 @@
           :offset="[18, 18]"
           v-if="editable"
         >
-          <q-fab icon="add" direction="up" color="primary" external-label>
+          <q-fab
+            icon="add"
+            direction="up"
+            color="primary"
+            external-label
+          >
             <q-fab-action
               external-label
               label-position="left"
@@ -272,14 +354,20 @@
       </div>
     </template>
 
-    <div v-if="flightLoading" class="absolute-center">
+    <div
+      v-if="flightLoading"
+      class="absolute-center"
+    >
       <q-spinner
         color="primary"
         size="3em"
       />
     </div>
 
-    <div v-if="flightNotFound" class="absolute-center	">
+    <div
+      v-if="flightNotFound"
+      class="absolute-center"
+    >
       <!-- TODO add icon -->
       Flight not Found
     </div>
@@ -287,7 +375,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, Ref, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { QItem, QList, useQuasar } from 'quasar';
 import { onBeforeRouteUpdate } from 'vue-router';
 import { storeToRefs } from 'pinia';
@@ -295,14 +383,7 @@ import { useProjectStore } from 'stores/project';
 import BaseFlight from 'components/BaseFlight.vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import BaseVehicle from 'components/BaseVehicle.vue';
-import {
-  Balloon,
-  Car,
-  Flight,
-  Person,
-  Project,
-  VehicleGroup,
-} from 'src/lib/entities';
+import { Balloon, Car, Flight, Person, VehicleGroup } from 'src/lib/entities';
 import EditableList from 'components/EditableList.vue';
 import { useI18n } from 'vue-i18n';
 import { solve } from 'src/lib/solver/solver';
@@ -321,19 +402,9 @@ const projectStore = useProjectStore();
 const serviceStore = useServiceStore();
 const settingsStore = useSettingsStore();
 
-// FIXME Convert correctly
-const {
-  project,
-  flight,
-}: {
-  project: Ref<Project | undefined>;
-  flight: Ref<Flight | undefined>;
-} = storeToRefs(projectStore) as any;
-const {
-  dataService,
-}: {
-  dataService: Ref<PersistenceService | null>;
-} = storeToRefs(serviceStore) as any;
+const { project, flight } = storeToRefs(projectStore);
+
+const { dataService } = storeToRefs(serviceStore);
 const { indexedVehicle, labeledVehicle } = storeToRefs(settingsStore);
 
 const menuTabs = ref('overview');
@@ -350,18 +421,6 @@ onMounted(async () => {
       flightLoading.value = false;
     });
 });
-
-watch(
-  flight,
-  () => {
-    // TODO maybe just redo the logic with computed
-    if (flight.value == undefined) return [];
-    availablePeople.value = flight.value.availablePeople();
-    availableBalloons.value = flight.value.availableBalloons();
-    availableCars.value = flight.value.availableCars();
-  },
-  { deep: true }
-);
 
 onBeforeRouteUpdate((to) => {
   flightNotFound.value = false;
@@ -404,7 +463,7 @@ function onSmartFill() {
 }
 
 function monitorService(
-  cb: (service: PersistenceService) => Promise<void>
+  cb: (service: PersistenceService) => Promise<void>,
 ): void {
   if (!dataService.value) {
     $q.notify({
@@ -438,7 +497,7 @@ function monitorService(
 
 function onBalloonAdd(balloon: Balloon) {
   monitorService((service) =>
-    service.addVehicleGroup(new VehicleGroup(balloon))
+    service.addVehicleGroup(new VehicleGroup(balloon)),
   );
 }
 
@@ -497,7 +556,7 @@ function showCreatePerson() {
       payload.name,
       payload.nation,
       payload.supervisor,
-      payload.flights
+      payload.flights,
     );
     monitorService((service) => service.addPerson(person));
   });
@@ -515,7 +574,7 @@ function showEditPerson(person: Person) {
       payload.name,
       payload.nation,
       payload.supervisor,
-      payload.flights
+      payload.flights,
     );
     p.id = person.id;
     monitorService((service) => service.updatePerson(p));
@@ -541,7 +600,7 @@ function showDeletePerson(person: Person) {
   });
 }
 
-function isFlightLoaded(flight: Flight | undefined): flight is Flight {
+function isFlightLoaded(flight: Flight | undefined | null): flight is Flight {
   return flight != undefined;
 }
 
@@ -559,7 +618,7 @@ function showCreateBalloon() {
     const balloon = new Balloon(
       payload.name,
       payload.capacity,
-      payload.allowedOperators
+      payload.allowedOperators,
     );
     monitorService((service) => service.addBalloon(balloon));
   });
@@ -580,7 +639,7 @@ function showEditBalloon(balloon: Balloon) {
     const b = new Balloon(
       payload.name,
       payload.capacity,
-      payload.allowedOperators
+      payload.allowedOperators,
     );
     b.id = balloon.id;
     b.operator = balloon.operator;
@@ -625,7 +684,7 @@ function showCreateCar() {
       payload.name,
       payload.capacity,
       payload.allowedOperators,
-      payload.trailerHitch
+      payload.trailerHitch,
     );
     monitorService((service) => service.addCar(car));
   });
@@ -647,7 +706,7 @@ function showEditCar(car: Car) {
       payload.name,
       payload.capacity,
       payload.allowedOperators,
-      payload.trailerHitch
+      payload.trailerHitch,
     );
     c.id = car.id;
     c.operator = car.operator;
@@ -699,17 +758,53 @@ const showSupervisorsMenuBadge = computed<boolean>(() => {
   return availableSupervisors.value.length > 0;
 });
 
-const availablePeople = ref(flight.value?.availablePeople() ?? []);
-const availableBalloons = ref(flight.value?.availableBalloons() ?? []);
-const availableCars = ref(flight.value?.availableCars() ?? []);
+const availablePeople = computed<Person[]>(() => {
+  return (
+    flight.value?.vehicleGroups.reduce(
+      (people, group) =>
+        people.filter(
+          (person) =>
+            ![
+              group.balloon.operator,
+              ...group.cars.map((car) => car.operator),
+              ...group.balloon.passengers,
+              ...group.cars.flatMap((car) => car.passengers),
+            ].includes(person),
+        ),
+      flight.value?.people,
+    ) ?? []
+  );
+});
 
-const availableParticipants = computed(() => {
+const availableBalloons = computed<Balloon[]>(() => {
+  return (
+    flight.value?.vehicleGroups.reduce(
+      (balloons, group) =>
+        balloons.filter((balloon) => balloon.id !== group.balloon.id),
+      flight.value?.balloons ?? [],
+    ) ?? []
+  );
+});
+
+const availableCars = computed<Car[]>(() => {
+  return (
+    flight.value?.vehicleGroups.reduce(
+      (cars, group) =>
+        cars.filter(
+          (car) => !group.cars.some((groupCar) => groupCar.id === car.id),
+        ),
+      flight.value?.cars ?? [],
+    ) ?? []
+  );
+});
+
+const availableParticipants = computed<Person[]>(() => {
   return availablePeople.value
     .filter((value) => !value.supervisor)
     .sort((a, b) => a.name.localeCompare(b.name));
 });
 
-const availableSupervisors = computed(() => {
+const availableSupervisors = computed<Person[]>(() => {
   return availablePeople.value
     .filter((value) => value.supervisor)
     .sort((a, b) => a.name.localeCompare(b.name));
