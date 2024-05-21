@@ -57,7 +57,7 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
 interface Props {
-  person: Person;
+  person?: Person;
   vehicle: Vehicle;
   editable?: boolean;
   operator?: boolean;
@@ -74,7 +74,11 @@ const emit = defineEmits<{
   (e: 'remove'): void;
 }>();
 
-const personLabel = computed(() => {
+const personLabel = computed<string>(() => {
+  if (!props.person) {
+    return '';
+  }
+
   let label = props.person.name;
   if (props.editable) {
     const isBalloon = props.vehicle instanceof Balloon;
