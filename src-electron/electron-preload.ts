@@ -16,31 +16,16 @@
  *   })
  */
 
-import { contextBridge } from 'electron';
-import { BrowserWindow } from '@electron/remote';
+import { contextBridge, ipcRenderer } from 'electron';
 
-export const windowAPI = {
-  minimize() {
-    BrowserWindow.getFocusedWindow()?.minimize();
-  },
-
-  toggleMaximize() {
-    const win = BrowserWindow.getFocusedWindow();
-
-    if (win === null) {
-      return;
-    }
-
-    if (win.isMaximized()) {
-      win.unmaximize();
-    } else {
-      win.maximize();
-    }
-  },
-
-  close() {
-    BrowserWindow.getFocusedWindow()?.close();
-  },
+const windowAPI = {
+  minimize: () => ipcRenderer.send('window:minimize'),
+  toggleMaximize: () => ipcRenderer.send('window:toggle-maximize'),
+  close: () => ipcRenderer.send('window:close'),
 };
+
+const solverAPI = {
+  solve: (data: object) => ipcRenderer.invoke('solver:solve', data),
+}
 
 contextBridge.exposeInMainWorld('windowAPI', windowAPI);

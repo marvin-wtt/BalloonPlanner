@@ -1,28 +1,16 @@
-import { app, BrowserWindow, nativeTheme } from 'electron';
-import { initialize, enable } from '@electron/remote/main';
+import { app, BrowserWindow, IpcMainEvent, ipcMain } from 'electron';
 import path from 'path';
 import os from 'os';
-
-initialize();
+import { spawn } from 'child_process';
 
 // needed in case process is undefined under Linux
 const platform = process.platform || os.platform();
-
-try {
-  if (platform === 'win32' && nativeTheme.shouldUseDarkColors === true) {
-    require('fs').unlinkSync(
-      path.join(app.getPath('userData'), 'DevTools Extensions')
-    );
-  }
-} catch (_) {}
-
-let mainWindow: BrowserWindow | undefined;
 
 function createWindow() {
   /**
    * Initial window options
    */
-  mainWindow = new BrowserWindow({
+  const mainWindow = new BrowserWindow({
     icon: path.resolve(__dirname, 'icons/icon.png'), // tray icon
     width: 1000,
     height: 600,
@@ -32,13 +20,15 @@ function createWindow() {
       sandbox: false,
       contextIsolation: true,
       // More info: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/electron-preload-script
-      preload: path.resolve(__dirname, process.env.QUASAR_ELECTRON_PRELOAD),
-    },
+      preload: path.resolve(__dirname, process.env.QUASAR_ELECTRON_PRELOAD)
+    }
   });
 
-  enable(mainWindow.webContents);
-
-  mainWindow.loadURL(process.env.APP_URL);
+  if (process.env.DEV) {
+    mainWindow.loadURL(process.env.APP_URL);
+  } else {
+    mainWindow.loadFile('index.html');
+  }
 
   if (process.env.DEBUGGING) {
     // if on DEV or Production with debug enabled
@@ -49,13 +39,19 @@ function createWindow() {
       mainWindow?.webContents.closeDevTools();
     });
   }
-
-  mainWindow.on('closed', () => {
-    mainWindow = undefined;
-  });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady()
+  .then(createWindow)
+  .then(() => {
+    ipcMain.on('window:close', windowApiHandler.close);
+    ipcMain.on('window:minimize', windowApiHandler.minimize);
+    ipcMain.on('window:toggle-maximize', windowApiHandler.toggleMaximize);
+
+    ipcMain.on('solver:solve', (data: object) => {
+      // TODO
+    });
+  });
 
 app.on('window-all-closed', () => {
   if (platform !== 'darwin') {
@@ -64,7 +60,41 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-  if (mainWindow === undefined) {
+  if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
 });
+
+// -----------------------------------------------------------------------------
+//  Window API
+// -----------------------------------------------------------------------------
+const windowEventWrapper = (next: (window: BrowserWindow) => void) => {
+  return (event: IpcMainEvent) => {
+    const webContents = event.sender;
+    const win = BrowserWindow.fromWebContents(webContents);
+
+    if (!win) {
+      return;
+    }
+
+    next(win);
+  };
+};
+
+const windowApiHandler = {
+  minimize: windowEventWrapper((win: BrowserWindow) => {
+    win.minimize();
+  }),
+
+  toggleMaximize: windowEventWrapper((win: BrowserWindow) => {
+    if (win.isMaximized()) {
+      win.unmaximize();
+    } else {
+      win.maximize();
+    }
+  }),
+
+  close: windowEventWrapper((win: BrowserWindow) => {
+    win.close();
+  })
+};
