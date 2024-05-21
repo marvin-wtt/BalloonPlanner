@@ -1,6 +1,8 @@
 import { Identifiable } from 'src/lib/utils/Identifiable';
 
 export class Person extends Identifiable {
+  public static DEFAULT_WEIGHT = 100;
+
   private _name: string;
   private _numberOfFlights: number;
   private _nation: string;
@@ -22,7 +24,7 @@ export class Person extends Identifiable {
     this._supervisor = supervisor ?? false;
     this._numberOfFlights = flights ?? 0;
     this._firstTime = firstTime ?? false;
-    this._weight = weight ?? Number.MAX_VALUE;
+    this._weight = weight ?? Person.DEFAULT_WEIGHT;
   }
 
   get nation(): string {
