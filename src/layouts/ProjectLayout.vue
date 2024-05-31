@@ -1,51 +1,70 @@
 <template>
   <q-layout view="hHh LpR lFf">
     <q-header elevated>
-      <q-bar class="q-electron-drag" v-if="$q.platform.is.electron">
+      <q-bar class="q-electron-drag">
         <q-icon name="mdi-airballoon" />
-        <div>
-          {{ $t('app_name') }}
+
+        <div class="row q-gutter-x-xs no-wrap">
+          <q-separator
+            vertical
+            dark
+            inset
+          />
+
+          <q-btn
+            v-if="authenticated"
+            :label="t('projects')"
+            to="/projects"
+            rounded
+            flat
+          />
+
+          <q-separator
+            vertical
+            dark
+            inset
+          />
+
+          <div
+            id="navigation"
+            class="row q-gutter-x-xs no-wrap"
+          />
         </div>
 
         <q-space />
 
-        <q-btn dense flat icon="minimize" @click="minimize()" />
-        <q-btn dense flat icon="crop_square" @click="toggleMaximize()" />
-        <q-btn dense flat icon="close" @click="closeApp()" />
+        <account-item />
+
+        <q-separator
+          vertical
+          dark
+          inset
+        />
+
+        <template v-if="$q.platform.is.electron">
+          <q-btn
+            icon="minimize"
+            dense
+            flat
+            rounded
+            @click="minimize()"
+          />
+          <q-btn
+            icon="crop_square"
+            dense
+            flat
+            rounded
+            @click="toggleMaximize()"
+          />
+          <q-btn
+            icon="close"
+            dense
+            flat
+            rounded
+            @click="closeApp()"
+          />
+        </template>
       </q-bar>
-
-      <q-toolbar class="bg-primary text-white">
-        <q-toolbar-title>
-          {{ $t('app_name') }}
-        </q-toolbar-title>
-        <q-space />
-
-        <FlightSelectionItem />
-
-        <q-btn stretch flat label="Projects" to="/projects" v-if="loggedIn" />
-
-        <q-separator dark vertical />
-
-        <q-btn stretch flat :label="$t('login')" to="/login" v-if="!loggedIn" />
-        <q-btn stretch flat icon="account_circle" v-if="loggedIn">
-          <q-menu auto-close>
-            <q-list>
-              <q-item>
-                <q-item-section>
-                  {{ $t('signed_in_as') }}
-                  <strong>{{ user.name }}</strong>
-                </q-item-section>
-              </q-item>
-              <q-separator />
-              <q-item clickable @click="logout()">
-                <q-item-section class="text-red">
-                  {{ $t('logout') }}
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-menu>
-        </q-btn>
-      </q-toolbar>
     </q-header>
 
     <q-page-container>
@@ -60,17 +79,15 @@ import { storeToRefs } from 'pinia';
 import { useAuthStore } from 'stores/auth';
 import { minimize, toggleMaximize, closeApp } from 'src/composables/windowAPI';
 
-import FlightSelectionItem from 'components/toolbar/FlightSelectionItem.vue';
+import { useI18n } from 'vue-i18n';
+import AccountItem from 'components/toolbar/AccountItem.vue';
 
 const authStore = useAuthStore();
 
 const { user } = storeToRefs(authStore);
+const { t } = useI18n();
 
-const loggedIn = computed(() => {
-  return user.value != null;
+const authenticated = computed(() => {
+  return user.value !== undefined;
 });
-
-function logout() {
-  authStore.logout();
-}
 </script>

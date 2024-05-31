@@ -4,12 +4,18 @@
     :accepted="isDropAllowed"
     @dropped="onDrop"
   >
-    <div v-if="empty" class="col-12 text-center text-body1">
+    <div
+      v-if="empty"
+      class="col-12 text-center text-body1"
+    >
       <!-- TODO Add translation -->
       Drop a balloon here to start.
     </div>
 
-    <q-scroll-area v-else class="col-grow">
+    <q-scroll-area
+      v-else
+      class="col-grow"
+    >
       <div class="full-width row">
         <slot />
       </div>

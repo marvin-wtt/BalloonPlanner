@@ -1,65 +1,19 @@
 <template>
-  <q-card class="bg-grey text-white">
-    <!-- TODO add delete option -->
-    <q-card-section>
-      <div class="text-h6">
-        {{ project.name }}
-      </div>
-      <div class="text-subtitle2">
-        {{ project.description }}
-      </div>
-    </q-card-section>
+  <q-card
+    class="cursor-pointer q-hoverable project-card"
+    v-ripple
+  >
+    <span class="q-focus-helper" />
 
-    <q-list>
-      <q-item>
-        <q-item-section avatar>
-          <q-icon name="flight" />
-        </q-item-section>
-
-        <q-item-section>
-          {{ $t('flights') }}
-        </q-item-section>
-
-        <q-item-section side>
-          {{ project.flights.length }}
-        </q-item-section>
-      </q-item>
-      <q-item>
-        <q-item-section avatar>
-          <q-icon name="groups" />
-        </q-item-section>
-
-        <q-item-section>
-          {{ $t('collaborators') }}
-        </q-item-section>
-
-        <q-item-section side>
-          {{ project.collaborators.length }}
-        </q-item-section>
-      </q-item>
-    </q-list>
-
-    <q-separator dark />
-
-    <q-card-actions align="right">
-      <q-btn flat :to="`/projects/${project.id}/edit`">
-        {{ $t('edit') }}
-      </q-btn>
-      <q-btn flat :to="`/projects/${project.id}/flights`">
-        {{ $t('open') }}
-      </q-btn>
-    </q-card-actions>
+    <slot />
   </q-card>
 </template>
 
-<script lang="ts" setup>
-import { Project } from 'src/lib/entities';
+<script lang="ts" setup></script>
 
-interface Props {
-  project: Project;
+<style scoped>
+.project-card {
+  width: 15em;
+  aspect-ratio: 1.5;
 }
-
-defineProps<Props>();
-</script>
-
-<style scoped></style>
+</style>

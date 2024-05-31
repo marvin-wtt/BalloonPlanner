@@ -5,7 +5,6 @@ import {
   Flight,
   Person,
   Project,
-  User,
   VehicleGroup,
 } from 'src/lib/entities';
 
@@ -13,7 +12,7 @@ export class LocalStorageService implements PersistenceService {
   private _flight?: Flight;
   private _project?: Project;
 
-  addFlight(flight: Flight): Promise<void> {
+  addFlight(): Promise<void> {
     throw 'not_implemented';
   }
 
@@ -21,19 +20,19 @@ export class LocalStorageService implements PersistenceService {
     throw 'not_implemented';
   }
 
-  loadFlight(flightId: string | null): Promise<void> {
+  loadFlight(): Promise<void> {
     throw 'not_implemented';
   }
 
-  loadProject(projectId: string | null): Promise<void> {
+  loadProject(): Promise<void> {
     throw 'not_implemented';
   }
 
-  createProject(project: Project): Promise<void> {
+  createProject(): Promise<void> {
     throw 'not_implemented';
   }
 
-  loadUserData(user: User): Promise<void> {
+  loadUserData(): Promise<void> {
     throw 'not_implemented';
   }
 
@@ -49,7 +48,7 @@ export class LocalStorageService implements PersistenceService {
     throw 'not_implemented';
   }
 
-  updateProject(project: Project): Promise<void> {
+  updateProject(): Promise<void> {
     throw 'not_implemented';
   }
 
@@ -64,6 +63,7 @@ export class LocalStorageService implements PersistenceService {
 
   addBalloonPassenger(person: Person, balloon: Balloon): Promise<void> {
     balloon.addPassenger(person);
+    person.incrementFlights();
     return this.write();
   }
 
@@ -114,12 +114,13 @@ export class LocalStorageService implements PersistenceService {
 
   removeBalloonPassenger(person: Person, balloon: Balloon): Promise<void> {
     balloon.removePassenger(person);
+    person.decrementFlights();
     return this.write();
   }
 
   removeCarFromVehicleGroup(
     car: Car,
-    vehicleGroup: VehicleGroup
+    vehicleGroup: VehicleGroup,
   ): Promise<void> {
     vehicleGroup.removeCar(car);
     return this.write();
@@ -132,9 +133,11 @@ export class LocalStorageService implements PersistenceService {
 
   setBalloonOperator(
     person: Person | undefined,
-    balloon: Balloon
+    balloon: Balloon,
   ): Promise<void> {
+    balloon.operator?.decrementFlights();
     balloon.operator = person;
+    person?.incrementFlights();
     return this.write();
   }
 
@@ -145,7 +148,7 @@ export class LocalStorageService implements PersistenceService {
 
   updateBalloon(balloon: Balloon): Promise<void> {
     const oldBalloon = this._flight?.balloons.find(
-      (value) => value.id === balloon.id
+      (value) => value.id === balloon.id,
     );
     if (oldBalloon == null) {
       this._flight?.balloons.push(balloon);
@@ -179,7 +182,7 @@ export class LocalStorageService implements PersistenceService {
 
   updatePerson(person: Person): Promise<void> {
     const oldPerson = this._flight?.people.find(
-      (value) => value.id === person.id
+      (value) => value.id === person.id,
     );
     if (oldPerson == null) {
       this._flight?.people.push(person);

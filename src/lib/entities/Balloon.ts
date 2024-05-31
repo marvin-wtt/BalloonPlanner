@@ -11,8 +11,6 @@ export class Balloon extends Vehicle {
   }
 
   set operator(value: Person | undefined) {
-    super.operator?.decrementFlights();
-    value?.incrementFlights();
     super.operator = value;
   }
 
@@ -25,12 +23,10 @@ export class Balloon extends Vehicle {
   }
 
   addPassenger(person: Person) {
-    person.incrementFlights();
     super.addPassenger(person);
   }
 
   removePassenger(person: Person) {
-    person.decrementFlights();
     super.removePassenger(person);
   }
 

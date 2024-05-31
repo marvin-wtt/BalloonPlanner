@@ -13,10 +13,10 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/login',
-    name: 'login',
     component: () => import('layouts/LoginLayout.vue'),
     children: [
       {
+        name: 'login',
         path: '',
         component: () => import('pages/LoginPage.vue'),
       },
@@ -47,7 +47,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: ':project/flights',
         name: 'flights',
-        component: () => import('pages/ProjectFlightsPage.vue'),
+        component: () => import('pages/FlightPage.vue'),
       },
       {
         path: ':project/flights/:flight',

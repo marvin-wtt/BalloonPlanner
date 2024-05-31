@@ -1,15 +1,10 @@
 <template>
   <template v-if="project != null">
-    <q-btn
-      stretch
+    <q-btn-dropdown
+      :label="t('flights')"
+      rounded
       flat
-      icon="add"
-      :loading="addFlightLoading"
-      @click="addFlight"
-      v-if="editable"
-    />
-    <q-separator dark vertical />
-    <q-btn-dropdown stretch flat :label="t('flights')">
+    >
       <!-- TODO Fix list style -->
       <q-item
         v-for="(flight, index) in project.flights"
@@ -18,17 +13,45 @@
         v-close-popup
         :to="'/projects/' + project.id + '/flights/' + flight.id"
       >
-        <q-item-section>{{ $t('flight') }} {{ index + 1 }}</q-item-section>
+        <q-item-section>{{ t('flight') }} {{ index + 1 }}</q-item-section>
         <q-item-section side>
-          <q-btn dense round flat icon="more_vert">
-            <q-menu auto-close>
-              <!-- Move, delete -->
+          <q-btn
+            dense
+            round
+            flat
+            icon="more_vert"
+            @click.stop
+          >
+            <q-menu>
+              <q-list>
+                <q-item
+                  clickable
+                  v-close-popup
+                >
+                  <q-item-section color="negative">
+                    {{ t('delete') }}
+                  </q-item-section>
+                </q-item>
+              </q-list>
             </q-menu>
           </q-btn>
         </q-item-section>
       </q-item>
     </q-btn-dropdown>
-    <q-separator dark vertical />
+    <q-separator
+      dark
+      vertical
+      inset
+    />
+    <q-btn
+      v-if="editable"
+      icon="add"
+      rounded
+      flat
+      dense
+      :loading="addFlightLoading"
+      @click="addFlight"
+    />
   </template>
 </template>
 

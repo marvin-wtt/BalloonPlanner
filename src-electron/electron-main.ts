@@ -1,7 +1,6 @@
 import { app, BrowserWindow, IpcMainEvent, ipcMain } from 'electron';
 import path from 'path';
 import os from 'os';
-import { spawn } from 'child_process';
 
 // needed in case process is undefined under Linux
 const platform = process.platform || os.platform();
@@ -20,8 +19,8 @@ function createWindow() {
       sandbox: false,
       contextIsolation: true,
       // More info: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/electron-preload-script
-      preload: path.resolve(__dirname, process.env.QUASAR_ELECTRON_PRELOAD)
-    }
+      preload: path.resolve(__dirname, process.env.QUASAR_ELECTRON_PRELOAD),
+    },
   });
 
   if (process.env.DEV) {
@@ -41,7 +40,8 @@ function createWindow() {
   }
 }
 
-app.whenReady()
+app
+  .whenReady()
   .then(createWindow)
   .then(() => {
     ipcMain.on('window:close', windowApiHandler.close);
@@ -96,5 +96,5 @@ const windowApiHandler = {
 
   close: windowEventWrapper((win: BrowserWindow) => {
     win.close();
-  })
+  }),
 };

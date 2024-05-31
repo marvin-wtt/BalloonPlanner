@@ -293,7 +293,7 @@ function findBestSolution(flights: Flight[]): Flight {
       0
     );
 
-    const flightDiff = evaulatePilotFlightDifference(flight);
+    const flightDiff = evaluatePilotFlightDifference(flight);
 
     if (
       supervisorCount > supervisorFlightCount ||
@@ -308,7 +308,7 @@ function findBestSolution(flights: Flight[]): Flight {
   return best;
 }
 
-function evaulatePilotFlightDifference(flight: Flight): number {
+function evaluatePilotFlightDifference(flight: Flight): number {
   const pilots = flight.pilots();
   const differences: number[] = [];
   for (let i = 0; i < pilots.length; i++) {

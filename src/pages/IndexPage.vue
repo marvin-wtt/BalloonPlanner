@@ -3,6 +3,8 @@
     <router-link to="/projects/g4A261XXWEuKWxsH4LGk/flights/1">
       Start Test
     </router-link>
+
+    <router-link to="/projects"> Projects </router-link>
   </q-page>
 </template>
 

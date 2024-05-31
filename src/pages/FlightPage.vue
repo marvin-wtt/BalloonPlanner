@@ -1,6 +1,20 @@
 <template>
   <q-page class="full-width row justify-start no-wrap bg-grey-5">
-    <template v-if="flight && !flightNotFound && !flightLoading">
+    <template v-if="flightError || projectError">
+      <div class="test-center">
+        {{ projectError }}
+        {{ flightError }}
+      </div>
+    </template>
+
+    <template v-else-if="flightLoading || projectLoading">
+      <q-spinner
+        color="primary"
+        size="3em"
+      />
+    </template>
+
+    <template v-else-if="flight">
       <!-- Menu -->
       <div
         v-if="editable"
@@ -112,11 +126,11 @@
                   @edit="(balloon) => showEditBalloon(balloon)"
                   @delete="(balloon) => showDeleteBalloon(balloon)"
                 >
-                  <template #main="{ item }">
-                    {{ (item as Balloon).name }}
+                  <template #main="{ item }: { item: Balloon }">
+                    {{ item.name }}
                   </template>
-                  <template #side="{ item }">
-                    {{ (item as Balloon).capacity - 1 + ' + 1' }}
+                  <template #side="{ item }: { item: Balloon }">
+                    {{ item.capacity - 1 + ' + 1' }}
                   </template>
                 </editable-list>
               </q-scroll-area>
@@ -135,11 +149,11 @@
                   @edit="(car) => showEditCar(car)"
                   @delete="(car) => showDeleteCar(car)"
                 >
-                  <template #main="{ item }">
-                    {{ (item as Car).name }}
+                  <template #main="{ item }: { item: Car }">
+                    {{ item.name }}
                   </template>
-                  <template #side="{ item }">
-                    {{ (item as Car).capacity - 1 + ' + 1' }}
+                  <template #side="{ item }: { item: Car }">
+                    {{ item.capacity - 1 + ' + 1' }}
                   </template>
                 </editable-list>
               </q-scroll-area>
@@ -182,11 +196,11 @@
                   @delete="(person) => showDeletePerson(person)"
                   :dense="availableParticipants.length > 10"
                 >
-                  <template #main="{ item }">
-                    {{ (item as Person).name }}
+                  <template #main="{ item }: { item: Person }">
+                    {{ item.name }}
                   </template>
-                  <template #side="{ item }">
-                    {{ (item as Person).numberOfFlights }}
+                  <template #side="{ item }: { item: Person }">
+                    {{ item.numberOfFlights }}
                   </template>
                 </editable-list>
               </q-scroll-area>
@@ -269,8 +283,8 @@
       >
         <base-flight
           :flight="flight"
-          @balloonAdd="onBalloonAdd"
-          class="col-grow content-stretch"
+          class="fit"
+          @balloon-add="onBalloonAdd"
         >
           <base-vehicle-group
             v-for="group in (flight as Flight).vehicleGroups"
@@ -283,6 +297,8 @@
                 :key="group.balloon.id"
                 type="balloon"
                 :vehicle="group.balloon"
+                :indexed="indexedVehicle"
+                :labeled="labeledVehicle"
                 @remove="onVehicleGroupRemove(group)"
                 @edit="showEditBalloon(group.balloon)"
                 @passenger-add="(p) => onBalloonPersonAdd(group.balloon, p)"
@@ -292,8 +308,6 @@
                 @operator-add="(p) => onBalloonOperatorAdd(group.balloon, p)"
                 @operator-remove="(p) => onBalloonOperatorRemove(group.balloon)"
                 @person-edit="(p) => showEditPerson(p)"
-                :indexed="indexedVehicle"
-                :labeled="labeledVehicle"
               />
             </template>
             <template #cars>
@@ -354,30 +368,18 @@
       </div>
     </template>
 
-    <div
-      v-if="flightLoading"
-      class="absolute-center"
-    >
-      <q-spinner
-        color="primary"
-        size="3em"
-      />
-    </div>
-
-    <div
-      v-if="flightNotFound"
-      class="absolute-center"
-    >
-      <!-- TODO add icon -->
-      Flight not Found
-    </div>
+    <template v-else> OOps </template>
   </q-page>
+
+  <teleport to="#navigation">
+    <flight-selection-item />
+  </teleport>
 </template>
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 import { QItem, QList, useQuasar } from 'quasar';
-import { onBeforeRouteUpdate } from 'vue-router';
+import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import BaseFlight from 'components/BaseFlight.vue';
@@ -394,46 +396,64 @@ import { useAuthStore } from 'stores/auth';
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
 import EditCarDialog from 'components/dialog/EditCarDialog.vue';
+import FlightSelectionItem from 'components/toolbar/FlightSelectionItem.vue';
+import { useFlightStore } from 'stores/flight';
 
 const { t } = useI18n();
-const $q = useQuasar();
+const route = useRoute();
+const quasar = useQuasar();
 const authStore = useAuthStore();
 const projectStore = useProjectStore();
+const flightStore = useFlightStore();
 const serviceStore = useServiceStore();
 const settingsStore = useSettingsStore();
 
-const { project, flight } = storeToRefs(projectStore);
+const {
+  project,
+  error: projectError,
+  loading: projectLoading,
+} = storeToRefs(projectStore);
+const {
+  flight,
+  error: flightError,
+  loading: flightLoading,
+} = storeToRefs(flightStore);
 
 const { dataService } = storeToRefs(serviceStore);
 const { indexedVehicle, labeledVehicle } = storeToRefs(settingsStore);
 
 const menuTabs = ref('overview');
-const flightLoading = ref(true);
-const flightNotFound = ref(false);
 
 onMounted(async () => {
-  projectStore
-    .load()
-    .catch(() => {
-      flightNotFound.value = true;
-    })
-    .finally(() => {
-      flightLoading.value = false;
-    });
+  const { projectId, flightId } = route.params;
+
+  if (typeof projectId !== 'string') {
+    return;
+  }
+
+  await projectStore.load(projectId);
+
+  if (typeof flightId !== 'string') {
+    return;
+  }
+
+  await flightStore.load(flightId);
 });
 
-onBeforeRouteUpdate((to) => {
-  flightNotFound.value = false;
-  flightLoading.value = true;
+onBeforeRouteUpdate(async (to) => {
+  const { projectId, flightId } = to.params;
 
-  projectStore
-    .load(to.params)
-    .catch(() => {
-      flightNotFound.value = true;
-    })
-    .finally(() => {
-      flightLoading.value = false;
-    });
+  if (typeof projectId !== 'string') {
+    return;
+  }
+
+  await projectStore.load(projectId);
+
+  if (typeof flightId !== 'string') {
+    return;
+  }
+
+  await flightStore.load(flightId);
 });
 
 function onSmartFill() {
@@ -442,7 +462,7 @@ function onSmartFill() {
   }
 
   const f = solve(flight.value);
-  const notify = $q.notify({
+  const notify = quasar.notify({
     type: 'ongoing',
     message: t('smart_fill_loading'),
   });
@@ -466,7 +486,7 @@ function monitorService(
   cb: (service: PersistenceService) => Promise<void>,
 ): void {
   if (!dataService.value) {
-    $q.notify({
+    quasar.notify({
       type: 'negative',
       message: t('service_not_available'),
     });
@@ -474,7 +494,7 @@ function monitorService(
   }
 
   const promise = cb(dataService.value);
-  const notify = $q.notify({
+  const notify = quasar.notify({
     type: 'ongoing',
     message: t('saving_in_progress'),
   });
@@ -546,58 +566,64 @@ function onCarPersonRemove(car: Car, person: Person) {
 }
 
 function showCreatePerson() {
-  $q.dialog({
-    component: EditPersonDialog,
-    componentProps: {
-      mode: 'create',
-    },
-  }).onOk((payload) => {
-    const person = new Person(
-      payload.name,
-      payload.nation,
-      payload.supervisor,
-      payload.flights,
-    );
-    monitorService((service) => service.addPerson(person));
-  });
+  quasar
+    .dialog({
+      component: EditPersonDialog,
+      componentProps: {
+        mode: 'create',
+      },
+    })
+    .onOk((payload) => {
+      const person = new Person(
+        payload.name,
+        payload.nation,
+        payload.supervisor,
+        payload.flights,
+      );
+      monitorService((service) => service.addPerson(person));
+    });
 }
 
 function showEditPerson(person: Person) {
-  $q.dialog({
-    component: EditPersonDialog,
-    componentProps: {
-      person: person,
-      mode: 'edit',
-    },
-  }).onOk((payload) => {
-    const p = new Person(
-      payload.name,
-      payload.nation,
-      payload.supervisor,
-      payload.flights,
-    );
-    p.id = person.id;
-    monitorService((service) => service.updatePerson(p));
-  });
+  quasar
+    .dialog({
+      component: EditPersonDialog,
+      componentProps: {
+        person: person,
+        mode: 'edit',
+      },
+    })
+    .onOk((payload) => {
+      const p = new Person(
+        payload.name,
+        payload.nation,
+        payload.supervisor,
+        payload.flights,
+      );
+      p.id = person.id;
+      monitorService((service) => service.updatePerson(p));
+    });
 }
 
 function showDeletePerson(person: Person) {
-  $q.dialog({
-    title: t('dialog.person.delete.confirm.title'),
-    message: t('dialog.person.delete.confirm.message', { name: person.name }),
-    ok: {
-      label: t('delete'),
-      color: 'negative',
-    },
-    cancel: {
-      label: t('cancel'),
-      outline: true,
-      color: 'grey',
-    },
-    persistent: true,
-  }).onOk(() => {
-    monitorService((service) => service.deletePerson(person));
-  });
+  quasar
+    .dialog({
+      title: t('dialog.person.delete.confirm.title'),
+      message: t('dialog.person.delete.confirm.message', { name: person.name }),
+      ok: {
+        label: t('delete'),
+        color: 'negative',
+      },
+      cancel: {
+        label: t('cancel'),
+        outline: true,
+        color: 'grey',
+      },
+      persistent: true,
+    })
+    .onOk(() => {
+      monitorService((service) => service.deletePerson(person));
+    });
 }
 
 function isFlightLoaded(flight: Flight | undefined | null): flight is Flight {
@@ -609,19 +635,21 @@ function showCreateBalloon() {
     return;
   }
 
-  $q.dialog({
-    component: EditBalloonDialog,
-    componentProps: {
-      people: flight.value.people,
-    },
-  }).onOk((payload) => {
-    const balloon = new Balloon(
-      payload.name,
-      payload.capacity,
-      payload.allowedOperators,
-    );
-    monitorService((service) => service.addBalloon(balloon));
-  });
+  quasar
+    .dialog({
+      component: EditBalloonDialog,
+      componentProps: {
+        people: flight.value.people,
+      },
+    })
+    .onOk((payload) => {
+      const balloon = new Balloon(
+        payload.name,
+        payload.capacity,
+        payload.allowedOperators,
+      );
+      monitorService((service) => service.addBalloon(balloon));
+    });
 }
 
 function showEditBalloon(balloon: Balloon) {
@@ -629,44 +657,48 @@ function showEditBalloon(balloon: Balloon) {
     return;
   }
 
-  $q.dialog({
-    component: EditBalloonDialog,
-    componentProps: {
-      balloon: balloon,
-      people: flight.value.people,
-    },
-  }).onOk((payload) => {
-    const b = new Balloon(
-      payload.name,
-      payload.capacity,
-      payload.allowedOperators,
-    );
-    b.id = balloon.id;
-    b.operator = balloon.operator;
-    b.passengers = balloon.passengers;
-    monitorService((service) => service.updateBalloon(b));
-  });
+  quasar
+    .dialog({
+      component: EditBalloonDialog,
+      componentProps: {
+        balloon: balloon,
+        people: flight.value.people,
+      },
+    })
+    .onOk((payload) => {
+      const b = new Balloon(
+        payload.name,
+        payload.capacity,
+        payload.allowedOperators,
+      );
+      b.id = balloon.id;
+      b.operator = balloon.operator;
+      b.passengers = balloon.passengers;
+      monitorService((service) => service.updateBalloon(b));
+    });
 }
 
 function showDeleteBalloon(balloon: Balloon) {
-  $q.dialog({
-    title: t('dialog.vehicle.delete.confirm.title'),
-    message: t('dialog.vehicle.delete.confirm.message', {
-      name: balloon.name,
-    }),
-    ok: {
-      label: t('delete'),
-      color: 'negative',
-    },
-    cancel: {
-      label: t('cancel'),
-      outline: true,
-      color: 'grey',
-    },
-    persistent: true,
-  }).onOk(() => {
-    monitorService((service) => service.deleteBalloon(balloon));
-  });
+  quasar
+    .dialog({
+      title: t('dialog.vehicle.delete.confirm.title'),
+      message: t('dialog.vehicle.delete.confirm.message', {
+        name: balloon.name,
+      }),
+      ok: {
+        label: t('delete'),
+        color: 'negative',
+      },
+      cancel: {
+        label: t('cancel'),
+        outline: true,
+        color: 'grey',
+      },
+      persistent: true,
+    })
+    .onOk(() => {
+      monitorService((service) => service.deleteBalloon(balloon));
+    });
 }
 
 function showCreateCar() {
@@ -674,20 +706,22 @@ function showCreateCar() {
     return;
   }
 
-  $q.dialog({
-    component: EditCarDialog,
-    componentProps: {
-      people: flight.value.people,
-    },
-  }).onOk((payload) => {
-    const car = new Car(
-      payload.name,
-      payload.capacity,
-      payload.allowedOperators,
-      payload.trailerHitch,
-    );
-    monitorService((service) => service.addCar(car));
-  });
+  quasar
+    .dialog({
+      component: EditCarDialog,
+      componentProps: {
+        people: flight.value.people,
+      },
+    })
+    .onOk((payload) => {
+      const car = new Car(
+        payload.name,
+        payload.capacity,
+        payload.allowedOperators,
+        payload.trailerHitch,
+      );
+      monitorService((service) => service.addCar(car));
+    });
 }
 
 function showEditCar(car: Car) {
@@ -695,45 +729,49 @@ function showEditCar(car: Car) {
     return;
   }
 
-  $q.dialog({
-    component: EditCarDialog,
-    componentProps: {
-      car: car,
-      people: flight.value.people,
-    },
-  }).onOk((payload) => {
-    const c = new Car(
-      payload.name,
-      payload.capacity,
-      payload.allowedOperators,
-      payload.trailerHitch,
-    );
-    c.id = car.id;
-    c.operator = car.operator;
-    c.passengers = car.passengers;
-    monitorService((service) => service.updateCar(c));
-  });
+  quasar
+    .dialog({
+      component: EditCarDialog,
+      componentProps: {
+        car: car,
+        people: flight.value.people,
+      },
+    })
+    .onOk((payload) => {
+      const c = new Car(
+        payload.name,
+        payload.capacity,
+        payload.allowedOperators,
+        payload.trailerHitch,
+      );
+      c.id = car.id;
+      c.operator = car.operator;
+      c.passengers = car.passengers;
+      monitorService((service) => service.updateCar(c));
+    });
 }
 
 function showDeleteCar(car: Car) {
-  $q.dialog({
-    title: t('dialog.vehicle.delete.confirm.title'),
-    message: t('dialog.vehicle.delete.confirm.message', {
-      name: car.name,
-    }),
-    ok: {
-      label: t('delete'),
-      color: 'negative',
-    },
-    cancel: {
-      label: t('cancel'),
-      outline: true,
-      color: 'grey',
-    },
-    persistent: true,
-  }).onOk(() => {
-    monitorService((service) => service.deleteCar(car));
-  });
+  quasar
+    .dialog({
+      title: t('dialog.vehicle.delete.confirm.title'),
+      message: t('dialog.vehicle.delete.confirm.message', {
+        name: car.name,
+      }),
+      ok: {
+        label: t('delete'),
+        color: 'negative',
+      },
+      cancel: {
+        label: t('cancel'),
+        outline: true,
+        color: 'grey',
+      },
+      persistent: true,
+    })
+    .onOk(() => {
+      monitorService((service) => service.deleteCar(car));
+    });
 }
 
 const editable = computed<boolean>(() => {
@@ -758,45 +796,11 @@ const showSupervisorsMenuBadge = computed<boolean>(() => {
   return availableSupervisors.value.length > 0;
 });
 
-const availablePeople = computed<Person[]>(() => {
-  return (
-    flight.value?.vehicleGroups.reduce(
-      (people, group) =>
-        people.filter(
-          (person) =>
-            ![
-              group.balloon.operator,
-              ...group.cars.map((car) => car.operator),
-              ...group.balloon.passengers,
-              ...group.cars.flatMap((car) => car.passengers),
-            ].includes(person),
-        ),
-      flight.value?.people,
-    ) ?? []
-  );
-});
+const availablePeople = computed(() => flightStore.availablePeople);
 
-const availableBalloons = computed<Balloon[]>(() => {
-  return (
-    flight.value?.vehicleGroups.reduce(
-      (balloons, group) =>
-        balloons.filter((balloon) => balloon.id !== group.balloon.id),
-      flight.value?.balloons ?? [],
-    ) ?? []
-  );
-});
+const availableBalloons = computed(() => flightStore.availableBalloons);
 
-const availableCars = computed<Car[]>(() => {
-  return (
-    flight.value?.vehicleGroups.reduce(
-      (cars, group) =>
-        cars.filter(
-          (car) => !group.cars.some((groupCar) => groupCar.id === car.id),
-        ),
-      flight.value?.cars ?? [],
-    ) ?? []
-  );
-});
+const availableCars = computed(() => flightStore.availableCars);
 
 const availableParticipants = computed<Person[]>(() => {
   return availablePeople.value
@@ -811,7 +815,7 @@ const availableSupervisors = computed<Person[]>(() => {
 });
 
 const showFlightView = computed<boolean>(() => {
-  return !$q.screen.xs || menuTabs.value === 'overview';
+  return !quasar.screen.xs || menuTabs.value === 'overview';
 });
 
 const menuClasses = computed<string>(() => {

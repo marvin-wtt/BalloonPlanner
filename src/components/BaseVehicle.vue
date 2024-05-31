@@ -122,7 +122,6 @@
 <script lang="ts" setup>
 import BaseVehiclePersonCell from 'components/BaseVehiclePersonCell.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
-
 import { Car, Person, Vehicle } from 'src/lib/entities';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -196,7 +195,7 @@ const tooMuchReservedCapacity = computed<boolean>(() => {
   );
 });
 
-const overfilled = computed(() => {
+const overfilled = computed<boolean>(() => {
   return props.vehicle.passengers.length > capacity.value;
 });
 
