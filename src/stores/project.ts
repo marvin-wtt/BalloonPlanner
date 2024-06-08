@@ -10,7 +10,7 @@ export const useProjectStore = defineStore('project', () => {
 
   const project = ref<Project | undefined | null>();
   const loading = ref<boolean>(false);
-  const error = ref<boolean>(false);
+  const error = ref<string | null>(null);
 
   async function load(projectId: string | undefined): Promise<void> {
     if (projectId === project.value?.id && !error.value) {
@@ -25,10 +25,11 @@ export const useProjectStore = defineStore('project', () => {
 
     try {
       loading.value = true;
-      error.value = false;
+      error.value = null;
       await serviceStore.dataService?.loadProject(projectId);
     } catch (e) {
-      error.value = true;
+      error.value =
+        e instanceof Error ? e.message : typeof e === 'string' ? e : 'Error';
     } finally {
       loading.value = false;
     }

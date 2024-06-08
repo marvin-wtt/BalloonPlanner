@@ -85,7 +85,7 @@ function fillBalloonPassengers(flight: Flight, passengers: Person[]): Flight {
     while (
       balloon.passengers.length < balloon.capacity - 1 &&
       passengers.length > 0
-    ) {
+      ) {
       const person = passengers.pop();
       if (person != null) {
         balloon.addPassenger(person);
@@ -345,7 +345,7 @@ function fillBalloons(flight: Flight, people: Person[]) {
     while (
       balloon.passengers.length < balloon.capacity - 1 &&
       people.length > 0
-    ) {
+      ) {
       const person = people.pop();
       if (person != null) {
         balloon.addPassenger(person);

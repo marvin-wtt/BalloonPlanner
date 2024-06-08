@@ -367,8 +367,6 @@
         </q-page-sticky>
       </div>
     </template>
-
-    <template v-else> OOps </template>
   </q-page>
 
   <teleport to="#navigation">
@@ -377,9 +375,9 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { QItem, QList, useQuasar } from 'quasar';
-import { onBeforeRouteUpdate, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import BaseFlight from 'components/BaseFlight.vue';
@@ -424,37 +422,24 @@ const { indexedVehicle, labeledVehicle } = storeToRefs(settingsStore);
 
 const menuTabs = ref('overview');
 
-onMounted(async () => {
-  const { projectId, flightId } = route.params;
+onMounted(init);
+watch(() => route.params, init);
 
-  if (typeof projectId !== 'string') {
-    return;
+async function init() {
+  let { projectId, flightId } = route.params;
+
+  if (Array.isArray(projectId)) {
+    projectId = projectId[0];
   }
 
   await projectStore.load(projectId);
 
-  if (typeof flightId !== 'string') {
-    return;
+  if (Array.isArray(flightId)) {
+    flightId = flightId[0];
   }
 
   await flightStore.load(flightId);
-});
-
-onBeforeRouteUpdate(async (to) => {
-  const { projectId, flightId } = to.params;
-
-  if (typeof projectId !== 'string') {
-    return;
-  }
-
-  await projectStore.load(projectId);
-
-  if (typeof flightId !== 'string') {
-    return;
-  }
-
-  await flightStore.load(flightId);
-});
+}
 
 function onSmartFill() {
   if (!flight.value) {

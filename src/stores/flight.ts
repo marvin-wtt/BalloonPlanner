@@ -8,7 +8,7 @@ export const useFlightStore = defineStore('flight', () => {
 
   const flight = ref<Flight | undefined | null>();
   const loading = ref<boolean>(false);
-  const error = ref<boolean>(false);
+  const error = ref<string | null>(null);
 
   async function load(flightId: string | undefined): Promise<void> {
     if (flightId == flight.value?.id) {
@@ -23,10 +23,11 @@ export const useFlightStore = defineStore('flight', () => {
 
     try {
       loading.value = true;
-      error.value = false;
+      error.value = null;
       await serviceStore.dataService?.loadFlight(flightId);
     } catch (e) {
-      error.value = true;
+      error.value =
+        e instanceof Error ? e.message : typeof e === 'string' ? e : 'Error';
     } finally {
       loading.value = false;
     }

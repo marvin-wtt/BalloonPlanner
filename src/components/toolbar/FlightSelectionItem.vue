@@ -1,7 +1,7 @@
 <template>
   <template v-if="project != null">
     <q-btn-dropdown
-      :label="t('flights')"
+      :label="label"
       rounded
       flat
     >
@@ -11,9 +11,15 @@
         :key="flight.id"
         clickable
         v-close-popup
-        :to="'/projects/' + project.id + '/flights/' + flight.id"
+        :to="{
+          name: 'flight',
+          params: {
+            projectId: project.id,
+            flightId: flight.id,
+          },
+        }"
       >
-        <q-item-section>{{ t('flight') }} {{ index + 1 }}</q-item-section>
+        <q-item-section>{{ flightName(index) }}</q-item-section>
         <q-item-section side>
           <q-btn
             dense
@@ -62,14 +68,32 @@ import { useProjectStore } from 'stores/project';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'stores/auth';
+import { useFlightStore } from 'stores/flight';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const projectStore = useProjectStore();
+const flightStore = useFlightStore();
 const { t } = useI18n();
 
 const { project } = storeToRefs(projectStore);
+const { flight } = storeToRefs(flightStore);
 const addFlightLoading = ref(false);
+
+const label = computed<string>(() => {
+  const flightId = flight.value?.id;
+  if (!project.value || !flightId) {
+    return t('flight', 2);
+  }
+
+  return flightName(
+    project.value.flights.findIndex((value) => value.id === flightId),
+  );
+});
+
+function flightName(index: number): string {
+  return `${t('flight')} ${index + 1}`;
+}
 
 const editable = computed<boolean>(() => {
   if (!authStore.user || !project.value) {
@@ -80,23 +104,23 @@ const editable = computed<boolean>(() => {
   return project.value.collaborators.includes(userId);
 });
 
-function addFlight() {
+async function addFlight() {
   addFlightLoading.value = true;
 
-  const projectPath = project.value ? `/projects/${project.value.id}` : '';
-  projectStore
-    .createFlight()
-    .then((flight) => {
-      router.push({
-        path: `${projectPath}/flights/${flight.id}`,
-      });
-    })
-    .catch(() => {
-      // TODO error
-    })
-    .finally(() => {
-      addFlightLoading.value = false;
-    });
+  if (!project.value) {
+    return false;
+  }
+
+  const projectId = project.value.id;
+  const flight = await flightStore.create();
+  await router.push({
+    name: 'flight',
+    params: {
+      projectId,
+      flightId: flight.id,
+    },
+  });
+  addFlightLoading.value = false;
 }
 </script>
 
