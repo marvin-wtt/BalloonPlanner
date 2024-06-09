@@ -11,20 +11,6 @@
             inset
           />
 
-          <q-btn
-            v-if="authenticated"
-            :label="t('projects')"
-            to="/projects"
-            rounded
-            flat
-          />
-
-          <q-separator
-            vertical
-            dark
-            inset
-          />
-
           <div
             id="navigation"
             class="row q-gutter-x-xs no-wrap"
@@ -74,20 +60,6 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
-import { storeToRefs } from 'pinia';
-import { useAuthStore } from 'stores/auth';
 import { minimize, toggleMaximize, closeApp } from 'src/composables/windowAPI';
-
-import { useI18n } from 'vue-i18n';
 import AccountItem from 'components/toolbar/AccountItem.vue';
-
-const authStore = useAuthStore();
-
-const { user } = storeToRefs(authStore);
-const { t } = useI18n();
-
-const authenticated = computed(() => {
-  return user.value !== undefined;
-});
 </script>

@@ -367,9 +367,24 @@
         </q-page-sticky>
       </div>
     </template>
+
+    <template v-else>
+      <div class="row full-width justify-center content-center text-center">
+        <!-- TODO Add translation -->
+        Select a flight first.
+      </div>
+    </template>
   </q-page>
 
   <teleport to="#navigation">
+    <project-selection-item />
+
+    <q-separator
+      vertical
+      dark
+      inset
+    />
+
     <flight-selection-item />
   </teleport>
 </template>
@@ -396,6 +411,7 @@ import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
 import EditCarDialog from 'components/dialog/EditCarDialog.vue';
 import FlightSelectionItem from 'components/toolbar/FlightSelectionItem.vue';
 import { useFlightStore } from 'stores/flight';
+import ProjectSelectionItem from 'components/toolbar/ProjectSelectionItem.vue';
 
 const { t } = useI18n();
 const route = useRoute();
