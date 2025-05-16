@@ -16,7 +16,7 @@ quasar build
 
 ### Customize the configuration
 
-See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-js).
+See [Configuring quasar.config.ts](https://v2.quasar.dev/quasar-cli-vite/quasar-config-js).
 
 ## Structure
 
@@ -55,7 +55,7 @@ A vehicle group describes the combination of one balloon and multiple cars which
 
 ## Solver
 
-The solver is an algorithm which tries to find an optimal solution for a flight.  
+The solver is an algorithm which tries to find an optimal solution for a flight.
 NOTE: The solver only searches for one solution.
 There might be other solutions which are evaluated the same.
 

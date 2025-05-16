@@ -1,27 +1,11 @@
-/* eslint-env node */
-
-/*
- * This file runs in a Node context (it's NOT transpiled by Babel), so use only
- * the ES6 features that are supported by your Node version. https://node.green/
- */
-
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
-const { configure } = require('quasar/wrappers');
-const path = require('path');
+import { defineConfig } from '#q-app/wrappers';
+import { fileURLToPath } from 'node:url';
 
-module.exports = configure(function (/* ctx */) {
+export default defineConfig((ctx) => {
   return {
-    eslint: {
-      // fix: true,
-      // include = [],
-      // exclude = [],
-      // rawOptions = {},
-      warnings: true,
-      errors: true,
-    },
-
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
 
@@ -75,13 +59,21 @@ module.exports = configure(function (/* ctx */) {
 
       vitePlugins: [
         [
-          '@intlify/vite-plugin-vue-i18n',
+          'vite-plugin-checker',
           {
-            // if you want to use Vue I18n Legacy API, you need to set `compositionOnly: false`
-            // compositionOnly: false,
-
-            // you need to set i18n resource including paths !
-            include: path.resolve(__dirname, './src/i18n/**'),
+            eslint: {
+              lintCommand:
+                'eslint -c ./eslint.config.js "./src*/**/*.{ts,js,mjs,cjs,vue}"',
+              useFlatConfig: true,
+            },
+          },
+          { server: false },
+        ],
+        [
+          '@intlify/unplugin-vue-i18n/vite',
+          {
+            include: [fileURLToPath(new URL('./src/i18n', import.meta.url))],
+            ssr: ctx.modeName === 'ssr',
           },
         ],
       ],
@@ -108,7 +100,7 @@ module.exports = configure(function (/* ctx */) {
       // directives: [],
 
       // Quasar plugins
-      plugins: ['Notify, Dialog'],
+      plugins: ['Notify', 'Dialog'],
     },
 
     // animations: 'all', // --- includes all animations
@@ -150,11 +142,11 @@ module.exports = configure(function (/* ctx */) {
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'generateSW', // or 'injectManifest'
-      injectPwaMetaTags: true,
-      swFilename: 'sw.js',
-      manifestFilename: 'manifest.json',
-      useCredentialsForManifestTag: false,
+      // workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
+      // injectPwaMetaTags: true,
+      // swFilename: 'sw.js',
+      // manifestFilename: 'manifest.json',
+      // useCredentialsForManifestTag: false,
       // extendGenerateSWOptions (cfg) {}
       // extendInjectManifestOptions (cfg) {},
       // extendManifestJson (json) {}
@@ -178,7 +170,7 @@ module.exports = configure(function (/* ctx */) {
 
       inspectPort: 5858,
 
-      bundler: 'packager', // 'packager' or 'builder'
+      bundler: 'builder', // 'packager' or 'builder'
 
       packager: {
         // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
@@ -200,8 +192,7 @@ module.exports = configure(function (/* ctx */) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-browser-extensions/configuring-bex
     bex: {
-      contentScripts: ['my-content-script'],
-
+      // extraScripts: ['my-content-script'],
       // extendBexScriptsConf (esbuildConf) {}
       // extendBexManifestJson (json) {}
     },
