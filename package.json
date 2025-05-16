@@ -10,12 +10,13 @@
     "postinstall": "quasar prepare",
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
+    "dev": "quasar dev -m electron",
     "test": "jest"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.17",
     "axios": "^1.9.0",
-    "firebase": "^9.23.0",
+    "firebase": "^11.7.3",
     "pinia": "^3.0.2",
     "quasar": "^2.18.1",
     "read-excel-file": "^5.8.8",

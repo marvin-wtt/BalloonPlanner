@@ -26,6 +26,7 @@ const windowAPI = {
 
 const solverAPI = {
   solve: (data: object) => ipcRenderer.invoke('solver:solve', data),
-}
+};
 
 contextBridge.exposeInMainWorld('windowAPI', windowAPI);
+contextBridge.exposeInMainWorld('solverAPI', solverAPI);

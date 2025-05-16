@@ -5,31 +5,31 @@ export async function loadJson(file: File): Promise<Person[]> {
   const json = JSON.parse(content);
 
   if (!Array.isArray(json)) {
-    throw 'invalid_file_content';
+    throw new Error('invalid_file_content');
   }
 
   const people: Person[] = [];
   for (const personData of json) {
     if (
-      !personData.hasOwnProperty('first_name') ||
+      !('first_name' in personData) ||
       typeof personData.first_name !== 'string'
     ) {
-      throw 'invalid_file_content';
+      throw new Error('invalid_file_content');
     }
 
     if (
-      !personData.hasOwnProperty('country') ||
+      !('country' in personData) ||
       typeof personData.country !== 'string' ||
       personData.country.length !== 2
     ) {
-      throw 'invalid_file_content';
+      throw new Error('invalid_file_content');
     }
 
     const person = new Person(
       capitalizeFirstLetter(personData.first_name),
       personData.country,
       false,
-      0
+      0,
     );
     people.push(person);
   }
@@ -42,7 +42,11 @@ function readFile(file: File): Promise<string> {
     const fileReader = new FileReader();
     fileReader.onload = () => {
       const result = fileReader.result;
-      typeof result === 'string' ? resolve(result) : reject('invalid_file');
+      if (typeof result === 'string') {
+        resolve(result);
+      } else {
+        reject(new Error('invalid_file'));
+      }
     };
     fileReader.onerror = reject;
     fileReader.readAsText(file);

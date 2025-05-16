@@ -1,5 +1,5 @@
 import { Policy } from 'src/lib/solver/policies/Policy';
-import { Flight } from 'src/lib/entities';
+import type { Flight } from 'src/lib/entities';
 
 export class MaximumPassengerPolicy extends Policy {
   apply(flight: Flight): boolean | number {

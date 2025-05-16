@@ -1,4 +1,4 @@
-import { Car, Flight, Person } from 'src/lib/entities';
+import type { Car, Flight, Person } from 'src/lib/entities';
 import { shuffle } from 'src/lib/utils/ArrayUtils';
 
 export interface SolvingOptions {
@@ -18,10 +18,7 @@ export interface SolvingOptions {
 //     Select the solution with the best score,
 //  8. Fill in all balloons and cars with the remaining participants.
 
-export async function solve(
-  f: Flight,
-  options?: SolvingOptions
-): Promise<Flight> {
+export function solve(f: Flight, options?: SolvingOptions): Promise<Flight> {
   let flight = f.clone();
 
   // 1
@@ -49,7 +46,7 @@ export async function solve(
 
   solutions = solutions.flatMap((value) => findDriverSolution(value.clone()));
   if (solutions.length == 0) {
-    throw 'not_enough_driver';
+    throw new Error('not_enough_driver');
   }
 
   // 7
@@ -85,7 +82,7 @@ function fillBalloonPassengers(flight: Flight, passengers: Person[]): Flight {
     while (
       balloon.passengers.length < balloon.capacity - 1 &&
       passengers.length > 0
-      ) {
+    ) {
       const person = passengers.pop();
       if (person != null) {
         balloon.addPassenger(person);
@@ -145,7 +142,7 @@ function findCarsSolution(flight: Flight): boolean {
 
     const existingCapacity = group.cars.reduce(
       (prev, curr) => prev + curr.capacity - 1,
-      0
+      0,
     );
     if (existingCapacity >= balloon.capacity) {
       continue;
@@ -182,7 +179,7 @@ function findSmallestCarFit(cars: Car[], capacity: number): Car[] {
     const firstCar = cars[i];
     const secondCar = cars.find(
       (value, index) =>
-        index != i && value.capacity >= capacity - firstCar.capacity
+        index != i && value.capacity >= capacity - firstCar.capacity,
     );
     if (secondCar != null) {
       return [firstCar, secondCar];
@@ -229,7 +226,7 @@ function findSupervisorSolution(flight: Flight, amount = 1): Flight[] {
 function findDriverSolution(
   baseFlight: Flight,
   groupIndex = 0,
-  carIndex = 0
+  carIndex = 0,
 ): Flight[] {
   const solutions: Flight[] = [];
 
@@ -252,7 +249,7 @@ function findDriverSolution(
 
     const availablePeople = solutionFlight.availablePeople();
     const solutionDriver = availablePeople.find(
-      (value) => value.id === baseDriver.id
+      (value) => value.id === baseDriver.id,
     );
     if (!solutionDriver) {
       continue;
@@ -263,7 +260,7 @@ function findDriverSolution(
     const childSolutions = findDriverSolution(
       solutionFlight,
       groupIndex,
-      carIndex + 1
+      carIndex + 1,
     );
     solutions.push(...childSolutions);
   }
@@ -286,11 +283,11 @@ function findBestSolution(flights: Flight[]): Flight {
             (prevCar, currCar) =>
               prevCar +
               currCar.passengers.filter((value) => value.supervisor).length,
-            0
+            0,
           )
         );
       },
-      0
+      0,
     );
 
     const flightDiff = evaluatePilotFlightDifference(flight);
@@ -314,7 +311,7 @@ function evaluatePilotFlightDifference(flight: Flight): number {
   for (let i = 0; i < pilots.length; i++) {
     for (let j = i; j < pilots.length; j++) {
       differences.push(
-        Math.abs(pilots[i].numberOfFlights - pilots[j].numberOfFlights)
+        Math.abs(pilots[i].numberOfFlights - pilots[j].numberOfFlights),
       );
     }
   }
@@ -345,7 +342,7 @@ function fillBalloons(flight: Flight, people: Person[]) {
     while (
       balloon.passengers.length < balloon.capacity - 1 &&
       people.length > 0
-      ) {
+    ) {
       const person = people.pop();
       if (person != null) {
         balloon.addPassenger(person);
@@ -385,7 +382,7 @@ function fillCars(flight: Flight, people: Person[]) {
       }
     }
     if (!filled) {
-      throw 'not_enough_capacity';
+      throw new Error('not_enough_capacity');
     }
   }
 }

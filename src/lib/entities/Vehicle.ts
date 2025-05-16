@@ -1,4 +1,4 @@
-import { Person } from 'src/lib/entities/Person';
+import type { Person } from 'src/lib/entities/Person';
 import { Identifiable } from 'src/lib/utils/Identifiable';
 import { removeFromArray } from 'src/lib/utils/ArrayUtils';
 

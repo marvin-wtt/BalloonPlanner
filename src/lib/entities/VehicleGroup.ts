@@ -1,5 +1,5 @@
-import { Balloon } from 'src/lib/entities/Balloon';
-import { Car } from 'src/lib/entities/Car';
+import type { Balloon } from 'src/lib/entities/Balloon';
+import type { Car } from 'src/lib/entities/Car';
 import { Identifiable } from 'src/lib/utils/Identifiable';
 
 export class VehicleGroup extends Identifiable {
@@ -35,7 +35,7 @@ export class VehicleGroup extends Identifiable {
     if (i === -1) {
       console.error(
         'Failed to remove person from vehicle. Cannot find group with id ' +
-          car.id
+          car.id,
       );
     }
     this._cars.splice(i, 1);

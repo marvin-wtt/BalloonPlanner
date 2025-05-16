@@ -60,7 +60,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Balloon, Person } from 'src/lib/entities';
+import type { Balloon, Person } from 'src/lib/entities';
 import { useQuasar } from 'quasar';
 import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue.vue';
 
@@ -125,7 +125,7 @@ const columns = [
 function showDeleteBalloon(balloon: Balloon) {
   emit(
     'update:modelValue',
-    props.modelValue.filter((value) => value.id !== balloon.id)
+    props.modelValue.filter((value) => value.id !== balloon.id),
   );
 }
 
@@ -140,12 +140,12 @@ function showEditBalloon(balloon: Balloon) {
     const b = new Balloon(
       payload.name,
       payload.capacity,
-      payload.allowedOperators
+      payload.allowedOperators,
     );
     b.id = balloon.id;
 
     const balloons = props.modelValue.filter(
-      (value) => value.id !== balloon.id
+      (value) => value.id !== balloon.id,
     );
     emit('update:modelValue', [...balloons, b]);
   });
@@ -161,7 +161,7 @@ function showCreateBalloon() {
     const balloon = new Balloon(
       payload.name,
       payload.capacity,
-      payload.allowedOperators
+      payload.allowedOperators,
     );
     emit('update:modelValue', [...props.modelValue, balloon]);
   });

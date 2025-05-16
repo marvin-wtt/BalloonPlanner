@@ -3,7 +3,7 @@ import {
   arrayUnion,
   deleteField,
   doc,
-  FieldValue,
+  type FieldValue,
   getDoc,
   increment,
   onSnapshot,
@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db } from 'src/boot/firebase';
 import { useAuthStore } from 'stores/auth';
-import {
+import type {
   Balloon,
   Car,
   Flight,
@@ -29,16 +29,16 @@ import {
   balloonToObject,
   carToObject,
   flightFromObject,
-  IFlight,
+  type IFlight,
   flightToObject,
   personToObject,
   projectFromObject,
-  IProject,
+  type IProject,
   projectToObject,
-  IVehicleGroup,
+  type IVehicleGroup,
   vehicleGroupToObject,
 } from 'src/lib/utils/converter';
-import { PersistenceService } from 'src/services/persistence/PersistenceService';
+import type { PersistenceService } from 'src/services/persistence/PersistenceService';
 import { useProjectStore } from 'stores/project';
 import { useFlightStore } from 'stores/flight';
 
@@ -53,7 +53,7 @@ export class FirestoreDataService implements PersistenceService {
 
   async loadUserData(user: User): Promise<void> {
     if (user.id == null) {
-      throw 'invalid_user_id';
+      throw new Error('invalid_user_id');
     }
 
     const ref = this.getProjectsCollectionReference();
@@ -66,7 +66,7 @@ export class FirestoreDataService implements PersistenceService {
 
         if (!authStore.user) {
           if (callPromise) {
-            reject('authstore_not_ready');
+            reject(new Error('authstore_not_ready'));
             callPromise = false;
           }
           return;
@@ -125,7 +125,7 @@ export class FirestoreDataService implements PersistenceService {
     }
 
     if (projectId == null) {
-      return Promise.reject('invalid_project_id');
+      throw new Error('invalid_project_id');
     }
 
     let callPromise = true;
@@ -156,7 +156,7 @@ export class FirestoreDataService implements PersistenceService {
     const authStore = useAuthStore();
 
     if (authStore.user == null) {
-      throw 'not_authenticated';
+      throw new Error('not_authenticated');
     }
 
     if (!project.collaborators.includes(authStore.user.id)) {
@@ -243,7 +243,7 @@ export class FirestoreDataService implements PersistenceService {
       }
 
       if (flightId == null) {
-        reject('invalid_flight');
+        reject(new Error('invalid_flight'));
         return;
       }
 
@@ -255,7 +255,11 @@ export class FirestoreDataService implements PersistenceService {
 
         if (callPromise) {
           callPromise = false;
-          doc.exists() ? resolve() : reject('flight_not_found');
+          if (doc.exists()) {
+            resolve();
+          } else {
+            reject(new Error('flight_not_found'));
+          }
         }
       });
     });
@@ -276,11 +280,11 @@ export class FirestoreDataService implements PersistenceService {
     const flightStore = useFlightStore();
 
     if (authStore.user == null) {
-      throw 'Cannot update flight. Not authenticated.';
+      throw new Error('Cannot update flight. Not authenticated.');
     }
 
     if (flightStore.flight == null) {
-      throw 'Cannot update flight. No flight is set.';
+      throw new Error('Cannot update flight. No flight is set.');
     }
 
     return updateDoc(doc(db, 'flights', flightStore.flight.id), obj);
@@ -398,7 +402,7 @@ export class FirestoreDataService implements PersistenceService {
 
   deleteCar(car: Car): Promise<void> {
     const flightStore = useFlightStore();
-    const flight = flightStore.flight as Flight;
+    const flight = flightStore.flight;
 
     if (flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
@@ -425,7 +429,7 @@ export class FirestoreDataService implements PersistenceService {
 
   deletePerson(person: Person): Promise<void> {
     const flightStore = useFlightStore();
-    const flight = flightStore.flight as Flight;
+    const flight = flightStore.flight;
 
     if (flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
@@ -565,7 +569,7 @@ export class FirestoreDataService implements PersistenceService {
 
   updateBalloon(balloon: Balloon): Promise<void> {
     const flightStore = useFlightStore();
-    const flight = flightStore.flight as Flight;
+    const flight = flightStore.flight;
 
     if (flight == null) {
       throw new Error('Cannot update flight. No flight is set.');
@@ -587,7 +591,7 @@ export class FirestoreDataService implements PersistenceService {
 
   updateCar(car: Car): Promise<void> {
     const flightStore = useFlightStore();
-    const flight = flightStore.flight as Flight;
+    const flight = flightStore.flight;
 
     if (flight == null) {
       throw new Error('Cannot update flight. No flight is set.');

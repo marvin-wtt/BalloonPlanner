@@ -1,9 +1,9 @@
-import { Flight } from 'src/lib/entities';
+import type { Flight } from 'src/lib/entities';
 
 export function solveX(flight: Flight): Flight[] {
   let results: Flight[] = [];
   const groups = createVehicleGroups(flight).sort(
-    (a, b) => b.vehicleGroups.length - a.vehicleGroups.length
+    (a, b) => b.vehicleGroups.length - a.vehicleGroups.length,
   );
 
   type Solver = (flight: Flight) => Flight[];
@@ -12,8 +12,6 @@ export function solveX(flight: Flight): Flight[] {
   solver.push(assignBalloonOperators);
   solver.push(assignCarOperators);
   // solver.push(assignBalloonPassengers);
-
-  flight.vehicleGroups;
 
   groups.some((value) => {
     results = [value];
@@ -41,7 +39,7 @@ function createVehicleGroups(flight: Flight): Flight[] {
       value.addVehicleGroup(balloon);
       return true;
     },
-    balloons.length
+    balloons.length,
   );
 }
 
@@ -69,15 +67,15 @@ function assignCars(flight: Flight): Flight[] {
             return true;
           },
           cars.length,
-          lastResult.cars.length - lastResult.vehicleGroups.length
+          lastResult.cars.length - lastResult.vehicleGroups.length,
         );
       })
       .filter(
         (value) =>
           value.vehicleGroups[g].cars.reduce(
             (total, curr) => total + (curr.capacity - 1),
-            0
-          ) >= value.vehicleGroups[g].balloon.capacity
+            0,
+          ) >= value.vehicleGroups[g].balloon.capacity,
       );
   }
 
@@ -101,7 +99,7 @@ function assignBalloonOperators(flight: Flight): Flight[] {
           return true;
         },
         balloonOperators.length,
-        0
+        0,
       );
     });
   }
@@ -127,7 +125,7 @@ function assignCarOperators(flight: Flight): Flight[] {
             return true;
           },
           carOperators.length,
-          0
+          0,
         );
       });
     }
@@ -154,7 +152,7 @@ function assignBalloonPassengers(flight: Flight): Flight[] {
           return true;
         },
         passengers.length,
-        lastResult.vehicleGroups[g].balloon.capacity - 1
+        lastResult.vehicleGroups[g].balloon.capacity - 1,
       );
     });
   }
@@ -166,7 +164,7 @@ function combinations(
   value: Flight,
   cb: (value: Flight, index: number) => boolean,
   n: number,
-  maxDepth = -1
+  maxDepth = -1,
 ): Flight[] {
   const results: Flight[] = [];
   if (maxDepth < 0) {

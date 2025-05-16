@@ -82,7 +82,7 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
-import { Person, Balloon } from 'src/lib/entities';
+import type { Person, Balloon } from 'src/lib/entities';
 import { useI18n } from 'vue-i18n';
 import { useDialogPluginComponent } from 'quasar';
 

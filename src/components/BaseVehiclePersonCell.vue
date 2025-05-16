@@ -47,10 +47,10 @@
 </template>
 
 <script lang="ts" setup>
-import { Balloon, Person, Vehicle } from 'src/lib/entities';
+import type { Balloon, Person, Vehicle } from 'src/lib/entities';
 import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
-import { Identifiable } from 'src/lib/utils/Identifiable';
+import type { Identifiable } from 'src/lib/utils/Identifiable';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import { useI18n } from 'vue-i18n';
 

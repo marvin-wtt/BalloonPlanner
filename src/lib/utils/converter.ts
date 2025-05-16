@@ -204,7 +204,7 @@ export function balloonsFromObject(
     const balloon = new Balloon(obj.name, obj.capacity, allowedOperators);
     balloon.id = id;
     balloon.operator = operator;
-    balloon.passengers = passengers as Person[];
+    balloon.passengers = passengers;
     balloons.push(balloon);
   }
 
@@ -260,7 +260,7 @@ export function carsFromObject(data: MapObject<ICar>, people: Person[]): Car[] {
     car.id = id;
     car.reservedCapacity = obj.reservedCapacity;
     car.operator = operator;
-    car.passengers = passengers as Person[];
+    car.passengers = passengers;
     cars.push(car);
   }
 

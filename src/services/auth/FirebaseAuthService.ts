@@ -1,4 +1,4 @@
-import { AuthenticationService } from 'src/services/auth/AuthenticationService';
+import type { AuthenticationService } from 'src/services/auth/AuthenticationService';
 import { User } from 'src/lib/entities';
 import {
   getAuth,
@@ -7,7 +7,7 @@ import {
   createUserWithEmailAndPassword,
 } from 'firebase/auth';
 import { useAuthStore } from 'stores/auth';
-import { User as FirebaseUser } from 'firebase/auth';
+import type { User as FirebaseUser } from 'firebase/auth';
 
 export class FirebaseAuthService implements AuthenticationService {
   static PROVIDER_NAME = 'FIRESTORE';
@@ -37,9 +37,9 @@ export class FirebaseAuthService implements AuthenticationService {
     this._unsubscribeStateChange = onAuthStateChanged(auth, (authUser) => {
       if (authUser != null) {
         const user = this.createUser(authUser);
-        authStore.loadUser(user);
+        authStore.loadUser(user).catch(console.error);
       } else {
-        authStore.logout();
+        authStore.logout().catch(console.error);
       }
 
       this._authenticated = authUser != null;
@@ -51,7 +51,7 @@ export class FirebaseAuthService implements AuthenticationService {
     // User is signed in, see docs for a list of available properties
     // https://firebase.google.com/docs/reference/js/firebase.User
     if (!password) {
-      throw 'password_required';
+      throw new Error('password_required');
     }
 
     const auth = getAuth();
@@ -61,14 +61,14 @@ export class FirebaseAuthService implements AuthenticationService {
 
   async register(email: string, password?: string): Promise<User> {
     if (!password) {
-      throw 'password_required';
+      throw new Error('password_required');
     }
 
     const auth = getAuth();
     const credential = await createUserWithEmailAndPassword(
       auth,
       email,
-      password
+      password,
     );
     return this.createUser(credential.user);
   }
@@ -78,7 +78,7 @@ export class FirebaseAuthService implements AuthenticationService {
       firebaseUser.email ?? firebaseUser.uid,
       FirebaseAuthService.PROVIDER_NAME,
       firebaseUser.displayName ?? firebaseUser.email ?? firebaseUser.uid,
-      false
+      false,
     );
   }
 

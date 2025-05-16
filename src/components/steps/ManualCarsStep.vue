@@ -14,7 +14,11 @@
     >
       <template v-slot:body-cell-edit="props">
         <td class="text-center">
-          <q-btn icon="edit" color="primary" @click="showEditCar(props.row)" />
+          <q-btn
+            icon="edit"
+            color="primary"
+            @click="showEditCar(props.row)"
+          />
         </td>
       </template>
 
@@ -29,7 +33,11 @@
       </template>
 
       <template v-slot:top-right>
-        <q-btn label="Add Car" color="primary" @click="showCreateCar()" />
+        <q-btn
+          label="Add Car"
+          color="primary"
+          @click="showCreateCar()"
+        />
       </template>
     </q-table>
 
@@ -52,7 +60,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Car, Person } from 'src/lib/entities';
+import type { Car, Person } from 'src/lib/entities';
 import { useQuasar } from 'quasar';
 import EditCarDialog from 'components/dialog/EditCarDialog.vue';
 
@@ -124,7 +132,7 @@ const columns = [
 function showDeleteCar(car: Car) {
   emit(
     'update:modelValue',
-    props.modelValue.filter((value) => value.id !== car.id)
+    props.modelValue.filter((value) => value.id !== car.id),
   );
 }
 
@@ -140,7 +148,7 @@ function showEditCar(car: Car) {
       payload.name,
       payload.capacity,
       payload.allowedOperators,
-      payload.trailerHitch
+      payload.trailerHitch,
     );
     c.id = car.id;
 
@@ -160,7 +168,7 @@ function showCreateCar() {
       payload.name,
       payload.capacity,
       payload.allowedOperators,
-      payload.trailerHitch
+      payload.trailerHitch,
     );
     emit('update:modelValue', [...props.modelValue, car]);
   });

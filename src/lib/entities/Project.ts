@@ -1,4 +1,4 @@
-import { Flight } from 'src/lib/entities';
+import type { Flight } from 'src/lib/entities';
 import { Identifiable } from 'src/lib/utils/Identifiable';
 
 export class Project extends Identifiable {
@@ -14,7 +14,7 @@ export class Project extends Identifiable {
     description?: string,
     flights?: Flight[],
     collaborators?: string[],
-    local?: boolean
+    local?: boolean,
   ) {
     super();
     this._flights = flights ?? [];

@@ -1,4 +1,4 @@
-import { Identifiable } from 'src/lib/utils/Identifiable';
+import type { Identifiable } from 'src/lib/utils/Identifiable';
 
 export { shuffle, swap, removeFromArray, permutations };
 
@@ -12,7 +12,7 @@ function shuffle<Type>(a: Array<Type>): Array<Type> {
 
 function removeFromArray<Type extends Identifiable>(
   a: Array<Type>,
-  e: Type
+  e: Type,
 ): boolean {
   const i = a.findIndex((value) => value.id === e.id);
   if (i === -1) {

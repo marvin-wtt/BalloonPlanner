@@ -1,11 +1,11 @@
 import { Policy } from 'src/lib/solver/policies/Policy';
-import { Flight } from 'src/lib/entities';
+import type { Flight } from 'src/lib/entities';
 
 export class ParticipantsFirstPolicy extends Policy {
   apply(flight: Flight): boolean | number {
     // This policy states that all participants have to be flown before a supervisor can fly as a passenger
     const pendingParticipants = flight.people.filter(
-      (value) => value.numberOfFlights == 0 && !value.supervisor
+      (value) => value.numberOfFlights == 0 && !value.supervisor,
     );
 
     const supervisors = flight.vehicleGroups

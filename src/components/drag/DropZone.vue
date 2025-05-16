@@ -15,7 +15,7 @@
 <script lang="ts" setup>
 import { DragHelper } from 'src/util/DragHelper';
 import { ref } from 'vue';
-import { Identifiable } from 'src/lib/utils/Identifiable';
+import type { Identifiable } from 'src/lib/utils/Identifiable';
 
 interface Props {
   accepted?: (element: Identifiable) => boolean;
@@ -73,7 +73,7 @@ function onDrop(event: DragEvent) {
   }
 
   // Typecasting is safe as type safety is previously ensured
-  emit('dropped', element as Identifiable);
+  emit('dropped', element);
 }
 </script>
 

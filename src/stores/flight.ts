@@ -1,6 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import { Balloon, Car, Flight, Person } from 'src/lib/entities';
+import type { Balloon, Car, Flight, Person } from 'src/lib/entities';
 import { useServiceStore } from 'stores/service';
 
 export const useFlightStore = defineStore('flight', () => {
@@ -35,7 +35,7 @@ export const useFlightStore = defineStore('flight', () => {
 
   function create(): Promise<Flight> {
     if (!serviceStore.dataService) {
-      throw 'service_invalid';
+      throw new Error('service_invalid');
     }
 
     return serviceStore.dataService.createFlight();

@@ -1,11 +1,11 @@
-import { app, BrowserWindow, IpcMainEvent, ipcMain } from 'electron';
+import { app, BrowserWindow, type IpcMainEvent, ipcMain } from 'electron';
 import path from 'path';
 import os from 'os';
 
 // needed in case process is undefined under Linux
 const platform = process.platform || os.platform();
 
-function createWindow() {
+async function createWindow() {
   /**
    * Initial window options
    */
@@ -24,9 +24,9 @@ function createWindow() {
   });
 
   if (process.env.DEV) {
-    mainWindow.loadURL(process.env.APP_URL);
+    await mainWindow.loadURL(process.env.APP_URL);
   } else {
-    mainWindow.loadFile('index.html');
+    await mainWindow.loadFile('index.html');
   }
 
   if (process.env.DEBUGGING) {
@@ -40,7 +40,7 @@ function createWindow() {
   }
 }
 
-app
+await app
   .whenReady()
   .then(createWindow)
   .then(() => {
@@ -48,7 +48,7 @@ app
     ipcMain.on('window:minimize', windowApiHandler.minimize);
     ipcMain.on('window:toggle-maximize', windowApiHandler.toggleMaximize);
 
-    ipcMain.on('solver:solve', (data: object) => {
+    ipcMain.on('solver:solve', () => {
       // TODO
     });
   });
@@ -61,7 +61,7 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+    createWindow().catch(console.error);
   }
 });
 

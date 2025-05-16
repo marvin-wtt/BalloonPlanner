@@ -43,8 +43,8 @@ const { t } = useI18n();
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
 
-function logout() {
-  authStore.logout();
+async function logout() {
+  await authStore.logout();
 }
 </script>
 

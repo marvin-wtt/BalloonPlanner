@@ -1,4 +1,4 @@
-import {
+import type {
   Balloon,
   Car,
   Flight,
@@ -57,7 +57,7 @@ export interface PersistenceService {
 
   setBalloonOperator(
     person: Person | undefined,
-    balloon: Balloon
+    balloon: Balloon,
   ): Promise<void>;
 
   addBalloonPassenger(person: Person, balloon: Balloon): Promise<void>;
@@ -66,7 +66,7 @@ export interface PersistenceService {
 
   removeCarFromVehicleGroup(
     car: Car,
-    vehicleGroup: VehicleGroup
+    vehicleGroup: VehicleGroup,
   ): Promise<void>;
 
   setCarOperator(person: Person | undefined, car: Car): Promise<void>;

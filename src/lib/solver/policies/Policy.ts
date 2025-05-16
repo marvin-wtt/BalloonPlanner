@@ -1,4 +1,4 @@
-import { Flight } from 'src/lib/entities';
+import type { Flight } from 'src/lib/entities';
 import { SolverStage } from 'src/lib/solver/SolverStage';
 
 abstract class Policy {

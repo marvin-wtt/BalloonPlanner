@@ -29,8 +29,8 @@
 <script lang="ts" setup>
 import DropZone from 'components/drag/DropZone.vue';
 
-import { Car, VehicleGroup } from 'src/lib/entities';
-import { Identifiable } from 'src/lib/utils/Identifiable';
+import type { Car, VehicleGroup } from 'src/lib/entities';
+import type { Identifiable } from 'src/lib/utils/Identifiable';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

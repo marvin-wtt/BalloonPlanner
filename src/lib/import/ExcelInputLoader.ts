@@ -1,4 +1,4 @@
-import { readXlsxFile, Schema } from 'read-excel-file';
+import { readXlsxFile, type Schema } from 'read-excel-file';
 
 interface PersonSheetOptions {
   sheetName?: string;
@@ -46,7 +46,7 @@ export function gernerateShema(options: PersonSheetOptions): Schema {
 export async function load<T extends object>(
   file: File,
   shema: Schema,
-  options?: PersonSheetOptions
+  options?: PersonSheetOptions,
 ): Promise<T[]> {
   const data = await readXlsxFile<T>(file, {
     sheet: options?.sheetName ?? 1,
@@ -54,7 +54,7 @@ export async function load<T extends object>(
   });
 
   if (data.errors.length > 0) {
-    throw 'no_data';
+    throw new Error('no_data');
   }
 
   return data.rows;

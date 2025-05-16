@@ -398,11 +398,17 @@ import { useProjectStore } from 'stores/project';
 import BaseFlight from 'components/BaseFlight.vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import BaseVehicle from 'components/BaseVehicle.vue';
-import { Balloon, Car, Flight, Person, VehicleGroup } from 'src/lib/entities';
+import type {
+  Balloon,
+  Car,
+  Flight,
+  Person,
+  VehicleGroup,
+} from 'src/lib/entities';
 import EditableList from 'components/EditableList.vue';
 import { useI18n } from 'vue-i18n';
 import { solve } from 'src/lib/solver/solver';
-import { PersistenceService } from 'src/services/persistence/PersistenceService';
+import type { PersistenceService } from 'src/services/persistence/PersistenceService';
 import { useServiceStore } from 'stores/service';
 import { useSettingsStore } from 'stores/settings';
 import { useAuthStore } from 'stores/auth';
@@ -468,7 +474,7 @@ function onSmartFill() {
     message: t('smart_fill_loading'),
   });
   f.then((value) => {
-    dataService.value?.updateFLight(value);
+    await dataService.value?.updateFLight(value);
     notify({
       type: 'positive',
       message: t('smart_fill_success'),

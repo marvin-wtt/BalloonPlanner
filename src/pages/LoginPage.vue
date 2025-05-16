@@ -9,7 +9,11 @@
         </h5>
       </div>
       <div class="row">
-        <q-card square bordered class="q-pa-lg shadow-1">
+        <q-card
+          square
+          bordered
+          class="q-pa-lg shadow-1"
+        >
           <q-card-section>
             <q-form class="q-gutter-md">
               <q-input
@@ -81,6 +85,7 @@ import { useRoute, useRouter } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+// eslint-disable-next-line @typescript-eslint/unbound-method
 const { t, te } = useI18n();
 const q = useQuasar();
 
@@ -103,8 +108,8 @@ const loading = ref<boolean>(false);
 async function onLoginEmail() {
   loading.value = true;
 
-  emailRef.value?.validate();
-  passwordRef.value?.validate();
+  await emailRef.value?.validate();
+  await passwordRef.value?.validate();
 
   if (emailRef.value?.hasError || passwordRef.value?.hasError) {
     loading.value = false;
@@ -113,9 +118,9 @@ async function onLoginEmail() {
 
   authStore
     .loginEmail(email.value, password.value)
-    .then(() => {
+    .then(async () => {
       const origin = route.query.origin ?? '/';
-      router.push({
+      await router.push({
         path: origin as string,
       });
     })

@@ -1,5 +1,5 @@
 import { Policy } from 'src/lib/solver/policies/Policy';
-import { Flight } from 'src/lib/entities';
+import type { Flight } from 'src/lib/entities';
 
 function containsDuplicates(arr: string[]): boolean {
   return arr.filter((item, index) => arr.indexOf(item) !== index).length > 0;
@@ -26,14 +26,14 @@ export class NoDuplicatesPolicy extends Policy {
 
     const balloonOperatorIds = flight.vehicleGroups
       .map((value) => value.balloon.operator?.id)
-      .filter((value) => value !== undefined) as string[];
+      .filter((value) => value !== undefined);
     const balloonPassengerIds = flight.vehicleGroups
       .flatMap((value) => value.balloon.passengers)
       .map((value) => value.id);
     const carOperatorIds = flight.vehicleGroups
       .flatMap((value) => value.cars)
       .map((value) => value.operator?.id)
-      .filter((value) => value !== undefined) as string[];
+      .filter((value) => value !== undefined);
     const carPassengerIds = flight.vehicleGroups
       .flatMap((value) => value.cars)
       .flatMap((value) => value.passengers)

@@ -1,5 +1,5 @@
 import { Policy } from 'src/lib/solver/policies/Policy';
-import { Flight } from 'src/lib/entities';
+import type { Flight } from 'src/lib/entities';
 
 export class EqualFlightsPolicy extends Policy {
   apply(flight: Flight): boolean | number {
@@ -17,7 +17,9 @@ export class EqualFlightsPolicy extends Policy {
     }
 
     if (this.scoreMultiplier >= 1) {
-      throw 'score multiplier is exponential and should be greater than one';
+      throw new Error(
+        'score multiplier is exponential and should be greater than one',
+      );
     }
 
     return (

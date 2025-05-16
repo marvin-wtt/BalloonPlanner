@@ -45,37 +45,13 @@ class MessageBadge {
     priority: number,
     textColor: string,
     bgColor: string,
-    icon: string
+    icon: string,
   ) {
     this.message = message;
     this.priority = priority;
     this.textColor = textColor;
     this.bgColor = bgColor;
     this.icon = icon;
-  }
-}
-
-class ErrorMessageBadge extends MessageBadge {
-  constructor(message: string) {
-    super(message, 1, 'white', 'negative', 'error');
-  }
-}
-
-class WarningMessageBadge extends MessageBadge {
-  constructor(message: string) {
-    super(message, 2, 'white', 'warning', 'warning');
-  }
-}
-
-class InfoMessageBadge extends MessageBadge {
-  constructor(message: string) {
-    super(message, 3, 'white', 'info', 'info');
-  }
-}
-
-class HelpMessageBadge extends MessageBadge {
-  constructor(message: string) {
-    super(message, 4, 'white', 'accent', 'help');
   }
 }
 </script>

@@ -1,5 +1,5 @@
-import { PersistenceService } from 'src/services/persistence/PersistenceService';
-import {
+import type { PersistenceService } from 'src/services/persistence/PersistenceService';
+import type {
   Balloon,
   Car,
   Flight,
@@ -13,27 +13,27 @@ export class LocalStorageService implements PersistenceService {
   private _project?: Project;
 
   addFlight(): Promise<void> {
-    throw 'not_implemented';
+    throw new Error('not_implemented');
   }
 
   createFlight(): Promise<Flight> {
-    throw 'not_implemented';
+    throw new Error('not_implemented');
   }
 
   loadFlight(): Promise<void> {
-    throw 'not_implemented';
+    throw new Error('not_implemented');
   }
 
   loadProject(): Promise<void> {
-    throw 'not_implemented';
+    throw new Error('not_implemented');
   }
 
   createProject(): Promise<void> {
-    throw 'not_implemented';
+    throw new Error('not_implemented');
   }
 
   loadUserData(): Promise<void> {
-    throw 'not_implemented';
+    throw new Error('not_implemented');
   }
 
   unloadFlight(): void {
@@ -45,15 +45,15 @@ export class LocalStorageService implements PersistenceService {
   }
 
   unloadUserData(): void {
-    throw 'not_implemented';
+    throw new Error('not_implemented');
   }
 
   updateProject(): Promise<void> {
-    throw 'not_implemented';
+    throw new Error('not_implemented');
   }
 
   private write(): Promise<void> {
-    throw 'not_implemented';
+    throw new Error('not_implemented');
   }
 
   addBalloon(balloon: Balloon): Promise<void> {

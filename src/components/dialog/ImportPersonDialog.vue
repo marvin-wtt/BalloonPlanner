@@ -184,7 +184,7 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { Person } from 'src/lib/entities';
+import type { Person } from 'src/lib/entities';
 import { useI18n } from 'vue-i18n';
 import { useDialogPluginComponent } from 'quasar';
 

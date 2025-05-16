@@ -1,5 +1,5 @@
 import { Policy } from 'src/lib/solver/policies/Policy';
-import { Flight, Vehicle } from 'src/lib/entities';
+import type { Flight, Vehicle } from 'src/lib/entities';
 import { SolverStage } from 'src/lib/solver/SolverStage';
 
 function checkVehicleOperator(vehicle: Vehicle): boolean {
@@ -9,7 +9,7 @@ function checkVehicleOperator(vehicle: Vehicle): boolean {
 
   return (
     vehicle.allowedOperators.find(
-      (value) => value.id === vehicle.operator?.id
+      (value) => value.id === vehicle.operator?.id,
     ) !== undefined
   );
 }

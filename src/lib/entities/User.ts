@@ -1,5 +1,5 @@
 import { Identifiable } from 'src/lib/utils/Identifiable';
-import { Project } from 'src/lib/entities/Project';
+import type { Project } from 'src/lib/entities/Project';
 
 export class User extends Identifiable {
   private _provider: string;
@@ -13,7 +13,7 @@ export class User extends Identifiable {
     provider: string,
     name: string,
     local: boolean,
-    projects?: Project[]
+    projects?: Project[],
   ) {
     super(id);
     this._provider = provider;

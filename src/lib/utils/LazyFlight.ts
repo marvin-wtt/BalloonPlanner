@@ -1,4 +1,10 @@
-import { Balloon, Car, Person, VehicleGroup, Flight } from 'src/lib/entities';
+import type {
+  Balloon,
+  Car,
+  Person,
+  VehicleGroup,
+  Flight,
+} from 'src/lib/entities';
 
 function error(): Error {
   return new Error('Flight not loaded.');

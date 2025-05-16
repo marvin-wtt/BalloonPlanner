@@ -109,7 +109,7 @@
 </template>
 
 <script lang="ts" generic="T extends Identifiable" setup>
-import { Identifiable } from 'src/lib/utils/Identifiable';
+import type { Identifiable } from 'src/lib/utils/Identifiable';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import { QItem } from 'quasar';
 import { ref } from 'vue';

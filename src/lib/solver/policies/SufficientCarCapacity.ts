@@ -1,5 +1,5 @@
 import { Policy } from 'src/lib/solver/policies/Policy';
-import { Flight } from 'src/lib/entities';
+import type { Flight } from 'src/lib/entities';
 import { SolverStage } from 'src/lib/solver/SolverStage';
 
 export class SufficientCarCapacity extends Policy {

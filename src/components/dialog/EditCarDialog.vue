@@ -88,7 +88,7 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
-import { Car, Person } from 'src/lib/entities';
+import type { Car, Person } from 'src/lib/entities';
 import { useI18n } from 'vue-i18n';
 import { useDialogPluginComponent } from 'quasar';
 

@@ -79,8 +79,8 @@ import ProjectCard from 'components/ProjectCard.vue';
 import { useAuthStore } from 'stores/auth';
 import { storeToRefs } from 'pinia';
 import { useServiceStore } from 'stores/service';
-import { Ref } from 'vue';
-import { Project, User } from 'src/lib/entities';
+import type { Ref } from 'vue';
+import type { Project, User } from 'src/lib/entities';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
@@ -103,8 +103,8 @@ function loadProject() {
   // TODO Open electron file chooser
 }
 
-function openProject(project: Project) {
-  router.push(`/projects/${project.id}/flights`);
+async function openProject(project: Project) {
+  await router.push(`/projects/${project.id}/flights`);
 }
 
 function deleteProject() {

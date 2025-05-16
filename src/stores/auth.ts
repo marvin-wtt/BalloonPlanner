@@ -20,7 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function register(email: string, password: string) {
     if (!serviceStore.authService) {
-      throw 'auth_service_unavailable';
+      throw new Error('auth_service_unavailable');
     }
 
     return serviceStore.authService.register(email, password);
@@ -28,7 +28,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function loginEmail(e: string, p: string): Promise<User> {
     if (!serviceStore.authService) {
-      throw 'auth_service_unavailable';
+      throw new Error('auth_service_unavailable');
     }
 
     return serviceStore.authService.login(e, p);
@@ -40,15 +40,15 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout(): Promise<void> {
     if (!serviceStore.authService) {
-      throw 'auth_service_unavailable';
+      throw new Error('auth_service_unavailable');
     }
 
     await serviceStore.authService.logout();
 
     if (serviceStore.dataService) {
-      await serviceStore.dataService.unloadUserData();
-      await serviceStore.dataService.unloadFlight();
-      await serviceStore.dataService.unloadProject();
+      serviceStore.dataService.unloadUserData();
+      serviceStore.dataService.unloadFlight();
+      serviceStore.dataService.unloadProject();
     }
 
     user.value = undefined;

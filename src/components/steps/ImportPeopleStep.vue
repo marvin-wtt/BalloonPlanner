@@ -6,9 +6,16 @@
     :done="loader !== undefined"
   >
     <q-list>
-      <q-item tag="label" v-ripple>
+      <q-item
+        tag="label"
+        v-ripple
+      >
         <q-item-section avatar>
-          <q-radio v-model="loader" val="online" disable />
+          <q-radio
+            v-model="loader"
+            val="online"
+            disable
+          />
         </q-item-section>
         <q-item-section>
           <q-item-label> Online (Ballaeron)</q-item-label>
@@ -18,9 +25,15 @@
         </q-item-section>
       </q-item>
 
-      <q-item tag="label" v-ripple>
+      <q-item
+        tag="label"
+        v-ripple
+      >
         <q-item-section avatar>
-          <q-radio v-model="loader" val="json" />
+          <q-radio
+            v-model="loader"
+            val="json"
+          />
         </q-item-section>
         <q-item-section>
           <q-item-label>JSON</q-item-label>
@@ -30,9 +43,16 @@
         </q-item-section>
       </q-item>
 
-      <q-item tag="label" v-ripple>
+      <q-item
+        tag="label"
+        v-ripple
+      >
         <q-item-section avatar>
-          <q-radio v-model="loader" val="csv" disable />
+          <q-radio
+            v-model="loader"
+            val="csv"
+            disable
+          />
         </q-item-section>
         <q-item-section>
           <q-item-label> CSV</q-item-label>
@@ -42,9 +62,15 @@
         </q-item-section>
       </q-item>
 
-      <q-item tag="label" v-ripple>
+      <q-item
+        tag="label"
+        v-ripple
+      >
         <q-item-section avatar>
-          <q-radio v-model="loader" val="manual" />
+          <q-radio
+            v-model="loader"
+            val="manual"
+          />
         </q-item-section>
         <q-item-section>
           <q-item-label>Manual</q-item-label>
@@ -77,7 +103,10 @@
     icon="upload"
     :done="file !== undefined"
   >
-    <div class="q-pa-md" style="max-width: 300px">
+    <div
+      class="q-pa-md"
+      style="max-width: 300px"
+    >
       <div class="q-gutter-md">
         <q-file
           v-model="file"
@@ -114,7 +143,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Person } from 'src/lib/entities';
+import type { Person } from 'src/lib/entities';
 import { ref } from 'vue';
 import { loadJson } from 'src/lib/import/JsonInputLoader';
 

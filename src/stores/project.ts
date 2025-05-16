@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { Project } from 'src/lib/entities/Project';
+import type { Project } from 'src/lib/entities/Project';
 import { ref } from 'vue';
 import { useServiceStore } from 'stores/service';
 

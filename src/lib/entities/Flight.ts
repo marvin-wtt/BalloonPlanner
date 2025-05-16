@@ -1,8 +1,8 @@
-import { Balloon } from 'src/lib/entities/Balloon';
+import type { Balloon } from 'src/lib/entities/Balloon';
 import { VehicleGroup } from 'src/lib/entities/VehicleGroup';
-import { Person } from 'src/lib/entities/Person';
+import type { Person } from 'src/lib/entities/Person';
 import { Identifiable } from 'src/lib/utils/Identifiable';
-import { Car } from 'src/lib/entities/Car';
+import type { Car } from 'src/lib/entities/Car';
 import { removeFromArray } from 'src/lib/utils/ArrayUtils';
 import { flightFromObject, flightToObject } from 'src/lib/utils/converter';
 

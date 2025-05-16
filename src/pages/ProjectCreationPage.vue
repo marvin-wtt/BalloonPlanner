@@ -1,20 +1,39 @@
 <template>
-  <q-page padding class="full-width">
+  <q-page
+    padding
+    class="full-width"
+  >
     <!--    <q-scroll-area class="col-grow full-height" style="width: 200px; height: 200px;">-->
     <!-- content -->
     <!-- TODO i18n -->
 
-    <q-stepper v-model="step" vertical color="primary" animated flat>
+    <q-stepper
+      v-model="step"
+      vertical
+      color="primary"
+      animated
+      flat
+    >
       <q-step
         name="details"
         title="Enter project details"
         icon="edit_note"
         :done="name && name.length > 0"
       >
-        <div class="q-gutter-md" style="max-width: 300px">
-          <q-input v-model="name" label="Name" />
+        <div
+          class="q-gutter-md"
+          style="max-width: 300px"
+        >
+          <q-input
+            v-model="name"
+            label="Name"
+          />
 
-          <q-input v-model="description" label="Description" type="textarea" />
+          <q-input
+            v-model="description"
+            label="Description"
+            type="textarea"
+          />
         </div>
         <q-stepper-navigation>
           <q-btn
@@ -60,11 +79,20 @@
         @to="(dest) => (step = dest)"
       />
 
-      <q-step name="finish" title="Finish" icon="flag" :done="completed">
+      <q-step
+        name="finish"
+        title="Finish"
+        icon="flag"
+        :done="completed"
+      >
         This step won't show up because it is disabled.
 
         <q-stepper-navigation>
-          <q-btn @click="finish()" color="primary" label="Finish" />
+          <q-btn
+            @click="finish()"
+            color="primary"
+            label="Finish"
+          />
           <q-btn
             flat
             @click="step = 'manual_cars'"
@@ -81,7 +109,7 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
-import { Balloon, Car, Flight, Person, Project } from 'src/lib/entities';
+import type { Balloon, Car, Flight, Person, Project } from 'src/lib/entities';
 import ImportPeopleStep from 'components/steps/ImportPeopleStep.vue';
 import ManualPeopleStep from 'components/steps/ManualPeopleStep.vue';
 import ManualBalloonsStep from 'components/steps/ManualBalloonsStep.vue';
@@ -108,7 +136,7 @@ const completed = computed(() => {
   );
 });
 
-function finish() {
+async function finish() {
   if (!name.value) {
     return;
   }
@@ -122,8 +150,8 @@ function finish() {
 
   const project = new Project(name.value, description.value, [flight]);
 
-  serviceStore.dataService?.createProject(project);
+  await serviceStore.dataService?.createProject(project);
 
-  router.push(`/projects/${project.id}/flights/${flight.id}`);
+  await router.push(`/projects/${project.id}/flights/${flight.id}`);
 }
 </script>
