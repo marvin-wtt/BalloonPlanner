@@ -16,17 +16,7 @@
  *   })
  */
 
-import { contextBridge, ipcRenderer } from 'electron';
-
-const windowAPI = {
-  minimize: () => ipcRenderer.send('window:minimize'),
-  toggleMaximize: () => ipcRenderer.send('window:toggle-maximize'),
-  close: () => ipcRenderer.send('window:close'),
-};
-
-const solverAPI = {
-  solve: (data: object) => ipcRenderer.invoke('solver:solve', data),
-};
+import { contextBridge } from 'electron';
+import windowAPI from './windowAPI/preload';
 
 contextBridge.exposeInMainWorld('windowAPI', windowAPI);
-contextBridge.exposeInMainWorld('solverAPI', solverAPI);

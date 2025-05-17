@@ -1,25 +1,33 @@
-import { app, BrowserWindow, type IpcMainEvent, ipcMain } from 'electron';
+import { app, BrowserWindow } from 'electron';
+import initWindowApiHandler from 'app/src-electron/windowAPI/main';
 import path from 'path';
 import os from 'os';
+import { fileURLToPath } from 'node:url';
 
 // needed in case process is undefined under Linux
 const platform = process.platform || os.platform();
+const currentDir = fileURLToPath(new URL('.', import.meta.url));
 
 async function createWindow() {
   /**
    * Initial window options
    */
   const mainWindow = new BrowserWindow({
-    icon: path.resolve(__dirname, 'icons/icon.png'), // tray icon
+    icon: path.resolve(currentDir, 'icons/icon.png'), // tray icon
     width: 1000,
     height: 600,
     useContentSize: true,
     frame: false,
     webPreferences: {
-      sandbox: false,
+      sandbox: true,
       contextIsolation: true,
-      // More info: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/electron-preload-script
-      preload: path.resolve(__dirname, process.env.QUASAR_ELECTRON_PRELOAD),
+      preload: path.resolve(
+        currentDir,
+        path.join(
+          process.env.QUASAR_ELECTRON_PRELOAD_FOLDER,
+          'electron-preload' + process.env.QUASAR_ELECTRON_PRELOAD_EXTENSION,
+        ),
+      ),
     },
   });
 
@@ -40,17 +48,12 @@ async function createWindow() {
   }
 }
 
-await app
+app
   .whenReady()
+  .then(initWindowApiHandler)
   .then(createWindow)
-  .then(() => {
-    ipcMain.on('window:close', windowApiHandler.close);
-    ipcMain.on('window:minimize', windowApiHandler.minimize);
-    ipcMain.on('window:toggle-maximize', windowApiHandler.toggleMaximize);
-
-    ipcMain.on('solver:solve', () => {
-      // TODO
-    });
+  .catch((reason) => {
+    console.error(`Failed to start application: ${reason}`);
   });
 
 app.on('window-all-closed', () => {
@@ -61,40 +64,8 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow().catch(console.error);
+    createWindow().catch((reason) => {
+      console.error(`Failed to create window: ${reason}`);
+    });
   }
 });
-
-// -----------------------------------------------------------------------------
-//  Window API
-// -----------------------------------------------------------------------------
-const windowEventWrapper = (next: (window: BrowserWindow) => void) => {
-  return (event: IpcMainEvent) => {
-    const webContents = event.sender;
-    const win = BrowserWindow.fromWebContents(webContents);
-
-    if (!win) {
-      return;
-    }
-
-    next(win);
-  };
-};
-
-const windowApiHandler = {
-  minimize: windowEventWrapper((win: BrowserWindow) => {
-    win.minimize();
-  }),
-
-  toggleMaximize: windowEventWrapper((win: BrowserWindow) => {
-    if (win.isMaximized()) {
-      win.unmaximize();
-    } else {
-      win.maximize();
-    }
-  }),
-
-  close: windowEventWrapper((win: BrowserWindow) => {
-    win.close();
-  }),
-};

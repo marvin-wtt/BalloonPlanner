@@ -183,6 +183,8 @@ export default defineConfig((ctx) => {
         // win32metadata: { ... }
       },
 
+      preloadScripts: ['electron-preload'],
+
       builder: {
         // https://www.electron.build/configuration/configuration
 
