@@ -17,4 +17,6 @@ export async function load(config: LoaderConfig) {
       password: config.password,
     },
   });
+
+  return response.data;
 }

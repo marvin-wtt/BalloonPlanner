@@ -1,10 +1,6 @@
 import type { Car, Flight, Person } from 'src/lib/entities';
 import { shuffle } from 'src/lib/utils/ArrayUtils';
 
-export interface SolvingOptions {
-  someOption?: boolean;
-}
-
 //  1. Create vehicle groups for each balloon
 //  2. Store each solution where every balloon has a valid pilot. Invalid solutions are ignored
 //  3. For each solution, fill the balloon with participants who have never flown yet.
@@ -18,7 +14,7 @@ export interface SolvingOptions {
 //     Select the solution with the best score,
 //  8. Fill in all balloons and cars with the remaining participants.
 
-export function solve(f: Flight, options?: SolvingOptions): Promise<Flight> {
+export function solve(f: Flight): Flight {
   let flight = f.clone();
 
   // 1

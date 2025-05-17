@@ -16,15 +16,13 @@ import {
 import { db } from 'src/boot/firebase';
 import { useAuthStore } from 'stores/auth';
 import type {
-  Balloon,
-  Car,
-  Flight,
   Person,
   Project,
   User,
   Vehicle,
   VehicleGroup,
 } from 'src/lib/entities';
+import { Balloon, Car, Flight } from 'src/lib/entities';
 import {
   balloonToObject,
   carToObject,
@@ -225,7 +223,7 @@ export class FirestoreDataService implements PersistenceService {
     });
   }
 
-  updateProject(project: Project): Promise<void> {
+  updateProject(): Promise<void> {
     // TODO
     return Promise.resolve(undefined);
   }

@@ -1,5 +1,6 @@
 import type { Flight } from 'src/lib/entities';
 
+// eslint-ignore-next-line @typescript-eslint/no-unused-vars
 export function solveX(flight: Flight): Flight[] {
   let results: Flight[] = [];
   const groups = createVehicleGroups(flight).sort(
@@ -11,7 +12,7 @@ export function solveX(flight: Flight): Flight[] {
   solver.push(assignCars);
   solver.push(assignBalloonOperators);
   solver.push(assignCarOperators);
-  // solver.push(assignBalloonPassengers);
+  solver.push(assignBalloonPassengers);
 
   groups.some((value) => {
     results = [value];

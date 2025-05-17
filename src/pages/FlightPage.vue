@@ -398,10 +398,10 @@ import { useProjectStore } from 'stores/project';
 import BaseFlight from 'components/BaseFlight.vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import BaseVehicle from 'components/BaseVehicle.vue';
-import type {
+import {
   Balloon,
   Car,
-  Flight,
+  type Flight,
   Person,
   VehicleGroup,
 } from 'src/lib/entities';
@@ -463,30 +463,32 @@ async function init() {
   await flightStore.load(flightId);
 }
 
-function onSmartFill() {
+async function onSmartFill() {
   if (!flight.value) {
     return;
   }
 
-  const f = solve(flight.value);
   const notify = quasar.notify({
     type: 'ongoing',
     message: t('smart_fill_loading'),
   });
-  f.then((value) => {
-    await dataService.value?.updateFLight(value);
+  try {
+    const f = solve(flight.value);
+
+    await dataService.value?.updateFLight(f);
+
     notify({
       type: 'positive',
       message: t('smart_fill_success'),
       timeout: 1000,
     });
-  }).catch((reason) => {
+  } catch (reason) {
     notify({
       type: 'warning',
       message: t('smart_fill_error') + ': ' + reason,
       timeout: 2000,
     });
-  });
+  }
 }
 
 function monitorService(
