@@ -284,13 +284,13 @@
         <base-flight
           :flight="flight"
           class="fit"
-          @balloon-add="onBalloonAdd"
+          @balloon-add="addVehicleGroup"
         >
           <base-vehicle-group
             v-for="group in (flight as Flight).vehicleGroups"
             :key="group.id"
             :group="group"
-            @car-add="(car) => onCarAdd(group, car)"
+            @car-add="(car) => addCarToVehicleGroup(group, car)"
           >
             <template #balloon>
               <base-vehicle
@@ -299,14 +299,14 @@
                 :vehicle="group.balloon"
                 :indexed="indexedVehicle"
                 :labeled="labeledVehicle"
-                @remove="onVehicleGroupRemove(group)"
+                @remove="removeVehicleGroup(group)"
                 @edit="showEditBalloon(group.balloon)"
-                @passenger-add="(p) => onBalloonPersonAdd(group.balloon, p)"
+                @passenger-add="(p) => addBalloonPassenger(group.balloon, p)"
                 @passenger-remove="
-                  (p) => onBalloonPersonRemove(group.balloon, p)
+                  (p) => removeBalloonPassenger(group.balloon, p)
                 "
-                @operator-add="(p) => onBalloonOperatorAdd(group.balloon, p)"
-                @operator-remove="(p) => onBalloonOperatorRemove(group.balloon)"
+                @operator-add="(p) => addBalloonOperator(group.balloon, p)"
+                @operator-remove="() => removeBalloonOperator(group.balloon)"
                 @person-edit="(p) => showEditPerson(p)"
               />
             </template>
@@ -316,12 +316,12 @@
                 :key="car.id"
                 type="car"
                 :vehicle="car"
-                @remove="onCarRemove(group, car)"
+                @remove="removeCarFromVehicleGroup(group, car)"
                 @edit="showEditCar(car)"
-                @passenger-add="(p) => onCarPersonAdd(car, p)"
-                @passenger-remove="(p) => onCarPersonRemove(car, p)"
-                @operator-add="(p) => onCarOperatorAdd(car, p)"
-                @operator-remove="(p) => onCarOperatorRemove(car)"
+                @passenger-add="(p) => addCarPassenger(car, p)"
+                @passenger-remove="(p) => removeCarPassenger(car, p)"
+                @operator-add="(p) => addCarOperator(car, p)"
+                @operator-remove="() => removeCarOperator(car)"
                 @person-edit="(p) => showEditPerson(p)"
                 :indexed="indexedVehicle"
                 :labeled="labeledVehicle"
@@ -398,17 +398,10 @@ import { useProjectStore } from 'stores/project';
 import BaseFlight from 'components/BaseFlight.vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import BaseVehicle from 'components/BaseVehicle.vue';
-import {
-  Balloon,
-  Car,
-  type Flight,
-  Person,
-  VehicleGroup,
-} from 'src/lib/entities';
+import { Balloon, Car, type Flight, Person } from 'src/lib/entities';
 import EditableList from 'components/EditableList.vue';
 import { useI18n } from 'vue-i18n';
 import { solve } from 'src/lib/solver/solver';
-import type { PersistenceService } from 'src/services/persistence/PersistenceService';
 import { useServiceStore } from 'stores/service';
 import { useSettingsStore } from 'stores/settings';
 import { useAuthStore } from 'stores/auth';
@@ -418,6 +411,7 @@ import EditCarDialog from 'components/dialog/EditCarDialog.vue';
 import FlightSelectionItem from 'components/toolbar/FlightSelectionItem.vue';
 import { useFlightStore } from 'stores/flight';
 import ProjectSelectionItem from 'components/toolbar/ProjectSelectionItem.vue';
+import { useFlightOperations } from 'src/composables/flight-operations';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -441,6 +435,30 @@ const {
 
 const { dataService } = storeToRefs(serviceStore);
 const { indexedVehicle, labeledVehicle } = storeToRefs(settingsStore);
+
+const {
+  addVehicleGroup,
+  removeVehicleGroup,
+  addCarToVehicleGroup,
+  removeCarFromVehicleGroup,
+  addBalloonOperator,
+  addCarOperator,
+  removeBalloonOperator,
+  removeCarOperator,
+  addBalloonPassenger,
+  addCarPassenger,
+  removeBalloonPassenger,
+  removeCarPassenger,
+  addPerson,
+  editPerson,
+  removePerson,
+  addBalloon,
+  editBalloon,
+  removeBalloon,
+  addCar,
+  editCar,
+  removeCar,
+} = useFlightOperations();
 
 const menuTabs = ref('overview');
 
@@ -491,89 +509,6 @@ async function onSmartFill() {
   }
 }
 
-function monitorService(
-  cb: (service: PersistenceService) => Promise<void>,
-): void {
-  if (!dataService.value) {
-    quasar.notify({
-      type: 'negative',
-      message: t('service_not_available'),
-    });
-    return;
-  }
-
-  const promise = cb(dataService.value);
-  const notify = quasar.notify({
-    type: 'ongoing',
-    message: t('saving_in_progress'),
-  });
-  promise
-    .then(() => {
-      notify({
-        type: 'positive',
-        message: t('saving_success'),
-        timeout: 1000,
-      });
-    })
-    .catch((reason) => {
-      notify({
-        type: 'warning',
-        message: t('saving_failed') + ': ' + reason,
-        timeout: 5000,
-      });
-    });
-}
-
-function onBalloonAdd(balloon: Balloon) {
-  monitorService((service) =>
-    service.addVehicleGroup(new VehicleGroup(balloon)),
-  );
-}
-
-function onVehicleGroupRemove(group: VehicleGroup) {
-  monitorService((service) => service.deleteVehicleGroup(group));
-}
-
-function onCarAdd(group: VehicleGroup, car: Car) {
-  monitorService((service) => service.addCarToVehicleGroup(car, group));
-}
-
-function onCarRemove(group: VehicleGroup, car: Car) {
-  monitorService((service) => service.removeCarFromVehicleGroup(car, group));
-}
-
-function onBalloonOperatorAdd(balloon: Balloon, person: Person) {
-  monitorService((service) => service.setBalloonOperator(person, balloon));
-}
-
-function onCarOperatorAdd(car: Car, person: Person) {
-  monitorService((service) => service.setCarOperator(person, car));
-}
-
-function onBalloonOperatorRemove(balloon: Balloon) {
-  monitorService((service) => service.setBalloonOperator(undefined, balloon));
-}
-
-function onCarOperatorRemove(car: Car) {
-  monitorService((service) => service.setCarOperator(undefined, car));
-}
-
-function onBalloonPersonAdd(balloon: Balloon, person: Person) {
-  monitorService((service) => service.addBalloonPassenger(person, balloon));
-}
-
-function onCarPersonAdd(car: Car, person: Person) {
-  monitorService((service) => service.addCarPassenger(person, car));
-}
-
-function onBalloonPersonRemove(balloon: Balloon, person: Person) {
-  monitorService((service) => service.removeBalloonPassenger(person, balloon));
-}
-
-function onCarPersonRemove(car: Car, person: Person) {
-  monitorService((service) => service.removeCarPassenger(person, car));
-}
-
 function showCreatePerson() {
   quasar
     .dialog({
@@ -589,7 +524,7 @@ function showCreatePerson() {
         payload.supervisor,
         payload.flights,
       );
-      monitorService((service) => service.addPerson(person));
+      addPerson(person);
     });
 }
 
@@ -610,7 +545,7 @@ function showEditPerson(person: Person) {
         payload.flights,
       );
       p.id = person.id;
-      monitorService((service) => service.updatePerson(p));
+      editPerson(p);
     });
 }
 
@@ -631,7 +566,7 @@ function showDeletePerson(person: Person) {
       persistent: true,
     })
     .onOk(() => {
-      monitorService((service) => service.deletePerson(person));
+      removePerson(person);
     });
 }
 
@@ -657,7 +592,7 @@ function showCreateBalloon() {
         payload.capacity,
         payload.allowedOperators,
       );
-      monitorService((service) => service.addBalloon(balloon));
+      addBalloon(balloon);
     });
 }
 
@@ -683,7 +618,7 @@ function showEditBalloon(balloon: Balloon) {
       b.id = balloon.id;
       b.operator = balloon.operator;
       b.passengers = balloon.passengers;
-      monitorService((service) => service.updateBalloon(b));
+      editBalloon(b);
     });
 }
 
@@ -706,7 +641,7 @@ function showDeleteBalloon(balloon: Balloon) {
       persistent: true,
     })
     .onOk(() => {
-      monitorService((service) => service.deleteBalloon(balloon));
+      removeBalloon(balloon);
     });
 }
 
@@ -729,7 +664,7 @@ function showCreateCar() {
         payload.allowedOperators,
         payload.trailerHitch,
       );
-      monitorService((service) => service.addCar(car));
+      addCar(car);
     });
 }
 
@@ -756,7 +691,7 @@ function showEditCar(car: Car) {
       c.id = car.id;
       c.operator = car.operator;
       c.passengers = car.passengers;
-      monitorService((service) => service.updateCar(c));
+      editCar(c);
     });
 }
 
@@ -779,7 +714,7 @@ function showDeleteCar(car: Car) {
       persistent: true,
     })
     .onOk(() => {
-      monitorService((service) => service.deleteCar(car));
+      removeCar(car);
     });
 }
 
