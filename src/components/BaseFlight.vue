@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Balloon, Flight, Person } from 'src/lib/entities';
+import { Balloon, type Flight, Person } from 'src/lib/entities';
 import DropZone from 'components/drag/DropZone.vue';
 import type { Identifiable } from 'src/lib/utils/Identifiable';
 import { computed } from 'vue';

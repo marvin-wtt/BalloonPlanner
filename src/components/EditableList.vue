@@ -101,7 +101,7 @@
         class="q-ma-sm"
         color="primary"
         icon="add"
-        :label="$t('list.item.create', { name: itemName.toLowerCase() })"
+        :label="t('list.item.create', { name: itemName.toLowerCase() })"
         @click="addItem()"
       />
     </div>

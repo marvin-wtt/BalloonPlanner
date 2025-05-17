@@ -47,7 +47,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Balloon, Person, Vehicle } from 'src/lib/entities';
+import { Balloon, Person, type Vehicle } from 'src/lib/entities';
 import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
 import type { Identifiable } from 'src/lib/utils/Identifiable';
@@ -56,17 +56,17 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-interface Props {
+const {
+  person,
+  vehicle,
+  editable = false,
+  operator = false,
+} = defineProps<{
   person?: Person;
   vehicle: Vehicle;
   editable?: boolean;
   operator?: boolean;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  operator: false,
-  editable: true,
-});
+}>();
 
 const emit = defineEmits<{
   (e: 'add', person: Person): void;
@@ -75,14 +75,14 @@ const emit = defineEmits<{
 }>();
 
 const personLabel = computed<string>(() => {
-  if (!props.person) {
+  if (!person) {
     return '';
   }
 
-  let label = props.person.name;
-  if (props.editable) {
-    const isBalloon = props.vehicle instanceof Balloon;
-    const flights = props.person.numberOfFlights;
+  let label = person.name;
+  if (editable) {
+    const isBalloon = vehicle instanceof Balloon;
+    const flights = person.numberOfFlights;
 
     label += isBalloon ? ` (${flights - 1})` : `(${flights})`;
   }
@@ -95,11 +95,11 @@ function isDropAllowed(element: Identifiable): boolean {
     return false;
   }
 
-  if (props.operator) {
-    return props.vehicle.allowedOperators.includes(element);
+  if (operator) {
+    return vehicle.allowedOperators.includes(element);
   }
 
-  return !props.vehicle.passengers.includes(element);
+  return !vehicle.passengers.includes(element);
 }
 
 function onDrop(element: Identifiable) {

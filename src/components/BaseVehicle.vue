@@ -122,7 +122,8 @@
 <script lang="ts" setup>
 import BaseVehiclePersonCell from 'components/BaseVehiclePersonCell.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
-import type { Car, Person, Vehicle } from 'src/lib/entities';
+import type { Person, Vehicle } from 'src/lib/entities';
+import { Car } from 'src/lib/entities';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
