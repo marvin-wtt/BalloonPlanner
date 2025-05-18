@@ -1,6 +1,6 @@
 <template>
   <draggable-item
-    :item="props.vehicle"
+    :item="vehicle"
     class="row"
     @remove="onVehicleRemoved"
   >
@@ -28,12 +28,12 @@
 
       <tr>
         <th
-          v-if="props.labeled"
+          v-if="labeled"
           class="vehicle-label"
           :rowspan="capacity + 1"
         >
           <span>
-            {{ props.vehicle.name }}
+            {{ vehicle.name }}
           </span>
           <q-menu
             touch-position
@@ -75,21 +75,19 @@
         </th>
         <base-vehicle-person-cell
           class="vehicle-person"
-          :class="props.indexed ? 'vehicle-person__indexed' : ''"
-          :editable="props.editable"
-          :person="props.vehicle.operator"
-          :vehicle="props.vehicle"
+          :class="indexed ? 'vehicle-person__indexed' : ''"
+          :editable="editable"
+          :person="vehicle.operator"
+          :vehicle="vehicle"
           operator
           @add="(p) => emit('operatorAdd', p)"
           @remove="
-            props.vehicle.operator
-              ? emit('operatorRemove', props.vehicle.operator)
+            vehicle.operator
+              ? emit('operatorRemove', vehicle.operator)
               : undefined
           "
           @edit="
-            props.vehicle.operator
-              ? emit('personEdit', props.vehicle.operator)
-              : undefined
+            vehicle.operator ? emit('personEdit', vehicle.operator) : undefined
           "
         />
       </tr>
@@ -100,19 +98,19 @@
       >
         <td
           class="vehicle-index"
-          v-if="props.indexed"
+          v-if="indexed"
         >
           {{ c }}
         </td>
         <base-vehicle-person-cell
           class="vehicle-person"
-          :class="props.indexed ? 'vehicle-person__indexed' : ''"
-          :editable="props.editable"
-          :person="props.vehicle.passengers[c - 1]"
-          :vehicle="props.vehicle"
+          :class="indexed ? 'vehicle-person__indexed' : ''"
+          :editable="editable"
+          :person="vehicle.passengers[c - 1]"
+          :vehicle="vehicle"
           @add="(p) => emit('passengerAdd', p)"
-          @remove="emit('passengerRemove', props.vehicle.passengers[c - 1])"
-          @edit="emit('personEdit', props.vehicle.passengers[c - 1])"
+          @remove="emit('passengerRemove', vehicle.passengers[c - 1])"
+          @edit="emit('personEdit', vehicle.passengers[c - 1])"
         />
       </tr>
     </table>
@@ -129,21 +127,21 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-interface Props {
+const {
+  vehicle,
+  type,
+  indexed = false,
+  labeled = false,
+  editable = false,
+  hideEmpty = false,
+} = defineProps<{
   vehicle: Vehicle;
   type: 'balloon' | 'car';
   indexed?: boolean;
   labeled?: boolean;
   editable?: boolean;
   hideEmpty?: boolean;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  indexed: true,
-  labeled: true,
-  editable: true,
-  hideEmpty: false,
-});
+}>();
 
 const emit = defineEmits<{
   (e: 'remove'): void;
@@ -155,18 +153,18 @@ const emit = defineEmits<{
   (e: 'personEdit', person: Person): void;
 }>();
 
-const capacity = computed(() => {
-  let capacity: number = props.vehicle.capacity - 1;
+const capacity = computed<number>(() => {
+  let capacity: number = vehicle.capacity - 1;
 
-  if (vehicleIsCar(props.vehicle)) {
-    capacity -= props.vehicle.reservedCapacity;
+  if (vehicleIsCar(vehicle)) {
+    capacity -= vehicle.reservedCapacity;
   }
 
   if (capacity < 0) {
     capacity = 0;
   }
 
-  return props.hideEmpty ? props.vehicle.passengers.length : capacity;
+  return hideEmpty ? vehicle.passengers.length : capacity;
 });
 
 function vehicleIsCar(vehicle: Vehicle): vehicle is Car {
@@ -190,20 +188,17 @@ const errorMessage = computed<string>(() => {
 });
 
 const tooMuchReservedCapacity = computed<boolean>(() => {
-  return (
-    vehicleIsCar(props.vehicle) &&
-    props.vehicle.capacity <= props.vehicle.reservedCapacity
-  );
+  return vehicleIsCar(vehicle) && vehicle.capacity <= vehicle.reservedCapacity;
 });
 
 const overfilled = computed<boolean>(() => {
-  return props.vehicle.passengers.length > capacity.value;
+  return vehicle.passengers.length > capacity.value;
 });
 
 const invalidOperator = computed<boolean>(() => {
   return (
-    props.vehicle.operator !== undefined &&
-    !props.vehicle.allowedOperators.includes(props.vehicle.operator)
+    vehicle.operator !== undefined &&
+    !vehicle.allowedOperators.includes(vehicle.operator)
   );
 });
 

@@ -25,7 +25,7 @@
           v-model="menuTabs"
           vertical
           active-bg-color="grey-6"
-          class="bg-grey-10 text-white"
+          class="bg-grey-10 text-white column justify-between"
         >
           <q-tab
             name="overview"
@@ -299,6 +299,7 @@
                 :vehicle="group.balloon"
                 :indexed="indexedVehicle"
                 :labeled="labeledVehicle"
+                editable
                 @remove="removeVehicleGroup(group)"
                 @edit="showEditBalloon(group.balloon)"
                 @passenger-add="(p) => addBalloonPassenger(group.balloon, p)"
@@ -316,6 +317,9 @@
                 :key="car.id"
                 type="car"
                 :vehicle="car"
+                :indexed="indexedVehicle"
+                :labeled="labeledVehicle"
+                editable
                 @remove="removeCarFromVehicleGroup(group, car)"
                 @edit="showEditCar(car)"
                 @passenger-add="(p) => addCarPassenger(car, p)"
@@ -323,8 +327,6 @@
                 @operator-add="(p) => addCarOperator(car, p)"
                 @operator-remove="() => removeCarOperator(car)"
                 @person-edit="(p) => showEditPerson(p)"
-                :indexed="indexedVehicle"
-                :labeled="labeledVehicle"
               />
             </template>
           </base-vehicle-group>
@@ -392,7 +394,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import { QItem, QList, useQuasar } from 'quasar';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import BaseFlight from 'components/BaseFlight.vue';
@@ -415,6 +417,7 @@ import { useFlightOperations } from 'src/composables/flight-operations';
 
 const { t } = useI18n();
 const route = useRoute();
+const router = useRouter();
 const quasar = useQuasar();
 const authStore = useAuthStore();
 const projectStore = useProjectStore();
@@ -476,6 +479,21 @@ async function init() {
 
   if (Array.isArray(flightId)) {
     flightId = flightId[0];
+  }
+
+  // If not flight specified, load the last flight
+  if (!flightId && project.value && project.value.flights.length > 0) {
+    flightId = project.value.flights[project.value.flights.length - 1]?.id;
+
+    await router.push({
+      name: 'flight',
+      params: {
+        projectId,
+        flightId,
+      },
+    });
+
+    return;
   }
 
   await flightStore.load(flightId);
@@ -740,22 +758,30 @@ const showSupervisorsMenuBadge = computed<boolean>(() => {
   return availableSupervisors.value.length > 0;
 });
 
-const availablePeople = computed(() => flightStore.availablePeople);
+const availablePeople = computed<Person[]>(() => flightStore.availablePeople);
 
-const availableBalloons = computed(() => flightStore.availableBalloons);
+const availableBalloons = computed<Balloon[]>(() => {
+  return flightStore.availableBalloons.toSorted((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+});
 
-const availableCars = computed(() => flightStore.availableCars);
+const availableCars = computed<Car[]>(() => {
+  return flightStore.availableCars.toSorted((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+});
 
 const availableParticipants = computed<Person[]>(() => {
   return availablePeople.value
     .filter((value) => !value.supervisor)
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .toSorted((a, b) => a.name.localeCompare(b.name));
 });
 
 const availableSupervisors = computed<Person[]>(() => {
   return availablePeople.value
     .filter((value) => value.supervisor)
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .toSorted((a, b) => a.name.localeCompare(b.name));
 });
 
 const showFlightView = computed<boolean>(() => {

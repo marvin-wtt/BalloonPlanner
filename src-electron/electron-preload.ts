@@ -18,5 +18,7 @@
 
 import { contextBridge } from 'electron';
 import windowAPI from './windowAPI/preload';
+import solverAPI from './solverAPI/preload';
 
 contextBridge.exposeInMainWorld('windowAPI', windowAPI);
+contextBridge.exposeInMainWorld('solverAPI', solverAPI);

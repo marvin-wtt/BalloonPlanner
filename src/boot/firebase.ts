@@ -1,5 +1,7 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { persistentLocalCache, initializeFirestore } from 'firebase/firestore';
+import { defineBoot } from '#q-app/wrappers';
+import { VueFire, VueFireAuth } from 'vuefire';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCOJ5PSnYXlBqf5SVD0jcUAtov2BPASe2Y',
@@ -12,11 +14,18 @@ const firebaseConfig = {
   appId: '1:185271036675:web:921eefcd7e578cc5a95736',
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-enableIndexedDbPersistence(db).catch((error) => {
-  console.error(error);
+const firebaseApp = initializeApp(firebaseConfig, {});
+const db = initializeFirestore(firebaseApp, {
+  localCache: persistentLocalCache(),
 });
+
+export default defineBoot(({ app }) => {
+  app.use(VueFire, {
+    firebaseApp,
+    modules: [VueFireAuth()],
+  });
+});
+
+const app = firebaseApp;
 
 export { app, db };

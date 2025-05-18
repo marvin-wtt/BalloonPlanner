@@ -134,7 +134,6 @@ export class FirestoreDataService implements PersistenceService {
         const project = doc.data();
         const projectStore = useProjectStore();
         projectStore.project = project;
-
         if (callPromise) {
           callPromise = false;
           resolve();

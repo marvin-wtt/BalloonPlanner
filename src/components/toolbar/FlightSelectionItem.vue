@@ -19,14 +19,19 @@
           },
         }"
       >
-        <q-item-section>{{ flightName(index) }}</q-item-section>
+        <q-item-section>
+          <q-item-label>
+            {{ flightName(index) }}
+          </q-item-label>
+        </q-item-section>
         <q-item-section side>
           <q-btn
             dense
             round
             flat
+            size="sm"
             icon="more_vert"
-            @click.stop
+            @click.prevent.stop
           >
             <q-menu>
               <q-list>
@@ -34,7 +39,7 @@
                   clickable
                   v-close-popup
                 >
-                  <q-item-section color="negative">
+                  <q-item-section class="text-negative">
                     {{ t('delete') }}
                   </q-item-section>
                 </q-item>
@@ -70,11 +75,11 @@ import { useI18n } from 'vue-i18n';
 import { useAuthStore } from 'stores/auth';
 import { useFlightStore } from 'stores/flight';
 
+const { t } = useI18n();
 const router = useRouter();
 const authStore = useAuthStore();
 const projectStore = useProjectStore();
 const flightStore = useFlightStore();
-const { t } = useI18n();
 
 const { project } = storeToRefs(projectStore);
 const { flight } = storeToRefs(flightStore);

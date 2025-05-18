@@ -47,14 +47,16 @@
 </template>
 
 <script lang="ts" setup>
-import { Balloon, Person, type Vehicle } from 'src/lib/entities';
+import { Person, type Vehicle } from 'src/lib/entities';
 import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
 import type { Identifiable } from 'src/lib/utils/Identifiable';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import { useI18n } from 'vue-i18n';
+import { useFlightStore } from 'stores/flight';
 
 const { t } = useI18n();
+const flightStore = useFlightStore();
 
 const {
   person,
@@ -81,10 +83,9 @@ const personLabel = computed<string>(() => {
 
   let label = person.name;
   if (editable) {
-    const isBalloon = vehicle instanceof Balloon;
-    const flights = person.numberOfFlights;
+    const flights = flightStore.personFlights[person.id] ?? 0;
 
-    label += isBalloon ? ` (${flights - 1})` : `(${flights})`;
+    label += ` (${flights})`;
   }
 
   return label;
