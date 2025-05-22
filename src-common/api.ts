@@ -7,3 +7,14 @@ export interface ProjectsAPI {
   update: (project: Project) => Promise<void>;
   destroy: (id: string) => Promise<void>;
 }
+
+export interface SolverAPI {
+  solveFlight: (project: Project, fightId: string) => Promise<Project>;
+}
+
+export interface WindowAPI {
+  minimize: () => void;
+  toggleMaximize: () => void;
+  close: () => void;
+  openDevTools: () => void;
+}

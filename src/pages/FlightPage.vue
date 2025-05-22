@@ -287,7 +287,7 @@
             :key="`vg-${i}`"
             :flight
             :group
-            editable
+            :editable
             @car-add="(car) => addCarToVehicleGroup(group.balloon.id, car.id)"
           >
             <template #balloon>
@@ -299,7 +299,7 @@
                 :indexed="indexedVehicle"
                 :labeled="labeledVehicle"
                 :flightHint="showNumberOfFlights"
-                editable
+                :editable
                 @remove="removeVehicleGroup(group.balloon.id)"
                 @edit="showEditBalloon(group.balloon.id)"
                 @passenger-add="
@@ -325,7 +325,7 @@
                 :indexed="indexedVehicle"
                 :labeled="labeledVehicle"
                 :flightHint="showNumberOfFlights"
-                editable
+                :editable
                 @remove="
                   () => removeCarFromVehicleGroup(group.balloon.id, car.id)
                 "
@@ -392,16 +392,6 @@
       </div>
     </template>
   </q-page>
-
-  <teleport to="#navigation">
-    <q-separator
-      vertical
-      dark
-      inset
-    />
-
-    <flight-selection-item />
-  </teleport>
 </template>
 
 <script lang="ts" setup>

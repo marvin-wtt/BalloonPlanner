@@ -12,9 +12,13 @@ export const useProjectStore = defineStore('project', () => {
   const isSaving = ref<boolean>(false);
   const isDorty = ref<boolean>(false);
 
+  const debouncedSave = debounce(async () => {
+    await saveProject();
+  }, 1000);
+
   watch(
     project,
-    debounce(async (project, oldProject) => {
+    (project, oldProject) => {
       // Skip initial load and updates
       if (!oldProject || project.id !== oldProject.id) {
         return;
@@ -22,9 +26,9 @@ export const useProjectStore = defineStore('project', () => {
 
       isDorty.value = true;
 
-      await saveProject();
-    }, 1000),
-    { deep: true, immediate: true },
+      debouncedSave();
+    },
+    { deep: true },
   );
 
   async function loadIndex() {
@@ -71,13 +75,12 @@ export const useProjectStore = defineStore('project', () => {
   }
 
   async function saveProject() {
-    console.trace('Saving project', project.value);
-
     isSaving.value = true;
     isDorty.value = false;
     try {
       await window.projectAPI.update(toRaw(project.value));
     } catch (e) {
+      isDorty.value = true;
       console.error(e);
       quasar.notify({
         message: 'Failed to save project',
@@ -94,6 +97,8 @@ export const useProjectStore = defineStore('project', () => {
     projectIndex,
     project,
     loading: isLoading,
+    isSaving,
+    isDorty,
     createProject,
     deleteProject,
     loadIndex,

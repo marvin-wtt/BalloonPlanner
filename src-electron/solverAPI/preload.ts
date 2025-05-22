@@ -1,7 +1,7 @@
 import { ipcRenderer } from 'electron';
 
 const api = {
-  run: () => ipcRenderer.invoke('solver:run'),
+  run: (...args: unknown[]) => ipcRenderer.invoke('solver:run', ...args),
 };
 
 export default api;

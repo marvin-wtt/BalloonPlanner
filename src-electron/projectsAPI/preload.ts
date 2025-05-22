@@ -1,4 +1,4 @@
-import type { ProjectsAPI } from 'app/src-common/ProjectsAPI';
+import type { ProjectsAPI } from 'app/src-common/api';
 import { ipcRenderer } from 'electron';
 
 const api: ProjectsAPI = {

@@ -11,10 +11,7 @@
             inset
           />
 
-          <div
-            id="navigation"
-            class="row q-gutter-x-xs no-wrap"
-          >
+          <div class="row q-gutter-x-xs no-wrap">
             <q-btn
               :label
               :to="{ name: 'projects' }"
@@ -22,6 +19,28 @@
               rounded
               flat
             />
+
+            <q-btn
+              v-if="project"
+              :icon="syncIcon"
+              :disable="!isDorty"
+              :loading="isSaving"
+              size="sm"
+              dense
+              round
+              flat
+              @click="onSaveProject"
+            />
+
+            <template v-if="project">
+              <q-separator
+                vertical
+                dark
+                inset
+              />
+
+              <flight-selection-item />
+            </template>
           </div>
         </div>
         <q-space />
@@ -75,12 +94,21 @@ import { useRoute } from 'vue-router';
 import { useProjectStore } from 'stores/project';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
+import FlightSelectionItem from 'components/toolbar/FlightSelectionItem.vue';
 
 const quasar = useQuasar();
 
 const route = useRoute();
 const projectStore = useProjectStore();
-const { project } = storeToRefs(projectStore);
+const { project, isDorty, isSaving } = storeToRefs(projectStore);
+
+const syncIcon = computed<string>(() => {
+  if (isDorty.value || isSaving.value) {
+    return 'autorenew';
+  }
+
+  return 'done';
+});
 
 const label = computed<string>(() => {
   if (project.value == null || route.name === 'projects') {
@@ -89,4 +117,8 @@ const label = computed<string>(() => {
 
   return project.value.name;
 });
+
+async function onSaveProject() {
+  await projectStore.saveProject();
+}
 </script>

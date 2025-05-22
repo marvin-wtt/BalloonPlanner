@@ -1,13 +1,20 @@
-import { ipcMain } from 'electron';
+import { ipcMain, type IpcMainEvent } from 'electron';
 import { spawn } from 'node:child_process';
+import { Project } from 'app/src-common/entities';
 
 export default () => {
-  ipcMain.handle('solver:run', () => runSolver);
+  ipcMain.handle('solver:run', () => handleEvent(runSolver));
+};
+
+const handleEvent = (next: (...args: unknown[]) => Promise<unknown>) => {
+  return (_event: IpcMainEvent, ...args: unknown[]) => {
+    return next(...args);
+  };
 };
 
 const PROCESS_TIMEOUT_MS = 1_000_000;
 
-const runSolver = () => {
+const runSolver = (project: Project, flightId: string): Promise<Project> => {
   const payload = {
     vehicleGroups: [],
     balloons: [
@@ -44,7 +51,7 @@ const runSolver = () => {
   const python = venv + 'Scripts\\python.exe';
   const scriptName = 'run_balloon_solver.py';
 
-  return new Promise((resolve, reject) => {
+  return new Promise<Project>((resolve, reject) => {
     const process = spawn(python, [root + scriptName, '--stdin']);
 
     process.stdin.write(json);

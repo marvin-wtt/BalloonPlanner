@@ -1,9 +1,9 @@
-import type { WindowAPI } from 'app/src-common/WindowAPI';
-import type { ProjectsAPI } from 'app/src-common/ProjectsAPI';
+import type { WindowAPI, ProjectsAPI, SolverAPI } from 'app/src-common/api';
 
 declare global {
   interface Window {
     windowAPI: WindowAPI;
     projectAPI: ProjectsAPI;
+    solverAPI: SolverAPI;
   }
 }
