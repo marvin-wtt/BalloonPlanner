@@ -9,7 +9,7 @@ interface PersonSheetOptions {
   firstTime?: string;
 }
 
-export function gernerateShema(options: PersonSheetOptions): Schema {
+export function generateShema(options: PersonSheetOptions): Schema {
   return {
     [options.nameColumn ?? 'name']: {
       prop: 'name',

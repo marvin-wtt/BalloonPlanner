@@ -38,7 +38,7 @@ export const useFlightStore = defineStore('flight', () => {
       return {};
     }
 
-    return projectStore.project.cars
+    return project.value.cars
       .filter(({ id }) => flight.value.carIds.includes(id))
       .reduce(
         (cars, car) => ({
@@ -54,7 +54,7 @@ export const useFlightStore = defineStore('flight', () => {
       return {};
     }
 
-    return projectStore.project.people
+    return project.value.people
       .filter(({ id }) => flight.value.personIds.includes(id))
       .reduce(
         (persons, person) => ({
@@ -65,22 +65,33 @@ export const useFlightStore = defineStore('flight', () => {
       );
   });
 
-  function load(id: string) {
+  function loadFlight(id: string) {
     flightId.value = id;
   }
 
-  function create(): Flight {
+  function createFlight(): Flight {
     const newFlight = {
       id: crypto.randomUUID(),
       vehicleGroups: [],
-      carIds: projectStore.project.cars.map(({ id }) => id),
-      balloonIds: projectStore.project.balloons.map(({ id }) => id),
-      personIds: projectStore.project.people.map(({ id }) => id),
+      carIds: project.value.cars.map(({ id }) => id),
+      balloonIds: project.value.balloons.map(({ id }) => id),
+      personIds: project.value.people.map(({ id }) => id),
     };
 
-    projectStore.project.flights.push(newFlight);
+    project.value.flights.push(newFlight);
 
     return newFlight;
+  }
+
+  function deleteFlight(id: string) {
+    const index = project.value.flights.findIndex((f) => f.id === id);
+    if (index >= 0) {
+      project.value.flights.splice(index, 1);
+    }
+
+    if (flight.value?.id === id) {
+      flightId.value = undefined;
+    }
   }
 
   const availableBalloons = computed<Balloon[]>(() => {
@@ -130,7 +141,7 @@ export const useFlightStore = defineStore('flight', () => {
   });
 
   const numberOfFlights = computed<Record<string, number>>(() => {
-    const allFlights = projectStore.project?.flights ?? [];
+    const allFlights = project.value?.flights ?? [];
     const currentFlightId = flight.value?.id;
     if (!currentFlightId) {
       return {};
@@ -145,7 +156,7 @@ export const useFlightStore = defineStore('flight', () => {
     const counts: Record<string, number> = {};
     for (const f of flightHistory) {
       const balloons = f.vehicleGroups.map((g) => g.balloon);
-      for (const person of projectStore.project.people) {
+      for (const person of project.value.people) {
         const pid = person.id;
         if (!(pid in counts)) {
           counts[pid] = 0;
@@ -176,8 +187,9 @@ export const useFlightStore = defineStore('flight', () => {
     availableCars,
     numberOfFlights,
     // Methods
-    load,
-    create,
+    loadFlight,
+    createFlight,
+    deleteFlight,
   };
 });
 

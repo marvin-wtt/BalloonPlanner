@@ -90,7 +90,20 @@ onBeforeMount(async () => {
 
 function loadProject() {
   // TODO Open electron file chooser
-  quasar.dialog({});
+  quasar.dialog({
+    title: 'Open Project',
+    message: 'This feature is not yet implemented.',
+    ok: {
+      label: 'OK',
+      color: 'primary',
+      rounded: true,
+    },
+    cancel: {
+      label: 'Cancel',
+      rounded: true,
+      outline: true,
+    },
+  });
 }
 
 async function openProject(project: ProjectMeta) {

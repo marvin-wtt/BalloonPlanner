@@ -71,6 +71,8 @@ export const useProjectStore = defineStore('project', () => {
   }
 
   async function saveProject() {
+    console.trace('Saving project', project.value);
+
     isSaving.value = true;
     isDorty.value = false;
     try {

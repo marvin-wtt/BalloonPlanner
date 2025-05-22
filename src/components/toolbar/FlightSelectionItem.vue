@@ -38,6 +38,7 @@
                 <q-item
                   clickable
                   v-close-popup
+                  @click="deleteFlight(flight)"
                 >
                   <q-item-section class="text-negative">
                     Delete
@@ -71,6 +72,7 @@ import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import { useRouter } from 'vue-router';
 import { useFlightStore } from 'stores/flight';
+import type { Flight } from 'app/src-common/entities';
 
 const router = useRouter();
 const projectStore = useProjectStore();
@@ -103,7 +105,7 @@ async function addFlight() {
   }
 
   const projectId = project.value.id;
-  const flight = flightStore.create();
+  const flight = flightStore.createFlight();
   await router.push({
     name: 'flight',
     params: {
@@ -112,6 +114,10 @@ async function addFlight() {
     },
   });
   addFlightLoading.value = false;
+}
+
+function deleteFlight(flight: Flight) {
+  flightStore.deleteFlight(flight.id);
 }
 </script>
 

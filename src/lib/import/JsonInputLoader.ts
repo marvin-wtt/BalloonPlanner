@@ -1,4 +1,4 @@
-import { Person } from 'src/lib/entities';
+import type { Person } from 'app/src-common/entities';
 
 export async function loadJson(file: File): Promise<Person[]> {
   const content = await readFile(file);
@@ -11,27 +11,42 @@ export async function loadJson(file: File): Promise<Person[]> {
   const people: Person[] = [];
   for (const personData of json) {
     if (
-      !('first_name' in personData) ||
+      !('firstName' in personData) ||
       typeof personData.first_name !== 'string'
     ) {
-      throw new Error('invalid_file_content');
+      throw new Error('Missing first name property.');
     }
 
     if (
-      !('country' in personData) ||
-      typeof personData.country !== 'string' ||
-      personData.country.length !== 2
+      !('lastName' in personData) ||
+      typeof personData.lastName !== 'string'
     ) {
-      throw new Error('invalid_file_content');
+      throw new Error('Missing last name property.');
     }
 
-    const person = new Person(
-      capitalizeFirstLetter(personData.first_name),
-      personData.country,
-      false,
-      0,
-    );
-    people.push(person);
+    if (
+      !('address' in personData) ||
+      typeof personData.address !== 'object' ||
+      !('country' in personData.address) ||
+      typeof personData.address.country !== 'string' ||
+      personData.country.length !== 2
+    ) {
+      throw new Error('Missing country property.');
+    }
+
+    if (!('role' in personData) || typeof personData.role !== 'string') {
+      throw new Error('Missing last name property.');
+    }
+
+    people.push({
+      id: crypto.randomUUID(),
+      name:
+        capitalizeFirstLetter(personData.first_name) +
+        ' ' +
+        capitalizeFirstLetter(personData.lastName),
+      nationality: personData.address.country,
+      role: personData.role, // TODO Match roles
+    });
   }
 
   return people;

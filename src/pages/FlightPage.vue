@@ -476,18 +476,28 @@ async function init() {
     projectId = projectId[0];
   }
 
-  try {
-    await projectStore.loadProject(projectId);
-  } catch {
-    // TODO Route to selection page and notify about error
+  if (!project.value || project.value.id !== projectId) {
+    try {
+      await projectStore.loadProject(projectId);
+    } catch {
+      await router.push({
+        name: 'projects',
+      });
+      return;
+    }
   }
 
   if (Array.isArray(flightId)) {
-    flightId = flightId[0];
+    throw new Error('Received multiple flight ids');
+  }
+
+  if (flightId) {
+    flightStore.loadFlight(flightId);
+    return;
   }
 
   // If not flight specified, load the last flight
-  if (!flightId && project.value && project.value.flights.length > 0) {
+  if (project.value && project.value.flights.length > 0) {
     flightId = project.value.flights[project.value.flights.length - 1]?.id;
 
     await router.push({
@@ -497,11 +507,7 @@ async function init() {
         flightId,
       },
     });
-
-    return;
   }
-
-  flightStore.load(flightId);
 }
 
 function onSmartFill() {

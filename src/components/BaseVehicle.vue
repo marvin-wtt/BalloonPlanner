@@ -48,7 +48,7 @@
                 v-close-popup
               >
                 <q-item-section @click="onVehicleEdit()">
-                  {{ t('edit') }}
+                  {{ Edit }}
                 </q-item-section>
               </q-item>
               <q-item
@@ -59,7 +59,7 @@
                   class="text-negative"
                   @click="onVehicleRemoved()"
                 >
-                  {{ t('remove') }}
+                  {{ Remove }}
                 </q-item-section>
               </q-item>
             </q-list>
@@ -69,9 +69,7 @@
           v-if="indexed"
           class="vehicle-index"
         >
-          {{
-            type === 'balloon' ? t('pilot_index', 'P') : t('driver_index', 'D')
-          }}
+          {{ type === 'balloon' ? 'P' : 'D' }}
         </th>
         <base-vehicle-person-cell
           class="vehicle-person"
@@ -135,12 +133,10 @@ import type {
   VehicleGroup,
 } from 'app/src-common/entities';
 import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import { useFlightUtils } from 'src/composables/reservedCapacity';
 
-const { t } = useI18n();
 const flightStore = useFlightStore();
 const { remainingCapacity } = useFlightUtils();
 
@@ -204,10 +200,10 @@ const error = computed<boolean>(() => {
 
 const errorMessage = computed<string>(() => {
   return overfilled.value
-    ? t('tooltip_overfilled')
+    ? 'Too many passengers for this vehicle.'
     : invalidOperator.value
-      ? t('tooltip_invalid_operator')
-      : '';
+      ? 'This operator is not allowed for this vehicle.'
+      : 'An unknown error occurred.';
 });
 
 const overfilled = computed<boolean>(() => {
