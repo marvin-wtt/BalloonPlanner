@@ -42,7 +42,7 @@
         </div>
         <q-stepper-navigation>
           <q-btn
-            @click="step = 'people'"
+            @click="step = people.length === 0 ? 'people' : 'people_manual'"
             color="primary"
             label="Continue"
             :disable="!name || name.length === 0"

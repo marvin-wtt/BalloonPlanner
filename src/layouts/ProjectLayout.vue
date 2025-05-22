@@ -15,7 +15,13 @@
             id="navigation"
             class="row q-gutter-x-xs no-wrap"
           >
-            <project-selection-item />
+            <q-btn
+              :label
+              :to="{ name: 'projects' }"
+              class="ellipsis"
+              rounded
+              flat
+            />
           </div>
         </div>
         <q-space />
@@ -65,7 +71,22 @@
 <script lang="ts" setup>
 import { minimize, toggleMaximize, closeApp } from 'src/composables/windowAPI';
 import { useQuasar } from 'quasar';
-import ProjectSelectionItem from 'components/toolbar/ProjectSelectionItem.vue';
+import { useRoute } from 'vue-router';
+import { useProjectStore } from 'stores/project';
+import { storeToRefs } from 'pinia';
+import { computed } from 'vue';
 
 const quasar = useQuasar();
+
+const route = useRoute();
+const projectStore = useProjectStore();
+const { project } = storeToRefs(projectStore);
+
+const label = computed<string>(() => {
+  if (project.value == null || route.name === 'projects') {
+    return 'Projects';
+  }
+
+  return project.value.name;
+});
 </script>

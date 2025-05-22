@@ -3,7 +3,7 @@
     :name
     title="Select loading method"
     icon="input"
-    :done="loader !== undefined"
+    :done="loadingMethod !== undefined"
   >
     <q-list>
       <q-item
@@ -12,15 +12,15 @@
       >
         <q-item-section avatar>
           <q-radio
-            v-model="loader"
+            v-model="loadingMethod"
             val="online"
             disable
           />
         </q-item-section>
         <q-item-section>
-          <q-item-label> Online (Ballaeron)</q-item-label>
+          <q-item-label> Online</q-item-label>
           <q-item-label caption>
-            Download data from Ballaeron survey server
+            Download data from camp registration server
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -31,7 +31,7 @@
       >
         <q-item-section avatar>
           <q-radio
-            v-model="loader"
+            v-model="loadingMethod"
             val="json"
           />
         </q-item-section>
@@ -49,7 +49,7 @@
       >
         <q-item-section avatar>
           <q-radio
-            v-model="loader"
+            v-model="loadingMethod"
             val="csv"
             disable
           />
@@ -68,7 +68,7 @@
       >
         <q-item-section avatar>
           <q-radio
-            v-model="loader"
+            v-model="loadingMethod"
             val="manual"
           />
         </q-item-section>
@@ -83,15 +83,15 @@
       <q-btn
         label="Continue"
         color="primary"
-        :disable="loader === undefined"
+        :disable="loadingMethod === undefined"
         rounded
-        @click="emit('to', name + '_' + loader)"
+        @click="emit('to', name + '_' + loadingMethod)"
       />
     </q-stepper-navigation>
   </q-step>
 
   <q-step
-    v-if="loader === 'json'"
+    v-if="loadingMethod === 'json'"
     :name="name + '_json'"
     title="Upload JSON File"
     icon="upload"
@@ -110,6 +110,8 @@
           :error-message="inputErrorMessage"
           @change="inputErrorMessage = undefined"
           :loading="fileUploadOngoing"
+          rounded
+          outlined
         >
           <template v-slot:prepend>
             <q-icon name="attach_file" />
@@ -123,12 +125,14 @@
         label="Continue"
         color="primary"
         :disable="file === undefined"
+        rounded
         @click="processJson()"
       />
       <q-btn
         label="Back"
         color="primary"
-        flat
+        rounded
+        outline
         @click="emit('to', name)"
       />
     </q-stepper-navigation>
@@ -151,28 +155,25 @@ const emit = defineEmits<{
   (e: 'to', destination: string): void;
 }>();
 
-const loader = ref<string>();
+const loadingMethod = ref<string>();
 const fileUploadOngoing = ref(false);
 const inputErrorMessage = ref<string>();
 
-const file = ref();
+const file = ref<File>();
 
-function processJson() {
+async function processJson() {
   fileUploadOngoing.value = true;
   inputErrorMessage.value = undefined;
-  // TODO Input check
 
-  loadJson(file.value)
-    .then((value) => {
-      // TODO Validate
-      emit('to', 'people_manual');
-    })
-    .catch((reason) => {
-      inputErrorMessage.value = reason;
-    })
-    .finally(() => {
-      fileUploadOngoing.value = false;
-    });
+  try {
+    modelValue.value = await loadJson(file.value);
+
+    emit('to', 'people_manual');
+  } catch (reason) {
+    inputErrorMessage.value = reason.message;
+  } finally {
+    fileUploadOngoing.value = false;
+  }
 }
 </script>
 

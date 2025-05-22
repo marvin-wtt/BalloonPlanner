@@ -6,11 +6,11 @@
     :done="modelValue.length > 0"
   >
     <q-table
-      v-model:pagination="pagination"
-      :rows="modelValue"
-      :columns="columns"
       title="People"
-      row-key="name"
+      :rows="modelValue"
+      :columns
+      :pagination
+      row-key="id"
       flat
     >
       <template v-slot:top-right>
