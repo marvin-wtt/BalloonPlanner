@@ -399,6 +399,7 @@
             icon="fast_forward"
             fab
             color="accent"
+            :disable="!editable"
             @click="onSmartFill"
           >
             <q-tooltip> Smart fill </q-tooltip>
