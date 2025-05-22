@@ -36,11 +36,8 @@ import type {
   Balloon,
 } from 'app/src-common/entities';
 import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
-
-const { t } = useI18n();
 
 const flightStore = useFlightStore();
 const { carMap, balloonMap } = storeToRefs(flightStore);
@@ -65,10 +62,10 @@ const showWarning = computed(() => {
 
 const warningText = computed(() => {
   return trailerHitchWarning.value
-    ? t('tooltip_missing_trailer_hitch')
+    ? 'The group is missing a trailer clutch'
     : reservedCapacityWarning.value
-      ? t('tooltip_insufficient_capacity')
-      : '';
+      ? 'The group does not have enough car capacity'
+      : 'Unknown error';
 });
 
 const cars = computed<Car[]>(() => {

@@ -24,14 +24,7 @@
         <q-item v-if="items.length === 0">
           <q-item-section>
             <q-item-label>
-              {{
-                t('list.empty.label', { name: itemName.toLowerCase() + 's' })
-              }}
-            </q-item-label>
-            <q-item-label caption>
-              {{
-                t('list.empty.caption', { name: itemName.toLowerCase() + 's' })
-              }}
+              {{ `No ${itemName.toLowerCase()}s available` }}
             </q-item-label>
           </q-item-section>
         </q-item>
@@ -98,10 +91,10 @@
       </q-list>
       <q-btn
         v-if="editable"
+        :label="`Create ${itemName.toLowerCase()}`"
         class="q-ma-sm"
         color="primary"
         icon="add"
-        :label="t('list.item.create', { name: itemName.toLowerCase() })"
         @click="addItem()"
       />
     </div>
@@ -113,9 +106,6 @@ import type { Identifiable } from 'app/src-common/entities';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import { QItem } from 'quasar';
 import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
 
 const {
   title,

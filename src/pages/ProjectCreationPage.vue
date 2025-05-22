@@ -90,11 +90,10 @@
         icon="flag"
         :done="completed"
       >
-        This step won't show up because it is disabled.
-
+        All done! You may edit the data later too.
         <q-stepper-navigation class="row q-gutter-sm">
           <q-btn
-            label="Finish"
+            label="Create"
             color="primary"
             rounded
             @click="finish()"

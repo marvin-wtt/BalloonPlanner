@@ -21,9 +21,9 @@
           class="bg-grey-10 text-white column justify-between"
         >
           <q-tab
+            label="Overview"
             name="overview"
             icon="home"
-            :label="t('overview')"
           />
           <q-separator
             spaced
@@ -31,9 +31,9 @@
             color="white"
           />
           <q-tab
+            label="Balloons"
             name="balloons"
             icon="mdi-airballoon"
-            :label="t('balloon', 2)"
           >
             <q-badge
               v-if="showBalloonsMenuBadge"
@@ -44,9 +44,9 @@
             </q-badge>
           </q-tab>
           <q-tab
+            label="Cars"
             name="cars"
             icon="airport_shuttle"
-            :label="t('car', 2)"
           >
             <q-badge
               v-if="showCarsMenuBadge"
@@ -57,9 +57,9 @@
             </q-badge>
           </q-tab>
           <q-tab
+            label="Counselors"
             name="supervisors"
             icon="supervisor_account"
-            :label="t('supervisor', 2)"
           >
             <q-badge
               v-if="showCounselorsMenuBadge"
@@ -70,9 +70,9 @@
             </q-badge>
           </q-tab>
           <q-tab
+            label="Participants"
             name="participants"
             icon="group"
-            :label="t('participant', 2)"
           >
             <q-badge
               v-if="showParticipantsMenuBadge"
@@ -88,9 +88,9 @@
             color="white"
           />
           <q-tab
+            label="Settings"
             name="settings"
             icon="settings"
-            :label="t('settings')"
           />
         </q-tabs>
 
@@ -112,8 +112,8 @@
             >
               <q-scroll-area class="col-grow self-stretch">
                 <editable-list
-                  :title="t('balloon', 2)"
-                  :item-name="t('balloon')"
+                  title="Balloons"
+                  item-name="Balloon"
                   :items="availableBalloons"
                   @create="showCreateBalloon"
                   @edit="(balloon) => showEditBalloon(balloon.id)"
@@ -135,8 +135,8 @@
             >
               <q-scroll-area class="col-grow self-stretch">
                 <editable-list
-                  :title="t('car', 2)"
-                  :item-name="t('car')"
+                  title="Cars"
+                  item-name="Car"
                   :items="availableCars"
                   @create="showCreateCar()"
                   @edit="(car) => showEditCar(car.id)"
@@ -158,8 +158,8 @@
             >
               <q-scroll-area class="col-grow self-stretch">
                 <editable-list
-                  :title="t('supervisor', 2)"
-                  :item-name="t('supervisor')"
+                  title="Counselors"
+                  item-name="Counselor"
                   :items="availableCounselors"
                   @create="showCreatePerson()"
                   @edit="(person) => showEditPerson(person)"
@@ -181,8 +181,8 @@
             >
               <q-scroll-area class="col-grow self-stretch">
                 <editable-list
-                  :title="t('participant', 2)"
-                  :item-name="t('participant')"
+                  title="Participants"
+                  item-name="Participant"
                   :items="availableParticipants"
                   @create="showCreatePerson()"
                   @edit="(person) => showEditPerson(person)"
@@ -225,7 +225,7 @@
                           />
                         </q-item-section>
                         <q-item-section>
-                          <q-item-label> Show vehicle names </q-item-label>
+                          <q-item-label> Show vehicle names</q-item-label>
                         </q-item-section>
                       </q-item>
                       <q-item
@@ -242,7 +242,7 @@
                           />
                         </q-item-section>
                         <q-item-section>
-                          <q-item-label> Show passenger index </q-item-label>
+                          <q-item-label> Show passenger index</q-item-label>
                         </q-item-section>
                       </q-item>
                       <q-item
@@ -259,7 +259,7 @@
                           />
                         </q-item-section>
                         <q-item-section>
-                          <q-item-label> Show passenger index </q-item-label>
+                          <q-item-label> Show passenger index</q-item-label>
                         </q-item-section>
                       </q-item>
                     </q-list>
@@ -415,7 +415,6 @@ import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import BaseVehicle from 'components/BaseVehicle.vue';
 import type { Balloon, Car, Flight, Person } from 'app/src-common/entities';
 import EditableList from 'components/EditableList.vue';
-import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from 'stores/settings';
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
@@ -424,7 +423,6 @@ import FlightSelectionItem from 'components/toolbar/FlightSelectionItem.vue';
 import { useFlightStore } from 'stores/flight';
 import { useFlightOperations } from 'src/composables/flight-operations';
 
-const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const quasar = useQuasar();
@@ -517,7 +515,7 @@ function onSmartFill() {
 
   const notify = quasar.notify({
     type: 'ongoing',
-    message: t('smart_fill_loading'),
+    message: 'Calculating optimal flight plan...',
   });
   try {
     // const f = solve(flight.value);
@@ -526,13 +524,13 @@ function onSmartFill() {
 
     notify({
       type: 'positive',
-      message: t('smart_fill_success'),
+      message: 'Sucessfully filled flight!',
       timeout: 1000,
     });
   } catch (reason) {
     notify({
       type: 'warning',
-      message: t('smart_fill_error') + ': ' + reason,
+      message: 'Failed to fill the flight' + ': ' + reason,
       timeout: 2000,
     });
   }
@@ -566,14 +564,14 @@ function showEditPerson(person: Person) {
 function showDeletePerson(person: Person) {
   quasar
     .dialog({
-      title: t('dialog.person.delete.confirm.title'),
-      message: t('dialog.person.delete.confirm.message', { name: person.name }),
+      title: 'Delete person',
+      message: `Are you sure you want to delete ${person.name} fron this flight? The person will remain in the project for other flights?`,
       ok: {
-        label: t('delete'),
+        label: 'Delete',
         color: 'negative',
       },
       cancel: {
-        label: t('cancel'),
+        label: 'Cancel',
         outline: true,
         color: 'grey',
       },
@@ -624,16 +622,14 @@ function showEditBalloon(id: string) {
 function showDeleteBalloon(balloon: Balloon) {
   quasar
     .dialog({
-      title: t('dialog.vehicle.delete.confirm.title'),
-      message: t('dialog.vehicle.delete.confirm.message', {
-        name: balloon.name,
-      }),
+      title: 'Delete balloon',
+      message: `Are you sure the balloon ${balloon.name} from this flight? It remains in the project for other flights.`,
       ok: {
-        label: t('delete'),
+        label: 'Delete',
         color: 'negative',
       },
       cancel: {
-        label: t('cancel'),
+        label: 'Cancel',
         outline: true,
         color: 'grey',
       },
@@ -680,16 +676,14 @@ function showEditCar(id: string) {
 function showDeleteCar(car: Car) {
   quasar
     .dialog({
-      title: t('dialog.vehicle.delete.confirm.title'),
-      message: t('dialog.vehicle.delete.confirm.message', {
-        name: car.name,
-      }),
+      title: `Delete car`,
+      message: `Are you sure the car ${car.name} from this flight? It remains in the project for other flights.`,
       ok: {
-        label: t('delete'),
+        label: 'Delete',
         color: 'negative',
       },
       cancel: {
-        label: t('cancel'),
+        label: 'Cancel',
         outline: true,
         color: 'grey',
       },

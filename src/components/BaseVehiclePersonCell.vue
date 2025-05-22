@@ -19,9 +19,7 @@
           clickable
           v-close-popup
         >
-          <q-item-section @click="onEdit()">
-            {{ t('edit') }}
-          </q-item-section>
+          <q-item-section @click="onEdit()"> Edit </q-item-section>
         </q-item>
         <q-item
           clickable
@@ -31,7 +29,7 @@
             @click="onDragEnd()"
             class="text-negative"
           >
-            {{ t('remove') }}
+            Remove
           </q-item-section>
         </q-item>
       </q-list>
@@ -56,11 +54,9 @@ import type {
 import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
-import { useI18n } from 'vue-i18n';
 import { useFlightStore } from 'stores/flight';
 import { storeToRefs } from 'pinia';
 
-const { t } = useI18n();
 const flightStore = useFlightStore();
 
 const { personMap, numberOfFlights } = storeToRefs(flightStore);
