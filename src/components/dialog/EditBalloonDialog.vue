@@ -21,6 +21,8 @@
             :rules="[
               (val?: string | null) =>
                 (!!val && val.length > 0) || 'Name is required.',
+              (val?: string | null) =>
+                !existingNames?.includes(val) || 'Name must be unique.',
             ]"
             hide-bottom-space
             rounded
@@ -88,8 +90,9 @@ import { useDialogPluginComponent, type QSelectOption } from 'quasar';
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
-const { people, balloon } = defineProps<{
+const { people, balloon, existingNames } = defineProps<{
   balloon?: Balloon;
+  existingNames?: string[];
   people: Person[];
 }>();
 

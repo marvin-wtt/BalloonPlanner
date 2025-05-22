@@ -154,6 +154,7 @@ function onEditPerson(person: Person) {
       component: EditPersonDialog,
       componentProps: {
         person,
+        personNames: modelValue.value.map(({ name }) => name),
       },
     })
     .onOk((payload) => {
@@ -173,6 +174,9 @@ function onCreatePerson() {
   quasar
     .dialog({
       component: EditPersonDialog,
+      componentProps: {
+        existingNames: modelValue.value.map(({ name }) => name),
+      },
     })
     .onOk((payload) => {
       modelValue.value.push({

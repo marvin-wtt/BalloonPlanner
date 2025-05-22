@@ -154,6 +154,7 @@ function onEditBalloon(balloon: Balloon) {
       componentProps: {
         vehicle: balloon,
         people,
+        existingNames: modelValue.value.map(({ name }) => name),
       },
     })
     .onOk((payload) => {
@@ -175,6 +176,7 @@ function onCreateBalloon() {
       component: EditBalloonDialog,
       componentProps: {
         people,
+        existingNames: modelValue.value.map(({ name }) => name),
       },
     })
     .onOk((payload) => {

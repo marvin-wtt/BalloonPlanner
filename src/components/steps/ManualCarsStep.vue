@@ -161,6 +161,7 @@ function onEditCar(car: Car) {
       componentProps: {
         vehicle: car,
         people,
+        existingNames: modelValue.value.map(({ name }) => name),
       },
     })
     .onOk((payload) => {
@@ -180,6 +181,7 @@ function onCreateCar() {
       component: EditCarDialog,
       componentProps: {
         people,
+        existingNames: modelValue.value.map(({ name }) => name),
       },
     })
     .onOk((payload) => {

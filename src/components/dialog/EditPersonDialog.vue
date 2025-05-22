@@ -21,6 +21,8 @@
             :rules="[
               (val: string | undefined) =>
                 (val && val.length > 0) || 'Name is required.',
+              (val?: string | null) =>
+                !existingNames?.includes(val) || 'Name must be unique.',
             ]"
             hide-bottom-space
             outlined
@@ -97,8 +99,9 @@ import { computed, ref, toRaw } from 'vue';
 import type { Person, PersonRole } from 'app/src-common/entities';
 import { useDialogPluginComponent } from 'quasar';
 
-const { person } = defineProps<{
+const { person, existingNames } = defineProps<{
   person?: Person;
+  existingNames?: string[];
 }>();
 
 defineEmits([...useDialogPluginComponent.emits]);

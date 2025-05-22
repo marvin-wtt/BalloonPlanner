@@ -36,6 +36,8 @@
             :rules="[
               (val?: number | null) =>
                 (!!val && val > 0) || 'Maximum Capacity is required.',
+              (val?: string | null) =>
+                !existingNames?.includes(val) || 'Name must be unique.',
             ]"
             rounded
             outlined
@@ -95,6 +97,7 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
 
 const { car, people } = defineProps<{
   car?: Car;
+  existingNames?: string[];
   people: Person[];
 }>();
 
