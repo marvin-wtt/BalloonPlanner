@@ -40,6 +40,14 @@
         </project-card>
 
         <project-card>
+          <q-file
+            v-model="file"
+            ref="uploaderRef"
+            accept="application/json"
+            style="display: none"
+            @update:model-value="onFilesAdded"
+          />
+
           <q-btn
             class="add-btn"
             icon="folder_open"
@@ -73,10 +81,12 @@
 import ProjectCard from 'components/ProjectCard.vue';
 import type { ProjectMeta } from 'app/src-common/entities';
 import { useRouter } from 'vue-router';
-import { useQuasar } from 'quasar';
+import { QFile, useQuasar } from 'quasar';
 import { useProjectStore } from 'stores/project';
 import { storeToRefs } from 'pinia';
-import { onBeforeMount } from 'vue';
+import { onBeforeMount, ref } from 'vue';
+import { readJsonFile } from 'src/util/json-file-reader';
+import { isProject } from 'src/util/validate-project';
 
 const router = useRouter();
 const quasar = useQuasar();
@@ -84,26 +94,31 @@ const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { projectIndex } = storeToRefs(projectStore);
 
+const file = ref<File>();
+const uploaderRef = ref<QFile>(null);
+
 onBeforeMount(async () => {
   await projectStore.loadIndex();
 });
 
 function loadProject() {
-  // TODO Open electron file chooser
-  quasar.dialog({
-    title: 'Open Project',
-    message: 'This feature is not yet implemented.',
-    ok: {
-      label: 'OK',
-      color: 'primary',
-      rounded: true,
-    },
-    cancel: {
-      label: 'Cancel',
-      rounded: true,
-      outline: true,
-    },
-  });
+  uploaderRef.value.pickFiles();
+}
+
+async function onFilesAdded() {
+  const data = await readJsonFile(file.value);
+
+  if (!isProject(data)) {
+    quasar.notify({
+      message: 'Invalid project file',
+      caption: 'The file does not contain a valid project.',
+      type: 'negative',
+    });
+    return;
+  }
+
+  // TODO Validate
+  await projectStore.createProject(data);
 }
 
 async function openProject(project: ProjectMeta) {
@@ -132,6 +147,7 @@ function deleteProject(project: ProjectMeta) {
     });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function editProject(project: ProjectMeta) {
   // TODO Add dialog
   quasar.dialog({

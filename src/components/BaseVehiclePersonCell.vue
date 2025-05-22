@@ -1,8 +1,9 @@
 <template>
   <draggable-item
-    :tag="operator ? 'th' : 'td'"
     v-if="person"
+    :tag="operator ? 'th' : 'td'"
     :item="person"
+    :disabled="!editable"
     @remove="onDragEnd()"
   >
     {{ personLabel }}
@@ -67,6 +68,7 @@ const {
   assignment,
   editable = false,
   flightHint = false,
+  weightHint = false,
   operator = false,
 } = defineProps<{
   person?: Person;
@@ -74,6 +76,7 @@ const {
   assignment: VehicleAssignment;
   editable?: boolean;
   flightHint?: boolean;
+  weightHint?: boolean;
   operator?: boolean;
 }>();
 
@@ -88,18 +91,30 @@ const personLabel = computed<string>(() => {
     return '';
   }
 
-  const label = person.name;
+  let label = person.name;
 
-  if (!flightHint || !editable) {
+  if (!editable) {
     return label;
   }
 
-  const flights = numberOfFlights.value[person.id] ?? 0;
+  if (flightHint) {
+    const flights = numberOfFlights.value[person.id] ?? 0;
 
-  return `${label} (${flights})`;
+    label += ` (${flights})`;
+  }
+
+  if (weightHint) {
+    label += ` (${person.weight ?? '?'} kg)`;
+  }
+
+  return label;
 });
 
 function isDropAllowed(element: Identifiable): boolean {
+  if (!editable) {
+    return false;
+  }
+
   if (!personMap.value[element.id]) {
     return false;
   }

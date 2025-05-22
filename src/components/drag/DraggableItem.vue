@@ -4,7 +4,7 @@
     :class="{ dragged: dragged }"
     @dragstart.stop="onDragStart($event)"
     @dragend.stop="onDragEnd($event)"
-    draggable="true"
+    :draggable="disabled ? 'false' : 'true'"
   >
     <slot />
   </component>
@@ -15,13 +15,15 @@ import { DragHelper } from 'src/util/DragHelper';
 import type { Identifiable } from 'app/src-common/entities';
 import { ref } from 'vue';
 
-interface Props {
+const {
+  item,
+  tag = 'div',
+  disabled = false,
+} = defineProps<{
   item: Identifiable;
   tag?: string | object;
-  label?: string;
-}
-
-const { item, tag = 'div' } = defineProps<Props>();
+  disabled?: boolean;
+}>();
 
 const emit = defineEmits<{
   (e: 'cancel', element: Identifiable): void;

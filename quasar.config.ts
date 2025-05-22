@@ -2,9 +2,8 @@
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
 import { defineConfig } from '#q-app/wrappers';
-import { fileURLToPath } from 'node:url';
 
-export default defineConfig((ctx) => {
+export default defineConfig(() => {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
@@ -68,13 +67,6 @@ export default defineConfig((ctx) => {
             },
           },
           { server: false },
-        ],
-        [
-          '@intlify/unplugin-vue-i18n/vite',
-          {
-            include: [fileURLToPath(new URL('./src/i18n', import.meta.url))],
-            ssr: ctx.modeName === 'ssr',
-          },
         ],
       ],
     },

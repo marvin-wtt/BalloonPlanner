@@ -41,6 +41,21 @@
             rounded
           />
 
+          <q-input
+            v-model.number="weight"
+            type="number"
+            label="Weight"
+            hint="in kg"
+            lazy-rules
+            :rules="[
+              (val?: number | null) =>
+                !val || val > 0 || 'Weight must be greater than 0.',
+            ]"
+            clearable
+            rounded
+            outlined
+          />
+
           <q-select
             v-model="role"
             label="Role"
@@ -94,6 +109,7 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
 const name = ref<string>(person?.name ?? null);
 const nationality = ref<string>(person?.nationality ?? null);
 const role = ref<PersonRole>(person?.role ?? 'participant');
+const weight = ref<number>(person?.weight ?? undefined);
 
 const mode = computed<'create' | 'edit'>(() => {
   return person ? 'edit' : 'create';
@@ -126,6 +142,7 @@ function onSubmit() {
     name: toRaw(name.value),
     nationality: toRaw(nationality.value),
     role: toRaw(role.value),
+    weight: toRaw(weight.value),
   };
 
   onDialogOK(payload);

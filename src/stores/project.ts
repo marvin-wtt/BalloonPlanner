@@ -39,7 +39,19 @@ export const useProjectStore = defineStore('project', () => {
     // Clone the project to remove all vue proxies
     const copy = JSON.parse(JSON.stringify(project));
 
-    await window.projectAPI.store(copy);
+    try {
+      await window.projectAPI.store(copy);
+
+      await loadIndex();
+    } catch (error) {
+      quasar.notify({
+        message: 'Failed to create project',
+        caption: error.message,
+        color: 'negative',
+        group: 'project-error',
+      });
+      throw error;
+    }
   }
 
   async function deleteProject(projectId: string): Promise<void> {

@@ -67,4 +67,10 @@ export interface ProjectMeta {
   description: string;
 }
 
-export type EntityMap<T extends Identifiable> = Record<string, T>;
+export interface SmartFillPayload {
+  people: (Person & { flights: number })[];
+  cars: Car[];
+  balloons: Balloon[];
+  groups: VehicleGroup[];
+  history: Flight[];
+}

@@ -8,7 +8,6 @@
       v-if="empty"
       class="col-12 text-center text-body1"
     >
-      <!-- TODO Add translation -->
       Drop a balloon here to start.
     </div>
 
@@ -33,8 +32,9 @@ import type {
 import DropZone from 'components/drag/DropZone.vue';
 import { computed } from 'vue';
 
-const { flight } = defineProps<{
+const { flight, editable = false } = defineProps<{
   flight: Flight;
+  editable?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -54,6 +54,10 @@ function elementIsPerson(element: Identifiable): element is Person {
 }
 
 function isDropAllowed(element: Identifiable): boolean {
+  if (!editable) {
+    return false;
+  }
+
   if (elementIsPerson(element)) {
     return true;
   }

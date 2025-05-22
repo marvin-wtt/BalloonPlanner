@@ -30,10 +30,6 @@ const routes: RouteRecordRaw[] = [
         component: () => undefined,
       },
       {
-        path: ':project/edit',
-        component: () => import('pages/ProjectEditPage.vue'),
-      },
-      {
         path: ':projectId/flights',
         name: 'flights',
         component: () => import('pages/FlightPage.vue'),

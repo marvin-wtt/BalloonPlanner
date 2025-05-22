@@ -1,6 +1,12 @@
 import { acceptHMRUpdate, defineStore, storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
-import type { Balloon, Car, Flight, Person } from 'app/src-common/entities';
+import type {
+  Balloon,
+  Car,
+  Flight,
+  Person,
+  SmartFillPayload,
+} from 'app/src-common/entities';
 import { useProjectStore } from 'stores/project';
 
 export const useFlightStore = defineStore('flight', () => {
@@ -140,21 +146,24 @@ export const useFlightStore = defineStore('flight', () => {
     );
   });
 
-  const numberOfFlights = computed<Record<string, number>>(() => {
+  const history = computed<Flight[]>(() => {
     const allFlights = project.value?.flights ?? [];
     const currentFlightId = flight.value?.id;
     if (!currentFlightId) {
-      return {};
+      return [];
     }
 
     const endIndex = allFlights.findIndex((f) => f.id === currentFlightId);
     if (endIndex === -1) {
-      return {};
+      return [];
     }
 
-    const flightHistory = allFlights.slice(0, endIndex);
+    return allFlights.slice(0, endIndex);
+  });
+
+  const numberOfFlights = computed<Record<string, number>>(() => {
     const counts: Record<string, number> = {};
-    for (const f of flightHistory) {
+    for (const f of history.value) {
       const balloons = f.vehicleGroups.map((g) => g.balloon);
       for (const person of project.value.people) {
         const pid = person.id;
@@ -176,6 +185,27 @@ export const useFlightStore = defineStore('flight', () => {
     return counts;
   });
 
+  async function smartFillFlight() {
+    const data: SmartFillPayload = {
+      cars: Object.values(carMap.value),
+      balloons: Object.values(balloonMap.value), // TODO Add max weight
+      people: Object.values(personMap.value).map((person) => ({
+        ...person,
+        flights: numberOfFlights.value[person.id] ?? 0,
+      })),
+      groups: flight.value?.vehicleGroups ?? [],
+      history: history.value,
+    };
+
+    // Remove all vue proxies
+    const generatedGroups = await window.solverAPI.solveFlight(
+      JSON.parse(JSON.stringify(data)),
+    );
+
+    project.value.flights.find((f) => f.id === flightId.value).vehicleGroups =
+      generatedGroups;
+  }
+
   return {
     // Computed
     flight,
@@ -190,6 +220,7 @@ export const useFlightStore = defineStore('flight', () => {
     loadFlight,
     createFlight,
     deleteFlight,
+    smartFillFlight,
   };
 });
 

@@ -1,6 +1,7 @@
 <template>
   <draggable-item
     :item="vehicle"
+    :disabled="!editable"
     class="row"
     @remove="onVehicleRemoved"
   >
@@ -33,7 +34,7 @@
           :rowspan="capacity + 1"
         >
           <span>
-            {{ vehicle.name }}
+            {{ vehicleName }}
           </span>
           <q-menu
             touch-position
@@ -47,9 +48,7 @@
                 clickable
                 v-close-popup
               >
-                <q-item-section @click="onVehicleEdit()">
-                  {{ Edit }}
-                </q-item-section>
+                <q-item-section @click="onVehicleEdit()"> Edit</q-item-section>
               </q-item>
               <q-item
                 clickable
@@ -59,7 +58,7 @@
                   class="text-negative"
                   @click="onVehicleRemoved()"
                 >
-                  {{ Remove }}
+                  Remove
                 </q-item-section>
               </q-item>
             </q-list>
@@ -74,12 +73,13 @@
         <base-vehicle-person-cell
           class="vehicle-person"
           :class="indexed ? 'vehicle-person__indexed' : ''"
-          :editable
-          :flightHint
           :person="personMap[assignment.operatorId]"
           :vehicle
           :assignment
           operator
+          :editable
+          :flightHint
+          :weight-hint="passengerWeightHint"
           @add="(p) => emit('operatorAdd', p)"
           @remove="
             personMap[assignment.operatorId]
@@ -95,7 +95,7 @@
       </tr>
 
       <tr
-        v-for="c in capacity"
+        v-for="c in capacity - 1"
         :key="c"
       >
         <td
@@ -107,11 +107,12 @@
         <base-vehicle-person-cell
           class="vehicle-person"
           :class="indexed ? 'vehicle-person__indexed' : ''"
-          :editable
           :person="personMap[assignment.passengerIds[c - 1]]"
           :vehicle
           :assignment
+          :editable
           :flightHint
+          :weight-hint="passengerWeightHint"
           @add="(p) => emit('passengerAdd', p)"
           @remove="
             emit('passengerRemove', personMap[assignment.passengerIds[c - 1]])
@@ -151,6 +152,8 @@ const {
   editable = false,
   hideEmpty = false,
   flightHint = false,
+  passengerWeightHint = false,
+  totalWeightHint = false,
 } = defineProps<{
   group: VehicleGroup;
   assignment: VehicleAssignment;
@@ -159,6 +162,8 @@ const {
   labeled?: boolean;
   editable?: boolean;
   flightHint?: boolean;
+  passengerWeightHint?: boolean;
+  totalWeightHint?: boolean;
   hideEmpty?: boolean;
 }>();
 
@@ -178,8 +183,24 @@ const vehicle = computed<Vehicle>(() => {
   return map[assignment.id];
 });
 
+const vehicleName = computed<string>(() => {
+  let name = vehicle.value.name;
+
+  if (totalWeightHint) {
+    const totalWeight =
+      assignment.passengerIds
+        .map((id) => personMap.value[id])
+        .reduce<number>((acc, person) => acc + (person?.weight ?? 0), 0) +
+      (personMap[assignment.operatorId]?.weight ?? 0);
+
+    name += ` (${totalWeight} kg)`;
+  }
+
+  return name;
+});
+
 const capacity = computed<number>(() => {
-  let capacity: number = vehicle.value.maxCapacity - 1;
+  let capacity: number = vehicle.value.maxCapacity;
 
   if (type === 'car') {
     // Compute reserved capacity

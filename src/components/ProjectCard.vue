@@ -15,5 +15,6 @@
 .project-card {
   width: 15em;
   aspect-ratio: 1.5;
+  border-radius: 1em;
 }
 </style>

@@ -1,9 +1,9 @@
 import { ipcMain, type IpcMainEvent } from 'electron';
 import { spawn } from 'node:child_process';
-import { Project } from 'app/src-common/entities';
+import type { SmartFillPayload, VehicleGroup } from 'app/src-common/entities';
 
 export default () => {
-  ipcMain.handle('solver:run', () => handleEvent(runSolver));
+  ipcMain.handle('solver:run', handleEvent(runSolver));
 };
 
 const handleEvent = (next: (...args: unknown[]) => Promise<unknown>) => {
@@ -14,36 +14,7 @@ const handleEvent = (next: (...args: unknown[]) => Promise<unknown>) => {
 
 const PROCESS_TIMEOUT_MS = 1_000_000;
 
-const runSolver = (project: Project, flightId: string): Promise<Project> => {
-  const payload = {
-    vehicleGroups: [],
-    balloons: [
-      {
-        id: 'B1',
-        capacity: 3,
-        allowed_operators: ['pilotA', 'pilotB'],
-        max_weight: 250,
-      },
-      {
-        id: 'B2',
-        capacity: 4,
-        allowed_operators: ['pilotC'],
-        max_weight: 350,
-      },
-    ],
-    cars: [{ id: 'C1', capacity: 4, allowed_operators: ['driverA', 'pilotA'] }],
-    people: [
-      { id: 'pilotA', flights: 10, nationality: 'DE', weight: 80 },
-      { id: 'pilotB', flights: 5, nationality: 'DE', weight: 75 },
-      { id: 'pilotC', flights: 0, nationality: 'FR', weight: 78 },
-      { id: 'driverA', flights: 1, nationality: 'FR', weight: 85 },
-      { id: 'p1', flights: 2, nationality: 'DE', weight: 70 },
-      { id: 'p2', flights: 0, nationality: 'FR', weight: 68 },
-      { id: 'p3', flights: 3, nationality: 'DE', weight: 90 },
-      { id: 'p4', flights: 4, nationality: 'DE', weight: 65 },
-    ],
-    history: {},
-  };
+const runSolver = (payload: SmartFillPayload): Promise<VehicleGroup[]> => {
   const json = JSON.stringify(payload);
 
   const root = 'C:\\Users\\Marvi\\PycharmProjects\\BalloonSolver\\';
@@ -51,7 +22,9 @@ const runSolver = (project: Project, flightId: string): Promise<Project> => {
   const python = venv + 'Scripts\\python.exe';
   const scriptName = 'run_balloon_solver.py';
 
-  return new Promise<Project>((resolve, reject) => {
+  console.log(json);
+
+  return new Promise<VehicleGroup[]>((resolve, reject) => {
     const process = spawn(python, [root + scriptName, '--stdin']);
 
     process.stdin.write(json);
@@ -72,8 +45,17 @@ const runSolver = (project: Project, flightId: string): Promise<Project> => {
 
     process.on('close', (code) => {
       clearTimeout(timeout);
+
       try {
+        console.log('Buffer:');
+        console.log(buffer);
+
         const json = JSON.parse(buffer);
+
+        if (!Array.isArray(json)) {
+          reject(new Error('Invalid JSON'));
+          return;
+        }
 
         if (code === 0) {
           resolve(json);

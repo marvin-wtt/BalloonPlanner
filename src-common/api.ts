@@ -1,4 +1,9 @@
-import type { Project, ProjectMeta } from 'app/src-common/entities';
+import type {
+  Project,
+  ProjectMeta,
+  SmartFillPayload,
+  VehicleGroup,
+} from 'app/src-common/entities';
 
 export interface ProjectsAPI {
   index: () => Promise<ProjectMeta[]>;
@@ -9,7 +14,7 @@ export interface ProjectsAPI {
 }
 
 export interface SolverAPI {
-  solveFlight: (project: Project, fightId: string) => Promise<Project>;
+  solveFlight: (data: SmartFillPayload) => Promise<VehicleGroup[]>;
 }
 
 export interface WindowAPI {

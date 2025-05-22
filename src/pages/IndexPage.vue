@@ -1,11 +1,20 @@
 <template>
-  <q-page class="row items-center justify-evenly">
-    <router-link to="/projects/g4A261XXWEuKWxsH4LGk/flights/1">
-      Start Test
-    </router-link>
-
-    <router-link to="/projects"> Projects </router-link>
+  <q-page class="bg-primary row justify-center content-center">
+    <q-spinner-ios
+      color="white"
+      size="25%"
+      :thickness="2"
+    />
   </q-page>
 </template>
 
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import { useRouter } from 'vue-router';
+import { onMounted } from 'vue';
+
+const router = useRouter();
+
+onMounted(async () => {
+  await router.push({ name: 'projects' });
+});
+</script>

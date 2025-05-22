@@ -1,8 +1,8 @@
 import type { Person } from 'app/src-common/entities';
+import { readJsonFile } from 'src/util/json-file-reader';
 
 export async function loadJson(file: File): Promise<Person[]> {
-  const content = await readFile(file);
-  let data = JSON.parse(content);
+  let data = await readJsonFile(file);
 
   // Extra data wrap check in case of a response object
   if (
@@ -69,23 +69,6 @@ export async function loadJson(file: File): Promise<Person[]> {
 
   return people;
 }
-
-function readFile(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const fileReader = new FileReader();
-    fileReader.onload = () => {
-      const result = fileReader.result;
-      if (typeof result === 'string') {
-        resolve(result);
-      } else {
-        reject(new Error('invalid_file'));
-      }
-    };
-    fileReader.onerror = reject;
-    fileReader.readAsText(file, 'ISO-8859-1');
-  });
-}
-
 function capitalizeFirstLetter(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }

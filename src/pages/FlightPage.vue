@@ -169,7 +169,12 @@
                     {{ item.name }}
                   </template>
                   <template #side="{ item }">
-                    {{ numberOfFlights[item.id] }}
+                    <template v-if="showNumberOfFlights">
+                      {{ numberOfFlights[item.id] }}
+                    </template>
+                    <template v-if="showPersonWeight">
+                      {{ item.weight ?? '?' }} kg
+                    </template>
                   </template>
                 </editable-list>
               </q-scroll-area>
@@ -259,7 +264,43 @@
                           />
                         </q-item-section>
                         <q-item-section>
-                          <q-item-label> Show passenger index</q-item-label>
+                          <q-item-label> Show number of flights</q-item-label>
+                        </q-item-section>
+                      </q-item>
+                      <q-item
+                        tag="label"
+                        v-ripple
+                      >
+                        <q-item-section
+                          avatar
+                          top
+                        >
+                          <q-checkbox
+                            v-model="showPersonWeight"
+                            color="primary"
+                          />
+                        </q-item-section>
+                        <q-item-section>
+                          <q-item-label> Show weight of person</q-item-label>
+                        </q-item-section>
+                      </q-item>
+                      <q-item
+                        tag="label"
+                        v-ripple
+                      >
+                        <q-item-section
+                          avatar
+                          top
+                        >
+                          <q-checkbox
+                            v-model="showVehicleWeight"
+                            color="primary"
+                          />
+                        </q-item-section>
+                        <q-item-section>
+                          <q-item-label>
+                            Show total weight of balloons</q-item-label
+                          >
                         </q-item-section>
                       </q-item>
                     </q-list>
@@ -272,13 +313,13 @@
       </div>
 
       <!-- Flight overview -->
-      <!-- TODO add loader or skeleton -->
       <div
         v-if="showFlightView"
         class="col-grow flex"
       >
         <base-flight
           :flight
+          :editable
           class="fit"
           @balloon-add="(balloon) => addVehicleGroup(balloon.id)"
         >
@@ -299,6 +340,8 @@
                 :indexed="indexedVehicle"
                 :labeled="labeledVehicle"
                 :flightHint="showNumberOfFlights"
+                :passenger-weight-hint="showPersonWeight"
+                :total-weight-hint="showVehicleWeight"
                 :editable
                 @remove="removeVehicleGroup(group.balloon.id)"
                 @edit="showEditBalloon(group.balloon.id)"
@@ -351,37 +394,15 @@
         <q-page-sticky
           position="bottom-right"
           :offset="[18, 18]"
-          v-if="editable"
         >
-          <q-fab
-            icon="add"
-            direction="up"
-            color="primary"
-            external-label
+          <q-btn
+            icon="fast_forward"
+            fab
+            color="accent"
+            @click="onSmartFill"
           >
-            <q-fab-action
-              label="Add car"
-              external-label
-              label-position="left"
-              icon="airport_shuttle"
-              color="primary"
-            />
-            <q-fab-action
-              label="Add balloon"
-              external-label
-              label-position="left"
-              icon="mdi-airballoon"
-              color="primary"
-            />
-            <q-fab-action
-              label="Smart fill"
-              external-label
-              label-position="left"
-              icon="fast_forward"
-              color="accent"
-              @click="onSmartFill"
-            />
-          </q-fab>
+            <q-tooltip> Smart fill </q-tooltip>
+          </q-btn>
         </q-page-sticky>
       </div>
     </template>
@@ -409,7 +430,6 @@ import { useSettingsStore } from 'stores/settings';
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
 import EditCarDialog from 'components/dialog/EditCarDialog.vue';
-import FlightSelectionItem from 'components/toolbar/FlightSelectionItem.vue';
 import { useFlightStore } from 'stores/flight';
 import { useFlightOperations } from 'src/composables/flight-operations';
 
@@ -424,8 +444,13 @@ const { project, loading: projectLoading } = storeToRefs(projectStore);
 const { balloonMap, carMap, personMap, flight, numberOfFlights } =
   storeToRefs(flightStore);
 
-const { indexedVehicle, labeledVehicle, showNumberOfFlights } =
-  storeToRefs(settingsStore);
+const {
+  indexedVehicle,
+  labeledVehicle,
+  showNumberOfFlights,
+  showPersonWeight,
+  showVehicleWeight,
+} = storeToRefs(settingsStore);
 
 const {
   addVehicleGroup,
@@ -498,7 +523,7 @@ async function init() {
   }
 }
 
-function onSmartFill() {
+async function onSmartFill() {
   if (!flight.value) {
     return;
   }
@@ -507,14 +532,13 @@ function onSmartFill() {
     type: 'ongoing',
     message: 'Calculating optimal flight plan...',
   });
+  editable.value = false;
   try {
-    // const f = solve(flight.value);
-
-    //await dataService.value?.updateFLight(f);
+    await flightStore.smartFillFlight();
 
     notify({
       type: 'positive',
-      message: 'Sucessfully filled flight!',
+      message: 'Successfully filled flight!',
       timeout: 1000,
     });
   } catch (reason) {
@@ -523,6 +547,8 @@ function onSmartFill() {
       message: 'Failed to fill the flight' + ': ' + reason,
       timeout: 2000,
     });
+  } finally {
+    editable.value = true;
   }
 }
 

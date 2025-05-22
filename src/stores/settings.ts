@@ -5,12 +5,16 @@ export const useSettingsStore = defineStore('settings', () => {
   const indexedVehicle = ref<boolean>(true);
   const labeledVehicle = ref<boolean>(true);
   const showNumberOfFlights = ref<boolean>(true);
+  const showPersonWeight = ref<boolean>(false);
+  const showVehicleWeight = ref<boolean>(false);
   const presentation = ref<boolean>(false);
 
   // TODO load and store
 
   return {
     showNumberOfFlights,
+    showPersonWeight,
+    showVehicleWeight,
     indexedVehicle,
     labeledVehicle,
     presentation,

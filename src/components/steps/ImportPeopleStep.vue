@@ -142,7 +142,7 @@
 <script lang="ts" setup>
 import type { Person } from 'app/src-common/entities';
 import { ref } from 'vue';
-import { loadJson } from 'src/lib/import/JsonInputLoader';
+import { loadJson } from 'src/lib/JsonInputLoader';
 
 const modelValue = defineModel<Person[]>();
 

@@ -5,7 +5,6 @@
       rounded
       flat
     >
-      <!-- TODO Fix list style -->
       <q-item
         v-for="(flight, index) in project.flights"
         :key="flight.id"
