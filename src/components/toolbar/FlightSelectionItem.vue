@@ -40,7 +40,7 @@
                   v-close-popup
                 >
                   <q-item-section class="text-negative">
-                    {{ t('delete') }}
+                    Delete
                   </q-item-section>
                 </q-item>
               </q-list>
@@ -55,7 +55,6 @@
       inset
     />
     <q-btn
-      v-if="editable"
       icon="add"
       rounded
       flat
@@ -71,13 +70,9 @@ import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import { useRouter } from 'vue-router';
-import { useI18n } from 'vue-i18n';
-import { useAuthStore } from 'stores/auth';
 import { useFlightStore } from 'stores/flight';
 
-const { t } = useI18n();
 const router = useRouter();
-const authStore = useAuthStore();
 const projectStore = useProjectStore();
 const flightStore = useFlightStore();
 
@@ -88,7 +83,7 @@ const addFlightLoading = ref(false);
 const label = computed<string>(() => {
   const flightId = flight.value?.id;
   if (!project.value || !flightId) {
-    return t('flight', 2);
+    return 'Flights';
   }
 
   return flightName(
@@ -97,17 +92,8 @@ const label = computed<string>(() => {
 });
 
 function flightName(index: number): string {
-  return `${t('flight')} ${index + 1}`;
+  return `Flight ${index + 1}`;
 }
-
-const editable = computed<boolean>(() => {
-  if (!authStore.user || !project.value) {
-    return false;
-  }
-
-  const userId = authStore.user.email ?? authStore.user.id;
-  return project.value.collaborators.includes(userId);
-});
 
 async function addFlight() {
   addFlightLoading.value = true;
@@ -117,7 +103,7 @@ async function addFlight() {
   }
 
   const projectId = project.value.id;
-  const flight = await flightStore.create();
+  const flight = flightStore.create();
   await router.push({
     name: 'flight',
     params: {

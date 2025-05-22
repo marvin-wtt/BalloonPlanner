@@ -16,7 +16,9 @@
   "dependencies": {
     "@quasar/extras": "^1.16.17",
     "axios": "^1.9.0",
+    "electron-store": "^10.0.1",
     "firebase": "^11.7.3",
+    "fs-extra": "^11.3.0",
     "pinia": "^3.0.2",
     "quasar": "^2.18.1",
     "read-excel-file": "^5.8.8",
@@ -31,6 +33,7 @@
     "@intlify/unplugin-vue-i18n": "^6.0.8",
     "@quasar/app-vite": "^2.0.0",
     "@quasar/quasar-app-extension-testing": "^2.2.0",
+    "@types/fs-extra": "^11.0.4",
     "@types/jest": "^28.1.6",
     "@types/node": "^20.11.28",
     "@vue/eslint-config-prettier": "^10.2.0",

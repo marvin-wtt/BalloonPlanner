@@ -131,7 +131,7 @@ export default {
 
   settings: 'Settings',
   success: 'Action was successful',
-  supervisor: 'Supervisor | Supervisors',
+  supervisor: 'Counselor | Counselors',
 
   tooltip_insufficient_capacity: 'Insufficient seats in car(s)',
 

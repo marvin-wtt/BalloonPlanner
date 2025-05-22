@@ -1,76 +1,91 @@
 <template>
   <q-step
-    :name="name"
+    :name
     title="Manually add people"
     icon="person"
     :done="modelValue.length > 0"
   >
     <q-table
+      v-model:pagination="pagination"
       :rows="modelValue"
       :columns="columns"
       title="People"
       row-key="name"
-      v-model:pagination="pagination"
+      flat
     >
-      <template v-slot:body-cell-edit="props">
-        <td class="text-center">
-          <q-btn
-            icon="edit"
-            color="primary"
-            @click="showEditPerson(props.row)"
-          />
-        </td>
-      </template>
-
-      <template v-slot:body-cell-delete="props">
-        <td class="text-center">
-          <q-btn
-            icon="delete"
-            color="negative"
-            @click="showDeletePerson(props.row)"
-          />
-        </td>
-      </template>
-
       <template v-slot:top-right>
-        <q-btn label="Add person" color="primary" @click="showCreatePerson()" />
+        <q-btn
+          label="Add person"
+          color="primary"
+          rounded
+          @click="onCreatePerson()"
+        />
+      </template>
+
+      <template v-slot:body-cell-action="props">
+        <td>
+          <q-btn
+            icon="more_vert"
+            color="primary"
+            size="xs"
+            round
+            outline
+          >
+            <q-menu style="min-width: 100px">
+              <q-list>
+                <q-item
+                  clickable
+                  v-close-popup
+                  @click="onEditPerson(props.row)"
+                >
+                  <q-item-section>Edit</q-item-section>
+                </q-item>
+                <q-item
+                  clickable
+                  v-close-popup
+                  @click="onDeletePerson(props.row)"
+                >
+                  <q-item-section>Delete</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
+        </td>
       </template>
     </q-table>
 
-    <q-stepper-navigation>
+    <q-stepper-navigation class="row q-gutter-sm">
       <q-btn
-        @click="emit('continue')"
-        color="primary"
         label="Continue"
-        :disable="modelValue.length === 0"
+        color="primary"
+        rounded
+        @click="emit('continue')"
       />
       <q-btn
-        flat
-        @click="emit('back')"
-        color="primary"
         label="Back"
-        class="q-ml-sm"
+        color="primary"
+        rounded
+        outline
+        @click="emit('back')"
       />
     </q-stepper-navigation>
   </q-step>
 </template>
 
 <script lang="ts" setup>
-import { Person } from 'src/lib/entities';
+import type { Person } from 'app/src-common/entities';
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
-import { useQuasar } from 'quasar';
+import { type QTableColumn, useQuasar } from 'quasar';
 
-const q = useQuasar();
+const quasar = useQuasar();
 
-interface Props {
+const modelValue = defineModel<Person[]>();
+
+const { name } = defineProps<{
   name: string;
-  modelValue: Person[];
-}
-
-const props = defineProps<Props>();
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', people: Person[]): void;
   (e: 'continue'): void;
   (e: 'back'): void;
   (e: 'to', destination: string): void;
@@ -86,101 +101,85 @@ const nationMap = {
   fr: 'French',
 };
 
-const columns = [
+const columns: QTableColumn[] = [
   {
     name: 'name',
-    align: 'left',
     label: 'Name',
     field: 'name',
+    align: 'left',
     sortable: true,
   },
   {
     name: 'nation',
+    label: 'Nationality',
+    field: 'nationality',
     align: 'center',
-    label: 'Nation',
-    field: 'nation',
     sortable: true,
     format: (val: string) => nationMap[val] ?? val,
   },
   {
-    name: 'flights',
+    name: 'role',
+    label: 'Role',
+    field: 'role',
     align: 'center',
-    label: 'Flights',
-    field: 'numberOfFlights',
+    sortable: true,
+    format: (val: string) => val.charAt(0).toUpperCase() + String(val).slice(1),
   },
   {
     name: 'firstTime',
-    align: 'center',
     label: 'First Time',
     field: 'firstTime',
+    align: 'center',
     format: (val: boolean) => (val ? '\u2713' : 'X'),
   },
   {
-    name: 'supervisor',
+    name: 'action',
+    label: '',
+    field: 'action',
     align: 'center',
-    label: 'Supervisor',
-    field: 'supervisor',
-    sortable: true,
-    format: (val: boolean) => (val ? '\u2713' : ''),
-  },
-  {
-    name: 'edit',
-    align: 'center',
-    label: 'Edit',
-    required: true,
-  },
-  {
-    name: 'delete',
-    align: 'delete',
-    label: 'Delete',
     required: true,
   },
 ];
 
-function showDeletePerson(person: Person) {
-  emit(
-    'update:modelValue',
-    props.modelValue.filter((value) => value.id !== person.id)
-  );
+function onDeletePerson(person: Person) {
+  const index = modelValue.value.findIndex((value) => value.id === person.id);
+  if (index >= 0) {
+    modelValue.value.splice(index, 1);
+  }
 }
 
-function showEditPerson(person: Person) {
-  q.dialog({
-    component: EditPersonDialog,
-    componentProps: {
-      person: person,
-      mode: 'edit',
-    },
-  }).onOk((payload) => {
-    const p = new Person(
-      payload.name,
-      payload.nation,
-      payload.supervisor,
-      payload.flights,
-      payload.firstTime
-    );
-    p.id = person.id;
-
-    const people = props.modelValue.filter((value) => value.id !== person.id);
-    emit('update:modelValue', [...people, p]);
-  });
+function onEditPerson(person: Person) {
+  quasar
+    .dialog({
+      component: EditPersonDialog,
+      componentProps: {
+        person,
+      },
+    })
+    .onOk((payload) => {
+      const index = modelValue.value.findIndex(
+        (value) => value.id === person.id,
+      );
+      if (index >= 0) {
+        modelValue.value.splice(index, 1, {
+          ...payload,
+          id: person.id,
+        });
+      }
+    });
 }
 
-function showCreatePerson() {
-  q.dialog({
-    component: EditPersonDialog,
-    componentProps: {
-      mode: 'create',
-    },
-  }).onOk((payload) => {
-    const person = new Person(
-      payload.name,
-      payload.nation,
-      payload.supervisor,
-      payload.flights
-    );
-    emit('update:modelValue', [...props.modelValue, person]);
-  });
+function onCreatePerson() {
+  quasar
+    .dialog({
+      component: EditPersonDialog,
+    })
+    .onOk((payload) => {
+      modelValue.value.push({
+        ...payload,
+        id: crypto.randomUUID(),
+      });
+    });
 }
 </script>
 

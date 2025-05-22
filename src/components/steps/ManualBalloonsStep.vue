@@ -1,81 +1,93 @@
 <template>
   <q-step
-    :name="name"
+    :name
     title="Manually add balloons"
     icon="mdi-airballoon"
     :done="modelValue.length > 0"
   >
     <q-table
+      v-model:pagination="pagination"
       :rows="modelValue"
       :columns="columns"
       title="Balloons"
       row-key="name"
-      v-model:pagination="pagination"
+      flat
     >
-      <template v-slot:body-cell-edit="props">
-        <td class="text-center">
-          <q-btn
-            icon="edit"
-            color="primary"
-            @click="showEditBalloon(props.row)"
-          />
-        </td>
-      </template>
-
-      <template v-slot:body-cell-delete="props">
-        <td class="text-center">
-          <q-btn
-            icon="delete"
-            color="negative"
-            @click="showDeleteBalloon(props.row)"
-          />
-        </td>
-      </template>
-
       <template v-slot:top-right>
         <q-btn
           label="Add balloon"
           color="primary"
-          @click="showCreateBalloon()"
+          rounded
+          @click="onCreateBalloon()"
         />
+      </template>
+
+      <template v-slot:body-cell-action="props">
+        <td>
+          <q-btn
+            icon="more_vert"
+            color="primary"
+            size="xs"
+            round
+            outline
+          >
+            <q-menu style="min-width: 100px">
+              <q-list>
+                <q-item
+                  clickable
+                  v-close-popup
+                  @click="onEditBalloon(props.row)"
+                >
+                  <q-item-section>Edit</q-item-section>
+                </q-item>
+                <q-item
+                  clickable
+                  v-close-popup
+                  @click="onDeleteBalloon(props.row)"
+                >
+                  <q-item-section>Delete</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
+        </td>
       </template>
     </q-table>
 
-    <q-stepper-navigation>
+    <q-stepper-navigation class="row q-gutter-sm">
       <q-btn
-        @click="emit('continue')"
-        color="primary"
         label="Continue"
-        :disable="modelValue.length === 0"
+        color="primary"
+        rounded
+        @click="emit('continue')"
       />
       <q-btn
-        flat
-        @click="emit('back')"
         color="primary"
         label="Back"
-        class="q-ml-sm"
+        rounded
+        outline
+        @click="emit('back')"
       />
     </q-stepper-navigation>
   </q-step>
 </template>
 
 <script lang="ts" setup>
-import type { Balloon, Person } from 'src/lib/entities';
-import { useQuasar } from 'quasar';
-import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue.vue';
+import type { Balloon, Person } from 'app/src-common/entities';
+import { type QTableColumn, useQuasar } from 'quasar';
+import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
+import { computed } from 'vue';
 
-const q = useQuasar();
+const quasar = useQuasar();
 
-interface Props {
+const modelValue = defineModel<Balloon[]>();
+
+const { name, people } = defineProps<{
   name: string;
-  modelValue: Balloon[];
   people: Person[];
-}
-
-const props = defineProps<Props>();
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', balloons: Balloon[]): void;
   (e: 'continue'): void;
   (e: 'back'): void;
   (e: 'to', destination: string): void;
@@ -86,85 +98,91 @@ const pagination = {
   sortBy: 'name',
 };
 
-const columns = [
+const personMap = computed<Record<string, Person>>(() => {
+  return people.reduce(
+    (persons, person) => ({
+      ...persons,
+      [person.id]: person,
+    }),
+    {},
+  );
+});
+
+const columns: QTableColumn[] = [
   {
     name: 'name',
-    align: 'left',
     label: 'Name',
     field: 'name',
+    align: 'left',
     sortable: true,
   },
   {
     name: 'capacity',
-    align: 'center',
     label: 'Capacity',
-    field: 'capacity',
+    field: 'maxCapacity',
+    align: 'center',
     sortable: true,
   },
   {
     name: 'allowedOperators',
-    align: 'left',
     label: 'Allowed Operators',
-    field: 'allowedOperators',
-    format: (val: Person[]) => val.map((value) => value.name).join(', '),
+    field: 'allowedOperatorIds',
+    align: 'left',
+    format: (val: string[]) =>
+      val.map((id) => personMap.value[id].name).join(', '),
   },
   {
-    name: 'edit',
+    name: 'action',
+    label: '',
+    field: 'action',
     align: 'center',
-    label: 'Edit',
-    required: true,
-  },
-  {
-    name: 'delete',
-    align: 'delete',
-    label: 'Delete',
     required: true,
   },
 ];
 
-function showDeleteBalloon(balloon: Balloon) {
-  emit(
-    'update:modelValue',
-    props.modelValue.filter((value) => value.id !== balloon.id),
-  );
+function onDeleteBalloon(balloon: Balloon) {
+  const index = modelValue.value.findIndex((value) => value.id === balloon.id);
+  if (index >= 0) {
+    modelValue.value.splice(index, 1);
+  }
 }
 
-function showEditBalloon(balloon: Balloon) {
-  q.dialog({
-    component: EditBalloonDialog,
-    componentProps: {
-      vehicle: balloon,
-      people: props.people,
-    },
-  }).onOk((payload) => {
-    const b = new Balloon(
-      payload.name,
-      payload.capacity,
-      payload.allowedOperators,
-    );
-    b.id = balloon.id;
-
-    const balloons = props.modelValue.filter(
-      (value) => value.id !== balloon.id,
-    );
-    emit('update:modelValue', [...balloons, b]);
-  });
+function onEditBalloon(balloon: Balloon) {
+  quasar
+    .dialog({
+      component: EditBalloonDialog,
+      componentProps: {
+        vehicle: balloon,
+        people,
+      },
+    })
+    .onOk((payload) => {
+      const index = modelValue.value.findIndex(
+        (value) => value.id === balloon.id,
+      );
+      if (index >= 0) {
+        modelValue.value.splice(index, 1, {
+          ...payload,
+          id: balloon.id,
+        });
+      }
+    });
 }
 
-function showCreateBalloon() {
-  q.dialog({
-    component: EditBalloonDialog,
-    componentProps: {
-      people: props.people,
-    },
-  }).onOk((payload) => {
-    const balloon = new Balloon(
-      payload.name,
-      payload.capacity,
-      payload.allowedOperators,
-    );
-    emit('update:modelValue', [...props.modelValue, balloon]);
-  });
+function onCreateBalloon() {
+  quasar
+    .dialog({
+      component: EditBalloonDialog,
+      componentProps: {
+        people,
+      },
+    })
+    .onOk((payload) => {
+      modelValue.value.push({
+        ...payload,
+        id: crypto.randomUUID(),
+      });
+    });
 }
 </script>
 

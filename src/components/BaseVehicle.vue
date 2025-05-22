@@ -76,18 +76,22 @@
         <base-vehicle-person-cell
           class="vehicle-person"
           :class="indexed ? 'vehicle-person__indexed' : ''"
-          :editable="editable"
-          :person="vehicle.operator"
-          :vehicle="vehicle"
+          :editable
+          :flightHint
+          :person="personMap[assignment.operatorId]"
+          :vehicle
+          :assignment
           operator
           @add="(p) => emit('operatorAdd', p)"
           @remove="
-            vehicle.operator
-              ? emit('operatorRemove', vehicle.operator)
+            personMap[assignment.operatorId]
+              ? emit('operatorRemove', personMap[assignment.operatorId])
               : undefined
           "
           @edit="
-            vehicle.operator ? emit('personEdit', vehicle.operator) : undefined
+            personMap[assignment.operatorId]
+              ? emit('personEdit', personMap[assignment.operatorId])
+              : undefined
           "
         />
       </tr>
@@ -105,12 +109,16 @@
         <base-vehicle-person-cell
           class="vehicle-person"
           :class="indexed ? 'vehicle-person__indexed' : ''"
-          :editable="editable"
-          :person="vehicle.passengers[c - 1]"
-          :vehicle="vehicle"
+          :editable
+          :person="personMap[assignment.passengerIds[c - 1]]"
+          :vehicle
+          :assignment
+          :flightHint
           @add="(p) => emit('passengerAdd', p)"
-          @remove="emit('passengerRemove', vehicle.passengers[c - 1])"
-          @edit="emit('personEdit', vehicle.passengers[c - 1])"
+          @remove="
+            emit('passengerRemove', personMap[assignment.passengerIds[c - 1]])
+          "
+          @edit="emit('personEdit', personMap[assignment.passengerIds[c - 1]])"
         />
       </tr>
     </table>
@@ -120,26 +128,41 @@
 <script lang="ts" setup>
 import BaseVehiclePersonCell from 'components/BaseVehiclePersonCell.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
-import type { Person, Vehicle } from 'src/lib/entities';
-import { Car } from 'src/lib/entities';
+import type {
+  Person,
+  Vehicle,
+  VehicleAssignment,
+  VehicleGroup,
+} from 'app/src-common/entities';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { storeToRefs } from 'pinia';
+import { useFlightStore } from 'stores/flight';
+import { useFlightUtils } from 'src/composables/reservedCapacity';
 
 const { t } = useI18n();
+const flightStore = useFlightStore();
+const { remainingCapacity } = useFlightUtils();
+
+const { balloonMap, carMap, personMap } = storeToRefs(flightStore);
 
 const {
-  vehicle,
+  group,
+  assignment,
   type,
   indexed = false,
   labeled = false,
   editable = false,
   hideEmpty = false,
+  flightHint = false,
 } = defineProps<{
-  vehicle: Vehicle;
+  group: VehicleGroup;
+  assignment: VehicleAssignment;
   type: 'balloon' | 'car';
   indexed?: boolean;
   labeled?: boolean;
   editable?: boolean;
+  flightHint?: boolean;
   hideEmpty?: boolean;
 }>();
 
@@ -153,52 +176,48 @@ const emit = defineEmits<{
   (e: 'personEdit', person: Person): void;
 }>();
 
-const capacity = computed<number>(() => {
-  let capacity: number = vehicle.capacity - 1;
+const vehicle = computed<Vehicle>(() => {
+  const map = type === 'balloon' ? balloonMap.value : carMap.value;
 
-  if (vehicleIsCar(vehicle)) {
-    capacity -= vehicle.reservedCapacity;
+  return map[assignment.id];
+});
+
+const capacity = computed<number>(() => {
+  let capacity: number = vehicle.value.maxCapacity - 1;
+
+  if (type === 'car') {
+    // Compute reserved capacity
+    capacity = remainingCapacity(group)[assignment.id] ?? 0;
   }
 
   if (capacity < 0) {
+    console.warn(`Invalid capacity for ${type} ${vehicle.value.name}`);
     capacity = 0;
   }
 
-  return hideEmpty ? vehicle.passengers.length : capacity;
+  return hideEmpty ? assignment.passengerIds.length : capacity;
 });
 
-function vehicleIsCar(vehicle: Vehicle): vehicle is Car {
-  return vehicle instanceof Car;
-}
-
 const error = computed<boolean>(() => {
-  return (
-    overfilled.value || tooMuchReservedCapacity.value || invalidOperator.value
-  );
+  return overfilled.value || invalidOperator.value;
 });
 
 const errorMessage = computed<string>(() => {
   return overfilled.value
     ? t('tooltip_overfilled')
-    : tooMuchReservedCapacity.value
-      ? t('tooltip_too_much_reserved_capacity')
-      : invalidOperator.value
-        ? t('tooltip_invalid_operator')
-        : '';
-});
-
-const tooMuchReservedCapacity = computed<boolean>(() => {
-  return vehicleIsCar(vehicle) && vehicle.capacity <= vehicle.reservedCapacity;
+    : invalidOperator.value
+      ? t('tooltip_invalid_operator')
+      : '';
 });
 
 const overfilled = computed<boolean>(() => {
-  return vehicle.passengers.length > capacity.value;
+  return assignment.passengerIds.length > capacity.value;
 });
 
 const invalidOperator = computed<boolean>(() => {
   return (
-    vehicle.operator !== undefined &&
-    !vehicle.allowedOperators.includes(vehicle.operator)
+    assignment.operatorId !== null &&
+    !vehicle.value.allowedOperatorIds.includes(assignment.operatorId)
   );
 });
 

@@ -1,44 +1,105 @@
-import { defineStore } from 'pinia';
-import type { Project } from 'src/lib/entities/Project';
-import { ref } from 'vue';
-import { useServiceStore } from 'stores/service';
+import { acceptHMRUpdate, defineStore } from 'pinia';
+import type { Project, ProjectMeta } from 'app/src-common/entities';
+import { ref, toRaw, watch } from 'vue';
+import { debounce, useQuasar } from 'quasar';
 
 export const useProjectStore = defineStore('project', () => {
-  const serviceStore = useServiceStore();
-  // TODO UseRoute must only be called inside setup
-  // https://github.com/vuejs/pinia/discussions/1717
+  const quasar = useQuasar();
 
+  const projectIndex = ref<ProjectMeta[]>();
   const project = ref<Project | undefined | null>();
-  const loading = ref<boolean>(false);
-  const error = ref<string | null>(null);
+  const isLoading = ref<boolean>(false);
+  const isSaving = ref<boolean>(false);
+  const isDorty = ref<boolean>(false);
 
-  async function load(projectId: string | undefined): Promise<void> {
-    if (projectId === project.value?.id && !error.value) {
-      return;
-    }
+  watch(
+    project,
+    debounce(async (project, oldProject) => {
+      // Skip initial load and updates
+      if (!oldProject || project.id !== oldProject.id) {
+        return;
+      }
 
-    if (!projectId) {
-      project.value = null;
-      serviceStore.dataService?.unloadProject();
-      return;
-    }
+      isDorty.value = true;
 
+      await saveProject();
+    }, 1000),
+    { deep: true, immediate: true },
+  );
+
+  async function loadIndex() {
+    projectIndex.value = await window.projectAPI.index();
+  }
+
+  async function createProject(project: Project): Promise<void> {
+    // Clone the project to remove all vue proxies
+    const copy = JSON.parse(JSON.stringify(project));
+
+    await window.projectAPI.store(copy);
+  }
+
+  async function deleteProject(projectId: string): Promise<void> {
     try {
-      loading.value = true;
-      error.value = null;
-      await serviceStore.dataService?.loadProject(projectId);
+      await window.projectAPI.destroy(projectId);
     } catch (e) {
-      error.value =
-        e instanceof Error ? e.message : typeof e === 'string' ? e : 'Error';
+      quasar.notify({
+        message: 'Failed to delete project',
+        caption: e.message,
+        color: 'negative',
+        group: 'project-error',
+      });
+    }
+
+    await loadIndex();
+  }
+
+  async function loadProject(projectId: string): Promise<void> {
+    isLoading.value = true;
+    try {
+      project.value = await window.projectAPI.show(projectId);
+    } catch (e) {
+      quasar.notify({
+        message: 'Failed to delete project',
+        caption: e.message,
+        color: 'negative',
+        group: 'project-error',
+      });
+      throw e;
     } finally {
-      loading.value = false;
+      isLoading.value = false;
+    }
+  }
+
+  async function saveProject() {
+    isSaving.value = true;
+    isDorty.value = false;
+    try {
+      await window.projectAPI.update(toRaw(project.value));
+    } catch (e) {
+      console.error(e);
+      quasar.notify({
+        message: 'Failed to save project',
+        caption: e.message,
+        color: 'negative',
+        group: 'project-error',
+      });
+    } finally {
+      isSaving.value = false;
     }
   }
 
   return {
+    projectIndex,
     project,
-    error,
-    loading,
-    load,
+    loading: isLoading,
+    createProject,
+    deleteProject,
+    loadIndex,
+    loadProject,
+    saveProject,
   };
 });
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useProjectStore, import.meta.hot));
+}

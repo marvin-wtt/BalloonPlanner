@@ -1,81 +1,93 @@
 <template>
   <q-step
-    :name="name"
+    :name
     title="Manually add Car"
     icon="airport_shuttle"
     :done="modelValue.length > 0"
   >
     <q-table
+      v-model:pagination="pagination"
       :rows="modelValue"
       :columns="columns"
       title="Cars"
       row-key="name"
-      v-model:pagination="pagination"
+      flat
     >
-      <template v-slot:body-cell-edit="props">
-        <td class="text-center">
-          <q-btn
-            icon="edit"
-            color="primary"
-            @click="showEditCar(props.row)"
-          />
-        </td>
-      </template>
-
-      <template v-slot:body-cell-delete="props">
-        <td class="text-center">
-          <q-btn
-            icon="delete"
-            color="negative"
-            @click="showDeleteCar(props.row)"
-          />
-        </td>
-      </template>
-
       <template v-slot:top-right>
         <q-btn
           label="Add Car"
           color="primary"
-          @click="showCreateCar()"
+          rounded
+          @click="onCreateCar()"
         />
+      </template>
+
+      <template v-slot:body-cell-action="props">
+        <td>
+          <q-btn
+            icon="more_vert"
+            color="primary"
+            size="xs"
+            round
+            outline
+          >
+            <q-menu style="min-width: 100px">
+              <q-list>
+                <q-item
+                  clickable
+                  v-close-popup
+                  @click="onEditCar(props.row)"
+                >
+                  <q-item-section>Edit</q-item-section>
+                </q-item>
+                <q-item
+                  clickable
+                  v-close-popup
+                  @click="onDeleteCar(props.row)"
+                >
+                  <q-item-section>Delete</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
+        </td>
       </template>
     </q-table>
 
-    <q-stepper-navigation>
+    <q-stepper-navigation class="row q-gutter-sm">
       <q-btn
-        @click="emit('continue')"
-        color="primary"
         label="Continue"
-        :disable="modelValue.length == 0"
+        color="primary"
+        rounded
+        @click="emit('continue')"
       />
       <q-btn
-        flat
-        @click="emit('back')"
         color="primary"
         label="Back"
-        class="q-ml-sm"
+        rounded
+        outline
+        @click="emit('back')"
       />
     </q-stepper-navigation>
   </q-step>
 </template>
 
 <script lang="ts" setup>
-import type { Car, Person } from 'src/lib/entities';
-import { useQuasar } from 'quasar';
+import type { Car, Person } from 'app/src-common/entities';
+import { type QTableColumn, useQuasar } from 'quasar';
 import EditCarDialog from 'components/dialog/EditCarDialog.vue';
+import { computed } from 'vue';
 
-const q = useQuasar();
+const quasar = useQuasar();
 
-interface Props {
+const modelValue = defineModel<Car[]>();
+
+const { name, people } = defineProps<{
   name: string;
-  modelValue: Car[];
   people: Person[];
-}
-
-const props = defineProps<Props>();
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', cars: Car[]): void;
   (e: 'continue'): void;
   (e: 'back'): void;
   (e: 'to', destination: string): void;
@@ -86,92 +98,96 @@ const pagination = {
   sortBy: 'name',
 };
 
-const columns = [
+const personMap = computed<Record<string, Person>>(() => {
+  return people.reduce(
+    (persons, person) => ({
+      ...persons,
+      [person.id]: person,
+    }),
+    {},
+  );
+});
+
+const columns: QTableColumn[] = [
   {
     name: 'name',
-    align: 'left',
     label: 'Name',
     field: 'name',
+    align: 'left',
     sortable: true,
   },
   {
     name: 'capacity',
-    align: 'center',
     label: 'Capacity',
-    field: 'capacity',
+    field: 'maxCapacity',
+    align: 'center',
     sortable: true,
   },
   {
     name: 'allowedOperators',
-    align: 'left',
     label: 'Allowed Operators',
-    field: 'allowedOperators',
-    format: (val: Person[]) => val.map((value) => value.name).join(', '),
+    field: 'allowedOperatorIds',
+    align: 'left',
+    format: (val: string[]) =>
+      val.map((id) => personMap.value[id].name).join(', '),
   },
   {
     name: 'trailerHitch',
-    align: 'center',
     label: 'Trailer Hitch',
-    field: 'trailerHitch',
+    field: 'hasTrailerHitch',
+    align: 'center',
     format: (val: boolean) => (val ? '\u2713' : 'X'),
   },
   {
-    name: 'edit',
+    name: 'action',
+    label: '',
+    field: 'action',
     align: 'center',
-    label: 'Edit',
-    required: true,
-  },
-  {
-    name: 'delete',
-    align: 'delete',
-    label: 'Delete',
     required: true,
   },
 ];
 
-function showDeleteCar(car: Car) {
-  emit(
-    'update:modelValue',
-    props.modelValue.filter((value) => value.id !== car.id),
-  );
+function onDeleteCar(car: Car) {
+  const index = modelValue.value.findIndex((value) => value.id === car.id);
+  if (index >= 0) {
+    modelValue.value.splice(index, 1);
+  }
 }
 
-function showEditCar(car: Car) {
-  q.dialog({
-    component: EditCarDialog,
-    componentProps: {
-      vehicle: car,
-      people: props.people,
-    },
-  }).onOk((payload) => {
-    const c = new Car(
-      payload.name,
-      payload.capacity,
-      payload.allowedOperators,
-      payload.trailerHitch,
-    );
-    c.id = car.id;
-
-    const cars = props.modelValue.filter((value) => value.id !== car.id);
-    emit('update:modelValue', [...cars, c]);
-  });
+function onEditCar(car: Car) {
+  quasar
+    .dialog({
+      component: EditCarDialog,
+      componentProps: {
+        vehicle: car,
+        people,
+      },
+    })
+    .onOk((payload) => {
+      const index = modelValue.value.findIndex((value) => value.id === car.id);
+      if (index >= 0) {
+        modelValue.value.splice(index, 1, {
+          ...payload,
+          id: car.id,
+        });
+      }
+    });
 }
 
-function showCreateCar() {
-  q.dialog({
-    component: EditCarDialog,
-    componentProps: {
-      people: props.people,
-    },
-  }).onOk((payload) => {
-    const car = new Car(
-      payload.name,
-      payload.capacity,
-      payload.allowedOperators,
-      payload.trailerHitch,
-    );
-    emit('update:modelValue', [...props.modelValue, car]);
-  });
+function onCreateCar() {
+  quasar
+    .dialog({
+      component: EditCarDialog,
+      componentProps: {
+        people,
+      },
+    })
+    .onOk((payload) => {
+      modelValue.value.push({
+        ...payload,
+        id: crypto.randomUUID(),
+      });
+    });
 }
 </script>
 

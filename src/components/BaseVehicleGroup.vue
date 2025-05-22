@@ -28,22 +28,32 @@
 
 <script lang="ts" setup>
 import DropZone from 'components/drag/DropZone.vue';
-
-import { Car, type VehicleGroup } from 'src/lib/entities';
-import type { Identifiable } from 'src/lib/utils/Identifiable';
+import type {
+  Car,
+  VehicleGroup,
+  Identifiable,
+  Flight,
+  Balloon,
+} from 'app/src-common/entities';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { storeToRefs } from 'pinia';
+import { useFlightStore } from 'stores/flight';
 
 const { t } = useI18n();
 
-interface Props {
+const flightStore = useFlightStore();
+const { carMap, balloonMap } = storeToRefs(flightStore);
+
+const {
+  group,
+  flight,
+  editable = false,
+} = defineProps<{
+  flight: Flight;
   group: VehicleGroup;
   editable?: boolean;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  editable: true,
-});
+}>();
 
 const emit = defineEmits<{
   (e: 'carAdd', person: Car): void;
@@ -61,25 +71,37 @@ const warningText = computed(() => {
       : '';
 });
 
-const trailerHitchWarning = computed(() => {
-  return !props.group.cars.some((value) => value.trailerHitch);
+const cars = computed<Car[]>(() => {
+  return group.cars.map(({ id }) => carMap.value[id]);
 });
 
-const reservedCapacityWarning = computed(() => {
-  const availableCapacity = props.group.cars.reduce(
-    (prev, curr) => prev + curr.capacity - 1,
+const balloon = computed<Balloon>(() => {
+  return balloonMap.value[group.balloon.id];
+});
+
+const trailerHitchWarning = computed<boolean>(() => {
+  return !cars.value.some((car) => car.hasTrailerClutch);
+});
+
+const reservedCapacityWarning = computed<boolean>(() => {
+  const availableCapacity = cars.value.reduce(
+    (prev, curr) => prev + curr.maxCapacity - 1,
     0,
   );
 
-  return props.group.balloon.capacity > availableCapacity;
+  return balloon.value.maxCapacity > availableCapacity;
 });
 
 function isDropAccepted(element: Identifiable): boolean {
-  if (!(element instanceof Car)) {
+  if (!editable) {
     return false;
   }
 
-  return !props.group.cars.includes(element);
+  if (!flight.carIds.includes(element.id)) {
+    return false;
+  }
+
+  return !group.cars.some((car) => car.id === element.id);
 }
 
 function drop(element: Identifiable) {

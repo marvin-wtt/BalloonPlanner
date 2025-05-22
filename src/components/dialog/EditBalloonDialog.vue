@@ -3,58 +3,57 @@
     ref="dialogRef"
     @hide="onDialogHide"
   >
-    <q-card>
+    <q-card style="min-width: 300px">
       <q-form
         @reset="onReset"
         @submit="onSubmit"
-        class="q-gutter-md"
       >
-        <q-card-section>
-          <div class="text-h6">
-            {{ t(`dialog.balloon.title.${mode}`) }}
-          </div>
+        <q-card-section class="text-h6">
+          <template v-if="mode === 'create'">Create Balloon</template>
+          <template v-else> Edit Balloon</template>
         </q-card-section>
 
-        <q-card-section class="q-pt-none">
+        <q-card-section class="q-pt-none q-gutter-y-md">
           <q-input
             v-model="name"
-            :label="t('dialog.balloon.name.label')"
+            label="Name"
             lazy-rules
             :rules="[
-              (val: string | undefined) =>
-                (val && val.length > 0) ||
-                t('dialog.balloon.name.validation.required'),
+              (val?: string | null) =>
+                (!!val && val.length > 0) || 'Name is required.',
             ]"
-            filled
+            hide-bottom-space
+            rounded
+            outlined
           />
 
           <q-input
-            v-model.number="capacity"
+            v-model.number="maxCapacity"
             type="number"
-            :label="t('dialog.balloon.capacity.label')"
-            :hint="t('dialog.balloon.capacity.hint')"
+            label="Maximum Capacity"
+            hint="Including the pilot"
             lazy-rules
             :rules="[
-              (val: number | undefined) =>
-                (val !== undefined && val > 0) ||
-                t('dialog.balloon.capacity.validation.number'),
+              (val?: number | null) =>
+                (!!val && val > 0) || 'Maximum Capacity is required.',
             ]"
-            filled
+            rounded
+            outlined
           />
 
           <q-select
-            v-model="allowedOperators"
-            :label="t('dialog.balloon.allowed_operators.label')"
+            v-model="allowedOperatorIds"
+            label="Allowed operators"
             use-input
             use-chips
             multiple
             input-debounce="0"
             :options="filterOptions"
-            @filter="filterFn"
-            style="width: 250px"
             emit-value
             map-options
-            filled
+            @filter="filterFn"
+            outlined
+            rounded
           />
         </q-card-section>
 
@@ -63,16 +62,17 @@
           class="text-primary"
         >
           <q-btn
+            label="Cancel"
             type="reset"
             color="primary"
-            :label="t('cancel')"
-            v-close-popup
-            flat
+            rounded
+            outline
           />
           <q-btn
+            label="Create"
             type="submit"
             color="primary"
-            :label="t(mode)"
+            rounded
           />
         </q-card-actions>
       </q-form>
@@ -81,61 +81,62 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
-import type { Person, Balloon } from 'src/lib/entities';
-import { useI18n } from 'vue-i18n';
-import { useDialogPluginComponent } from 'quasar';
+import { computed, ref, toRaw } from 'vue';
+import type { Person, Balloon } from 'app/src-common/entities';
+import { useDialogPluginComponent, type QSelectOption } from 'quasar';
 
-const { t } = useI18n();
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
-interface Props {
+const { people, balloon } = defineProps<{
   balloon?: Balloon;
   people: Person[];
-}
-
-const props = defineProps<Props>();
+}>();
 
 defineEmits([...useDialogPluginComponent.emits]);
 
-const name = ref<string | undefined>(props.balloon?.name);
-const capacity = ref<number | undefined>(props.balloon?.capacity);
-const allowedOperators = ref<Person[]>(props.balloon?.allowedOperators ?? []);
-const options = [...props.people]
-  .sort((a, b) => a.name.localeCompare(b.name))
-  .sort((a, b) => (a.supervisor == b.supervisor ? 0 : a.supervisor ? -1 : 1))
-  .map((value) => {
-    return {
+const name = ref<string | undefined>(balloon?.name);
+const maxCapacity = ref<number | undefined>(balloon?.maxCapacity);
+const allowedOperatorIds = ref<string[]>(balloon?.allowedOperatorIds ?? []);
+
+const operatorOptions = computed<QSelectOption[]>(() => {
+  return people
+    .filter((value) => value.role === 'counselor')
+    .toSorted((a, b) => a.name.localeCompare(b.name))
+    .map((value) => ({
       label: value.name,
-      value: value,
-    };
-  });
-const filterOptions = ref(options);
+      value: value.id,
+    }));
+});
+
+const filterOptions = ref<QSelectOption[]>(operatorOptions.value);
 
 const mode = computed<'create' | 'edit'>(() => {
-  return props.balloon ? 'edit' : 'create';
+  return balloon ? 'edit' : 'create';
 });
 
 function onSubmit() {
-  onDialogOK({
-    name: name.value,
-    capacity: capacity.value,
-    allowedOperators: allowedOperators.value,
-  });
+  const payload: Omit<Balloon, 'id'> = {
+    type: 'balloon',
+    name: toRaw(name.value),
+    maxCapacity: toRaw(maxCapacity.value),
+    allowedOperatorIds: toRaw(allowedOperatorIds.value),
+  };
+
+  onDialogOK(payload);
 }
 
 function onReset() {
   name.value = undefined;
-  capacity.value = undefined;
-  allowedOperators.value = [];
+  maxCapacity.value = undefined;
+  allowedOperatorIds.value = [];
   onDialogCancel();
 }
 
 function filterFn(val: string, update: (a: () => void) => void) {
   update(() => {
     const needle = val.toLowerCase();
-    filterOptions.value = options.filter(
+    filterOptions.value = operatorOptions.value.filter(
       (value) => value.label.toLowerCase().indexOf(needle) > -1,
     );
   });

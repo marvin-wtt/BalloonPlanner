@@ -1,12 +1,9 @@
 <template>
   <q-page padding>
     <div class="q-pa-md">
-      <div
-        class="q-gutter-sm row"
-        v-if="user"
-      >
+      <div class="q-gutter-sm row">
         <project-card
-          v-for="project in user.projects"
+          v-for="project in projectIndex"
           :project="project"
           :key="project.id"
           class="project-card"
@@ -27,99 +24,121 @@
             <q-btn
               flat
               rounded
-              @click.stop="editProject()"
+              @click.stop="editProject(project)"
             >
-              {{ t('edit') }}
+              Edit
             </q-btn>
             <q-btn
               color="negative"
               flat
               rounded
-              @click.stop="deleteProject()"
+              @click.stop="deleteProject(project)"
             >
-              {{ t('delete') }}
+              Delete
             </q-btn>
           </q-card-actions>
         </project-card>
 
-        <project-card v-if="user.local">
+        <project-card>
           <q-btn
             class="add-btn"
             icon="folder_open"
             size="md"
             stack
+            flat
             @click="loadProject()"
           >
-            {{ t('open_project') }}
+            Open Project
           </q-btn>
         </project-card>
 
-        <project-card @click="createProject()">
-          <div class="fit column justify-center content-center text-center">
-            <div>
-              <q-icon
-                name="add"
-                size="lg"
-              />
-            </div>
-            <div class="text-subtitle1">
-              {{ t('add_project') }}
-            </div>
-          </div>
+        <project-card>
+          <q-btn
+            class="add-btn"
+            icon="add"
+            size="md"
+            stack
+            flat
+            @click="createProject()"
+          >
+            Create Project
+          </q-btn>
         </project-card>
       </div>
     </div>
-
-    <!-- content -->
   </q-page>
 </template>
 
 <script lang="ts" setup>
 import ProjectCard from 'components/ProjectCard.vue';
-import { useAuthStore } from 'stores/auth';
-import { storeToRefs } from 'pinia';
-import { useServiceStore } from 'stores/service';
-import type { Ref } from 'vue';
-import type { Project, User } from 'src/lib/entities';
-import { useI18n } from 'vue-i18n';
+import type { ProjectMeta } from 'app/src-common/entities';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useProjectStore } from 'stores/project';
+import { storeToRefs } from 'pinia';
+import { onBeforeMount } from 'vue';
 
-const authStore = useAuthStore();
-const serviceStore = useServiceStore();
 const router = useRouter();
 const quasar = useQuasar();
 
-const { t } = useI18n();
-const { user } = storeToRefs(authStore) as unknown as {
-  user: Ref<User>;
-};
+const projectStore = useProjectStore();
+const { projectIndex } = storeToRefs(projectStore);
+
+onBeforeMount(async () => {
+  await projectStore.loadIndex();
+});
 
 function loadProject() {
-  if (!serviceStore.dataService) {
-    return;
-  }
-
   // TODO Open electron file chooser
+  quasar.dialog({});
 }
 
-async function openProject(project: Project) {
+async function openProject(project: ProjectMeta) {
   await router.push(`/projects/${project.id}/flights`);
 }
 
-function deleteProject() {
-  // TODO Add dialog
-  quasar.dialog({});
+function deleteProject(project: ProjectMeta) {
+  quasar
+    .dialog({
+      title: `Delete project ${project.name}?`,
+      message:
+        'Are you sure you want to delete this project? This action cannot be undone.',
+      ok: {
+        label: 'Delete',
+        color: 'negative',
+        rounded: true,
+      },
+      cancel: {
+        label: 'Cancel',
+        rounded: true,
+        outline: true,
+      },
+    })
+    .onOk(() => {
+      void projectStore.deleteProject(project.id);
+    });
 }
 
-function editProject() {
+function editProject(project: ProjectMeta) {
   // TODO Add dialog
-  quasar.dialog({});
+  quasar.dialog({
+    title: 'Edit project',
+    message: 'This feature is not yet implemented.',
+    ok: {
+      label: 'OK',
+      color: 'primary',
+      rounded: true,
+    },
+    cancel: {
+      label: 'Cancel',
+      rounded: true,
+      outline: true,
+    },
+  });
 }
 
-function createProject() {
-  // TODO Add dialog
-  quasar.dialog({});
+async function createProject() {
+  await router.push('/projects/create');
 }
 </script>
 

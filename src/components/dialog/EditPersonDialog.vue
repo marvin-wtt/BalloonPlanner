@@ -3,69 +3,54 @@
     ref="dialogRef"
     @hide="onDialogHide"
   >
-    <q-card>
+    <q-card style="min-width: 300px">
       <q-form
-        @reset="onReset"
+        @reset="onDialogCancel"
         @submit="onSubmit"
-        class="q-gutter-md"
       >
-        <q-card-section>
-          <div class="text-h6">
-            {{ t(`dialog.person.${mode}.title`) }}
-          </div>
+        <q-card-section class="text-h6">
+          <template v-if="mode === 'create'"> Create Person </template>
+          <template v-else> Edit Person </template>
         </q-card-section>
 
-        <q-card-section class="q-pt-none">
-          <!-- TODO unique rule -->
+        <q-card-section class="q-pt-none q-gutter-y-md">
           <q-input
             v-model="name"
-            :label="t('dialog.person.name.label')"
+            label="Name"
             lazy-rules
             :rules="[
               (val: string | undefined) =>
-                (val && val.length > 0) ||
-                t('dialog.person.name_validation.required'),
+                (val && val.length > 0) || 'Name is required.',
             ]"
-            filled
-          />
-
-          <q-input
-            v-model.number="flights"
-            type="number"
-            :label="t('dialog.person.flights.label')"
-            :hint="t('dialog.person.flights.hint')"
-            lazy-rules
-            :rules="[
-              (val: number | undefined) =>
-                (val !== undefined && val >= 0) ||
-                $t('dialog.person.validation.flights'),
-            ]"
-            filled
-          />
-
-          <q-checkbox
-            v-model="firstTime"
-            :label="t('dialog.person.first_flight.label')"
-            :hint="t('dialog.person.first_flight.hint')"
+            hide-bottom-space
+            outlined
+            rounded
           />
 
           <q-select
-            v-model="nation"
-            :options="nations"
-            :label="t('nationality')"
-            :rules="[
-              (val: string | undefined) =>
-                (val && nations.map((val) => val.value).includes(val)) ||
-                t('dialog.person.nationality.validation.type'),
-            ]"
+            v-model="nationality"
+            label="Nationality"
+            :options="nationalityOptions"
             emit-value
             map-options
-            filled
+            :rules="[
+              (val?: string | null) => !!val || 'Nationality is required.',
+            ]"
+            hide-bottom-space
+            outlined
+            rounded
           />
 
-          <q-checkbox
-            v-model="supervisor"
-            :label="t('dialog.person.supervisor.label')"
+          <q-select
+            v-model="role"
+            label="Role"
+            :options="roleOptions"
+            emit-value
+            map-options
+            :rules="[(val?: string | null) => !!val || 'Role is required.']"
+            hide-bottom-space
+            outlined
+            rounded
           />
         </q-card-section>
 
@@ -74,16 +59,17 @@
           class="text-primary"
         >
           <q-btn
+            label="Cancel"
             type="reset"
             color="primary"
-            :label="t('cancel')"
-            v-close-popup
-            flat
+            rounded
+            outline
           />
           <q-btn
+            label="Create"
             type="submit"
             color="primary"
-            :label="t('create')"
+            rounded
           />
         </q-card-actions>
       </q-form>
@@ -92,58 +78,57 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
-import type { Person } from 'src/lib/entities';
-import { useI18n } from 'vue-i18n';
+import { computed, ref, toRaw } from 'vue';
+import type { Person, PersonRole } from 'app/src-common/entities';
 import { useDialogPluginComponent } from 'quasar';
 
-interface Props {
-  mode: 'create' | 'edit';
+const { person } = defineProps<{
   person?: Person;
-}
-
-const props = defineProps<Props>();
+}>();
 
 defineEmits([...useDialogPluginComponent.emits]);
 
-const { t } = useI18n();
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
-const name = ref(props.person?.name ?? null);
-const nation = ref(props.person?.nation ?? null);
-const flights = ref(props.person?.numberOfFlights ?? 0);
-const supervisor = ref(props.person?.supervisor ?? false);
-const firstTime = ref(props.person?.firstTime ?? false);
+const name = ref<string>(person?.name ?? null);
+const nationality = ref<string>(person?.nationality ?? null);
+const role = ref<PersonRole>(person?.role ?? 'participant');
 
-const nations = [
+const mode = computed<'create' | 'edit'>(() => {
+  return person ? 'edit' : 'create';
+});
+
+const nationalityOptions = [
   {
-    label: t('german'),
+    label: 'German',
     value: 'de',
   },
   {
-    label: t('france'),
+    label: 'French',
     value: 'fr',
   },
 ];
 
-function onSubmit() {
-  onDialogOK({
-    name: name.value,
-    nation: nation.value,
-    flights: flights.value,
-    supervisor: supervisor.value,
-    firstTime: firstTime.value,
-  });
-}
+const roleOptions = [
+  {
+    label: 'Counselor',
+    value: 'counselor',
+  },
+  {
+    label: 'Participant',
+    value: 'participant',
+  },
+];
 
-function onReset() {
-  name.value = null;
-  nation.value = null;
-  flights.value = 0;
-  supervisor.value = false;
-  firstTime.value = false;
-  onDialogCancel();
+function onSubmit() {
+  const payload: Omit<Person, 'id'> = {
+    name: toRaw(name.value),
+    nationality: toRaw(nationality.value),
+    role: toRaw(role.value),
+  };
+
+  onDialogOK(payload);
 }
 </script>
 

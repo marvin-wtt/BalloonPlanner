@@ -12,7 +12,7 @@
 
 <script lang="ts" setup>
 import { DragHelper } from 'src/util/DragHelper';
-import type { Identifiable } from 'src/lib/utils/Identifiable';
+import type { Identifiable } from 'app/src-common/entities';
 import { ref } from 'vue';
 
 interface Props {

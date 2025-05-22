@@ -1,131 +1,135 @@
-import { acceptHMRUpdate, defineStore } from 'pinia';
+import { acceptHMRUpdate, defineStore, storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
-import type { Balloon, Car, Flight, Person } from 'src/lib/entities';
-import { useServiceStore } from 'stores/service';
+import type { Balloon, Car, Flight, Person } from 'app/src-common/entities';
 import { useProjectStore } from 'stores/project';
 
 export const useFlightStore = defineStore('flight', () => {
-  const serviceStore = useServiceStore();
   const projectStore = useProjectStore();
+  const { project } = storeToRefs(projectStore);
 
-  const flight = ref<Flight | undefined | null>();
-  const loading = ref<boolean>(false);
-  const error = ref<string | null>(null);
+  const flightId = ref<string>();
 
-  const balloons = computed<Record<string, Balloon>>(() => {
-    if (flight.value === undefined) {
+  const flight = computed<Flight | undefined>(() => {
+    if (!project.value || !flightId.value) {
+      return undefined;
+    }
+
+    return project.value.flights.find(({ id }) => id === flightId.value);
+  });
+
+  const balloonMap = computed<Record<string, Balloon>>(() => {
+    if (!flight.value) {
       return {};
     }
 
-    return flight.value.balloons.reduce(
-      (balloons, balloon) => ({
-        ...balloons,
-        [balloon.id]: balloon,
-      }),
-      {},
-    );
+    return project.value.balloons
+      .filter(({ id }) => flight.value.balloonIds.includes(id))
+      .reduce(
+        (balloons, balloon) => ({
+          ...balloons,
+          [balloon.id]: balloon,
+        }),
+        {},
+      );
   });
 
-  const cars = computed<Record<string, Car>>(() => {
-    if (flight.value === undefined) {
+  const carMap = computed<Record<string, Car>>(() => {
+    if (!flight.value) {
       return {};
     }
 
-    return flight.value.cars.reduce(
-      (cars, car) => ({
-        ...cars,
-        [car.id]: car,
-      }),
-      {},
-    );
+    return projectStore.project.cars
+      .filter(({ id }) => flight.value.carIds.includes(id))
+      .reduce(
+        (cars, car) => ({
+          ...cars,
+          [car.id]: car,
+        }),
+        {},
+      );
   });
 
-  const persons = computed<Record<string, Car>>(() => {
-    if (flight.value === undefined) {
+  const personMap = computed<Record<string, Person>>(() => {
+    if (!flight.value) {
       return {};
     }
 
-    return flight.value.people.reduce(
-      (persons, person) => ({
-        ...person,
-        [person.id]: person,
-      }),
-      {},
-    );
+    return projectStore.project.people
+      .filter(({ id }) => flight.value.personIds.includes(id))
+      .reduce(
+        (persons, person) => ({
+          ...persons,
+          [person.id]: person,
+        }),
+        {},
+      );
   });
 
-  async function load(flightId: string | undefined): Promise<void> {
-    if (flightId == flight.value?.id) {
-      return;
-    }
-
-    if (!flightId) {
-      flight.value = null;
-      serviceStore.dataService?.unloadFlight();
-      return;
-    }
-
-    try {
-      loading.value = true;
-      error.value = null;
-      await serviceStore.dataService?.loadFlight(flightId);
-    } catch (e) {
-      error.value =
-        e instanceof Error ? e.message : typeof e === 'string' ? e : 'Error';
-    } finally {
-      loading.value = false;
-    }
+  function load(id: string) {
+    flightId.value = id;
   }
 
-  function create(): Promise<Flight> {
-    if (!serviceStore.dataService) {
-      throw new Error('service_invalid');
-    }
+  function create(): Flight {
+    const newFlight = {
+      id: crypto.randomUUID(),
+      vehicleGroups: [],
+      carIds: projectStore.project.cars.map(({ id }) => id),
+      balloonIds: projectStore.project.balloons.map(({ id }) => id),
+      personIds: projectStore.project.people.map(({ id }) => id),
+    };
 
-    return serviceStore.dataService.createFlight();
+    projectStore.project.flights.push(newFlight);
+
+    return newFlight;
   }
 
   const availableBalloons = computed<Balloon[]>(() => {
-    return (
-      flight.value?.vehicleGroups.reduce(
-        (balloons, group) =>
-          balloons.filter((balloon) => balloon.id !== group.balloon.id),
-        flight.value?.balloons ?? [],
-      ) ?? []
+    if (!flight.value) {
+      return [];
+    }
+
+    return flight.value.vehicleGroups.reduce(
+      (balloons, group) =>
+        balloons.filter((balloon) => balloon.id !== group.balloon.id),
+      Object.values(balloonMap.value),
     );
   });
 
   const availableCars = computed<Car[]>(() => {
-    return (
-      flight.value?.vehicleGroups.reduce(
-        (cars, group) =>
-          cars.filter(
-            (car) => !group.cars.some((groupCar) => groupCar.id === car.id),
-          ),
-        flight.value?.cars ?? [],
-      ) ?? []
+    if (!flight.value) {
+      return [];
+    }
+
+    return flight.value.vehicleGroups.reduce(
+      (cars, group) =>
+        cars.filter(
+          (car) => !group.cars.some((groupCar) => groupCar.id === car.id),
+        ),
+      Object.values(carMap.value),
     );
   });
 
   const availablePeople = computed<Person[]>(() => {
-    return (
-      flight.value?.vehicleGroups.reduce(
-        (people, group) =>
-          people.filter(
-            (person) =>
-              ![
-                group.balloon.operator,
-                ...group.cars.map((car) => car.operator),
-                ...group.balloon.passengers,
-                ...group.cars.flatMap((car) => car.passengers),
-              ].includes(person),
-          ),
-        flight.value?.people,
-      ) ?? []
+    if (!flight.value) {
+      return [];
+    }
+
+    return flight.value.vehicleGroups.reduce(
+      (people, group) =>
+        people.filter(
+          (person) =>
+            ![
+              group.balloon.operatorId,
+              ...group.cars.map((car) => car.operatorId),
+              ...group.balloon.passengerIds,
+              ...group.cars.flatMap((car) => car.passengerIds),
+            ].includes(person.id),
+        ),
+      Object.values(personMap.value),
     );
   });
 
-  const personFlights = computed<Record<string, number>>(() => {
+  const numberOfFlights = computed<Record<string, number>>(() => {
     const allFlights = projectStore.project?.flights ?? [];
     const currentFlightId = flight.value?.id;
     if (!currentFlightId) {
@@ -138,12 +142,10 @@ export const useFlightStore = defineStore('flight', () => {
     }
 
     const flightHistory = allFlights.slice(0, endIndex);
-    // TODO Data not loaded
-
     const counts: Record<string, number> = {};
     for (const f of flightHistory) {
       const balloons = f.vehicleGroups.map((g) => g.balloon);
-      for (const person of f.people) {
+      for (const person of projectStore.project.people) {
         const pid = person.id;
         if (!(pid in counts)) {
           counts[pid] = 0;
@@ -152,8 +154,8 @@ export const useFlightStore = defineStore('flight', () => {
         // check if this person is flying on any of the balloons
         const isFlying = balloons.some(
           (balloon) =>
-            balloon.operator?.id === pid ||
-            balloon.passengers.some((p) => p.id === pid),
+            balloon.operatorId === pid ||
+            balloon.passengerIds.some((pIds) => pIds === pid),
         );
 
         counts[pid] += isFlying ? 1 : 0;
@@ -164,18 +166,15 @@ export const useFlightStore = defineStore('flight', () => {
   });
 
   return {
-    // Properties
-    flight,
-    error,
-    loading,
     // Computed
-    balloons,
-    cars,
-    persons,
+    flight,
+    balloonMap,
+    carMap,
+    personMap,
     availableBalloons,
     availablePeople,
     availableCars,
-    personFlights,
+    numberOfFlights,
     // Methods
     load,
     create,

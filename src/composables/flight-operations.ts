@@ -1,134 +1,194 @@
-import type { PersistenceService } from 'src/services/persistence/PersistenceService';
-import type { Balloon, Car, Person } from 'src/lib/entities';
-import { VehicleGroup } from 'src/lib/entities';
-import { useQuasar } from 'quasar';
-import { useI18n } from 'vue-i18n';
-import { useServiceStore } from 'stores/service';
+import type { Balloon, Car, Person } from 'app/src-common/entities';
+import { useFlightStore } from 'stores/flight';
+import { useProjectStore } from 'stores/project';
 
 export function useFlightOperations() {
-  const quasar = useQuasar();
-  const { t } = useI18n();
-  const { dataService } = useServiceStore();
+  const flightStore = useFlightStore();
+  const projectStore = useProjectStore();
 
-  function monitorService(
-    cb: (service: PersistenceService) => Promise<void>,
-  ): void {
-    if (!dataService) {
-      quasar.notify({
-        type: 'negative',
-        message: t('service_not_available'),
-      });
-      return;
-    }
-
-    const promise = cb(dataService);
-    const notify = quasar.notify({
-      type: 'ongoing',
-      message: t('saving_in_progress'),
+  function addVehicleGroup(balloonId: string) {
+    flightStore.flight.vehicleGroups.push({
+      balloon: {
+        id: balloonId,
+        operatorId: null,
+        passengerIds: [],
+      },
+      cars: [],
     });
-    promise
-      .then(() => {
-        notify({
-          type: 'positive',
-          message: t('saving_success'),
-          timeout: 1000,
-        });
-      })
-      .catch((reason) => {
-        notify({
-          type: 'warning',
-          message: t('saving_failed') + ': ' + reason,
-          timeout: 5000,
-        });
+  }
+
+  function removeVehicleGroup(balloonId: string) {
+    const groups = flightStore.flight.vehicleGroups;
+
+    groups.splice(
+      groups.findIndex((g) => g.balloon.id === balloonId),
+      1,
+    );
+  }
+
+  function addCarToVehicleGroup(balloonId: string, carId: string) {
+    flightStore.flight.vehicleGroups
+      .find((group) => group.balloon.id === balloonId)
+      .cars.push({
+        id: carId,
+        operatorId: null,
+        passengerIds: [],
       });
   }
 
-  function addVehicleGroup(balloon: Balloon) {
-    monitorService((service) =>
-      service.addVehicleGroup(new VehicleGroup(balloon)),
+  function removeCarFromVehicleGroup(balloonId: string, carId: string) {
+    const cars = flightStore.flight.vehicleGroups.find(
+      (group) => group.balloon.id === balloonId,
+    ).cars;
+
+    cars.splice(
+      cars.findIndex((c) => c.id === carId),
+      1,
     );
   }
 
-  function removeVehicleGroup(group: VehicleGroup) {
-    monitorService((service) => service.deleteVehicleGroup(group));
+  function addBalloonOperator(balloonId: string, personId: string) {
+    flightStore.flight.vehicleGroups.find(
+      (group) => group.balloon.id === balloonId,
+    ).balloon.operatorId = personId;
   }
 
-  function addCarToVehicleGroup(group: VehicleGroup, car: Car) {
-    monitorService((service) => service.addCarToVehicleGroup(car, group));
+  function addCarOperator(balloonId: string, carId: string, personId: string) {
+    flightStore.flight.vehicleGroups
+      .find((group) => group.balloon.id === balloonId)
+      .cars.find((c) => c.id === carId).operatorId = personId;
   }
 
-  function removeCarFromVehicleGroup(group: VehicleGroup, car: Car) {
-    monitorService((service) => service.removeCarFromVehicleGroup(car, group));
+  function removeBalloonOperator(balloonId: string) {
+    flightStore.flight.vehicleGroups.find(
+      (group) => group.balloon.id === balloonId,
+    ).balloon.operatorId = null;
   }
 
-  function addBalloonOperator(balloon: Balloon, person: Person) {
-    monitorService((service) => service.setBalloonOperator(person, balloon));
+  function removeCarOperator(balloonId: string, carId: string) {
+    flightStore.flight.vehicleGroups
+      .find((group) => group.balloon.id === balloonId)
+      .cars.find((c) => c.id === carId).operatorId = null;
   }
 
-  function addCarOperator(car: Car, person: Person) {
-    monitorService((service) => service.setCarOperator(person, car));
+  function addBalloonPassenger(balloonId: string, personId: string) {
+    flightStore.flight.vehicleGroups
+      .find((group) => group.balloon.id === balloonId)
+      .balloon.passengerIds.push(personId);
   }
 
-  function removeBalloonOperator(balloon: Balloon) {
-    monitorService((service) => service.setBalloonOperator(undefined, balloon));
+  function addCarPassenger(balloonId: string, carId: string, personId: string) {
+    flightStore.flight.vehicleGroups
+      .find((group) => group.balloon.id === balloonId)
+      .cars.find((c) => c.id === carId)
+      .passengerIds.push(personId);
   }
 
-  function removeCarOperator(car: Car) {
-    monitorService((service) => service.setCarOperator(undefined, car));
-  }
+  function removeBalloonPassenger(balloonId: string, personId: string) {
+    const passengerIds = flightStore.flight.vehicleGroups.find(
+      (group) => group.balloon.id === balloonId,
+    ).balloon.passengerIds;
 
-  function addBalloonPassenger(balloon: Balloon, person: Person) {
-    monitorService((service) => service.addBalloonPassenger(person, balloon));
-  }
-
-  function addCarPassenger(car: Car, person: Person) {
-    monitorService((service) => service.addCarPassenger(person, car));
-  }
-
-  function removeBalloonPassenger(balloon: Balloon, person: Person) {
-    monitorService((service) =>
-      service.removeBalloonPassenger(person, balloon),
+    passengerIds.splice(
+      passengerIds.findIndex((p) => p === personId),
+      1,
     );
   }
 
-  function removeCarPassenger(car: Car, person: Person) {
-    monitorService((service) => service.removeCarPassenger(person, car));
+  function removeCarPassenger(
+    balloonId: string,
+    carId: string,
+    personId: string,
+  ) {
+    const passengerIds = flightStore.flight.vehicleGroups
+      .find((group) => group.balloon.id === balloonId)
+      .cars.find((c) => c.id === carId).passengerIds;
+
+    passengerIds.splice(
+      passengerIds.findIndex((p) => p === personId),
+      1,
+    );
   }
 
-  function addPerson(person: Person) {
-    monitorService((service) => service.addPerson(person));
+  function addPerson(person: Omit<Person, 'id'>) {
+    projectStore.project.people.push({
+      ...person,
+      id: crypto.randomUUID(),
+    });
   }
 
-  function editPerson(person: Person) {
-    monitorService((service) => service.updatePerson(person));
+  function editPerson(personId: string, person: Omit<Person, 'id'>) {
+    projectStore.project.people.splice(
+      projectStore.project.people.findIndex(({ id }) => id === personId),
+      1,
+      {
+        ...person,
+        id: personId,
+      },
+    );
   }
 
-  function removePerson(person: Person) {
-    monitorService((service) => service.deletePerson(person));
+  function removePerson(personId: string) {
+    const personIds = flightStore.flight.personIds;
+
+    personIds.splice(
+      personIds.findIndex((b) => b === personId),
+      1,
+    );
   }
 
-  function addBalloon(balloon: Balloon) {
-    monitorService((service) => service.addBalloon(balloon));
+  function addBalloon(balloon: Omit<Balloon, 'id'>) {
+    projectStore.project.balloons.push({
+      ...balloon,
+      id: crypto.randomUUID(),
+    });
   }
 
-  function editBalloon(balloon: Balloon) {
-    monitorService((service) => service.updateBalloon(balloon));
+  function editBalloon(balloonId: string, balloon: Omit<Balloon, 'id'>) {
+    projectStore.project.balloons.splice(
+      projectStore.project.balloons.findIndex(({ id }) => id === balloonId),
+      1,
+      {
+        ...balloon,
+        id: balloonId,
+      },
+    );
   }
 
-  function removeBalloon(balloon: Balloon) {
-    monitorService((service) => service.deleteBalloon(balloon));
+  function removeBalloon(balloonId: string) {
+    const balloonIds = flightStore.flight.balloonIds;
+
+    balloonIds.splice(
+      balloonIds.findIndex((b) => b === balloonId),
+      1,
+    );
   }
 
-  function addCar(car: Car) {
-    monitorService((service) => service.addCar(car));
+  function addCar(car: Omit<Car, 'id'>) {
+    projectStore.project.cars.push({
+      ...car,
+      id: crypto.randomUUID(),
+    });
   }
 
-  function editCar(car: Car) {
-    monitorService((service) => service.updateCar(car));
+  function editCar(carId: string, car: Omit<Car, 'id'>) {
+    projectStore.project.cars.splice(
+      projectStore.project.cars.findIndex(({ id }) => id === carId),
+      1,
+      {
+        ...car,
+        id: carId,
+      },
+    );
   }
 
-  function removeCar(car: Car) {
-    monitorService((service) => service.deleteCar(car));
+  function removeCar(carId: string) {
+    const carIds = flightStore.flight.carIds;
+
+    carIds.splice(
+      carIds.findIndex((b) => b === carId),
+      1,
+    );
   }
 
   return {

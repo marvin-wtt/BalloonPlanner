@@ -1,4 +1,4 @@
-import type { Identifiable } from 'src/lib/utils/Identifiable';
+import type { Identifiable } from 'app/src-common/entities';
 
 export class DragHelper {
   private static _element: Identifiable | null;

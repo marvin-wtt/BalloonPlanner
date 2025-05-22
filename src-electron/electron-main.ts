@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron';
 import initWindowApiHandler from 'app/src-electron/windowAPI/main';
+import initProjectApiHandler from 'app/src-electron/projectsAPI/main';
 import initSolverApiHandler from 'app/src-electron/solverAPI/main';
 import path from 'path';
 import os from 'os';
@@ -52,6 +53,7 @@ async function createWindow() {
 app
   .whenReady()
   .then(initWindowApiHandler)
+  .then(initProjectApiHandler)
   .then(initSolverApiHandler)
   .then(createWindow)
   .catch((reason) => {

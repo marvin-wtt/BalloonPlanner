@@ -1,4 +1,4 @@
-import type { Car, Flight, Person } from 'src/lib/entities';
+import type { Car, Flight, Person } from 'app/src-common/entities';
 import { shuffle } from 'src/lib/utils/ArrayUtils';
 
 //  1. Create vehicle groups for each balloon

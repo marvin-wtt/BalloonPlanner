@@ -3,64 +3,62 @@
     ref="dialogRef"
     @hide="onDialogHide"
   >
-    <q-card>
+    <q-card style="min-width: 300px">
       <q-form
         @reset="onReset"
         @submit="onSubmit"
-        class="q-gutter-md"
       >
-        <q-card-section>
-          <div class="text-h6">
-            {{ t(`dialog.car.title.${mode}`) }}
-          </div>
+        <q-card-section class="text-h6">
+          <template v-if="mode === 'create'">Create Car</template>
+          <template v-else> Edit Car</template>
         </q-card-section>
 
-        <q-card-section class="q-pt-none">
+        <q-card-section class="q-pt-none q-gutter-y-md">
           <q-input
             v-model="name"
-            :label="t('dialog.car.name.label')"
+            label="Name"
             lazy-rules
             :rules="[
-              (val: string | undefined) =>
-                (val && val.length > 0) ||
-                t('dialog.car.name.validation.required'),
+              (val?: string | null) =>
+                (!!val && val.length > 0) || 'Name is required.',
             ]"
-            filled
+            hide-bottom-space
+            rounded
+            outlined
           />
 
           <q-input
-            v-model.number="capacity"
+            v-model.number="maxCapacity"
             type="number"
-            :label="t('dialog.car.capacity.label')"
-            :hint="t('dialog.car.capacity.hint')"
+            label="Maximum Capacity"
+            hint="Including the pilot"
             lazy-rules
             :rules="[
-              (val: number | undefined) =>
-                (val !== undefined && val > 0) ||
-                t('dialog.car.capacity.validation.number'),
+              (val?: number | null) =>
+                (!!val && val > 0) || 'Maximum Capacity is required.',
             ]"
-            filled
-          />
-
-          <q-checkbox
-            v-model="trailerHitch"
-            :label="$t('dialog.car.trailer_hitch.label')"
-            :hint="$t('dialog.car.trailer_hitch.hint')"
+            rounded
+            outlined
           />
 
           <q-select
-            v-model="allowedOperators"
-            :label="t('dialog.car.allowed_operators.label')"
+            v-model="allowedOperatorIds"
+            label="Allowed operators"
             use-input
             use-chips
             multiple
             input-debounce="0"
             :options="filterOptions"
-            @filter="filterFn"
-            style="width: 250px"
             emit-value
             map-options
-            filled
+            @filter="filterFn"
+            outlined
+            rounded
+          />
+
+          <q-toggle
+            v-model="hasTrailerHitch"
+            label="Has trailer hitch"
           />
         </q-card-section>
 
@@ -69,16 +67,17 @@
           class="text-primary"
         >
           <q-btn
+            label="Cancel"
             type="reset"
             color="primary"
-            :label="t('cancel')"
-            v-close-popup
-            flat
+            rounded
+            outline
           />
           <q-btn
+            label="Create"
             type="submit"
             color="primary"
-            :label="t(mode)"
+            rounded
           />
         </q-card-actions>
       </q-form>
@@ -87,64 +86,64 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
-import type { Car, Person } from 'src/lib/entities';
-import { useI18n } from 'vue-i18n';
-import { useDialogPluginComponent } from 'quasar';
+import { computed, ref, toRaw } from 'vue';
+import type { Car, Person } from 'app/src-common/entities';
+import { type QSelectOption, useDialogPluginComponent } from 'quasar';
 
-const { t } = useI18n();
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
-interface Props {
+const { car, people } = defineProps<{
   car?: Car;
   people: Person[];
-}
-
-const props = defineProps<Props>();
+}>();
 
 defineEmits([...useDialogPluginComponent.emits]);
 
-const name = ref<string | undefined>(props.car?.name);
-const capacity = ref<number | undefined>(props.car?.capacity);
-const trailerHitch = ref<boolean>(props.car?.trailerHitch ?? false);
-const allowedOperators = ref<Person[]>(props.car?.allowedOperators ?? []);
-const options = [...props.people]
-  .sort((a, b) => a.name.localeCompare(b.name))
-  .sort((a, b) => (a.supervisor == b.supervisor ? 0 : a.supervisor ? -1 : 1))
-  .map((value) => {
-    return {
+const name = ref<string | undefined>(car?.name);
+const maxCapacity = ref<number | undefined>(car?.maxCapacity);
+const hasTrailerHitch = ref<boolean>(car?.hasTrailerClutch ?? true);
+const allowedOperatorIds = ref<string[]>(car?.allowedOperatorIds ?? []);
+
+const operatorOptions = computed<QSelectOption[]>(() => {
+  return people
+    .filter((value) => value.role === 'counselor')
+    .toSorted((a, b) => a.name.localeCompare(b.name))
+    .map((value) => ({
       label: value.name,
-      value: value,
-    };
-  });
-const filterOptions = ref(options);
+      value: value.id,
+    }));
+});
+
+const filterOptions = ref<QSelectOption[]>(operatorOptions.value);
 
 const mode = computed<'create' | 'edit'>(() => {
-  return props.car ? 'edit' : 'create';
+  return car ? 'edit' : 'create';
 });
 
 function onSubmit() {
-  onDialogOK({
-    name: name.value,
-    capacity: capacity.value,
-    allowedOperators: allowedOperators.value,
-    trailerHitch: trailerHitch.value,
-  });
+  const payload: Omit<Car, 'id'> = {
+    type: 'car',
+    name: toRaw(name.value),
+    maxCapacity: toRaw(maxCapacity.value),
+    allowedOperatorIds: toRaw(allowedOperatorIds.value),
+    hasTrailerClutch: toRaw(hasTrailerHitch.value),
+  };
+
+  onDialogOK(payload);
 }
 
 function onReset() {
   name.value = undefined;
-  capacity.value = undefined;
-  allowedOperators.value = [];
-  trailerHitch.value = false;
+  maxCapacity.value = undefined;
+  allowedOperatorIds.value = [];
   onDialogCancel();
 }
 
 function filterFn(val: string, update: (a: () => void) => void) {
   update(() => {
     const needle = val.toLowerCase();
-    filterOptions.value = options.filter(
+    filterOptions.value = operatorOptions.value.filter(
       (value) => value.label.toLowerCase().indexOf(needle) > -1,
     );
   });

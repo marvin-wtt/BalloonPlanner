@@ -47,26 +47,37 @@
 </template>
 
 <script lang="ts" setup>
-import { Person, type Vehicle } from 'src/lib/entities';
+import type {
+  Person,
+  Vehicle,
+  Identifiable,
+  VehicleAssignment,
+} from 'app/src-common/entities';
 import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
-import type { Identifiable } from 'src/lib/utils/Identifiable';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import { useI18n } from 'vue-i18n';
 import { useFlightStore } from 'stores/flight';
+import { storeToRefs } from 'pinia';
 
 const { t } = useI18n();
 const flightStore = useFlightStore();
 
+const { personMap, numberOfFlights } = storeToRefs(flightStore);
+
 const {
   person,
   vehicle,
+  assignment,
   editable = false,
+  flightHint = false,
   operator = false,
 } = defineProps<{
   person?: Person;
   vehicle: Vehicle;
+  assignment: VehicleAssignment;
   editable?: boolean;
+  flightHint?: boolean;
   operator?: boolean;
 }>();
 
@@ -81,26 +92,27 @@ const personLabel = computed<string>(() => {
     return '';
   }
 
-  let label = person.name;
-  if (editable) {
-    const flights = flightStore.personFlights[person.id] ?? 0;
+  const label = person.name;
 
-    label += ` (${flights})`;
+  if (!flightHint || !editable) {
+    return label;
   }
 
-  return label;
+  const flights = numberOfFlights.value[person.id] ?? 0;
+
+  return `${label} (${flights})`;
 });
 
 function isDropAllowed(element: Identifiable): boolean {
-  if (!(element instanceof Person)) {
+  if (!personMap.value[element.id]) {
     return false;
   }
 
   if (operator) {
-    return vehicle.allowedOperators.includes(element);
+    return vehicle.allowedOperatorIds.includes(element.id);
   }
 
-  return !vehicle.passengers.includes(element);
+  return !assignment.passengerIds.includes(element.id);
 }
 
 function onDrop(element: Identifiable) {

@@ -24,31 +24,33 @@
 </template>
 
 <script lang="ts" setup>
-import { Balloon, type Flight, Person } from 'src/lib/entities';
+import type {
+  Balloon,
+  Flight,
+  Person,
+  Identifiable,
+} from 'app/src-common/entities';
 import DropZone from 'components/drag/DropZone.vue';
-import type { Identifiable } from 'src/lib/utils/Identifiable';
 import { computed } from 'vue';
 
-interface Props {
+const { flight } = defineProps<{
   flight: Flight;
-}
-
-const props = defineProps<Props>();
+}>();
 
 const emit = defineEmits<{
   (e: 'balloonAdd', vehicle: Balloon): void;
 }>();
 
 const empty = computed(() => {
-  return props.flight.vehicleGroups.length === 0;
+  return flight.vehicleGroups.length === 0;
 });
 
 function elementIsBalloon(element: Identifiable): element is Balloon {
-  return element instanceof Balloon;
+  return flight.balloonIds.includes(element.id);
 }
 
 function elementIsPerson(element: Identifiable): element is Person {
-  return element instanceof Person;
+  return flight.personIds.includes(element.id);
 }
 
 function isDropAllowed(element: Identifiable): boolean {
@@ -61,7 +63,7 @@ function isDropAllowed(element: Identifiable): boolean {
 
 function flightContainsBalloon(balloon: Balloon): boolean {
   return (
-    props.flight.vehicleGroups.findIndex(
+    flight.vehicleGroups.findIndex(
       (value) => value.balloon.id === balloon.id,
     ) >= 0
   );

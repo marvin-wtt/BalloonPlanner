@@ -1,9 +1,7 @@
 <template>
   <q-btn
-    :label="label"
-    :to="{
-      name: 'projects',
-    }"
+    :label
+    :to="{ name: 'projects' }"
     class="ellipsis"
     rounded
     flat

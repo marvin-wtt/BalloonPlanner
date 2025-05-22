@@ -120,26 +120,6 @@
             filled
           />
 
-          <q-input
-            v-model.number="flights"
-            type="number"
-            :label="t('dialog.person.flights.label')"
-            :hint="t('dialog.person.flights.hint')"
-            lazy-rules
-            :rules="[
-              (val: number | undefined) =>
-                (val !== undefined && val >= 0) ||
-                t('dialog.person.validation.flights'),
-            ]"
-            filled
-          />
-
-          <q-checkbox
-            v-model="firstTime"
-            :label="t('dialog.person.first_flight.label')"
-            :hint="t('dialog.person.first_flight.hint')"
-          />
-
           <q-select
             v-model="nation"
             :options="nations"
@@ -184,16 +164,13 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
-import type { Person } from 'src/lib/entities';
+import type { Person } from 'app/src-common/entities';
 import { useI18n } from 'vue-i18n';
 import { useDialogPluginComponent } from 'quasar';
 
-interface Props {
-  mode: 'create' | 'edit';
+const { person } = defineProps<{
   person?: Person;
-}
-
-const props = defineProps<Props>();
+}>();
 
 defineEmits([...useDialogPluginComponent.emits]);
 
@@ -205,11 +182,9 @@ const step = ref(1);
 
 const method = ref<string>();
 
-const name = ref(props.person?.name ?? null);
-const nation = ref(props.person?.nation ?? null);
-const flights = ref(props.person?.numberOfFlights ?? 0);
-const supervisor = ref(props.person?.supervisor ?? false);
-const firstTime = ref(props.person?.firstTime ?? false);
+const name = ref(person?.name ?? null);
+const nation = ref(person?.nationality ?? null);
+const supervisor = ref(person?.role === 'counselor');
 
 const nations = [
   {
@@ -226,7 +201,6 @@ function onSubmit() {
   onDialogOK({
     name: name.value,
     nation: nation.value,
-    flights: flights.value,
     supervisor: supervisor.value,
   });
 }
@@ -234,7 +208,6 @@ function onSubmit() {
 function onReset() {
   name.value = null;
   nation.value = null;
-  flights.value = 0;
   supervisor.value = false;
   onDialogCancel();
 }

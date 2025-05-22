@@ -1,7 +1,9 @@
-import { type windowAPI } from '../../src-electron/electron-preload';
+import type { WindowAPI } from 'app/src-common/WindowAPI';
+import type { ProjectsAPI } from 'app/src-common/ProjectsAPI';
 
 declare global {
   interface Window {
-    windowAPI: typeof windowAPI;
+    windowAPI: WindowAPI;
+    projectAPI: ProjectsAPI;
   }
 }

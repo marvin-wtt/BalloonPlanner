@@ -1,6 +1,6 @@
 <template>
   <q-step
-    :name="name"
+    :name
     title="Select loading method"
     icon="input"
     :done="loader !== undefined"
@@ -79,19 +79,13 @@
       </q-item>
     </q-list>
 
-    <q-stepper-navigation>
+    <q-stepper-navigation class="row q-gutter-sm">
       <q-btn
-        @click="emit('to', name + '_' + loader)"
-        color="primary"
         label="Continue"
-        :disable="loader === undefined"
-      />
-      <q-btn
-        flat
-        @click="emit('back')"
         color="primary"
-        label="Back"
-        class="q-ml-sm"
+        :disable="loader === undefined"
+        rounded
+        @click="emit('to', name + '_' + loader)"
       />
     </q-stepper-navigation>
   </q-step>
@@ -114,7 +108,7 @@
           accept="application/JSON"
           :error="inputErrorMessage !== undefined"
           :error-message="inputErrorMessage"
-          @change="inputErrorMessage.value = undefined"
+          @change="inputErrorMessage = undefined"
           :loading="fileUploadOngoing"
         >
           <template v-slot:prepend>
@@ -124,40 +118,36 @@
       </div>
     </div>
 
-    <q-stepper-navigation>
+    <q-stepper-navigation class="row q-gutter-sm">
       <q-btn
-        @click="processJson()"
-        color="primary"
         label="Continue"
+        color="primary"
         :disable="file === undefined"
+        @click="processJson()"
       />
       <q-btn
+        label="Back"
+        color="primary"
         flat
         @click="emit('to', name)"
-        color="primary"
-        label="Back"
-        class="q-ml-sm"
       />
     </q-stepper-navigation>
   </q-step>
 </template>
 
 <script lang="ts" setup>
-import type { Person } from 'src/lib/entities';
+import type { Person } from 'app/src-common/entities';
 import { ref } from 'vue';
 import { loadJson } from 'src/lib/import/JsonInputLoader';
 
-interface Props {
-  name: string;
-  modelValue: Person[];
-}
+const modelValue = defineModel<Person[]>();
 
-defineProps<Props>();
+const { name } = defineProps<{
+  name: string;
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', people: Person[]): void;
   (e: 'continue'): void;
-  (e: 'back'): void;
   (e: 'to', destination: string): void;
 }>();
 
@@ -174,7 +164,7 @@ function processJson() {
 
   loadJson(file.value)
     .then((value) => {
-      emit('update:modelValue', value);
+      // TODO Validate
       emit('to', 'people_manual');
     })
     .catch((reason) => {

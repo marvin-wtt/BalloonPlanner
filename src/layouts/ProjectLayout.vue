@@ -14,12 +14,11 @@
           <div
             id="navigation"
             class="row q-gutter-x-xs no-wrap"
-          />
+          >
+            <project-selection-item />
+          </div>
         </div>
-
         <q-space />
-
-        <account-item />
 
         <q-separator
           vertical
@@ -27,7 +26,7 @@
           inset
         />
 
-        <template v-if="$q.platform.is.electron">
+        <template v-if="quasar.platform.is.electron">
           <q-btn
             icon="minimize"
             dense
@@ -53,13 +52,20 @@
       </q-bar>
     </q-header>
 
-    <q-page-container>
-      <router-view />
-    </q-page-container>
+    <q-scroll-area style="width: 100vw; height: 100vh">
+      <div style="max-width: 100vw">
+        <q-page-container>
+          <router-view />
+        </q-page-container>
+      </div>
+    </q-scroll-area>
   </q-layout>
 </template>
 
 <script lang="ts" setup>
 import { minimize, toggleMaximize, closeApp } from 'src/composables/windowAPI';
-import AccountItem from 'components/toolbar/AccountItem.vue';
+import { useQuasar } from 'quasar';
+import ProjectSelectionItem from 'components/toolbar/ProjectSelectionItem.vue';
+
+const quasar = useQuasar();
 </script>

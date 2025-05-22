@@ -6,13 +6,13 @@
     <q-card>
       <q-list>
         <q-expansion-item
-          :label="t('supervisor', 2)"
+          :label="t('counselor', 2)"
           icon="supervisor_account"
           group="people"
         >
           <q-list>
             <q-item
-              v-for="person in props.participants"
+              v-for="person in counselors"
               :key="person.id"
               clickable
               @click="onSelection(person)"
@@ -30,7 +30,7 @@
         >
           <q-list>
             <q-item
-              v-for="person in props.participants"
+              v-for="person in participants"
               :key="person.id"
               clickable
               @click="onSelection(person)"
@@ -53,12 +53,10 @@ import { useDialogPluginComponent } from 'quasar';
 const { t } = useI18n();
 const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent();
 
-interface Props {
+const { participants, counselors } = defineProps<{
   participants: Person[];
-  supervisors: Person[];
-}
-
-const props = defineProps<Props>();
+  counselors: Person[];
+}>();
 
 defineEmits([...useDialogPluginComponent.emits]);
 

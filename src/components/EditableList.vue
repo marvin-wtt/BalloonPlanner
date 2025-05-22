@@ -109,7 +109,7 @@
 </template>
 
 <script lang="ts" generic="T extends Identifiable" setup>
-import type { Identifiable } from 'src/lib/utils/Identifiable';
+import type { Identifiable } from 'app/src-common/entities';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import { QItem } from 'quasar';
 import { ref } from 'vue';
@@ -117,17 +117,17 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-interface Props {
+const {
+  title,
+  items,
+  itemName = 'item',
+  dense = false,
+} = defineProps<{
   title: string;
   items: T[];
   itemName?: string;
   dense?: boolean;
-}
-
-withDefaults(defineProps<Props>(), {
-  itemName: 'item',
-  dense: false,
-});
+}>();
 
 const emit = defineEmits<{
   (e: 'create'): void;
