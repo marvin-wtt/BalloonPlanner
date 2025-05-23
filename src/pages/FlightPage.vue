@@ -108,9 +108,9 @@
           >
             <q-tab-panel
               name="balloons"
-              class="column bg-grey-2"
+              class="column bg-grey-2 q-pa-none"
             >
-              <q-scroll-area class="col-grow self-stretch">
+              <q-scroll-area class="col-grow self-stretch q-pa-md">
                 <editable-list
                   title="Balloons"
                   item-name="Balloon"
@@ -131,9 +131,9 @@
 
             <q-tab-panel
               name="cars"
-              class="column bg-grey-2"
+              class="column bg-grey-2 q-pa-none"
             >
-              <q-scroll-area class="col-grow self-stretch">
+              <q-scroll-area class="col-grow self-stretch q-pa-md">
                 <editable-list
                   title="Cars"
                   item-name="Car"
@@ -154,9 +154,9 @@
 
             <q-tab-panel
               name="supervisors"
-              class="column bg-grey-2"
+              class="column bg-grey-2 q-pa-none"
             >
-              <q-scroll-area class="col-grow self-stretch">
+              <q-scroll-area class="col-grow self-stretch q-pa-md">
                 <editable-list
                   title="Counselors"
                   item-name="Counselor"
@@ -182,9 +182,9 @@
 
             <q-tab-panel
               name="participants"
-              class="column bg-grey-2"
+              class="column bg-grey-2 q-pa-none"
             >
-              <q-scroll-area class="col-grow self-stretch">
+              <q-scroll-area class="col-grow self-stretch q-pa-md">
                 <editable-list
                   title="Participants"
                   item-name="Participant"
@@ -299,8 +299,8 @@
                         </q-item-section>
                         <q-item-section>
                           <q-item-label>
-                            Show total weight of balloons</q-item-label
-                          >
+                            Show total weight of balloons
+                          </q-item-label>
                         </q-item-section>
                       </q-item>
                     </q-list>
@@ -402,7 +402,7 @@
             :disable="!editable"
             @click="onSmartFill"
           >
-            <q-tooltip> Smart fill </q-tooltip>
+            <q-tooltip> Smart fill</q-tooltip>
           </q-btn>
         </q-page-sticky>
       </div>
