@@ -91,10 +91,11 @@
       </q-list>
       <q-btn
         v-if="editable"
-        :label="`Create ${itemName.toLowerCase()}`"
+        label="Create new"
         class="q-ma-sm"
         color="primary"
         icon="add"
+        rounded
         @click="addItem()"
       />
     </div>
