@@ -1,5 +1,6 @@
 import type { Person } from 'app/src-common/entities';
 import { readJsonFile } from 'src/util/json-file-reader';
+import { makeUniqueNames } from 'src/util/unique-name';
 
 export async function loadJson(file: File): Promise<Person[]> {
   let data = await readJsonFile(file);
@@ -17,7 +18,12 @@ export async function loadJson(file: File): Promise<Person[]> {
     throw new Error('Invalid JSON data.');
   }
 
-  const people: Person[] = [];
+  const people: {
+    firstName: string;
+    lastName: string;
+    role: Person['role'];
+    nationality: Person['nationality'];
+  }[] = [];
   for (let personData of data) {
     // Computed data check in case it is a registration output
     if (
@@ -57,18 +63,21 @@ export async function loadJson(file: File): Promise<Person[]> {
     }
 
     people.push({
-      id: crypto.randomUUID(),
-      name:
-        capitalizeFirstLetter(personData.firstName) +
-        ' ' +
-        capitalizeFirstLetter(personData.lastName),
+      firstName: capitalizeFirstLetter(personData.firstName),
+      lastName: capitalizeFirstLetter(personData.lastName),
       nationality: personData.address.country,
       role: personData.role === 'participant' ? 'participant' : 'counselor',
     });
   }
 
-  return people;
+  return makeUniqueNames(people).map((person) => ({
+    id: crypto.randomUUID(),
+    name: person.name,
+    role: person.role,
+    nationality: person.nationality,
+  }));
 }
+
 function capitalizeFirstLetter(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
