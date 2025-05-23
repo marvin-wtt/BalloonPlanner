@@ -87,8 +87,8 @@
               : undefined
           "
           @edit="
-            personMap[assignment.operatorId]
-              ? emit('personEdit', personMap[assignment.operatorId])
+            assignment.operatorId
+              ? onPersonEdit(assignment.operatorId)
               : undefined
           "
         />
@@ -117,7 +117,7 @@
           @remove="
             emit('passengerRemove', personMap[assignment.passengerIds[c - 1]])
           "
-          @edit="emit('personEdit', personMap[assignment.passengerIds[c - 1]])"
+          @edit="onPersonEdit(assignment.passengerIds[c - 1])"
         />
       </tr>
     </table>
@@ -244,6 +244,10 @@ function onVehicleRemoved() {
 
 function onVehicleEdit() {
   emit('edit');
+}
+
+function onPersonEdit(id: string) {
+  emit('personEdit', personMap.value[id]);
 }
 </script>
 

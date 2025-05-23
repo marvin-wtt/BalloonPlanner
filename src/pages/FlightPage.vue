@@ -558,7 +558,7 @@ function showCreatePerson() {
     .dialog({
       component: EditPersonDialog,
       componentProps: {
-        existingNames: Object.values(personMap).map(({ name }) => name),
+        existingNames: Object.values(personMap.value).map(({ name }) => name),
       },
     })
     .onOk(addPerson);
@@ -570,7 +570,7 @@ function showEditPerson(person: Person) {
       component: EditPersonDialog,
       componentProps: {
         person,
-        existingNames: Object.values(personMap).map(({ name }) => name),
+        existingNames: Object.values(personMap.value).map(({ name }) => name),
       },
     })
     .onOk((payload) => {
@@ -606,9 +606,7 @@ function showCreateBalloon() {
       component: EditBalloonDialog,
       componentProps: {
         people: Object.values(personMap.value),
-        balloonNames: Object.values(balloonMap.value).map(
-          (balloon) => balloon.name,
-        ),
+        balloonNames: Object.values(balloonMap.value).map(({ name }) => name),
       },
     })
     .onOk(addBalloon);
@@ -621,9 +619,7 @@ function showEditBalloon(id: string) {
       componentProps: {
         balloon: balloonMap.value[id],
         people: Object.values(personMap.value),
-        balloonNames: Object.values(balloonMap.value).map(
-          (balloon) => balloon.name,
-        ),
+        balloonNames: Object.values(balloonMap.value).map(({ name }) => name),
       },
     })
     .onOk((payload) => {
@@ -659,7 +655,7 @@ function showCreateCar() {
       component: EditCarDialog,
       componentProps: {
         people: Object.values(personMap.value),
-        carNames: Object.values(carMap.value).map((car) => car.name),
+        carNames: Object.values(carMap.value).map(({ name }) => name),
       },
     })
     .onOk(addCar);
@@ -672,7 +668,7 @@ function showEditCar(id: string) {
       componentProps: {
         car: carMap.value[id],
         people: Object.values(personMap.value),
-        carNames: Object.values(carMap.value).map((car) => car.name),
+        carNames: Object.values(carMap.value).map(({ name }) => name),
       },
     })
     .onOk((payload) => {

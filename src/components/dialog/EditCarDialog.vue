@@ -21,6 +21,8 @@
             :rules="[
               (val?: string | null) =>
                 (!!val && val.length > 0) || 'Name is required.',
+              (val?: string | null) =>
+                nameIsUnique(val) || 'Name must be unique.',
             ]"
             hide-bottom-space
             rounded
@@ -95,7 +97,7 @@ import { type QSelectOption, useDialogPluginComponent } from 'quasar';
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
-const { car, people } = defineProps<{
+const { car, people, existingNames } = defineProps<{
   car?: Car;
   existingNames?: string[];
   people: Person[];
@@ -127,7 +129,7 @@ const mode = computed<'create' | 'edit'>(() => {
 function onSubmit() {
   const payload: Omit<Car, 'id'> = {
     type: 'car',
-    name: toRaw(name.value),
+    name: toRaw(name.value).trim(),
     maxCapacity: toRaw(maxCapacity.value),
     allowedOperatorIds: toRaw(allowedOperatorIds.value),
     hasTrailerClutch: toRaw(hasTrailerHitch.value),
@@ -142,6 +144,17 @@ function filterFn(val: string, update: (a: () => void) => void) {
     filterOptions.value = operatorOptions.value.filter(
       (value) => value.label.toLowerCase().indexOf(needle) > -1,
     );
+  });
+}
+
+function nameIsUnique(name: string): boolean {
+  name = name.trim().toLowerCase();
+  if (name === car?.name.toLowerCase()) {
+    return true;
+  }
+
+  return !existingNames?.some((existingName) => {
+    return existingName.toLowerCase() === name;
   });
 }
 </script>

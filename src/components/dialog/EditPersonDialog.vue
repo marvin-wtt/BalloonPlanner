@@ -9,8 +9,8 @@
         @submit="onSubmit"
       >
         <q-card-section class="text-h6">
-          <template v-if="mode === 'create'"> Create Person </template>
-          <template v-else> Edit Person </template>
+          <template v-if="mode === 'create'"> Create Person</template>
+          <template v-else> Edit Person</template>
         </q-card-section>
 
         <q-card-section class="q-pt-none q-gutter-y-md">
@@ -19,10 +19,10 @@
             label="Name"
             lazy-rules
             :rules="[
-              (val: string | undefined) =>
-                (val && val.length > 0) || 'Name is required.',
               (val?: string | null) =>
-                !existingNames?.includes(val) || 'Name must be unique.',
+                (!!val && val.length > 0) || 'Name is required.',
+              (val?: string | null) =>
+                nameIsUnique(val) || 'Name must be unique.',
             ]"
             hide-bottom-space
             outlined
@@ -47,7 +47,8 @@
             v-model.number="weight"
             type="number"
             label="Weight"
-            hint="in kg"
+            hint="Optional"
+            suffix=" kg"
             lazy-rules
             :rules="[
               (val?: number | null) =>
@@ -142,13 +143,24 @@ const roleOptions = [
 
 function onSubmit() {
   const payload: Omit<Person, 'id'> = {
-    name: toRaw(name.value),
+    name: toRaw(name.value).trim(),
     nationality: toRaw(nationality.value),
     role: toRaw(role.value),
     weight: toRaw(weight.value) ?? undefined,
   };
 
   onDialogOK(payload);
+}
+
+function nameIsUnique(name: string): boolean {
+  name = name.trim().toLowerCase();
+  if (name === person?.name.toLowerCase()) {
+    return true;
+  }
+
+  return !existingNames?.some((existingName) => {
+    return existingName.toLowerCase() === name;
+  });
 }
 </script>
 
