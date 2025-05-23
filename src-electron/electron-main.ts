@@ -5,6 +5,8 @@ import initSolverApiHandler from 'app/src-electron/solverAPI/main';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'node:url';
+import electronUpdater, { type AppUpdater } from 'electron-updater';
+import log from 'electron-log';
 
 // needed in case process is undefined under Linux
 const platform = process.platform || os.platform();
@@ -14,7 +16,7 @@ const singleInstanceLock = app.requestSingleInstanceLock();
 let mainWindow: BrowserWindow | null = null;
 
 if (!singleInstanceLock) {
-  console.error(
+  log.error(
     'Failed to start application: Another instance seems to be already running.',
   );
   app.quit();
@@ -66,12 +68,23 @@ async function createWindow() {
   }
 }
 
+export function getAutoUpdater(): AppUpdater {
+  // Using destructuring to access autoUpdater due to the CommonJS module of 'electron-updater'.
+  // It is a workaround for ESM compatibility issues, see https://github.com/electron-userland/electron-builder/issues/7976.
+  const { autoUpdater } = electronUpdater;
+
+  autoUpdater.logger = log;
+
+  return autoUpdater;
+}
+
 app
   .whenReady()
   .then(initWindowApiHandler)
   .then(initProjectApiHandler)
   .then(initSolverApiHandler)
   .then(createWindow)
+  .then(() => getAutoUpdater().checkForUpdatesAndNotify())
   .catch((reason) => {
     console.error(`Failed to start application: ${reason}`);
   });
