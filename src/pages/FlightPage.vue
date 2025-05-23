@@ -425,7 +425,7 @@ import { useProjectStore } from 'stores/project';
 import BaseFlight from 'components/BaseFlight.vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import BaseVehicle from 'components/BaseVehicle.vue';
-import type { Balloon, Car, Flight, Person } from 'app/src-common/entities';
+import type { Balloon, Car, Person } from 'app/src-common/entities';
 import EditableList from 'components/EditableList.vue';
 import { useSettingsStore } from 'stores/settings';
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
@@ -586,11 +586,12 @@ function showDeletePerson(person: Person) {
       ok: {
         label: 'Delete',
         color: 'negative',
+        rounded: true,
       },
       cancel: {
         label: 'Cancel',
         outline: true,
-        color: 'grey',
+        rounded: true,
       },
       persistent: true,
     })
@@ -638,11 +639,12 @@ function showDeleteBalloon(balloon: Balloon) {
       ok: {
         label: 'Delete',
         color: 'negative',
+        rounded: true,
       },
       cancel: {
         label: 'Cancel',
         outline: true,
-        color: 'grey',
+        rounded: true,
       },
       persistent: true,
     })
@@ -686,11 +688,12 @@ function showDeleteCar(car: Car) {
       ok: {
         label: 'Delete',
         color: 'negative',
+        rounded: true,
       },
       cancel: {
         label: 'Cancel',
         outline: true,
-        color: 'grey',
+        rounded: true,
       },
       persistent: true,
     })
