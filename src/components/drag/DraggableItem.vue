@@ -78,7 +78,7 @@ function eventContentLabel(event: DragEvent): string {
 
 <style>
 .drag-content {
-  position: absolute;
+  position: fixed;
   z-index: 1000;
   opacity: 0.5;
   background-color: grey;
