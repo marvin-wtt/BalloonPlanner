@@ -56,9 +56,9 @@ function unwrapComputed(entry: unknown): unknown {
   if (
     isObject(entry) &&
     'computedData' in entry &&
-    isObject((entry as any).computedData)
+    isObject(entry.computedData)
   ) {
-    return (entry as any).computedData;
+    return entry.computedData;
   }
   return entry;
 }

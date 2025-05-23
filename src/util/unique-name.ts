@@ -12,11 +12,11 @@ export function makeUniqueNames<T extends Person>(
   // 2. Group people by a duplicated firstName.
   const duplicateGroups = new Map<string, Person[]>();
   for (const p of people) {
-    if (firstNameCounts[p.firstName]! > 1) {
+    if (firstNameCounts[p.firstName] > 1) {
       if (!duplicateGroups.has(p.firstName)) {
         duplicateGroups.set(p.firstName, []);
       }
-      duplicateGroups.get(p.firstName)!.push(p);
+      duplicateGroups.get(p.firstName).push(p);
     }
   }
 
@@ -45,14 +45,14 @@ export function makeUniqueNames<T extends Person>(
   // 4. Build the display names.
   return people.map((p) => {
     // Unique firstName → just firstName
-    if (firstNameCounts[p.firstName]! === 1) {
+    if (firstNameCounts[p.firstName] === 1) {
       return {
         ...p,
         name: p.firstName,
       };
     }
     // Otherwise, take N letters of lastName (N from prefixLengths)
-    const len = prefixLengths.get(p.firstName)!;
+    const len = prefixLengths.get(p.firstName);
     const slice = p.lastName.slice(0, len);
     // If we've used the entire lastName, don't add a period
     const suffix = len < p.lastName.length ? '.' : '';
