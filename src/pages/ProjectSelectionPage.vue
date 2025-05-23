@@ -9,19 +9,33 @@
           class="project-card"
           @click="openProject(project)"
         >
-          <q-card-section>
+          <q-card-section class="col-grow">
             <div class="text-h6">
               {{ project.name }}
             </div>
             <div class="text-subtitle2">
-              {{ project.description }}
+              {{ project.description ?? '&#160;' }}
             </div>
           </q-card-section>
 
           <q-separator />
 
-          <q-card-actions align="right">
+          <q-card-actions
+            class="no-wrap"
+            align="right"
+          >
             <q-btn
+              icon="download"
+              size="sm"
+              flat
+              rounded
+              @click.stop="downloadProject(project)"
+            >
+              Export
+            </q-btn>
+            <q-btn
+              icon="edit"
+              size="sm"
               flat
               rounded
               @click.stop="editProject(project)"
@@ -29,9 +43,12 @@
               Edit
             </q-btn>
             <q-btn
+              icon="delete"
+              size="sm"
               color="negative"
               flat
               rounded
+              dense
               @click.stop="deleteProject(project)"
             >
               Delete
@@ -56,7 +73,7 @@
             flat
             @click="loadProject()"
           >
-            Open Project
+            Import Project
           </q-btn>
         </project-card>
 
@@ -79,7 +96,7 @@
 
 <script lang="ts" setup>
 import ProjectCard from 'components/ProjectCard.vue';
-import type { ProjectMeta } from 'app/src-common/entities';
+import type { Project, ProjectMeta } from 'app/src-common/entities';
 import { useRouter } from 'vue-router';
 import { QFile, useQuasar } from 'quasar';
 import { useProjectStore } from 'stores/project';
@@ -119,6 +136,18 @@ async function onFilesAdded() {
 
   // TODO Validate
   await projectStore.createProject(data);
+}
+
+async function downloadProject(project: ProjectMeta) {
+  await projectStore.loadProject(project.id);
+  const content = JSON.stringify(projectStore.project);
+  const file = new Blob([content], {
+    type: 'text/plain',
+  });
+  const element = document.createElement('a');
+  element.href = URL.createObjectURL(file);
+  element.download = `${project.name}.json`;
+  element.click();
 }
 
 async function openProject(project: ProjectMeta) {

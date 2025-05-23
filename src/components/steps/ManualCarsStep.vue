@@ -159,7 +159,7 @@ function onEditCar(car: Car) {
     .dialog({
       component: EditCarDialog,
       componentProps: {
-        vehicle: car,
+        car,
         people,
         existingNames: modelValue.value.map(({ name }) => name),
       },
