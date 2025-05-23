@@ -10,11 +10,27 @@ import { fileURLToPath } from 'node:url';
 const platform = process.platform || os.platform();
 const currentDir = fileURLToPath(new URL('.', import.meta.url));
 
+const singleInstanceLock = app.requestSingleInstanceLock();
+let mainWindow: BrowserWindow | null = null;
+
+if (!singleInstanceLock) {
+  console.error(
+    'Failed to start application: Another instance seems to be already running.',
+  );
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    mainWindow?.restore();
+    mainWindow?.center();
+    mainWindow?.focus();
+  });
+}
+
 async function createWindow() {
   /**
    * Initial window options
    */
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     icon: path.resolve(currentDir, 'icons/icon.png'), // tray icon
     width: 1000,
     height: 600,
