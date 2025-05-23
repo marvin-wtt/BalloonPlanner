@@ -18,6 +18,7 @@ def transform_input_payload(balloons, cars, people, groups, history):
     people = _transform_list(people, {
         'id': 'id',
         'nationality': 'nationality',
+        "role": "role",
         'weight': 'weight',
         'flights': 'flights'
     })

@@ -89,6 +89,9 @@ def solve(
     nationality = {
         p_id: people_by_id[p_id]["nationality"] for p_id in person_ids
     }
+    is_counselor = {
+        p_id: people_by_id[p_id]["role"] == "counselor" for p_id in person_ids
+    }
 
     capacity = {v_id: vehicles_by_id[v_id]["capacity"] for v_id in vehicle_ids}
     kind = {v_id: vehicles_by_id[v_id]["kind"] for v_id in vehicle_ids}
