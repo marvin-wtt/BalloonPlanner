@@ -5,7 +5,7 @@
   >
     <q-card style="min-width: 300px">
       <q-form
-        @reset="onReset"
+        @reset="onDialogCancel"
         @submit="onSubmit"
       >
         <q-card-section class="text-h6">
@@ -39,6 +39,21 @@
               (val?: number | null) =>
                 (!!val && val > 0) || 'Maximum Capacity is required.',
             ]"
+            rounded
+            outlined
+          />
+
+          <q-input
+            v-model.number="maxWeight"
+            type="number"
+            label="Maximum Weight"
+            hint="in kg"
+            lazy-rules
+            :rules="[
+              (val?: number | null) =>
+                !val || val > 0 || 'Max weight must be greater than 0.',
+            ]"
+            clearable
             rounded
             outlined
           />
@@ -100,6 +115,7 @@ defineEmits([...useDialogPluginComponent.emits]);
 
 const name = ref<string | undefined>(balloon?.name);
 const maxCapacity = ref<number | undefined>(balloon?.maxCapacity);
+const maxWeight = ref<number | undefined>(balloon?.maxWeight);
 const allowedOperatorIds = ref<string[]>(balloon?.allowedOperatorIds ?? []);
 
 const operatorOptions = computed<QSelectOption[]>(() => {
@@ -123,17 +139,11 @@ function onSubmit() {
     type: 'balloon',
     name: toRaw(name.value),
     maxCapacity: toRaw(maxCapacity.value),
+    maxWeight: toRaw(maxWeight.value) ?? undefined,
     allowedOperatorIds: toRaw(allowedOperatorIds.value),
   };
 
   onDialogOK(payload);
-}
-
-function onReset() {
-  name.value = undefined;
-  maxCapacity.value = undefined;
-  allowedOperatorIds.value = [];
-  onDialogCancel();
 }
 
 function filterFn(val: string, update: (a: () => void) => void) {

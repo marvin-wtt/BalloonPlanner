@@ -5,7 +5,7 @@
   >
     <q-card style="min-width: 300px">
       <q-form
-        @reset="onReset"
+        @reset="onDialogCancel"
         @submit="onSubmit"
       >
         <q-card-section class="text-h6">
@@ -134,13 +134,6 @@ function onSubmit() {
   };
 
   onDialogOK(payload);
-}
-
-function onReset() {
-  name.value = undefined;
-  maxCapacity.value = undefined;
-  allowedOperatorIds.value = [];
-  onDialogCancel();
 }
 
 function filterFn(val: string, update: (a: () => void) => void) {

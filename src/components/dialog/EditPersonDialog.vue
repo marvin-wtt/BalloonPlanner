@@ -145,7 +145,7 @@ function onSubmit() {
     name: toRaw(name.value),
     nationality: toRaw(nationality.value),
     role: toRaw(role.value),
-    weight: toRaw(weight.value),
+    weight: toRaw(weight.value) ?? undefined,
   };
 
   onDialogOK(payload);

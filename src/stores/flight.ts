@@ -188,7 +188,7 @@ export const useFlightStore = defineStore('flight', () => {
   async function smartFillFlight() {
     const data: SmartFillPayload = {
       cars: Object.values(carMap.value),
-      balloons: Object.values(balloonMap.value), // TODO Add max weight
+      balloons: Object.values(balloonMap.value),
       people: Object.values(personMap.value).map((person) => ({
         ...person,
         flights: numberOfFlights.value[person.id] ?? 0,
