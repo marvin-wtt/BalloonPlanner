@@ -96,7 +96,7 @@
 
 <script lang="ts" setup>
 import ProjectCard from 'components/ProjectCard.vue';
-import type { Project, ProjectMeta } from 'app/src-common/entities';
+import type { ProjectMeta } from 'app/src-common/entities';
 import { useRouter } from 'vue-router';
 import { QFile, useQuasar } from 'quasar';
 import { useProjectStore } from 'stores/project';
