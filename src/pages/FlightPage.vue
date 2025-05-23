@@ -7,7 +7,7 @@
       />
     </template>
 
-    <template v-else-if="flight && project">
+    <template v-else-if="flight">
       <!-- Menu -->
       <div
         v-if="editable"
@@ -138,7 +138,7 @@
                   title="Cars"
                   item-name="Car"
                   :items="availableCars"
-                  @create="showCreateCar()"
+                  @create="showCreateCar"
                   @edit="(car) => showEditCar(car.id)"
                   @delete="(car) => showDeleteCar(car)"
                 >
@@ -161,7 +161,7 @@
                   title="Counselors"
                   item-name="Counselor"
                   :items="availableCounselors"
-                  @create="showCreatePerson()"
+                  @create="showCreatePerson"
                   @edit="(person) => showEditPerson(person)"
                   @delete="(person) => showDeletePerson(person)"
                 >
@@ -189,7 +189,7 @@
                   title="Participants"
                   item-name="Participant"
                   :items="availableParticipants"
-                  @create="showCreatePerson()"
+                  @create="showCreatePerson"
                   @edit="(person) => showEditPerson(person)"
                   @delete="(person) => showDeletePerson(person)"
                   :dense="availableParticipants.length > 10"
@@ -582,7 +582,7 @@ function showDeletePerson(person: Person) {
   quasar
     .dialog({
       title: 'Delete person',
-      message: `Are you sure you want to delete ${person.name} fron this flight? The person will remain in the project for other flights?`,
+      message: `Are you sure you want to delete ${person.name} from this flight? The person will remain in the project for other flights.`,
       ok: {
         label: 'Delete',
         color: 'negative',
@@ -599,15 +599,7 @@ function showDeletePerson(person: Person) {
     });
 }
 
-function isFlightLoaded(flight: Flight | undefined | null): flight is Flight {
-  return flight != undefined;
-}
-
 function showCreateBalloon() {
-  if (!isFlightLoaded(flight.value)) {
-    return;
-  }
-
   quasar
     .dialog({
       component: EditBalloonDialog,
@@ -622,10 +614,6 @@ function showCreateBalloon() {
 }
 
 function showEditBalloon(id: string) {
-  if (!isFlightLoaded(flight.value)) {
-    return;
-  }
-
   quasar
     .dialog({
       component: EditBalloonDialog,
@@ -646,7 +634,7 @@ function showDeleteBalloon(balloon: Balloon) {
   quasar
     .dialog({
       title: 'Delete balloon',
-      message: `Are you sure the balloon ${balloon.name} from this flight? It remains in the project for other flights.`,
+      message: `Are you sure you want to delete the balloon ${balloon.name} from this flight? It will remain in the project for other flights.`,
       ok: {
         label: 'Delete',
         color: 'negative',
@@ -664,10 +652,6 @@ function showDeleteBalloon(balloon: Balloon) {
 }
 
 function showCreateCar() {
-  if (!isFlightLoaded(flight.value)) {
-    return;
-  }
-
   quasar
     .dialog({
       component: EditCarDialog,
@@ -680,10 +664,6 @@ function showCreateCar() {
 }
 
 function showEditCar(id: string) {
-  if (!isFlightLoaded(flight.value)) {
-    return;
-  }
-
   quasar
     .dialog({
       component: EditCarDialog,
@@ -702,7 +682,7 @@ function showDeleteCar(car: Car) {
   quasar
     .dialog({
       title: `Delete car`,
-      message: `Are you sure the car ${car.name} from this flight? It remains in the project for other flights.`,
+      message: `Are you sure you want to delete the car ${car.name} from this flight? It will remain in the project for other flights.`,
       ok: {
         label: 'Delete',
         color: 'negative',
