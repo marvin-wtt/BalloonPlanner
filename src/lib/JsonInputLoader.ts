@@ -2,82 +2,90 @@ import type { Person } from 'app/src-common/entities';
 import { readJsonFile } from 'src/util/json-file-reader';
 import { makeUniqueNames } from 'src/util/unique-name';
 
-export async function loadJson(file: File): Promise<Person[]> {
-  let data = await readJsonFile(file);
+/**
+ * Reads a JSON file, unwraps nested `data` properties, validates
+ * and normalizes person records, and assigns unique display names.
+ */
+export async function loadJson(
+  file: File,
+): Promise<Pick<Person, 'id' | 'name' | 'role' | 'nationality'>[]> {
+  const raw = await readJsonFile(file);
+  const unwrapped = unwrapData(raw);
 
-  // Extra data wrap check in case of a response object
-  if (
-    'data' in data &&
-    typeof data.data === 'object' &&
-    Array.isArray(data.data)
-  ) {
-    data = data.data;
+  if (!Array.isArray(unwrapped)) {
+    throw new Error('Expected top-level array of person records');
   }
 
-  if (!Array.isArray(data)) {
-    throw new Error('Invalid JSON data.');
-  }
+  // Normalize and validate each entry
+  const normalized = unwrapped.map((entry, idx) => {
+    const personData = unwrapComputed(entry);
 
-  const people: {
-    firstName: string;
-    lastName: string;
-    role: Person['role'];
-    nationality: Person['nationality'];
-  }[] = [];
-  for (let personData of data) {
-    // Computed data check in case it is a registration output
-    if (
-      'computedData' in personData &&
-      typeof personData.computedData === 'object'
-    ) {
-      personData = personData.computedData;
+    if (!isValidPersonData(personData)) {
+      throw new Error(`Invalid person record at index ${idx}`);
     }
 
-    if (
-      !('firstName' in personData) ||
-      typeof personData.firstName !== 'string'
-    ) {
-      throw new Error('Missing first name property.');
-    }
+    const { firstName, lastName, address, role } = personData;
 
-    if (
-      !('lastName' in personData) ||
-      typeof personData.lastName !== 'string'
-    ) {
-      throw new Error('Missing last name property.');
-    }
+    return {
+      firstName,
+      lastName,
+      role: normalizeRole(role),
+      nationality: address.country.toLowerCase(),
+    };
+  });
 
-    if (
-      !('address' in personData) ||
-      typeof personData.address !== 'object' ||
-      personData.address === null ||
-      !('country' in personData.address) ||
-      typeof personData.address.country !== 'string' ||
-      personData.address.country.length !== 2
-    ) {
-      throw new Error('Missing country property.');
-    }
-
-    if (!('role' in personData) || typeof personData.role !== 'string') {
-      throw new Error('Missing role property.');
-    }
-
-    people.push({
-      firstName: capitalizeFirstLetter(personData.firstName),
-      lastName: capitalizeFirstLetter(personData.lastName),
-      nationality: personData.address.country,
-      role: personData.role === 'participant' ? 'participant' : 'counselor',
-    });
-  }
-
-  return makeUniqueNames(people).map((person) => ({
+  const unique = makeUniqueNames(normalized);
+  return unique.map(({ name, role, nationality }) => ({
     id: crypto.randomUUID(),
-    name: person.name,
-    role: person.role,
-    nationality: person.nationality,
+    name,
+    role,
+    nationality,
   }));
 }
 
-function capitalizeFirstLetter(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+/** Unwrap nested `data` properties if present. */
+function unwrapData(input: unknown): unknown {
+  if (isObject(input) && 'data' in input) {
+    return input.data;
+  }
+  return input;
+}
+
+/** If `computedData` exists and is object, return it; otherwise return raw. */
+function unwrapComputed(entry: unknown): unknown {
+  if (
+    isObject(entry) &&
+    'computedData' in entry &&
+    isObject((entry as any).computedData)
+  ) {
+    return (entry as any).computedData;
+  }
+  return entry;
+}
+
+/** Runtime check for a plain object. */
+function isObject(x: unknown): x is Record<string, unknown> {
+  return typeof x === 'object' && x !== null;
+}
+
+/** Type guard verifying all required person properties and types. */
+function isValidPersonData(x: unknown): x is {
+  firstName: string;
+  lastName: string;
+  address: { country: string };
+  role: string;
+} {
+  if (!isObject(x)) return false;
+  const { firstName, lastName, address, role } = x;
+  if (typeof firstName !== 'string' || firstName.trim() === '') return false;
+  if (typeof lastName !== 'string' || lastName.trim() === '') return false;
+  if (!isObject(address)) return false;
+  const country = address.country;
+  if (typeof country !== 'string' || country.length !== 2) return false;
+  return !(typeof role !== 'string' || role.trim() === '');
+}
+
+/** Normalize role values. */
+function normalizeRole(role: string): Person['role'] {
+  return role === 'participant' ? 'participant' : 'counselor';
 }
