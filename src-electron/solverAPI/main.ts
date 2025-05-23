@@ -1,6 +1,8 @@
 import { ipcMain, type IpcMainEvent } from 'electron';
 import { spawn } from 'node:child_process';
 import type { SmartFillPayload, VehicleGroup } from 'app/src-common/entities';
+import { fileURLToPath } from 'node:url';
+import path from 'path';
 
 export default () => {
   ipcMain.handle('solver:run', handleEvent(runSolver));
@@ -12,20 +14,18 @@ const handleEvent = (next: (...args: unknown[]) => Promise<unknown>) => {
   };
 };
 
+const currentDir = fileURLToPath(new URL('.', import.meta.url));
 const PROCESS_TIMEOUT_MS = 1_000_000;
 
 const runSolver = (payload: SmartFillPayload): Promise<VehicleGroup[]> => {
   const json = JSON.stringify(payload);
 
-  const root = 'C:\\Users\\Marvi\\PycharmProjects\\BalloonSolver\\';
-  const venv = root + 'venv\\'; // or whatever your env is called
-  const python = venv + 'Scripts\\python.exe';
-  const scriptName = 'run_balloon_solver.py';
-
-  console.log(json);
+  const rootDir = path.join(currentDir, '..', '..', 'src-python');
+  const python = path.join(rootDir, '.venv', 'Scripts', 'python.exe');
+  const script = path.join(rootDir, 'run_balloon_solver.py');
 
   return new Promise<VehicleGroup[]>((resolve, reject) => {
-    const process = spawn(python, [root + scriptName, '--stdin']);
+    const process = spawn(python, [script, '--stdin']);
 
     process.stdin.write(json);
     process.stdin.end();
@@ -46,10 +46,12 @@ const runSolver = (payload: SmartFillPayload): Promise<VehicleGroup[]> => {
     process.on('close', (code) => {
       clearTimeout(timeout);
 
-      try {
-        console.log('Buffer:');
-        console.log(buffer);
+      if (code !== 0) {
+        reject(new Error(`Process exited with code ${code}:\n${error}`));
+        return;
+      }
 
+      try {
         const json = JSON.parse(buffer);
 
         if (!Array.isArray(json)) {
@@ -57,11 +59,7 @@ const runSolver = (payload: SmartFillPayload): Promise<VehicleGroup[]> => {
           return;
         }
 
-        if (code === 0) {
-          resolve(json);
-        } else {
-          reject(new Error(`Process exited with code ${code}:\n${error}`));
-        }
+        resolve(json);
       } catch (e) {
         reject(new Error(e));
       }
