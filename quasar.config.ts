@@ -181,6 +181,14 @@ export default defineConfig(() => {
         // https://www.electron.build/configuration/configuration
 
         appId: 'balloon-organizer',
+
+        extraResources: [
+          {
+            from: 'dist/python',
+            to: 'python-bin',
+            filter: ['*.exe'],
+          },
+        ],
       },
     },
 
