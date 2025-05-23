@@ -10,6 +10,6 @@ export function readJsonFile(file: File): Promise<object> {
       }
     };
     fileReader.onerror = reject;
-    fileReader.readAsText(file, 'ISO-8859-1');
+    fileReader.readAsText(file);
   });
 }
