@@ -3,79 +3,115 @@ import { spawn } from 'node:child_process';
 import type { SmartFillPayload, VehicleGroup } from 'app/src-common/entities';
 import { fileURLToPath } from 'node:url';
 import path from 'path';
-
-export default () => {
-  ipcMain.handle('solver:run', handleEvent(runSolver));
-};
-
-const handleEvent = (next: (...args: unknown[]) => Promise<unknown>) => {
-  return (_event: IpcMainEvent, ...args: unknown[]) => {
-    return next(...args);
-  };
-};
+import log from 'electron-log';
 
 const PROCESS_TIMEOUT_MS = 1_000_000;
-const SCRIPT_NAME = 'run_balloon_solver';
+const SCRIPT_BASE = 'run_balloon_solver';
 
-const spawnArgs = (): [string, string[]] => {
-  if (process.env.DEV) {
-    const currentDir = fileURLToPath(new URL('.', import.meta.url));
-    const rootDir = path.join(currentDir, '..', '..', 'src-python');
-    const python = path.join(rootDir, '.venv', 'Scripts', 'python.exe');
-    const script = path.join(rootDir, SCRIPT_NAME + '.py');
-
-    return [python, [script, '--stdin']];
-  }
-
-  const execName =
-    process.platform === 'win32' ? SCRIPT_NAME + '.exe' : SCRIPT_NAME;
-
-  const executable = path.join(process.resourcesPath, 'python-bin', execName);
-  return [executable, ['--stdin']];
+export default () => {
+  ipcMain.handle(
+    'solver:run',
+    (_evt: IpcMainEvent, payload: SmartFillPayload) => runSolver(payload),
+  );
 };
 
-const runSolver = (payload: SmartFillPayload): Promise<VehicleGroup[]> => {
-  const json = JSON.stringify(payload);
+function spawnArgs(): [string, string[]] {
+  if (process.env.DEV) {
+    // In dev, run from a local Python venv
+    const cwd = fileURLToPath(new URL('.', import.meta.url));
+    const srcPy = path.join(cwd, '..', '..', 'src-python');
+    const pythonExe = path.join(srcPy, '.venv', 'Scripts', 'python.exe');
+    const scriptPath = path.join(srcPy, SCRIPT_BASE + '.py');
 
-  const process = spawn(...spawnArgs());
+    return [pythonExe, [scriptPath]];
+  }
 
-  process.stdin.write(json);
-  process.stdin.end();
+  // In production, run the bundled exe (Windows) or binary
+  const execName =
+    process.platform === 'win32' ? SCRIPT_BASE + '.exe' : SCRIPT_BASE;
+  const binPath = path.join(process.resourcesPath, 'python-bin', execName);
+  return [binPath, []];
+}
 
-  let buffer = '';
-  process.stdout.setEncoding('utf8');
-  process.stdout.on('data', (chunk) => (buffer += chunk));
+function handleError(code: number, stderrData: string): Error {
+  let errorData: unknown;
+  try {
+    errorData = JSON.parse(stderrData);
+  } catch {
+    // ignore
+  }
 
-  let error = '';
-  process.stderr.setEncoding('utf8');
-  process.stderr.on('data', (chunk) => (error += chunk));
+  if (
+    typeof errorData === 'object' &&
+    errorData != null &&
+    'message' in errorData &&
+    typeof errorData.message === 'string'
+  ) {
+    log.error('Solver error', { data: errorData, stderr: stderrData });
+
+    return new Error(errorData.message);
+  }
+
+  log.error(
+    `Solver exited with code ${code} but no structured error.`,
+    stderrData,
+  );
+  return new Error('An unexpected error occurred in the solver.');
+}
+
+function runSolver(payload: SmartFillPayload): Promise<VehicleGroup[]> {
+  const [cmd, args] = spawnArgs();
+  const proc = spawn(cmd, args, { stdio: ['pipe', 'pipe', 'pipe'] });
+
+  // send input
+  proc.stdin.write(JSON.stringify(payload));
+  proc.stdin.end();
+
+  let stdoutData = '';
+  proc.stdout.setEncoding('utf8');
+  proc.stdout.on('data', (chunk) => {
+    stdoutData += chunk;
+  });
+
+  let stderrData = '';
+  proc.stderr.setEncoding('utf8');
+  proc.stderr.on('data', (chunk) => {
+    stderrData += chunk;
+  });
 
   return new Promise<VehicleGroup[]>((resolve, reject) => {
     const timeout = setTimeout(() => {
-      process.kill();
-      reject(new Error('Timeout'));
+      proc.kill();
+      log.error('Solver timeout', { payload, timeout: PROCESS_TIMEOUT_MS });
+      reject(
+        new Error('The solver took too long to respond. Please try again.'),
+      );
     }, PROCESS_TIMEOUT_MS);
 
-    process.on('close', (code) => {
+    proc.on('error', (err) => {
+      clearTimeout(timeout);
+      log.error('Spawn error', err);
+      reject(new Error('Could not start the solver process.'));
+    });
+
+    proc.on('close', (code) => {
       clearTimeout(timeout);
 
       if (code !== 0) {
-        reject(new Error(`Process exited with code ${code}:\n${error}`));
-        return;
+        return reject(handleError(code, stderrData));
       }
 
       try {
-        const json = JSON.parse(buffer);
-
-        if (!Array.isArray(json)) {
-          reject(new Error('Invalid JSON'));
-          return;
+        const data = JSON.parse(stdoutData);
+        if (!Array.isArray(data)) {
+          log.error('Invalid solver output', data);
+          return reject(new Error('Invalid solver output'));
         }
-
-        resolve(json);
+        resolve(data as VehicleGroup[]);
       } catch (e) {
-        reject(new Error(e));
+        log.error('Failed to parse solver output', e);
+        reject(new Error(`Invalid solver response`));
       }
     });
   });
-};
+}

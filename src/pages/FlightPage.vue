@@ -305,10 +305,11 @@ async function onSmartFill() {
       message: 'Successfully filled flight!',
       timeout: 1000,
     });
-  } catch (reason) {
+  } catch (error) {
     notify({
       type: 'warning',
-      message: 'Failed to fill the flight' + ': ' + reason,
+      message: 'Failed to fill the flight',
+      caption: error.message,
       timeout: 2000,
     });
   } finally {
