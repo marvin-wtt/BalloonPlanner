@@ -1,41 +1,60 @@
 <template>
-  <div class="q-py-md">
-    <a class="text-h6">
-      {{ title }}
-    </a>
-    <div class="column">
-      <q-btn
-        class="q-ma-xs q-ml-auto q-mr-none items-end"
-        square
-        outline
-        size="sm"
-        padding="xs"
-        color="grey"
-        :icon="settingsIcon"
-        @click="toggleEditable()"
-      />
+  <a class="text-h6">
+    {{ title }}
+  </a>
+  <div class="column">
+    <q-btn
+      class="q-ma-xs q-ml-auto q-mr-none items-end"
+      square
+      outline
+      size="sm"
+      padding="xs"
+      color="grey"
+      :icon="settingsIcon"
+      @click="toggleEditable()"
+    />
 
-      <q-list
-        bordered
-        separator
-        :dense="dense"
+    <q-list
+      bordered
+      separator
+      :dense="dense"
+    >
+      <!-- Empty List -->
+      <q-item v-if="items.length === 0">
+        <q-item-section>
+          <q-item-label>
+            {{ `No ${itemName.toLowerCase()}s available` }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <!-- Draggable -->
+      <draggable-item
+        v-else-if="!editable"
+        :tag="QItem"
+        v-for="element in items"
+        :key="element.id"
+        :item="element"
       >
-        <!-- Empty List -->
-        <q-item v-if="items.length === 0">
-          <q-item-section>
-            <q-item-label>
-              {{ `No ${itemName.toLowerCase()}s available` }}
-            </q-item-label>
-          </q-item-section>
-        </q-item>
+        <q-item-section>
+          <slot
+            name="main"
+            :item="element"
+          />
+        </q-item-section>
+        <q-item-section side>
+          <slot
+            name="side"
+            :item="element"
+          />
+        </q-item-section>
+      </draggable-item>
 
-        <!-- Draggable -->
-        <draggable-item
-          v-else-if="!editable"
-          :tag="QItem"
+      <!-- Editable -->
+      <template v-else>
+        <q-item
           v-for="element in items"
           :key="element.id"
-          :item="element"
         >
           <q-item-section>
             <slot
@@ -43,62 +62,39 @@
               :item="element"
             />
           </q-item-section>
+
           <q-item-section side>
-            <slot
-              name="side"
-              :item="element"
-            />
-          </q-item-section>
-        </draggable-item>
-
-        <!-- Editable -->
-        <template v-else>
-          <q-item
-            v-for="element in items"
-            :key="element.id"
-          >
-            <q-item-section>
-              <slot
-                name="main"
-                :item="element"
+            <div class="q-gutter-xs">
+              <q-btn
+                round
+                outline
+                size="sm"
+                padding="xs"
+                icon="edit"
+                @click="editItem(element)"
               />
-            </q-item-section>
-
-            <q-item-section side>
-              <div class="q-gutter-xs">
-                <q-btn
-                  round
-                  outline
-                  size="sm"
-                  padding="xs"
-                  color="warning"
-                  icon="edit"
-                  @click="editItem(element)"
-                />
-                <q-btn
-                  round
-                  outline
-                  size="sm"
-                  padding="xs"
-                  color="negative"
-                  icon="delete"
-                  @click="deleteItem(element)"
-                />
-              </div>
-            </q-item-section>
-          </q-item>
-        </template>
-      </q-list>
-      <q-btn
-        v-if="editable"
-        label="Create new"
-        class="q-ma-sm"
-        color="primary"
-        icon="add"
-        rounded
-        @click="addItem()"
-      />
-    </div>
+              <q-btn
+                round
+                outline
+                size="sm"
+                padding="xs"
+                icon="delete"
+                @click="deleteItem(element)"
+              />
+            </div>
+          </q-item-section>
+        </q-item>
+      </template>
+    </q-list>
+    <q-btn
+      v-if="editable"
+      label="Create new"
+      class="q-ma-sm"
+      color="primary"
+      icon="add"
+      rounded
+      @click="addItem()"
+    />
   </div>
 </template>
 
