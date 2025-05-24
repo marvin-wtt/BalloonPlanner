@@ -14,7 +14,18 @@ export interface ProjectsAPI {
 }
 
 export interface SolverAPI {
-  solveFlight: (data: SmartFillPayload) => Promise<VehicleGroup[]>;
+  solveFlight: (
+    data: SmartFillPayload,
+    options?: SolverOptions,
+  ) => Promise<VehicleGroup[]>;
+}
+
+export interface SolverOptions {
+  wPilotFairness?: number;
+  wPassengerFairness?: number;
+  wNationalityDiversity?: number;
+  wVehicleRotation?: number;
+  timeLimit?: number;
 }
 
 export interface WindowAPI {

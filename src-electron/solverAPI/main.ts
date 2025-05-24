@@ -4,6 +4,7 @@ import type { SmartFillPayload, VehicleGroup } from 'app/src-common/entities';
 import { fileURLToPath } from 'node:url';
 import path from 'path';
 import log from 'electron-log';
+import type { SolverOptions } from 'app/src-common/api';
 
 const PROCESS_TIMEOUT_MS = 1_000_000;
 const SCRIPT_BASE = 'run_balloon_solver';
@@ -11,7 +12,8 @@ const SCRIPT_BASE = 'run_balloon_solver';
 export default () => {
   ipcMain.handle(
     'solver:run',
-    (_evt: IpcMainEvent, payload: SmartFillPayload) => runSolver(payload),
+    (_evt: IpcMainEvent, payload: SmartFillPayload, options?: SolverOptions) =>
+      runSolver(payload, options),
   );
 };
 
@@ -62,8 +64,12 @@ function handleError(code: number, stderrData: string): Error {
   return new Error('An unexpected error occurred in the solver.');
 }
 
-function runSolver(payload: SmartFillPayload): Promise<VehicleGroup[]> {
-  const [cmd, args] = spawnArgs();
+function runSolver(
+  payload: SmartFillPayload,
+  options?: SolverOptions,
+): Promise<VehicleGroup[]> {
+  const [cmd, baseArgs] = spawnArgs();
+  const args = [...baseArgs, ...buildFlagArgs(options)];
   const proc = spawn(cmd, args, { stdio: ['pipe', 'pipe', 'pipe'] });
 
   // send input
@@ -117,4 +123,29 @@ function runSolver(payload: SmartFillPayload): Promise<VehicleGroup[]> {
       }
     });
   });
+}
+
+function buildFlagArgs(opts?: SolverOptions): string[] {
+  const args: string[] = [];
+  if (!opts) {
+    return args;
+  }
+
+  if (opts.wPilotFairness != null) {
+    args.push('--w-pilot-fairness', String(opts.wPilotFairness));
+  }
+  if (opts.wPassengerFairness != null) {
+    args.push('--w-passenger-fairness', String(opts.wPassengerFairness));
+  }
+  if (opts.wNationalityDiversity != null) {
+    args.push('--w-nationality-diversity', String(opts.wNationalityDiversity));
+  }
+  if (opts.wVehicleRotation != null) {
+    args.push('--w-vehicle-rotation', String(opts.wVehicleRotation));
+  }
+  if (opts.timeLimit != null) {
+    args.push('--time-limit', String(opts.timeLimit));
+  }
+
+  return args;
 }
