@@ -122,8 +122,8 @@ def _transform_flights(flights: list[dict]) -> list[dict]:
                 new_cars.append(
                     {
                         "id": c["id"],
-                        "operator": b["operatorId"],
-                        "passengers": b["passengerIds"],
+                        "operator": c["operatorId"],
+                        "passengers": c["passengerIds"],
                     }
                 )
 
