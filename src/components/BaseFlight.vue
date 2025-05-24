@@ -16,7 +16,12 @@
       class="col-grow"
     >
       <div class="full-width row">
-        <slot />
+        <base-vehicle-group
+          v-for="(group, i) in flight.vehicleGroups"
+          :key="`vg-${i}`"
+          :group
+          :editable
+        />
       </div>
     </q-scroll-area>
   </drop-zone>
@@ -31,14 +36,14 @@ import type {
 } from 'app/src-common/entities';
 import DropZone from 'components/drag/DropZone.vue';
 import { computed } from 'vue';
+import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
+import { useFlightOperations } from 'src/composables/flight-operations';
+
+const { addVehicleGroup } = useFlightOperations();
 
 const { flight, editable = false } = defineProps<{
   flight: Flight;
   editable?: boolean;
-}>();
-
-const emit = defineEmits<{
-  (e: 'balloonAdd', vehicle: Balloon): void;
 }>();
 
 const empty = computed(() => {
@@ -82,7 +87,7 @@ function onDrop(element: Identifiable) {
     return;
   }
 
-  emit('balloonAdd', element);
+  addVehicleGroup(element.id);
 }
 </script>
 

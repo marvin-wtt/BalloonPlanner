@@ -108,7 +108,7 @@ export const useProjectStore = defineStore('project', () => {
   return {
     projectIndex,
     project,
-    loading: isLoading,
+    isLoading,
     isSaving,
     isDorty,
     createProject,

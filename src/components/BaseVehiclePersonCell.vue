@@ -51,39 +51,49 @@ import type {
   Vehicle,
   Identifiable,
   VehicleAssignment,
+  VehicleGroup,
 } from 'app/src-common/entities';
 import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import { useFlightStore } from 'stores/flight';
 import { storeToRefs } from 'pinia';
+import { useSettingsStore } from 'stores/settings';
+import { useFlightOperations } from 'src/composables/flight-operations';
+import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
+import { useQuasar } from 'quasar';
 
+const quasar = useQuasar();
 const flightStore = useFlightStore();
-
 const { personMap, numberOfFlights } = storeToRefs(flightStore);
+const settingsStore = useSettingsStore();
+const { showPersonWeight, showNumberOfFlights } = storeToRefs(settingsStore);
+const {
+  editPerson,
+  addCarPassenger,
+  addBalloonPassenger,
+  addCarOperator,
+  addBalloonOperator,
+  removeCarPassenger,
+  removeBalloonPassenger,
+  removeCarOperator,
+  removeBalloonOperator,
+} = useFlightOperations();
 
 const {
   person,
   vehicle,
+  group,
   assignment,
   editable = false,
-  flightHint = false,
-  weightHint = false,
   operator = false,
 } = defineProps<{
   person?: Person;
   vehicle: Vehicle;
   assignment: VehicleAssignment;
-  editable?: boolean;
-  flightHint?: boolean;
-  weightHint?: boolean;
+  group: VehicleGroup;
   operator?: boolean;
-}>();
-
-const emit = defineEmits<{
-  (e: 'add', person: Person): void;
-  (e: 'edit'): void;
-  (e: 'remove'): void;
+  editable?: boolean;
 }>();
 
 const personLabel = computed<string>(() => {
@@ -97,13 +107,13 @@ const personLabel = computed<string>(() => {
     return label;
   }
 
-  if (flightHint) {
+  if (showNumberOfFlights.value) {
     const flights = numberOfFlights.value[person.id] ?? 0;
 
     label += ` (${flights})`;
   }
 
-  if (weightHint) {
+  if (showPersonWeight.value) {
     label += ` (${person.weight ?? '?'} kg)`;
   }
 
@@ -127,15 +137,57 @@ function isDropAllowed(element: Identifiable): boolean {
 }
 
 function onDrop(element: Identifiable) {
-  emit('add', element as Person);
+  addPersonToVehicle(element.id);
 }
 
 function onDragEnd() {
-  emit('remove');
+  removePersonFromVehicle(person.id);
 }
 
 function onEdit() {
-  emit('edit');
+  quasar
+    .dialog({
+      component: EditPersonDialog,
+      componentProps: {
+        person,
+        existingNames: Object.values(personMap.value).map(({ name }) => name),
+      },
+    })
+    .onOk((payload) => {
+      editPerson(person.id, payload);
+    });
+}
+
+function addPersonToVehicle(personId: string) {
+  if (vehicle.type === 'balloon') {
+    if (operator) {
+      addBalloonOperator(assignment.id, personId);
+    } else {
+      addBalloonPassenger(assignment.id, personId);
+    }
+  } else {
+    if (operator) {
+      addCarOperator(group.balloon.id, assignment.id, personId);
+    } else {
+      addCarPassenger(group.balloon.id, assignment.id, personId);
+    }
+  }
+}
+
+function removePersonFromVehicle(personId: string) {
+  if (vehicle.type === 'balloon') {
+    if (operator) {
+      removeBalloonOperator(assignment.id);
+    } else {
+      removeBalloonPassenger(assignment.id, personId);
+    }
+  } else {
+    if (operator) {
+      removeCarOperator(group.balloon.id, assignment.id);
+    } else {
+      removeCarPassenger(group.balloon.id, assignment.id, personId);
+    }
+  }
 }
 </script>
 

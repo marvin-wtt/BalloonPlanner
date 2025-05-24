@@ -29,7 +29,7 @@
 
       <tr>
         <th
-          v-if="labeled"
+          v-if="showVehicleLabel"
           class="vehicle-label"
           :rowspan="capacity + 1"
         >
@@ -65,32 +65,20 @@
           </q-menu>
         </th>
         <th
-          v-if="indexed"
+          v-if="showVehicleIndex"
           class="vehicle-index"
         >
-          {{ type === 'balloon' ? 'P' : 'D' }}
+          {{ vehicle.type === 'balloon' ? 'P' : 'D' }}
         </th>
         <base-vehicle-person-cell
           class="vehicle-person"
-          :class="indexed ? 'vehicle-person__indexed' : ''"
+          :class="showVehicleIndex ? 'vehicle-person__indexed' : ''"
           :person="personMap[assignment.operatorId]"
           :vehicle
+          :group
           :assignment
           operator
           :editable
-          :flightHint
-          :weight-hint="passengerWeightHint"
-          @add="(p) => emit('operatorAdd', p)"
-          @remove="
-            personMap[assignment.operatorId]
-              ? emit('operatorRemove', personMap[assignment.operatorId])
-              : undefined
-          "
-          @edit="
-            assignment.operatorId
-              ? onPersonEdit(assignment.operatorId)
-              : undefined
-          "
         />
       </tr>
 
@@ -100,24 +88,18 @@
       >
         <td
           class="vehicle-index"
-          v-if="indexed"
+          v-if="showVehicleIndex"
         >
           {{ c }}
         </td>
         <base-vehicle-person-cell
           class="vehicle-person"
-          :class="indexed ? 'vehicle-person__indexed' : ''"
+          :class="showVehicleIndex ? 'vehicle-person__indexed' : ''"
           :person="personMap[assignment.passengerIds[c - 1]]"
           :vehicle
+          :group
           :assignment
           :editable
-          :flightHint
-          :weight-hint="passengerWeightHint"
-          @add="(p) => emit('passengerAdd', p)"
-          @remove="
-            emit('passengerRemove', personMap[assignment.passengerIds[c - 1]])
-          "
-          @edit="onPersonEdit(assignment.passengerIds[c - 1])"
         />
       </tr>
     </table>
@@ -128,65 +110,55 @@
 import BaseVehiclePersonCell from 'components/BaseVehiclePersonCell.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import type {
-  Person,
   Vehicle,
   VehicleAssignment,
   VehicleGroup,
 } from 'app/src-common/entities';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import { useFlightUtils } from 'src/composables/reservedCapacity';
+import { useFlightOperations } from 'src/composables/flight-operations';
+import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
+import { useQuasar } from 'quasar';
+import EditCarDialog from 'components/dialog/EditCarDialog.vue';
+import { useSettingsStore } from 'stores/settings';
 
-const flightStore = useFlightStore();
+const { removeCarFromVehicleGroup, removeVehicleGroup, editBalloon, editCar } =
+  useFlightOperations();
+const quasar = useQuasar();
 const { remainingCapacity } = useFlightUtils();
-
+const flightStore = useFlightStore();
 const { balloonMap, carMap, personMap } = storeToRefs(flightStore);
+const settingsStore = useSettingsStore();
+const { showVehicleWeight, showVehicleIndex, showVehicleLabel } =
+  storeToRefs(settingsStore);
 
 const {
   group,
   assignment,
-  type,
-  indexed = false,
-  labeled = false,
   editable = false,
-  hideEmpty = false,
-  flightHint = false,
-  passengerWeightHint = false,
-  totalWeightHint = false,
 } = defineProps<{
   group: VehicleGroup;
   assignment: VehicleAssignment;
-  type: 'balloon' | 'car';
-  indexed?: boolean;
-  labeled?: boolean;
   editable?: boolean;
-  flightHint?: boolean;
-  passengerWeightHint?: boolean;
-  totalWeightHint?: boolean;
-  hideEmpty?: boolean;
 }>();
 
-const emit = defineEmits<{
-  (e: 'remove'): void;
-  (e: 'edit'): void;
-  (e: 'operatorAdd', person: Person): void;
-  (e: 'operatorRemove', person: Person): void;
-  (e: 'passengerAdd', person: Person): void;
-  (e: 'passengerRemove', person: Person): void;
-  (e: 'personEdit', person: Person): void;
-}>();
+// TODO This is currently not used
+const hideEmptyCapacity = ref<boolean>(false);
 
 const vehicle = computed<Vehicle>(() => {
-  const map = type === 'balloon' ? balloonMap.value : carMap.value;
+  if (carMap.value[assignment.id]) {
+    return carMap.value[assignment.id];
+  }
 
-  return map[assignment.id];
+  return balloonMap.value[assignment.id];
 });
 
 const vehicleName = computed<string>(() => {
   let name = vehicle.value.name;
 
-  if (totalWeightHint) {
+  if (showVehicleWeight.value) {
     const totalWeight =
       assignment.passengerIds
         .map((id) => personMap.value[id])
@@ -202,17 +174,19 @@ const vehicleName = computed<string>(() => {
 const capacity = computed<number>(() => {
   let capacity: number = vehicle.value.maxCapacity;
 
-  if (type === 'car') {
+  if (vehicle.value.type === 'car') {
     // Compute reserved capacity
     capacity = remainingCapacity(group)[assignment.id] ?? 0;
   }
 
   if (capacity < 0) {
-    console.warn(`Invalid capacity for ${type} ${vehicle.value.name}`);
+    console.warn(
+      `Invalid capacity for ${vehicle.value.type} ${vehicle.value.name}`,
+    );
     capacity = 0;
   }
 
-  return hideEmpty ? assignment.passengerIds.length : capacity;
+  return hideEmptyCapacity.value ? assignment.passengerIds.length : capacity;
 });
 
 const error = computed<boolean>(() => {
@@ -239,15 +213,43 @@ const invalidOperator = computed<boolean>(() => {
 });
 
 function onVehicleRemoved() {
-  emit('remove');
+  if (vehicle.value.type === 'balloon') {
+    removeVehicleGroup(assignment.id);
+  } else {
+    removeCarFromVehicleGroup(group.balloon.id, assignment.id);
+  }
 }
 
 function onVehicleEdit() {
-  emit('edit');
-}
-
-function onPersonEdit(id: string) {
-  emit('personEdit', personMap.value[id]);
+  if (vehicle.value.type === 'balloon') {
+    quasar
+      .dialog({
+        component: EditBalloonDialog,
+        componentProps: {
+          balloon: vehicle.value,
+          people: Object.values(personMap.value),
+          existingNames: Object.values(balloonMap.value).map(
+            ({ name }) => name,
+          ),
+        },
+      })
+      .onOk((payload) => {
+        editBalloon(assignment.id, payload);
+      });
+  } else {
+    quasar
+      .dialog({
+        component: EditCarDialog,
+        componentProps: {
+          car: vehicle.value,
+          people: Object.values(personMap.value),
+          existingNames: Object.values(carMap.value).map(({ name }) => name),
+        },
+      })
+      .onOk((payload) => {
+        editCar(assignment.id, payload);
+      });
+  }
 }
 </script>
 

@@ -2,12 +2,12 @@ import { acceptHMRUpdate, defineStore } from 'pinia';
 import { ref } from 'vue';
 
 export const useSettingsStore = defineStore('settings', () => {
-  const indexedVehicle = ref<boolean>(true);
-  const labeledVehicle = ref<boolean>(true);
+  const showVehicleIndex = ref<boolean>(true);
+  const showVehicleLabel = ref<boolean>(true);
   const showNumberOfFlights = ref<boolean>(true);
   const showPersonWeight = ref<boolean>(false);
   const showVehicleWeight = ref<boolean>(false);
-  const presentation = ref<boolean>(false);
+  const isPresentationMode = ref<boolean>(false);
 
   // TODO load and store
 
@@ -15,9 +15,9 @@ export const useSettingsStore = defineStore('settings', () => {
     showNumberOfFlights,
     showPersonWeight,
     showVehicleWeight,
-    indexedVehicle,
-    labeledVehicle,
-    presentation,
+    showVehicleIndex,
+    showVehicleLabel,
+    isPresentationMode,
   };
 });
 

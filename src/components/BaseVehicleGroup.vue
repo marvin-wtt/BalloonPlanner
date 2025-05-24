@@ -20,8 +20,24 @@
           {{ warningText }}
         </q-tooltip>
       </q-badge>
-      <slot name="balloon" />
-      <slot name="cars" />
+      <!-- Balloon -->
+      <base-vehicle
+        :key="group.balloon.id"
+        type="balloon"
+        :assignment="group.balloon"
+        :group
+        :editable
+      />
+
+      <!-- Cars -->
+      <base-vehicle
+        v-for="car in group.cars"
+        :key="car.id"
+        type="car"
+        :assignment="car"
+        :group
+        :editable
+      />
     </div>
   </drop-zone>
 </template>
@@ -32,28 +48,22 @@ import type {
   Car,
   VehicleGroup,
   Identifiable,
-  Flight,
   Balloon,
 } from 'app/src-common/entities';
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
+import BaseVehicle from 'components/BaseVehicle.vue';
+import { useFlightOperations } from 'src/composables/flight-operations';
+
+const { addCarToVehicleGroup } = useFlightOperations();
 
 const flightStore = useFlightStore();
-const { carMap, balloonMap } = storeToRefs(flightStore);
+const { flight, carMap, balloonMap } = storeToRefs(flightStore);
 
-const {
-  group,
-  flight,
-  editable = false,
-} = defineProps<{
-  flight: Flight;
+const { group, editable = false } = defineProps<{
   group: VehicleGroup;
   editable?: boolean;
-}>();
-
-const emit = defineEmits<{
-  (e: 'carAdd', person: Car): void;
 }>();
 
 const showWarning = computed(() => {
@@ -89,12 +99,16 @@ const reservedCapacityWarning = computed<boolean>(() => {
   return balloon.value.maxCapacity > availableCapacity;
 });
 
+function elementIsCar(element: Identifiable): element is Car {
+  return flight.value.carIds.includes(element.id);
+}
+
 function isDropAccepted(element: Identifiable): boolean {
   if (!editable) {
     return false;
   }
 
-  if (!flight.carIds.includes(element.id)) {
+  if (!elementIsCar(element)) {
     return false;
   }
 
@@ -102,7 +116,11 @@ function isDropAccepted(element: Identifiable): boolean {
 }
 
 function drop(element: Identifiable) {
-  emit('carAdd', element as Car);
+  if (!elementIsCar(element)) {
+    return;
+  }
+
+  addCarToVehicleGroup(group.balloon.id, element.id);
 }
 </script>
 

@@ -1,6 +1,6 @@
 <template>
   <q-page class="full-width row justify-start no-wrap bg-grey-5">
-    <template v-if="projectLoading">
+    <template v-if="isLoading">
       <q-spinner
         color="primary"
         size="3em"
@@ -106,51 +106,15 @@
             vertical
             class="no-wrap col-grow shadow-24"
           >
-            <q-tab-panel
+            <flight-balloons-panel
               name="balloons"
-              class="column bg-grey-2 q-pa-none"
-            >
-              <q-scroll-area class="col-grow self-stretch q-pa-md">
-                <editable-list
-                  title="Balloons"
-                  item-name="Balloon"
-                  :items="availableBalloons"
-                  @create="showCreateBalloon"
-                  @edit="(balloon) => showEditBalloon(balloon.id)"
-                  @delete="(balloon) => showDeleteBalloon(balloon)"
-                >
-                  <template #main="{ item }: { item: Balloon }">
-                    {{ item.name }}
-                  </template>
-                  <template #side="{ item }: { item: Balloon }">
-                    {{ item.maxCapacity - 1 + ' + 1' }}
-                  </template>
-                </editable-list>
-              </q-scroll-area>
-            </q-tab-panel>
+              :balloons="availableBalloons"
+            />
 
-            <q-tab-panel
+            <flight-cars-panel
               name="cars"
-              class="column bg-grey-2 q-pa-none"
-            >
-              <q-scroll-area class="col-grow self-stretch q-pa-md">
-                <editable-list
-                  title="Cars"
-                  item-name="Car"
-                  :items="availableCars"
-                  @create="showCreateCar"
-                  @edit="(car) => showEditCar(car.id)"
-                  @delete="(car) => showDeleteCar(car)"
-                >
-                  <template #main="{ item }: { item: Car }">
-                    {{ item.name }}
-                  </template>
-                  <template #side="{ item }: { item: Car }">
-                    {{ item.maxCapacity - 1 + ' + 1' }}
-                  </template>
-                </editable-list>
-              </q-scroll-area>
-            </q-tab-panel>
+              :cars="availableCars"
+            />
 
             <q-tab-panel
               name="supervisors"
@@ -204,110 +168,7 @@
               </q-scroll-area>
             </q-tab-panel>
 
-            <q-tab-panel
-              name="settings"
-              class="column bg-grey-2"
-            >
-              <q-scroll-area class="col-grow self-stretch">
-                <div class="q-py-md">
-                  <div class="text-h6 q-py-md">Settings</div>
-                  <div class="q-gutter-sm">
-                    <q-list
-                      bordered
-                      separator
-                    >
-                      <q-item
-                        tag="label"
-                        v-ripple
-                      >
-                        <q-item-section
-                          avatar
-                          top
-                        >
-                          <q-checkbox
-                            v-model="labeledVehicle"
-                            color="primary"
-                          />
-                        </q-item-section>
-                        <q-item-section>
-                          <q-item-label> Show vehicle names</q-item-label>
-                        </q-item-section>
-                      </q-item>
-                      <q-item
-                        tag="label"
-                        v-ripple
-                      >
-                        <q-item-section
-                          avatar
-                          top
-                        >
-                          <q-checkbox
-                            v-model="indexedVehicle"
-                            color="primary"
-                          />
-                        </q-item-section>
-                        <q-item-section>
-                          <q-item-label> Show passenger index</q-item-label>
-                        </q-item-section>
-                      </q-item>
-                      <q-item
-                        tag="label"
-                        v-ripple
-                      >
-                        <q-item-section
-                          avatar
-                          top
-                        >
-                          <q-checkbox
-                            v-model="showNumberOfFlights"
-                            color="primary"
-                          />
-                        </q-item-section>
-                        <q-item-section>
-                          <q-item-label> Show number of flights</q-item-label>
-                        </q-item-section>
-                      </q-item>
-                      <q-item
-                        tag="label"
-                        v-ripple
-                      >
-                        <q-item-section
-                          avatar
-                          top
-                        >
-                          <q-checkbox
-                            v-model="showPersonWeight"
-                            color="primary"
-                          />
-                        </q-item-section>
-                        <q-item-section>
-                          <q-item-label> Show weight of person</q-item-label>
-                        </q-item-section>
-                      </q-item>
-                      <q-item
-                        tag="label"
-                        v-ripple
-                      >
-                        <q-item-section
-                          avatar
-                          top
-                        >
-                          <q-checkbox
-                            v-model="showVehicleWeight"
-                            color="primary"
-                          />
-                        </q-item-section>
-                        <q-item-section>
-                          <q-item-label>
-                            Show total weight of balloons
-                          </q-item-label>
-                        </q-item-section>
-                      </q-item>
-                    </q-list>
-                  </div>
-                </div>
-              </q-scroll-area>
-            </q-tab-panel>
+            <flight-settings-panel name="settings" />
           </q-tab-panels>
         </div>
       </div>
@@ -321,75 +182,7 @@
           :flight
           :editable
           class="fit"
-          @balloon-add="(balloon) => addVehicleGroup(balloon.id)"
-        >
-          <base-vehicle-group
-            v-for="(group, i) in flight.vehicleGroups"
-            :key="`vg-${i}`"
-            :flight
-            :group
-            :editable
-            @car-add="(car) => addCarToVehicleGroup(group.balloon.id, car.id)"
-          >
-            <template #balloon>
-              <base-vehicle
-                :key="group.balloon.id"
-                type="balloon"
-                :assignment="group.balloon"
-                :group
-                :indexed="indexedVehicle"
-                :labeled="labeledVehicle"
-                :flightHint="showNumberOfFlights"
-                :passenger-weight-hint="showPersonWeight"
-                :total-weight-hint="showVehicleWeight"
-                :editable
-                @remove="removeVehicleGroup(group.balloon.id)"
-                @edit="showEditBalloon(group.balloon.id)"
-                @passenger-add="
-                  (p) => addBalloonPassenger(group.balloon.id, p.id)
-                "
-                @passenger-remove="
-                  (p) => removeBalloonPassenger(group.balloon.id, p.id)
-                "
-                @operator-add="
-                  (p) => addBalloonOperator(group.balloon.id, p.id)
-                "
-                @operator-remove="() => removeBalloonOperator(group.balloon.id)"
-                @person-edit="(p) => showEditPerson(p)"
-              />
-            </template>
-            <template #cars>
-              <base-vehicle
-                v-for="car in group.cars"
-                :key="car.id"
-                type="car"
-                :assignment="car"
-                :group
-                :indexed="indexedVehicle"
-                :labeled="labeledVehicle"
-                :flightHint="showNumberOfFlights"
-                :editable
-                @remove="
-                  () => removeCarFromVehicleGroup(group.balloon.id, car.id)
-                "
-                @edit="() => showEditCar(car.id)"
-                @passenger-add="
-                  (p) => addCarPassenger(group.balloon.id, car.id, p.id)
-                "
-                @passenger-remove="
-                  (p) => removeCarPassenger(group.balloon.id, car.id, p.id)
-                "
-                @operator-add="
-                  (p) => addCarOperator(group.balloon.id, car.id, p.id)
-                "
-                @operator-remove="
-                  () => removeCarOperator(group.balloon.id, car.id)
-                "
-                @person-edit="(p) => showEditPerson(p)"
-              />
-            </template>
-          </base-vehicle-group>
-        </base-flight>
+        />
 
         <q-page-sticky
           position="bottom-right"
@@ -418,21 +211,20 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref, watch } from 'vue';
-import { QItem, QList, useQuasar } from 'quasar';
+import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import BaseFlight from 'components/BaseFlight.vue';
-import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
-import BaseVehicle from 'components/BaseVehicle.vue';
 import type { Balloon, Car, Person } from 'app/src-common/entities';
 import EditableList from 'components/EditableList.vue';
 import { useSettingsStore } from 'stores/settings';
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
-import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
-import EditCarDialog from 'components/dialog/EditCarDialog.vue';
 import { useFlightStore } from 'stores/flight';
 import { useFlightOperations } from 'src/composables/flight-operations';
+import FlightSettingsPanel from 'components/panels/FlightSettingsPanel.vue';
+import FlightBalloonsPanel from 'components/panels/FlightBalloonsPanel.vue';
+import FlightCarsPanel from 'components/panels/FlightCarsPanel.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -441,41 +233,12 @@ const projectStore = useProjectStore();
 const flightStore = useFlightStore();
 const settingsStore = useSettingsStore();
 
-const { project, loading: projectLoading } = storeToRefs(projectStore);
-const { balloonMap, carMap, personMap, flight, numberOfFlights } =
-  storeToRefs(flightStore);
+const { project, isLoading } = storeToRefs(projectStore);
+const { personMap, flight, numberOfFlights } = storeToRefs(flightStore);
 
-const {
-  indexedVehicle,
-  labeledVehicle,
-  showNumberOfFlights,
-  showPersonWeight,
-  showVehicleWeight,
-} = storeToRefs(settingsStore);
+const { showNumberOfFlights, showPersonWeight } = storeToRefs(settingsStore);
 
-const {
-  addVehicleGroup,
-  removeVehicleGroup,
-  addCarToVehicleGroup,
-  removeCarFromVehicleGroup,
-  addBalloonOperator,
-  addCarOperator,
-  removeBalloonOperator,
-  removeCarOperator,
-  addBalloonPassenger,
-  addCarPassenger,
-  removeBalloonPassenger,
-  removeCarPassenger,
-  addPerson,
-  editPerson,
-  removePerson,
-  addBalloon,
-  editBalloon,
-  removeBalloon,
-  addCar,
-  editCar,
-  removeCar,
-} = useFlightOperations();
+const { addPerson, editPerson, removePerson } = useFlightOperations();
 
 const menuTabs = ref('overview');
 const editable = ref<boolean>(true);
@@ -597,104 +360,6 @@ function showDeletePerson(person: Person) {
     })
     .onOk(() => {
       removePerson(person.id);
-    });
-}
-
-function showCreateBalloon() {
-  quasar
-    .dialog({
-      component: EditBalloonDialog,
-      componentProps: {
-        people: Object.values(personMap.value),
-        balloonNames: Object.values(balloonMap.value).map(({ name }) => name),
-      },
-    })
-    .onOk(addBalloon);
-}
-
-function showEditBalloon(id: string) {
-  quasar
-    .dialog({
-      component: EditBalloonDialog,
-      componentProps: {
-        balloon: balloonMap.value[id],
-        people: Object.values(personMap.value),
-        balloonNames: Object.values(balloonMap.value).map(({ name }) => name),
-      },
-    })
-    .onOk((payload) => {
-      editBalloon(id, payload);
-    });
-}
-
-function showDeleteBalloon(balloon: Balloon) {
-  quasar
-    .dialog({
-      title: 'Delete balloon',
-      message: `Are you sure you want to delete the balloon ${balloon.name} from this flight? It will remain in the project for other flights.`,
-      ok: {
-        label: 'Delete',
-        color: 'negative',
-        rounded: true,
-      },
-      cancel: {
-        label: 'Cancel',
-        outline: true,
-        rounded: true,
-      },
-      persistent: true,
-    })
-    .onOk(() => {
-      removeBalloon(balloon.id);
-    });
-}
-
-function showCreateCar() {
-  quasar
-    .dialog({
-      component: EditCarDialog,
-      componentProps: {
-        people: Object.values(personMap.value),
-        carNames: Object.values(carMap.value).map(({ name }) => name),
-      },
-    })
-    .onOk(addCar);
-}
-
-function showEditCar(id: string) {
-  quasar
-    .dialog({
-      component: EditCarDialog,
-      componentProps: {
-        car: carMap.value[id],
-        people: Object.values(personMap.value),
-        carNames: Object.values(carMap.value).map(({ name }) => name),
-      },
-    })
-    .onOk((payload) => {
-      editCar(id, payload);
-    });
-}
-
-function showDeleteCar(car: Car) {
-  quasar
-    .dialog({
-      title: `Delete car`,
-      message: `Are you sure you want to delete the car ${car.name} from this flight? It will remain in the project for other flights.`,
-      ok: {
-        label: 'Delete',
-        color: 'negative',
-        rounded: true,
-      },
-      cancel: {
-        label: 'Cancel',
-        outline: true,
-        rounded: true,
-      },
-      persistent: true,
-    })
-    .onOk(() => {
-      removeCar(car.id);
     });
 }
 
