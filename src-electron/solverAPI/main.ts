@@ -20,10 +20,13 @@ function spawnArgs(): [string, string[]] {
     // In dev, run from a local Python venv
     const cwd = fileURLToPath(new URL('.', import.meta.url));
     const srcPy = path.join(cwd, '..', '..', 'src-python');
-    const pythonExe = path.join(srcPy, '.venv', 'Scripts', 'python.exe');
+    const pythonBin =
+      process.platform === 'win32'
+        ? path.join(srcPy, '.venv', 'Scripts', 'python.exe')
+        : path.join(srcPy, '.venv', 'bin', 'python');
     const scriptPath = path.join(srcPy, SCRIPT_BASE + '.py');
 
-    return [pythonExe, [scriptPath]];
+    return [pythonBin, [scriptPath]];
   }
 
   // In production, run the bundled exe (Windows) or binary
