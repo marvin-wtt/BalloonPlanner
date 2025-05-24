@@ -80,7 +80,7 @@ def _transform_vehicle_groups(
 
         # Process cars in this group
         car_ids: list[str] = []
-        for car in group.get("cars", []):
+        for car in group["cars"]:
             c_id = car["id"]
             car_ids.append(c_id)
             # Record each car’s passengers
@@ -102,22 +102,28 @@ def _transform_flights(flights: list[dict]) -> list[dict]:
     transformed_flights = []
     for flight in flights:
         new_groups = []
-        for group in flight.get("vehicleGroups", []):
+        for group in flight["vehicleGroups"]:
             # Transform balloon
             b = group.get("balloon", {})
+            if "operatorId" not in b:
+                raise ValueError("Flight history must be complete, missing operator")
             new_balloon = {
-                "id": b.get("id"),
-                "operator": b.get("operatorId"),
-                "passengers": b.get("passengerIds", []),
+                "id": b["id"],
+                "operator": b["operatorId"],
+                "passengers": b["passengerIds"],
             }
             # Transform cars
             new_cars = []
-            for c in group.get("cars", []):
+            for c in group["cars"]:
+                if "operatorId" not in c:
+                    raise ValueError(
+                        "Flight history must be complete, missing operator"
+                    )
                 new_cars.append(
                     {
-                        "id": c.get("id"),
-                        "operator": c.get("operatorId"),
-                        "passengers": c.get("passengerIds", []),
+                        "id": c["id"],
+                        "operator": b["operatorId"],
+                        "passengers": b["passengerIds"],
                     }
                 )
 
@@ -159,7 +165,7 @@ def transform_output(
         info = vehicle_info.get(b_id, {})
         new_group["balloon"] = {
             "id": b_id,
-            "operatorId": info.get("operator"),
+            "operatorId": info.get("operator", None),
             "passengerIds": info.get("passengers", []),
         }
 
@@ -169,7 +175,7 @@ def transform_output(
             new_group["cars"].append(
                 {
                     "id": c_id,
-                    "operatorId": c_info.get("operator"),
+                    "operatorId": c_info.get("operator", None),
                     "passengerIds": c_info.get("passengers", []),
                 }
             )
