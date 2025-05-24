@@ -82,11 +82,7 @@ def build_clusters(
     for bal in balloons:
         bid = bal["id"]
         need = bal["capacity"]  # seats to reserve
-        # sort cluster cars by passenger capacity descending
-        cluster_cars = sorted(
-            clusters[bid], key=lambda cid: car_by_id[cid]["capacity"] - 1, reverse=True
-        )
-        for cid in cluster_cars:
+        for cid in clusters[bid]:
             if need == 0:
                 break
             car = car_by_id[cid]
