@@ -14,6 +14,7 @@ import argparse
 import json
 import sys
 import traceback
+import random
 from typing import List, Any, NoReturn
 
 from vehicle_solver import solve
@@ -49,6 +50,18 @@ def main(argv: List[str] | None = None) -> None:
 
     # soft-rule weights -------------------------------------------------------
     parser.add_argument(
+        "--flight-leg",
+        type=int,
+        default=None,
+        help="Which flight leg to solve for. Accepted values are: [1, 2] ",
+    )
+    parser.add_argument(
+        "--w-second-leg",
+        type=int,
+        default=10,
+        help="Weight for balancing car passengers for the second leg",
+    )
+    parser.add_argument(
         "--w-pilot-fairness",
         type=int,
         default=1,
@@ -60,7 +73,7 @@ def main(argv: List[str] | None = None) -> None:
     parser.add_argument(
         "--w-passenger-fairness",
         type=int,
-        default=10,
+        default=20,
         help=(
             "Weight for balancing how many flights each passenger takes "
             "(higher → passengers fly a more equal number of times)."
@@ -87,7 +100,7 @@ def main(argv: List[str] | None = None) -> None:
     parser.add_argument(
         "--time-limit",
         type=int,
-        default=30,
+        default=20,
         help="Maximum solver runtime in seconds before timing out.",
     )
 
@@ -102,6 +115,11 @@ def main(argv: List[str] | None = None) -> None:
     people = payload.get("people", [])
     history = payload.get("history", [])
     groups = payload.get("groups", [])
+
+    # Randomize input order
+    random.shuffle(balloons)
+    random.shuffle(cars)
+    random.shuffle(people)
 
     try:
         balloons, cars, people, preclusers, frozen, history = transform_input_payload(
@@ -120,12 +138,15 @@ def main(argv: List[str] | None = None) -> None:
             balloons=balloons,
             cars=cars,
             people=people,
+            cluster=cluster,
             frozen=frozen,
             past_flights=history,
+            leg=args.flight_leg,
             w_fair=args.w_pilot_fairness,
             w_low_flights=args.w_passenger_fairness,
             w_new_vehicle=args.w_vehicle_rotation,
             w_diversity=args.w_nationality_diversity,
+            w_second_leg=args.w_second_leg,
             time_limit_s=args.time_limit,
         )
 

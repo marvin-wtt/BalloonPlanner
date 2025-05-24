@@ -6,6 +6,7 @@ import type {
   Flight,
   Person,
   SmartFillPayload,
+  SmartFillOptions,
 } from 'app/src-common/entities';
 import { useProjectStore } from 'stores/project';
 
@@ -185,7 +186,7 @@ export const useFlightStore = defineStore('flight', () => {
     return counts;
   });
 
-  async function smartFillFlight() {
+  async function smartFillFlight(options: SmartFillOptions) {
     const data: SmartFillPayload = {
       cars: Object.values(carMap.value),
       balloons: Object.values(balloonMap.value),
@@ -197,13 +198,11 @@ export const useFlightStore = defineStore('flight', () => {
       history: history.value,
     };
 
-    // Remove all vue proxies
-    const generatedGroups = await window.solverAPI.solveFlight(
-      JSON.parse(JSON.stringify(data)),
-    );
+    const payload = JSON.parse(JSON.stringify(data));
 
+    // Remove all vue proxies
     project.value.flights.find((f) => f.id === flightId.value).vehicleGroups =
-      generatedGroups;
+      await window.solverAPI.solveFlight(payload, options);
   }
 
   return {

@@ -1,10 +1,13 @@
 import { ipcMain, type IpcMainEvent } from 'electron';
 import { spawn } from 'node:child_process';
-import type { SmartFillPayload, VehicleGroup } from 'app/src-common/entities';
+import type {
+  SmartFillPayload,
+  SmartFillOptions,
+  VehicleGroup,
+} from 'app/src-common/entities';
 import { fileURLToPath } from 'node:url';
 import path from 'path';
 import log from 'electron-log';
-import type { SolverOptions } from 'app/src-common/api';
 
 const PROCESS_TIMEOUT_MS = 1_000_000;
 const SCRIPT_BASE = 'run_balloon_solver';
@@ -12,14 +15,17 @@ const SCRIPT_BASE = 'run_balloon_solver';
 export default () => {
   ipcMain.handle(
     'solver:run',
-    (_evt: IpcMainEvent, payload: SmartFillPayload, options?: SolverOptions) =>
-      runSolver(payload, options),
+    (
+      _evt: IpcMainEvent,
+      payload: SmartFillPayload,
+      options?: SmartFillOptions,
+    ) => runSolver(payload, options),
   );
 };
 
 function runSolver(
   payload: SmartFillPayload,
-  options?: SolverOptions,
+  options?: SmartFillOptions,
 ): Promise<VehicleGroup[]> {
   const [cmd, baseArgs] = spawnArgs();
   const args = [...baseArgs, ...buildFlagArgs(options)];
@@ -99,7 +105,7 @@ function spawnArgs(): [string, string[]] {
   return [binPath, []];
 }
 
-function buildFlagArgs(opts?: SolverOptions): string[] {
+function buildFlagArgs(opts?: SmartFillOptions): string[] {
   const args: string[] = [];
   if (!opts) {
     return args;
@@ -117,8 +123,14 @@ function buildFlagArgs(opts?: SolverOptions): string[] {
   if (opts.wVehicleRotation != null) {
     args.push('--w-vehicle-rotation', String(opts.wVehicleRotation));
   }
+  if (opts.wSecondLegFairness != null) {
+    args.push('--w-second-leg', String(opts.wSecondLegFairness));
+  }
   if (opts.timeLimit != null) {
     args.push('--time-limit', String(opts.timeLimit));
+  }
+  if (opts.leg != null) {
+    args.push('--flight-leg', opts.leg === 'first' ? '1' : '2');
   }
 
   return args;

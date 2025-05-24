@@ -1,6 +1,7 @@
 import type {
   Project,
   ProjectMeta,
+  SmartFillOptions,
   SmartFillPayload,
   VehicleGroup,
 } from 'app/src-common/entities';
@@ -16,16 +17,8 @@ export interface ProjectsAPI {
 export interface SolverAPI {
   solveFlight: (
     data: SmartFillPayload,
-    options?: SolverOptions,
+    options?: SmartFillOptions,
   ) => Promise<VehicleGroup[]>;
-}
-
-export interface SolverOptions {
-  wPilotFairness?: number;
-  wPassengerFairness?: number;
-  wNationalityDiversity?: number;
-  wVehicleRotation?: number;
-  timeLimit?: number;
 }
 
 export interface WindowAPI {

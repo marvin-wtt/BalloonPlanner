@@ -216,7 +216,12 @@ import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import BaseFlight from 'components/BaseFlight.vue';
-import type { Balloon, Car, Person } from 'app/src-common/entities';
+import type {
+  Balloon,
+  Car,
+  Person,
+  SmartFillOptions,
+} from 'app/src-common/entities';
 import EditableList from 'components/EditableList.vue';
 import { useSettingsStore } from 'stores/settings';
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
@@ -225,6 +230,7 @@ import { useFlightOperations } from 'src/composables/flight-operations';
 import FlightSettingsPanel from 'components/panels/FlightSettingsPanel.vue';
 import FlightBalloonsPanel from 'components/panels/FlightBalloonsPanel.vue';
 import FlightCarsPanel from 'components/panels/FlightCarsPanel.vue';
+import SmartFillDialog from 'components/dialog/SmartFillDialog.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -287,18 +293,24 @@ async function init() {
   }
 }
 
-async function onSmartFill() {
-  if (!flight.value) {
-    return;
-  }
+function onSmartFill() {
+  quasar
+    .dialog({
+      component: SmartFillDialog,
+    })
+    .onOk((options: SmartFillOptions) => {
+      void smartFill(options);
+    });
+}
 
+async function smartFill(options: SmartFillOptions) {
   const notify = quasar.notify({
     type: 'ongoing',
     message: 'Calculating optimal flight plan...',
   });
   editable.value = false;
   try {
-    await flightStore.smartFillFlight();
+    await flightStore.smartFillFlight(options);
 
     notify({
       type: 'positive',

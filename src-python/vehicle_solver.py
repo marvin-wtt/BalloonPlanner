@@ -36,22 +36,22 @@ def solve(
     *,
     frozen: Optional[List[Dict[str, str]]] = None,
     past_flights: Optional[List[Dict[str, Any]]] = None,
-    num_legs: int = 2,
-    leg_index: int = 1,
+    leg: int = None,
     # soft weights
+    # Defaults are overwritten by command-line args
     w_fair: int = 1,
     w_low_flights: int = 20,
     w_diversity: int = 3,
     w_new_vehicle: int = 5,
+    w_second_leg: int = 20,
     # misc
     default_person_weight: int = 70,
     time_limit_s: int = 30,
-    random_seed: int = 1,
 ):
     """Solve a *single* leg; call once per flight."""
     frozen = frozen or []
 
-    if leg_index > 0:
+    if leg is not None and leg > 1:
         if len(past_flights) == 0:
             raise ValueError("Flight history must be provided for multi-leg flights")
         if cluster is None:
@@ -160,7 +160,7 @@ def solve(
             raise ValueError("unknown role")
 
     # 2.7 stay-in-cluster after leg-0
-    if leg_index > 0 and past_flights:
+    if leg is not None and leg > 1:
         # take cluster from *previous* leg (last entry)
         prev = past_flights[-1]
         allowed = defaultdict(set)
@@ -220,10 +220,8 @@ def solve(
         if v not in seen[p]:
             objective_terms.append(-w_new_vehicle * (pax[p, v] - op[p, v]))
 
-    # 3.5 soft cluster balance – only leg 0 and multi-leg day
-    if leg_index == 0 and num_legs > 1:
-        w_second_leg = 30
-
+    # 3.5 soft cluster balance
+    if leg is not None and leg == 1:
         future_seats = sum(b["capacity"] for b in balloons)
         sorted_f = sorted(flights_so_far.values())
         cutoff = (
@@ -255,7 +253,6 @@ def solve(
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = time_limit_s
     solver.parameters.num_search_workers = 8
-    solver.parameters.random_seed = random_seed
 
     if solver.Solve(model) not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         raise RuntimeError("No feasible assignment")

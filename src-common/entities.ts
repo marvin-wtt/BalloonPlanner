@@ -74,3 +74,13 @@ export interface SmartFillPayload {
   groups: VehicleGroup[];
   history: Flight[];
 }
+
+export interface SmartFillOptions {
+  wPilotFairness?: number;
+  wPassengerFairness?: number;
+  wNationalityDiversity?: number;
+  wVehicleRotation?: number;
+  wSecondLegFairness?: number;
+  timeLimit?: number;
+  leg?: 'first' | 'second' | undefined;
+}
