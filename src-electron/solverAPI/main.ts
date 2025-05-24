@@ -17,53 +17,6 @@ export default () => {
   );
 };
 
-function spawnArgs(): [string, string[]] {
-  if (process.env.DEV) {
-    // In dev, run from a local Python venv
-    const cwd = fileURLToPath(new URL('.', import.meta.url));
-    const srcPy = path.join(cwd, '..', '..', 'src-python');
-    const pythonBin =
-      process.platform === 'win32'
-        ? path.join(srcPy, '.venv', 'Scripts', 'python.exe')
-        : path.join(srcPy, '.venv', 'bin', 'python');
-    const scriptPath = path.join(srcPy, SCRIPT_BASE + '.py');
-
-    return [pythonBin, [scriptPath]];
-  }
-
-  // In production, run the bundled exe (Windows) or binary
-  const execName =
-    process.platform === 'win32' ? SCRIPT_BASE + '.exe' : SCRIPT_BASE;
-  const binPath = path.join(process.resourcesPath, 'python-bin', execName);
-  return [binPath, []];
-}
-
-function handleError(code: number, stderrData: string): Error {
-  let errorData: unknown;
-  try {
-    errorData = JSON.parse(stderrData);
-  } catch {
-    // ignore
-  }
-
-  if (
-    typeof errorData === 'object' &&
-    errorData != null &&
-    'message' in errorData &&
-    typeof errorData.message === 'string'
-  ) {
-    log.error('Solver error', { data: errorData, stderr: stderrData });
-
-    return new Error(errorData.message);
-  }
-
-  log.error(
-    `Solver exited with code ${code} but no structured error.`,
-    stderrData,
-  );
-  return new Error('An unexpected error occurred in the solver.');
-}
-
 function runSolver(
   payload: SmartFillPayload,
   options?: SolverOptions,
@@ -125,6 +78,27 @@ function runSolver(
   });
 }
 
+function spawnArgs(): [string, string[]] {
+  if (process.env.DEV) {
+    // In dev, run from a local Python venv
+    const cwd = fileURLToPath(new URL('.', import.meta.url));
+    const srcPy = path.join(cwd, '..', '..', 'src-python');
+    const pythonBin =
+      process.platform === 'win32'
+        ? path.join(srcPy, '.venv', 'Scripts', 'python.exe')
+        : path.join(srcPy, '.venv', 'bin', 'python');
+    const scriptPath = path.join(srcPy, SCRIPT_BASE + '.py');
+
+    return [pythonBin, [scriptPath]];
+  }
+
+  // In production, run the bundled exe (Windows) or binary
+  const execName =
+    process.platform === 'win32' ? SCRIPT_BASE + '.exe' : SCRIPT_BASE;
+  const binPath = path.join(process.resourcesPath, 'python-bin', execName);
+  return [binPath, []];
+}
+
 function buildFlagArgs(opts?: SolverOptions): string[] {
   const args: string[] = [];
   if (!opts) {
@@ -148,4 +122,30 @@ function buildFlagArgs(opts?: SolverOptions): string[] {
   }
 
   return args;
+}
+
+function handleError(code: number, stderrData: string): Error {
+  let errorData: unknown;
+  try {
+    errorData = JSON.parse(stderrData);
+  } catch {
+    // ignore
+  }
+
+  if (
+    typeof errorData === 'object' &&
+    errorData != null &&
+    'message' in errorData &&
+    typeof errorData.message === 'string'
+  ) {
+    log.error('Solver error', { data: errorData, stderr: stderrData });
+
+    return new Error(errorData.message);
+  }
+
+  log.error(
+    `Solver exited with code ${code} but no structured error.`,
+    stderrData,
+  );
+  return new Error('An unexpected error occurred in the solver.');
 }
