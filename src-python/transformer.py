@@ -23,6 +23,7 @@ def transform_input_payload(balloons, cars, people, groups, history):
         people,
         {
             "id": "id",
+            "name": "name",
             "nationality": "nationality",
             "role": "role",
             "weight": "weight",
