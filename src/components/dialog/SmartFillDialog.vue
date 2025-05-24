@@ -27,6 +27,7 @@
                 v-model="options.wPassengerFairness"
                 label="Passenger Fairness Weight"
                 type="number"
+                dense
                 outlined
                 rounded
               />
@@ -35,6 +36,7 @@
                 v-model="options.wSecondLegFairness"
                 label="Second Leg Fairness Weight"
                 type="number"
+                dense
                 outlined
                 rounded
               />
@@ -42,6 +44,7 @@
                 v-model="options.wPilotFairness"
                 label="Pilot Fairness Weight"
                 type="number"
+                dense
                 outlined
                 rounded
               />
@@ -49,6 +52,7 @@
                 v-model="options.wVehicleRotation"
                 label="Vehicle Rotation Weight"
                 type="number"
+                dense
                 outlined
                 rounded
               />
@@ -56,6 +60,7 @@
                 v-model="options.wNationalityDiversity"
                 label="Nationality Diversity Weight"
                 type="number"
+                dense
                 outlined
                 rounded
               />
@@ -63,6 +68,7 @@
                 v-model="options.timeLimit"
                 label="Time Limit (seconds)"
                 type="number"
+                dense
                 outlined
                 rounded
               />

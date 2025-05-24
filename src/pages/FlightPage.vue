@@ -189,7 +189,7 @@
           :offset="[18, 18]"
         >
           <q-btn
-            icon="fast_forward"
+            icon="auto_awesome"
             fab
             color="accent"
             :disable="!editable"
