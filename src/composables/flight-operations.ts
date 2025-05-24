@@ -138,10 +138,13 @@ export function useFlightOperations() {
   }
 
   function addBalloon(balloon: Omit<Balloon, 'id'>) {
+    const id = crypto.randomUUID();
+
     projectStore.project.balloons.push({
       ...balloon,
-      id: crypto.randomUUID(),
+      id,
     });
+    flightStore.flight.balloonIds.push(id);
   }
 
   function editBalloon(balloonId: string, balloon: Omit<Balloon, 'id'>) {
@@ -165,10 +168,13 @@ export function useFlightOperations() {
   }
 
   function addCar(car: Omit<Car, 'id'>) {
+    const id = crypto.randomUUID();
+
     projectStore.project.cars.push({
       ...car,
-      id: crypto.randomUUID(),
+      id,
     });
+    flightStore.flight.carIds.push(id);
   }
 
   function editCar(carId: string, car: Omit<Car, 'id'>) {
