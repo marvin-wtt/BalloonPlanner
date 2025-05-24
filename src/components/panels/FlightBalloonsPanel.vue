@@ -48,7 +48,7 @@ function showCreateBalloon() {
       component: EditBalloonDialog,
       componentProps: {
         people: Object.values(personMap.value),
-        balloonNames: Object.values(balloonMap.value).map(({ name }) => name),
+        existingNames: Object.values(balloonMap.value).map(({ name }) => name),
       },
     })
     .onOk(addBalloon);
@@ -61,7 +61,7 @@ function showEditBalloon(id: string) {
       componentProps: {
         balloon: balloonMap.value[id],
         people: Object.values(personMap.value),
-        balloonNames: Object.values(balloonMap.value).map(({ name }) => name),
+        existingNames: Object.values(balloonMap.value).map(({ name }) => name),
       },
     })
     .onOk((payload) => {

@@ -48,7 +48,7 @@ function showCreateCar() {
       component: EditCarDialog,
       componentProps: {
         people: Object.values(personMap.value),
-        carNames: Object.values(carMap.value).map(({ name }) => name),
+        existingNames: Object.values(carMap.value).map(({ name }) => name),
       },
     })
     .onOk(addCar);
@@ -61,7 +61,7 @@ function showEditCar(id: string) {
       componentProps: {
         car: carMap.value[id],
         people: Object.values(personMap.value),
-        carNames: Object.values(carMap.value).map(({ name }) => name),
+        existingNames: Object.values(carMap.value).map(({ name }) => name),
       },
     })
     .onOk((payload) => {
