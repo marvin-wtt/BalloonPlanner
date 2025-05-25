@@ -87,7 +87,7 @@
             outline
           />
           <q-btn
-            label="Create"
+            :label="mode === 'create' ? 'Create' : 'Save'"
             type="submit"
             color="primary"
             rounded
