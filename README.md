@@ -30,6 +30,7 @@ An application to organize hot air balloon crews for youth camps. This tool help
 ### Setup
 
 #### Linux/macOS
+
 ```shell
 # Install Python environment
 ./scripts/install-python-env.sh
@@ -42,6 +43,7 @@ npm run dev
 ```
 
 #### Windows
+
 ```powershell
 # Install Python environment
 .\scripts\install-python-env.bat
