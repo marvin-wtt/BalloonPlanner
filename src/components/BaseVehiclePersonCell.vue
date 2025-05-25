@@ -59,8 +59,11 @@ import { useSettingsStore } from 'stores/settings';
 import { useFlightOperations } from 'src/composables/flight-operations';
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import { useQuasar } from 'quasar';
+import { useProjectStore } from 'stores/project';
 
 const quasar = useQuasar();
+const projectStore = useProjectStore();
+const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
 const { personMap, numberOfFlights } = storeToRefs(flightStore);
 const settingsStore = useSettingsStore();
@@ -148,7 +151,7 @@ function onEdit() {
       component: EditPersonDialog,
       componentProps: {
         person,
-        existingNames: Object.values(personMap.value).map(({ name }) => name),
+        existingNames: project.value.people.map(({ name }) => name),
       },
     })
     .onOk((payload) => {

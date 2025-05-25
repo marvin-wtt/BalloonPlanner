@@ -31,8 +31,12 @@ import { useFlightOperations } from 'src/composables/flight-operations';
 import type { Car } from 'app/src-common/entities';
 import EditableList from 'components/EditableList.vue';
 import EditCarDialog from 'components/dialog/EditCarDialog.vue';
+import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';
+import { useProjectStore } from 'stores/project';
 
 const quasar = useQuasar();
+const projectStore = useProjectStore();
+const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
 const { carMap, personMap } = storeToRefs(flightStore);
 const { addCar, editCar, removeCar } = useFlightOperations();
@@ -47,8 +51,8 @@ function showCreateCar() {
     .dialog({
       component: EditCarDialog,
       componentProps: {
-        people: Object.values(personMap.value),
-        existingNames: Object.values(carMap.value).map(({ name }) => name),
+        people: project.value.people,
+        existingNames: project.value.cars.map(({ name }) => name),
       },
     })
     .onOk(addCar);
@@ -60,8 +64,8 @@ function showEditCar(id: string) {
       component: EditCarDialog,
       componentProps: {
         car: carMap.value[id],
-        people: Object.values(personMap.value),
-        existingNames: Object.values(carMap.value).map(({ name }) => name),
+        people: project.value.people,
+        existingNames: project.value.people.map(({ name }) => name),
       },
     })
     .onOk((payload) => {

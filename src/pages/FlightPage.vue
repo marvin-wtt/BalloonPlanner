@@ -235,7 +235,7 @@ const flightStore = useFlightStore();
 const settingsStore = useSettingsStore();
 
 const { project, isLoading } = storeToRefs(projectStore);
-const { personMap, flight, numberOfFlights } = storeToRefs(flightStore);
+const { flight, numberOfFlights } = storeToRefs(flightStore);
 
 const { showNumberOfFlights, showPersonWeight } = storeToRefs(settingsStore);
 
@@ -329,7 +329,7 @@ function showCreatePerson() {
     .dialog({
       component: EditPersonDialog,
       componentProps: {
-        existingNames: Object.values(personMap.value).map(({ name }) => name),
+        existingNames: project.value.people.map(({ name }) => name),
       },
     })
     .onOk(addPerson);
@@ -341,7 +341,7 @@ function showEditPerson(person: Person) {
       component: EditPersonDialog,
       componentProps: {
         person,
-        existingNames: Object.values(personMap.value).map(({ name }) => name),
+        existingNames: project.value.people.map(({ name }) => name),
       },
     })
     .onOk((payload) => {

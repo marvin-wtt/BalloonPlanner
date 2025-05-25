@@ -31,8 +31,12 @@ import { useQuasar } from 'quasar';
 import { useFlightOperations } from 'src/composables/flight-operations';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
+import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';
+import { useProjectStore } from 'stores/project';
 
 const quasar = useQuasar();
+const projectStore = useProjectStore();
+const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
 const { balloonMap, personMap } = storeToRefs(flightStore);
 const { addBalloon, editBalloon, removeBalloon } = useFlightOperations();
@@ -47,8 +51,8 @@ function showCreateBalloon() {
     .dialog({
       component: EditBalloonDialog,
       componentProps: {
-        people: Object.values(personMap.value),
-        existingNames: Object.values(balloonMap.value).map(({ name }) => name),
+        people: project.value.people,
+        existingNames: project.value.balloons.map(({ name }) => name),
       },
     })
     .onOk(addBalloon);
@@ -60,8 +64,8 @@ function showEditBalloon(id: string) {
       component: EditBalloonDialog,
       componentProps: {
         balloon: balloonMap.value[id],
-        people: Object.values(personMap.value),
-        existingNames: Object.values(balloonMap.value).map(({ name }) => name),
+        people: project.value.people,
+        existingNames: project.value.balloons.map(({ name }) => name),
       },
     })
     .onOk((payload) => {

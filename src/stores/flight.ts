@@ -188,16 +188,18 @@ export const useFlightStore = defineStore('flight', () => {
 
   async function smartFillFlight(options: SmartFillOptions) {
     const data: SmartFillPayload = {
-      cars: Object.values(carMap.value),
-      balloons: Object.values(balloonMap.value),
-      people: Object.values(personMap.value).map((person) => {
-        const flights = numberOfFlights.value[person.id] ?? 0;
+      cars: flight.value.carIds.map((id) => carMap.value[id]),
+      balloons: flight.value.balloonIds.map((id) => balloonMap.value[id]),
+      people: flight.value.personIds
+        .map((id) => personMap.value[id])
+        .map((person) => {
+          const flights = numberOfFlights.value[person.id] ?? 0;
 
-        return {
-          ...person,
-          flights: person.firstTime && flights === 0 ? -1 : flights,
-        };
-      }),
+          return {
+            ...person,
+            flights: person.firstTime && flights === 0 ? -1 : flights,
+          };
+        }),
       groups: flight.value?.vehicleGroups ?? [],
       history: history.value,
     };

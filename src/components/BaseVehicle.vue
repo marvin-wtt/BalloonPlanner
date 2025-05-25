@@ -136,11 +136,14 @@ import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
 import { useQuasar } from 'quasar';
 import EditCarDialog from 'components/dialog/EditCarDialog.vue';
 import { useSettingsStore } from 'stores/settings';
+import { useProjectStore } from 'stores/project';
 
 const { removeCarFromVehicleGroup, removeVehicleGroup, editBalloon, editCar } =
   useFlightOperations();
 const quasar = useQuasar();
 const { remainingCapacity } = useFlightUtils();
+const projectStore = useProjectStore();
+const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
 const { balloonMap, carMap, personMap } = storeToRefs(flightStore);
 const settingsStore = useSettingsStore();
@@ -236,10 +239,8 @@ function onVehicleEdit() {
         component: EditBalloonDialog,
         componentProps: {
           balloon: vehicle.value,
-          people: Object.values(personMap.value),
-          existingNames: Object.values(balloonMap.value).map(
-            ({ name }) => name,
-          ),
+          people: project.value.people,
+          existingNames: project.value.balloons.map(({ name }) => name),
         },
       })
       .onOk((payload) => {
@@ -251,8 +252,8 @@ function onVehicleEdit() {
         component: EditCarDialog,
         componentProps: {
           car: vehicle.value,
-          people: Object.values(personMap.value),
-          existingNames: Object.values(carMap.value).map(({ name }) => name),
+          people: project.value.people,
+          existingNames: project.value.cars.map(({ name }) => name),
         },
       })
       .onOk((payload) => {
