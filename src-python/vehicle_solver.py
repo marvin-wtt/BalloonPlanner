@@ -181,7 +181,7 @@ def solve(
             for v in vehicle_ids:
                 if not allowed.get(p):
                     raise ValueError(
-                        f"Person {people_by_id[p]["name"]} not allowed in any vehicle"
+                        f"Person {people_by_id[p]['name']} not allowed in any vehicle"
                     )
                 if v not in allowed.get(p, set()):
                     model.Add(pax[p, v] == 0)
