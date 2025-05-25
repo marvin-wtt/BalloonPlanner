@@ -109,10 +109,10 @@
           colspan="3"
           class="vehicle-footer"
         >
-          <template v-if="vehicle.maxWeight">
+          <span v-if="vehicle.maxWeight">
             {{ totalWeight }} kg / {{ vehicle.maxWeight }} kg
-          </template>
-          <template v-else> {{ totalWeight }} kg </template>
+          </span>
+          <span v-else>{{ totalWeight }} kg</span>
         </td>
       </tr>
     </table>
@@ -147,8 +147,12 @@ const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
 const { balloonMap, carMap, personMap } = storeToRefs(flightStore);
 const settingsStore = useSettingsStore();
-const { showVehicleWeight, showVehicleIndex, showVehicleLabel } =
-  storeToRefs(settingsStore);
+const {
+  showVehicleWeight,
+  showVehicleIndex,
+  showVehicleLabel,
+  personDefaultWeight,
+} = storeToRefs(settingsStore);
 
 const {
   group,
@@ -171,11 +175,12 @@ const vehicle = computed<Vehicle>(() => {
 });
 
 const totalWeight = computed<number>(() => {
+  const fallback = personDefaultWeight.value ?? 0;
   return (
     assignment.passengerIds
       .map((id) => personMap.value[id])
-      .reduce<number>((acc, person) => acc + (person?.weight ?? 0), 0) +
-    (personMap[assignment.operatorId]?.weight ?? 0)
+      .reduce<number>((acc, person) => acc + (person?.weight ?? fallback), 0) +
+    (personMap[assignment.operatorId]?.weight ?? fallback)
   );
 });
 

@@ -6,7 +6,21 @@
     :disabled="!editable"
     @remove="onDragEnd()"
   >
-    {{ personLabel }}
+    <span>
+      {{ person.name }}
+    </span>
+    <span
+      v-if="showNumberOfFlights"
+      :class="coloredLabels ? 'text-blue' : ''"
+    >
+      {{ flightsLabel }}
+    </span>
+    <span
+      v-if="showPersonWeight"
+      :class="coloredLabels ? 'text-orange' : ''"
+    >
+      {{ weightLabel }}
+    </span>
 
     <q-menu
       touch-position
@@ -67,7 +81,8 @@ const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
 const { personMap, numberOfFlights } = storeToRefs(flightStore);
 const settingsStore = useSettingsStore();
-const { showPersonWeight, showNumberOfFlights } = storeToRefs(settingsStore);
+const { showPersonWeight, showNumberOfFlights, personDefaultWeight } =
+  storeToRefs(settingsStore);
 const {
   editPerson,
   addCarPassenger,
@@ -96,29 +111,22 @@ const {
   editable?: boolean;
 }>();
 
-const personLabel = computed<string>(() => {
-  if (!person) {
-    return '';
-  }
+const flightsLabel = computed<string>(() => {
+  const flights = numberOfFlights.value[person.id] ?? 0;
+  const suffix = flights === 0 && person.firstTime ? '*' : '';
 
-  let label = person.name;
+  return ` (${flights}${suffix})`;
+});
 
-  if (!editable) {
-    return label;
-  }
+const weightLabel = computed<string>(() => {
+  const weight = person.weight ?? personDefaultWeight.value ?? '?';
+  const suffix = !person.weight && personDefaultWeight.value ? '*' : '';
 
-  if (showNumberOfFlights.value) {
-    const flights = numberOfFlights.value[person.id] ?? 0;
-    const suffix = flights === 0 && person.firstTime ? '*' : '';
+  return ` (${weight}${suffix} kg)`;
+});
 
-    label += ` (${flights}${suffix})`;
-  }
-
-  if (showPersonWeight.value) {
-    label += ` (${person.weight ?? '?'} kg)`;
-  }
-
-  return label;
+const coloredLabels = computed<boolean>(() => {
+  return showPersonWeight.value && showNumberOfFlights.value;
 });
 
 function isDropAllowed(element: Identifiable): boolean {

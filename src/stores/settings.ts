@@ -8,6 +8,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const showPersonWeight = ref<boolean>(false);
   const showVehicleWeight = ref<boolean>(false);
   const isPresentationMode = ref<boolean>(false);
+  const personDefaultWeight = ref<number>(80);
 
   // TODO load and store
 
@@ -18,6 +19,7 @@ export const useSettingsStore = defineStore('settings', () => {
     showVehicleIndex,
     showVehicleLabel,
     isPresentationMode,
+    personDefaultWeight,
   };
 });
 
