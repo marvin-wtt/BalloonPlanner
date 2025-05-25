@@ -57,9 +57,9 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, toRaw } from 'vue';
-import type { Car, Person, ProjectMeta } from 'app/src-common/entities';
-import { type QSelectOption, useDialogPluginComponent } from 'quasar';
+import { ref, toRaw } from 'vue';
+import type { ProjectMeta } from 'app/src-common/entities';
+import { useDialogPluginComponent } from 'quasar';
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
