@@ -12,7 +12,7 @@
       @dragleave.stop
     >
       <q-badge
-        v-if="error"
+        v-if="errorMessage != null"
         color="negative"
         floating
         rounded
@@ -31,10 +31,11 @@
         <th
           v-if="showVehicleLabel"
           class="vehicle-label"
-          :rowspan="capacity + 1"
+          :class="{ 'vehicle-label--rounded': !hasFooter }"
+          :rowspan="capacity"
         >
           <span>
-            {{ vehicleName }}
+            {{ vehicle.name ?? '&#160;' }}
           </span>
           <q-menu
             touch-position
@@ -102,6 +103,18 @@
           :editable
         />
       </tr>
+
+      <tr v-if="vehicle.type === 'balloon' && showVehicleWeight">
+        <td
+          colspan="3"
+          class="vehicle-footer"
+        >
+          <template v-if="vehicle.maxWeight">
+            {{ totalWeight }} kg / {{ vehicle.maxWeight }} kg
+          </template>
+          <template v-else> {{ totalWeight }} kg </template>
+        </td>
+      </tr>
     </table>
   </draggable-item>
 </template>
@@ -144,7 +157,6 @@ const {
   editable?: boolean;
 }>();
 
-// TODO This is currently not used
 const hideEmptyCapacity = ref<boolean>(false);
 
 const vehicle = computed<Vehicle>(() => {
@@ -155,27 +167,19 @@ const vehicle = computed<Vehicle>(() => {
   return balloonMap.value[assignment.id];
 });
 
-const vehicleName = computed<string>(() => {
-  let name = vehicle.value.name;
-
-  if (showVehicleWeight.value) {
-    const totalWeight =
-      assignment.passengerIds
-        .map((id) => personMap.value[id])
-        .reduce<number>((acc, person) => acc + (person?.weight ?? 0), 0) +
-      (personMap[assignment.operatorId]?.weight ?? 0);
-
-    name += ` (${totalWeight} kg)`;
-  }
-
-  return name;
+const totalWeight = computed<number>(() => {
+  return (
+    assignment.passengerIds
+      .map((id) => personMap.value[id])
+      .reduce<number>((acc, person) => acc + (person?.weight ?? 0), 0) +
+    (personMap[assignment.operatorId]?.weight ?? 0)
+  );
 });
 
 const capacity = computed<number>(() => {
   let capacity: number = vehicle.value.maxCapacity;
 
   if (vehicle.value.type === 'car') {
-    // Compute reserved capacity
     capacity = remainingCapacity(group)[assignment.id] ?? 0;
   }
 
@@ -189,28 +193,33 @@ const capacity = computed<number>(() => {
   return hideEmptyCapacity.value ? assignment.passengerIds.length : capacity;
 });
 
-const error = computed<boolean>(() => {
-  return overfilled.value || invalidOperator.value;
-});
+const errorMessage = computed<string | null>(() => {
+  if (assignment.passengerIds.length > capacity.value) {
+    return 'Too many passengers for this vehicle.';
+  }
 
-const errorMessage = computed<string>(() => {
-  return overfilled.value
-    ? 'Too many passengers for this vehicle.'
-    : invalidOperator.value
-      ? 'This operator is not allowed for this vehicle.'
-      : 'An unknown error occurred.';
-});
-
-const overfilled = computed<boolean>(() => {
-  return assignment.passengerIds.length > capacity.value;
-});
-
-const invalidOperator = computed<boolean>(() => {
-  return (
+  if (
     assignment.operatorId !== null &&
     !vehicle.value.allowedOperatorIds.includes(assignment.operatorId)
-  );
+  ) {
+    return 'This operator is not allowed for this vehicle.';
+  }
+
+  if (
+    vehicle.value.type === 'balloon' &&
+    vehicle.value.maxWeight !== null &&
+    totalWeight.value > vehicle.value.maxWeight
+  ) {
+    return 'Total weight exceeds maximum weight.';
+  }
+
+  return null;
 });
+
+// Determine if footer row is rendered
+const hasFooter = computed<boolean>(
+  () => vehicle.value.type === 'balloon' && showVehicleWeight.value,
+);
 
 function onVehicleRemoved() {
   if (vehicle.value.type === 'balloon') {
@@ -255,12 +264,16 @@ function onVehicleEdit() {
 
 <style scoped>
 .vehicle-table {
-  /* TODO use default bg color -- support dark mode later */
   background-color: white;
   margin: 20px;
   border-collapse: collapse;
-  /*border: 1px solid;*/
   border-radius: 10px;
+}
+
+.vehicle-footer {
+  text-align: center;
+  font-size: 0.8rem;
+  border-top: 1px solid;
 }
 
 .vehicle-table tr:last-child * {
@@ -274,6 +287,10 @@ function onVehicleEdit() {
   border: 0;
   background-color: darkgray;
   color: white;
+  border-radius: 10px 0 0 0;
+}
+
+.vehicle-label--rounded {
   border-radius: 10px 0 0 10px;
 }
 

@@ -133,11 +133,14 @@
                     {{ item.name }}
                   </template>
                   <template #side="{ item }">
-                    <template v-if="showNumberOfFlights">
-                      {{ numberOfFlights[item.id] }}
-                    </template>
                     <template v-if="showPersonWeight">
                       {{ item.weight ?? '?' }} kg
+                    </template>
+                    <template v-if="showNumberOfFlights && showPersonWeight">
+                      |
+                    </template>
+                    <template v-if="showNumberOfFlights">
+                      {{ numberOfFlights[item.id] }}
                     </template>
                   </template>
                 </editable-list>
@@ -162,7 +165,15 @@
                     {{ item.name }}
                   </template>
                   <template #side="{ item }: { item: Person }">
-                    {{ numberOfFlights[item.id] }}
+                    <template v-if="showPersonWeight">
+                      {{ item.weight ?? '?' }} kg
+                    </template>
+                    <template v-if="showNumberOfFlights && showPersonWeight">
+                      |
+                    </template>
+                    <template v-if="showNumberOfFlights">
+                      {{ numberOfFlights[item.id] }}
+                    </template>
                   </template>
                 </editable-list>
               </q-scroll-area>
