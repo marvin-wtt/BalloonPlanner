@@ -8,7 +8,8 @@
         title="Balloons"
         item-name="Balloon"
         :items="balloons"
-        @create="showCreateBalloon"
+        @add="showAddBalloons()"
+        @create="showCreateBalloon()"
         @edit="(balloon) => showEditBalloon(balloon.id)"
         @delete="(balloon) => showDeleteBalloon(balloon)"
       >
@@ -38,13 +39,28 @@ const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
-const { balloonMap, personMap } = storeToRefs(flightStore);
-const { addBalloon, editBalloon, removeBalloon } = useFlightOperations();
+const { flight, balloonMap } = storeToRefs(flightStore);
+const { createBalloon, editBalloon, removeBalloon, addBalloon } =
+  useFlightOperations();
 
 const { name } = defineProps<{
   name: string;
   balloons: Balloon[];
 }>();
+
+function showAddBalloons() {
+  quasar
+    .dialog({
+      component: AddEntityToFlightDialog,
+      componentProps: {
+        itemName: 'Balloon',
+        items: project.value.balloons.filter(
+          ({ id }) => !flight.value?.balloonIds.includes(id),
+        ),
+      },
+    })
+    .onOk((ids) => ids.forEach(addBalloon));
+}
 
 function showCreateBalloon() {
   quasar
@@ -55,7 +71,7 @@ function showCreateBalloon() {
         existingNames: project.value.balloons.map(({ name }) => name),
       },
     })
-    .onOk(addBalloon);
+    .onOk(createBalloon);
 }
 
 function showEditBalloon(id: string) {

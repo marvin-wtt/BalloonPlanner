@@ -8,7 +8,8 @@
         title="Cars"
         item-name="Car"
         :items="cars"
-        @create="showCreateCar"
+        @add="showAddCars()"
+        @create="showCreateCar()"
         @edit="(car) => showEditCar(car.id)"
         @delete="(car) => showDeleteCar(car)"
       >
@@ -38,13 +39,27 @@ const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
-const { carMap, personMap } = storeToRefs(flightStore);
-const { addCar, editCar, removeCar } = useFlightOperations();
+const { carMap, flight } = storeToRefs(flightStore);
+const { createCar, editCar, removeCar, addCar } = useFlightOperations();
 
 const { name } = defineProps<{
   name: string;
   cars: Car[];
 }>();
+
+function showAddCars() {
+  quasar
+    .dialog({
+      component: AddEntityToFlightDialog,
+      componentProps: {
+        itemName: 'Balloon',
+        items: project.value.cars.filter(
+          ({ id }) => !flight.value?.carIds.includes(id),
+        ),
+      },
+    })
+    .onOk((ids) => ids.forEach(addCar));
+}
 
 function showCreateCar() {
   quasar
@@ -55,7 +70,7 @@ function showCreateCar() {
         existingNames: project.value.cars.map(({ name }) => name),
       },
     })
-    .onOk(addCar);
+    .onOk(createCar);
 }
 
 function showEditCar(id: string) {

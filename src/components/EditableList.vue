@@ -86,15 +86,41 @@
         </q-item>
       </template>
     </q-list>
-    <q-btn
+    <q-btn-dropdown
       v-if="editable"
-      label="Create new"
+      :label="'Add ' + itemName"
+      split
       class="q-ma-sm"
       color="primary"
       icon="add"
       rounded
-      @click="addItem()"
-    />
+      @click="createItem()"
+    >
+      <q-list>
+        <q-item
+          clickable
+          v-close-popup
+          @click="createItem()"
+        >
+          <q-item-section>
+            <q-item-label>
+              {{ 'Create new ' + itemName }}
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item
+          clickable
+          v-close-popup
+          @click="addItem()"
+        >
+          <q-item-section>
+            <q-item-label>
+              {{ 'Add ' + itemName + ' from project' }}
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-btn-dropdown>
   </div>
 </template>
 
@@ -118,6 +144,7 @@ const {
 
 const emit = defineEmits<{
   (e: 'create'): void;
+  (e: 'add'): void;
   (e: 'edit', item: T): void;
   (e: 'delete', item: T): void;
 }>();
@@ -138,8 +165,12 @@ function deleteItem(item: T) {
   emit('delete', item);
 }
 
-function addItem() {
+function createItem() {
   emit('create');
+}
+
+function addItem() {
+  emit('add');
 }
 </script>
 

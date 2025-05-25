@@ -110,7 +110,7 @@ export function useFlightOperations() {
     );
   }
 
-  function addPerson(person: Omit<Person, 'id'>) {
+  function createPerson(person: Omit<Person, 'id'>) {
     projectStore.project.people.push({
       ...person,
       id: crypto.randomUUID(),
@@ -137,7 +137,7 @@ export function useFlightOperations() {
     );
   }
 
-  function addBalloon(balloon: Omit<Balloon, 'id'>) {
+  function createBalloon(balloon: Omit<Balloon, 'id'>) {
     const id = crypto.randomUUID();
 
     projectStore.project.balloons.push({
@@ -167,7 +167,7 @@ export function useFlightOperations() {
     );
   }
 
-  function addCar(car: Omit<Car, 'id'>) {
+  function createCar(car: Omit<Car, 'id'>) {
     const id = crypto.randomUUID();
 
     projectStore.project.cars.push({
@@ -197,6 +197,18 @@ export function useFlightOperations() {
     );
   }
 
+  function addPerson(personId: string) {
+    flightStore.flight.personIds.push(personId);
+  }
+
+  function addBalloon(balloonId: string) {
+    flightStore.flight.balloonIds.push(balloonId);
+  }
+
+  function addCar(carId: string) {
+    flightStore.flight.carIds.push(carId);
+  }
+
   return {
     addVehicleGroup,
     removeVehicleGroup,
@@ -210,14 +222,17 @@ export function useFlightOperations() {
     addCarPassenger,
     removeBalloonPassenger,
     removeCarPassenger,
-    addPerson,
+    createPerson,
     editPerson,
     removePerson,
-    addBalloon,
+    createBalloon,
     editBalloon,
     removeBalloon,
-    addCar,
+    createCar,
     editCar,
     removeCar,
+    addPerson,
+    addBalloon,
+    addCar,
   };
 }

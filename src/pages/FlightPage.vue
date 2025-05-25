@@ -125,6 +125,7 @@
                   title="Counselors"
                   item-name="Counselor"
                   :items="availableCounselors"
+                  @add="showAddPeople('counselor')"
                   @create="showCreatePerson"
                   @edit="(person) => showEditPerson(person)"
                   @delete="(person) => showDeletePerson(person)"
@@ -148,6 +149,7 @@
                   title="Participants"
                   item-name="Participant"
                   :items="availableParticipants"
+                  @add="showAddPeople('participant')"
                   @create="showCreatePerson"
                   @edit="(person) => showEditPerson(person)"
                   @delete="(person) => showDeletePerson(person)"
@@ -226,6 +228,7 @@ import FlightSettingsPanel from 'components/panels/FlightSettingsPanel.vue';
 import FlightBalloonsPanel from 'components/panels/FlightBalloonsPanel.vue';
 import FlightCarsPanel from 'components/panels/FlightCarsPanel.vue';
 import SmartFillDialog from 'components/dialog/SmartFillDialog.vue';
+import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -239,7 +242,8 @@ const { flight, numberOfFlights } = storeToRefs(flightStore);
 
 const { showNumberOfFlights, showPersonWeight } = storeToRefs(settingsStore);
 
-const { addPerson, editPerson, removePerson } = useFlightOperations();
+const { createPerson, editPerson, removePerson, addPerson } =
+  useFlightOperations();
 
 const menuTabs = ref('overview');
 const editable = ref<boolean>(true);
@@ -324,6 +328,20 @@ async function smartFill(options: SmartFillOptions) {
   }
 }
 
+function showAddPeople(role: Person['role']) {
+  quasar
+    .dialog({
+      component: AddEntityToFlightDialog,
+      componentProps: {
+        itemName: role.charAt(0).toUpperCase() + role.slice(1),
+        items: project.value.people
+          .filter(({ role: personRole }) => personRole === role)
+          .filter(({ id }) => !flight.value?.personIds.includes(id)),
+      },
+    })
+    .onOk((ids) => ids.forEach(addPerson));
+}
+
 function showCreatePerson() {
   quasar
     .dialog({
@@ -332,7 +350,7 @@ function showCreatePerson() {
         existingNames: project.value.people.map(({ name }) => name),
       },
     })
-    .onOk(addPerson);
+    .onOk(createPerson);
 }
 
 function showEditPerson(person: Person) {
