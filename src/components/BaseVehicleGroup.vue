@@ -1,7 +1,7 @@
 <template>
   <drop-zone
     :accepted="isDropAccepted"
-    class="q-ma-md bg-grey-6 rounded-borders"
+    class="q-ma-md bg-grey-6 vehicle-group"
     @dropped="drop"
   >
     <div class="relative-position">
@@ -124,4 +124,8 @@ function drop(element: Identifiable) {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.vehicle-group {
+  border-radius: 15px;
+}
+</style>
