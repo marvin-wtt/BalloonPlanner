@@ -190,10 +190,14 @@ export const useFlightStore = defineStore('flight', () => {
     const data: SmartFillPayload = {
       cars: Object.values(carMap.value),
       balloons: Object.values(balloonMap.value),
-      people: Object.values(personMap.value).map((person) => ({
-        ...person,
-        flights: numberOfFlights.value[person.id] ?? 0,
-      })),
+      people: Object.values(personMap.value).map((person) => {
+        const flights = numberOfFlights.value[person.id] ?? 0;
+
+        return {
+          ...person,
+          flights: person.firstTime && flights === 0 ? -1 : flights,
+        };
+      }),
       groups: flight.value?.vehicleGroups ?? [],
       history: history.value,
     };

@@ -133,15 +133,7 @@
                     {{ item.name }}
                   </template>
                   <template #side="{ item }">
-                    <template v-if="showPersonWeight">
-                      {{ item.weight ?? '?' }} kg
-                    </template>
-                    <template v-if="showNumberOfFlights && showPersonWeight">
-                      |
-                    </template>
-                    <template v-if="showNumberOfFlights">
-                      {{ numberOfFlights[item.id] }}
-                    </template>
+                    {{ formatPersonMeta(item) }}
                   </template>
                 </editable-list>
               </q-scroll-area>
@@ -165,15 +157,7 @@
                     {{ item.name }}
                   </template>
                   <template #side="{ item }: { item: Person }">
-                    <template v-if="showPersonWeight">
-                      {{ item.weight ?? '?' }} kg
-                    </template>
-                    <template v-if="showNumberOfFlights && showPersonWeight">
-                      |
-                    </template>
-                    <template v-if="showNumberOfFlights">
-                      {{ numberOfFlights[item.id] }}
-                    </template>
+                    {{ formatPersonMeta(item) }}
                   </template>
                 </editable-list>
               </q-scroll-area>
@@ -435,6 +419,22 @@ const menuClasses = computed<string>(() => {
     ? 'col-xl-3 col-lg-3 col-md-4 col-sm-6 col-xs-12'
     : '';
 });
+
+function formatPersonMeta(person: Person): string {
+  const parts: string[] = [];
+
+  if (showPersonWeight.value) {
+    parts.push(`${person.weight ?? '?'} kg`);
+  }
+
+  if (showNumberOfFlights.value) {
+    const flights = numberOfFlights.value[person.id] ?? 0;
+    const suffix = flights === 0 && person.firstTime ? '*' : '';
+    parts.push(`${flights}${suffix}`);
+  }
+
+  return parts.join(' | ');
+}
 </script>
 
 <style>

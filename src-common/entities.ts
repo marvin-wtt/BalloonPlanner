@@ -10,6 +10,7 @@ export interface Person extends Identifiable {
   name: string;
   nationality: string;
   weight?: number;
+  firstTime?: boolean;
 }
 
 export interface VehicleBase extends Identifiable {

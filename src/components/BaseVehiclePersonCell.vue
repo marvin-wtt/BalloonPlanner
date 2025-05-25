@@ -19,19 +19,16 @@
         <q-item
           clickable
           v-close-popup
+          @click="onEdit()"
         >
-          <q-item-section @click="onEdit()"> Edit </q-item-section>
+          <q-item-section>Edit</q-item-section>
         </q-item>
         <q-item
           clickable
           v-close-popup
+          @click="onDragEnd()"
         >
-          <q-item-section
-            @click="onDragEnd()"
-            class="text-negative"
-          >
-            Remove
-          </q-item-section>
+          <q-item-section class="text-negative">Remove</q-item-section>
         </q-item>
       </q-list>
     </q-menu>
@@ -109,8 +106,9 @@ const personLabel = computed<string>(() => {
 
   if (showNumberOfFlights.value) {
     const flights = numberOfFlights.value[person.id] ?? 0;
+    const suffix = flights === 0 && person.firstTime ? '*' : '';
 
-    label += ` (${flights})`;
+    label += ` (${flights}${suffix})`;
   }
 
   if (showPersonWeight.value) {

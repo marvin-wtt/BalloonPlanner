@@ -124,6 +124,14 @@ const columns: QTableColumn[] = [
     sortable: true,
   },
   {
+    name: 'maxWeight',
+    label: 'Maximum Weight',
+    field: 'maxWeight',
+    align: 'right',
+    sortable: false,
+    format: (val?: string) => (val ? `${val} kg` : ''),
+  },
+  {
     name: 'allowedOperators',
     label: 'Allowed Operators',
     field: 'allowedOperatorIds',

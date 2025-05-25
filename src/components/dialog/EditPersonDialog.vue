@@ -43,6 +43,12 @@
             rounded
           />
 
+          <q-toggle
+            v-model="firstTime"
+            label="Is first time"
+            toggle-indeterminate
+          />
+
           <q-input
             v-model.number="weight"
             type="number"
@@ -114,6 +120,7 @@ const name = ref<string>(person?.name ?? null);
 const nationality = ref<string>(person?.nationality ?? null);
 const role = ref<PersonRole>(person?.role ?? 'participant');
 const weight = ref<number>(person?.weight ?? undefined);
+const firstTime = ref<boolean>(person?.firstTime ?? undefined);
 
 const mode = computed<'create' | 'edit'>(() => {
   return person ? 'edit' : 'create';
@@ -147,6 +154,7 @@ function onSubmit() {
     nationality: toRaw(nationality.value),
     role: toRaw(role.value),
     weight: toRaw(weight.value) ?? undefined,
+    firstTime: toRaw(firstTime.value) ?? undefined,
   };
 
   onDialogOK(payload);
