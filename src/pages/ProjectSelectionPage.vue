@@ -38,7 +38,7 @@
               size="sm"
               flat
               rounded
-              @click.stop="editProject(project)"
+              @click.stop="onEditProject(project)"
             >
               Edit
             </q-btn>
@@ -104,6 +104,7 @@ import { storeToRefs } from 'pinia';
 import { onBeforeMount, ref } from 'vue';
 import { readJsonFile } from 'src/util/json-file-reader';
 import { isProject } from 'src/util/validate-project';
+import ProjectEditDialog from 'components/dialog/ProjectEditDialog.vue';
 
 const router = useRouter();
 const quasar = useQuasar();
@@ -134,7 +135,6 @@ async function onFilesAdded() {
     return;
   }
 
-  // TODO Validate
   await projectStore.createProject(data);
 }
 
@@ -176,23 +176,27 @@ function deleteProject(project: ProjectMeta) {
     });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function editProject(project: ProjectMeta) {
-  // TODO Add dialog
-  quasar.dialog({
-    title: 'Edit project',
-    message: 'This feature is not yet implemented.',
-    ok: {
-      label: 'OK',
-      color: 'primary',
-      rounded: true,
-    },
-    cancel: {
-      label: 'Cancel',
-      rounded: true,
-      outline: true,
-    },
-  });
+function onEditProject(project: ProjectMeta) {
+  quasar
+    .dialog({
+      component: ProjectEditDialog,
+      componentProps: {
+        project,
+      },
+    })
+    .onOk((payload: Omit<ProjectMeta, 'id'>) => {
+      void editProject(project.id, payload);
+    });
+}
+
+async function editProject(projectId: string, data: Omit<ProjectMeta, 'id'>) {
+  await projectStore.loadProject(projectId);
+  // Apply update
+  projectStore.project.name = data.name;
+  projectStore.project.description = data.description;
+  // Refresh index
+  await projectStore.saveProject();
+  await projectStore.loadIndex();
 }
 
 async function createProject() {
