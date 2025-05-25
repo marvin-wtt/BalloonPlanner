@@ -32,7 +32,7 @@
               @click="onSaveProject"
             />
 
-            <template v-if="project">
+            <template v-if="!inIndexPage">
               <q-separator
                 vertical
                 dark
@@ -110,8 +110,12 @@ const syncIcon = computed<string>(() => {
   return 'done';
 });
 
+const inIndexPage = computed<boolean>(() => {
+  return project.value == null || route.name === 'projects';
+});
+
 const label = computed<string>(() => {
-  if (project.value == null || route.name === 'projects') {
+  if (inIndexPage.value) {
     return 'Projects';
   }
 
