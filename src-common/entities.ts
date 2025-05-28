@@ -51,6 +51,15 @@ export interface Flight extends Identifiable {
   carIds: string[];
 }
 
+export interface ProjectSettings {
+  showVehicleIndex?: boolean;
+  showVehicleLabel?: boolean;
+  showNumberOfFlights?: boolean;
+  showPersonWeight?: boolean;
+  showVehicleWeight?: boolean;
+  personDefaultWeight?: number;
+}
+
 export interface Project extends Identifiable {
   name: string;
   description?: string;
@@ -60,6 +69,7 @@ export interface Project extends Identifiable {
   cars: Car[];
   balloons: Balloon[];
   flights: Flight[];
+  settings?: ProjectSettings;
 }
 
 export interface ProjectMeta {

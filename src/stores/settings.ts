@@ -1,26 +1,47 @@
-import { acceptHMRUpdate, defineStore } from 'pinia';
-import { ref } from 'vue';
+import { acceptHMRUpdate, defineStore, storeToRefs } from 'pinia';
+import { reactive, toRefs, watch } from 'vue';
+import { useProjectStore } from 'stores/project';
+import type { ProjectSettings } from 'app/src-common/entities';
 
 export const useSettingsStore = defineStore('settings', () => {
-  const showVehicleIndex = ref<boolean>(true);
-  const showVehicleLabel = ref<boolean>(true);
-  const showNumberOfFlights = ref<boolean>(true);
-  const showPersonWeight = ref<boolean>(false);
-  const showVehicleWeight = ref<boolean>(false);
-  const isPresentationMode = ref<boolean>(false);
-  const personDefaultWeight = ref<number>(80);
+  const projectStore = useProjectStore();
+  const { project } = storeToRefs(projectStore);
 
-  // TODO load and store
-
-  return {
-    showNumberOfFlights,
-    showPersonWeight,
-    showVehicleWeight,
-    showVehicleIndex,
-    showVehicleLabel,
-    isPresentationMode,
-    personDefaultWeight,
+  const defaultSettings: ProjectSettings = {
+    showVehicleIndex: true,
+    showVehicleLabel: true,
+    showNumberOfFlights: true,
+    showPersonWeight: false,
+    showVehicleWeight: false,
+    personDefaultWeight: 80,
   };
+
+  const settings = reactive<ProjectSettings>({ ...defaultSettings });
+
+  watch(
+    project,
+    (project) => {
+      if (project?.settings) {
+        Object.assign(settings, { ...defaultSettings, ...project.settings });
+      } else if (project) {
+        // initialize in-project settings if missing
+        project.settings = { ...settings };
+      }
+    },
+    { immediate: true },
+  );
+
+  watch(
+    settings,
+    (newSettings) => {
+      if (project.value) {
+        project.value.settings = { ...newSettings };
+      }
+    },
+    { deep: true },
+  );
+
+  return toRefs(settings);
 });
 
 if (import.meta.hot) {
