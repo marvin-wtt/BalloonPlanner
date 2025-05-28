@@ -45,7 +45,7 @@ def solve(
     w_new_vehicle: int = 5,
     w_second_leg: int = 20,
     # misc
-    default_person_weight: int = 70,
+    default_person_weight: int = 80,
     time_limit_s: int = 30,
 ):
     """Solve a *single* leg; call once per flight."""
