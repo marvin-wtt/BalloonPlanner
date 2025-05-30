@@ -1,5 +1,5 @@
 <template>
-  <q-page class="full-width row justify-start no-wrap bg-grey-5">
+  <q-page class="full-width row justify-start no-wrap">
     <template v-if="isLoading">
       <q-spinner
         color="primary"
@@ -173,7 +173,7 @@
       <!-- Flight overview -->
       <div
         v-if="showFlightView"
-        class="col-grow flex"
+        class="col-grow bg-grey-3 flex"
       >
         <base-flight
           :flight
@@ -185,15 +185,26 @@
           position="bottom-right"
           :offset="[18, 18]"
         >
-          <q-btn
-            icon="auto_awesome"
-            fab
-            color="accent"
-            :disable="!editable"
-            @click="onSmartFill"
+          <q-fab
+            icon="keyboard_arrow_up"
+            color="secondary"
+            vertical-actions-align="right"
+            direction="up"
           >
-            <q-tooltip> Smart fill</q-tooltip>
-          </q-btn>
+            <q-fab-action
+              label="Export Image"
+              icon="photo_camera"
+              color="secondary"
+              @click="onExportImage"
+            />
+
+            <q-fab-action
+              label="Smart Fill"
+              icon="auto_awesome"
+              color="accent"
+              @click="onSmartFill"
+            />
+          </q-fab>
         </q-page-sticky>
       </div>
     </template>
@@ -207,7 +218,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
@@ -229,6 +240,7 @@ import FlightBalloonsPanel from 'components/panels/FlightBalloonsPanel.vue';
 import FlightCarsPanel from 'components/panels/FlightCarsPanel.vue';
 import SmartFillDialog from 'components/dialog/SmartFillDialog.vue';
 import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';
+import { toPng } from 'html-to-image';
 
 const route = useRoute();
 const router = useRouter();
@@ -326,6 +338,37 @@ async function smartFill(options: SmartFillOptions) {
   } finally {
     editable.value = true;
   }
+}
+
+async function onExportImage() {
+  const container = document.createElement('div');
+  container.classList.add('exporter-wrapper');
+  const src = document.getElementById('flight-content');
+  const clone = src.cloneNode(true) as HTMLElement;
+  clone.classList.add('no-wrap', 'fit');
+  Object.assign(container.style, {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    zIndex: -1,
+    backgroundColor: 'white', // TODO Set correct background color
+    width: 'auto',
+    height: 'auto',
+  });
+  container.appendChild(clone);
+  document.body.appendChild(container);
+
+  await nextTick();
+
+  const dataUrl = await toPng(container, {});
+
+  document.body.removeChild(container);
+
+  const fileName = `flight-${project.value.flights.indexOf(flight.value) + 1}.png`;
+  const link = document.createElement('a');
+  link.download = fileName;
+  link.href = dataUrl;
+  link.click();
 }
 
 function showAddPeople(role: Person['role']) {

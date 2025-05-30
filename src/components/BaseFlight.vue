@@ -15,7 +15,10 @@
       v-else
       class="col-grow"
     >
-      <div class="full-width row">
+      <div
+        id="flight-content"
+        class="full-width row"
+      >
         <base-vehicle-group
           v-for="(group, i) in flight.vehicleGroups"
           :key="`vg-${i}`"

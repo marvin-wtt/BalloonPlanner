@@ -17,19 +17,10 @@ import { DragHelper } from 'src/util/DragHelper';
 import { ref } from 'vue';
 import type { Identifiable } from 'src/lib/utils/Identifiable';
 
-interface Props {
+const { tag = 'div', accepted = () => true } = defineProps<{
   accepted?: (element: Identifiable) => boolean;
-  highlight?: boolean;
-  highlightColor?: string;
   tag?: string | object;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  accepted: () => true,
-  highlight: true,
-  highlightColor: '#31ccec',
-  tag: 'div',
-});
+}>();
 
 const emit = defineEmits<{
   (e: 'dropped', item: Identifiable): void;
@@ -38,7 +29,7 @@ const emit = defineEmits<{
 const highlighted = ref(false);
 
 function isAccepted(): boolean {
-  return DragHelper.element !== null && props.accepted(DragHelper.element);
+  return DragHelper.element !== null && accepted(DragHelper.element);
 }
 
 function onDragEnter(event: DragEvent) {
@@ -79,6 +70,6 @@ function onDrop(event: DragEvent) {
 
 <style scoped>
 .highlighted {
-  background-color: v-bind(highlightColor) !important;
+  background-color: rgba(49, 204, 236, 0.7) !important;
 }
 </style>

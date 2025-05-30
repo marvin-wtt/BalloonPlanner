@@ -1,10 +1,11 @@
 <template>
   <drop-zone
     :accepted="isDropAccepted"
-    class="q-ma-md bg-grey-6 vehicle-group"
+    class="q-ma-md vehicle-group"
+    :class="styleClass"
     @dropped="drop"
   >
-    <div class="relative-position">
+    <div class="relative-position q-gutter-md q-pa-md q-pb-lg">
       <q-badge
         v-if="showWarning"
         color="warning"
@@ -50,7 +51,7 @@ import type {
   Identifiable,
   Balloon,
 } from 'app/src-common/entities';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import BaseVehicle from 'components/BaseVehicle.vue';
@@ -66,11 +67,19 @@ const { group, editable = false } = defineProps<{
   editable?: boolean;
 }>();
 
-const showWarning = computed(() => {
+const groupStyle = ref<'highlighted' | 'dashed'>('dashed');
+
+const styleClass = computed<string>(() => {
+  return groupStyle.value === 'dashed'
+    ? 'vehicle-group__dashed'
+    : 'vehicle-group__highlighted';
+});
+
+const showWarning = computed<boolean>(() => {
   return trailerHitchWarning.value || reservedCapacityWarning.value;
 });
 
-const warningText = computed(() => {
+const warningText = computed<string>(() => {
   return trailerHitchWarning.value
     ? 'The group is missing a trailer clutch'
     : reservedCapacityWarning.value
@@ -127,5 +136,17 @@ function drop(element: Identifiable) {
 <style scoped>
 .vehicle-group {
   border-radius: 15px;
+}
+
+.vehicle-group__dashed {
+  border-style: dashed;
+  border-width: 2px;
+  border-color: #757575;
+  background-color: inherit;
+}
+
+.vehicle-group__highlighted {
+  border: none;
+  background-color: #bdbdbd;
 }
 </style>

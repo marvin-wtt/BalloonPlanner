@@ -88,8 +88,8 @@
         :key="c"
       >
         <td
-          class="vehicle-index"
           v-if="showVehicleIndex"
+          class="vehicle-index q-px-sm"
         >
           {{ c }}
         </td>
@@ -271,7 +271,6 @@ function onVehicleEdit() {
 <style scoped>
 .vehicle-table {
   background-color: white;
-  margin: 20px;
   border-collapse: collapse;
   border-radius: 10px;
 }
