@@ -176,12 +176,13 @@ const vehicle = computed<Vehicle>(() => {
 
 const totalWeight = computed<number>(() => {
   const fallback = personDefaultWeight.value ?? 0;
-  return (
-    assignment.passengerIds
-      .map((id) => personMap.value[id])
-      .reduce<number>((acc, person) => acc + (person?.weight ?? fallback), 0) +
-    (personMap[assignment.operatorId]?.weight ?? fallback)
-  );
+
+  return assignment.passengerIds
+    .map((id) => personMap.value[id])
+    .reduce<number>(
+      (acc, person) => acc + (person?.weight ?? fallback),
+      personMap.value[assignment.operatorId]?.weight ?? fallback,
+    );
 });
 
 const capacity = computed<number>(() => {
