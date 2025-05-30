@@ -17,7 +17,8 @@
     >
       <div
         id="flight-content"
-        class="full-width row"
+        class="full-width"
+        :class="groupAlignment === 'vertical' ? 'column' : 'row'"
       >
         <base-vehicle-group
           v-for="(group, i) in flight.vehicleGroups"
@@ -41,7 +42,11 @@ import DropZone from 'components/drag/DropZone.vue';
 import { computed } from 'vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import { useFlightOperations } from 'src/composables/flight-operations';
+import { useSettingsStore } from 'stores/settings';
+import { storeToRefs } from 'pinia';
 
+const settingsStore = useSettingsStore();
+const { groupAlignment } = storeToRefs(settingsStore);
 const { addVehicleGroup } = useFlightOperations();
 
 const { flight, editable = false } = defineProps<{
@@ -49,7 +54,7 @@ const { flight, editable = false } = defineProps<{
   editable?: boolean;
 }>();
 
-const empty = computed(() => {
+const empty = computed<boolean>(() => {
   return flight.vehicleGroups.length === 0;
 });
 

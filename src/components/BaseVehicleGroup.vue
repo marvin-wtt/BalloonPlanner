@@ -5,7 +5,10 @@
     :class="styleClass"
     @dropped="drop"
   >
-    <div class="relative-position q-gutter-md q-pa-md q-pb-lg">
+    <div
+      class="relative-position row q-gutter-md q-pa-md q-pb-lg"
+      :class="groupAlignment === 'vertical' ? 'row' : 'column'"
+    >
       <q-badge
         v-if="showWarning"
         color="warning"
@@ -22,23 +25,27 @@
         </q-tooltip>
       </q-badge>
       <!-- Balloon -->
-      <base-vehicle
-        :key="group.balloon.id"
-        type="balloon"
-        :assignment="group.balloon"
-        :group
-        :editable
-      />
+      <div>
+        <base-vehicle
+          :key="group.balloon.id"
+          type="balloon"
+          :assignment="group.balloon"
+          :group
+          :editable
+        />
+      </div>
 
       <!-- Cars -->
-      <base-vehicle
-        v-for="car in group.cars"
-        :key="car.id"
-        type="car"
-        :assignment="car"
-        :group
-        :editable
-      />
+      <div>
+        <base-vehicle
+          v-for="car in group.cars"
+          :key="car.id"
+          type="car"
+          :assignment="car"
+          :group
+          :editable
+        />
+      </div>
     </div>
   </drop-zone>
 </template>
@@ -51,23 +58,23 @@ import type {
   Identifiable,
   Balloon,
 } from 'app/src-common/entities';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import BaseVehicle from 'components/BaseVehicle.vue';
 import { useFlightOperations } from 'src/composables/flight-operations';
+import { useSettingsStore } from 'stores/settings';
 
-const { addCarToVehicleGroup } = useFlightOperations();
-
+const settingsStore = useSettingsStore();
+const { groupAlignment, groupStyle } = storeToRefs(settingsStore);
 const flightStore = useFlightStore();
 const { flight, carMap, balloonMap } = storeToRefs(flightStore);
+const { addCarToVehicleGroup } = useFlightOperations();
 
 const { group, editable = false } = defineProps<{
   group: VehicleGroup;
   editable?: boolean;
 }>();
-
-const groupStyle = ref<'highlighted' | 'dashed'>('dashed');
 
 const styleClass = computed<string>(() => {
   return groupStyle.value === 'dashed'

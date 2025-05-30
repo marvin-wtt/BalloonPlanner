@@ -58,6 +58,8 @@ export interface ProjectSettings {
   showPersonWeight?: boolean;
   showVehicleWeight?: boolean;
   personDefaultWeight?: number;
+  groupAlignment?: 'horizontal' | 'vertical';
+  groupStyle?: 'dashed' | 'highlighted';
 }
 
 export interface Project extends Identifiable {

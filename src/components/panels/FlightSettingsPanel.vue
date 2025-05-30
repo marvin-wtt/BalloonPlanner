@@ -22,7 +22,7 @@
               />
             </q-item-section>
             <q-item-section>
-              <q-item-label> Show vehicle names</q-item-label>
+              <q-item-label>Show vehicle names</q-item-label>
             </q-item-section>
           </q-item>
           <q-item
@@ -39,7 +39,7 @@
               />
             </q-item-section>
             <q-item-section>
-              <q-item-label> Show passenger index</q-item-label>
+              <q-item-label>Show passenger index</q-item-label>
             </q-item-section>
           </q-item>
           <q-item
@@ -56,7 +56,7 @@
               />
             </q-item-section>
             <q-item-section>
-              <q-item-label> Show number of flights</q-item-label>
+              <q-item-label>Show number of flights</q-item-label>
             </q-item-section>
           </q-item>
           <q-separator />
@@ -75,7 +75,7 @@
               />
             </q-item-section>
             <q-item-section>
-              <q-item-label> Show weight of person</q-item-label>
+              <q-item-label>Show weight of person</q-item-label>
             </q-item-section>
           </q-item>
           <q-item
@@ -92,7 +92,7 @@
               />
             </q-item-section>
             <q-item-section>
-              <q-item-label> Show total weight of balloons </q-item-label>
+              <q-item-label>Show total weight</q-item-label>
             </q-item-section>
           </q-item>
           <q-item>
@@ -108,6 +108,41 @@
                 dense
                 rounded
                 outlined
+              />
+            </q-item-section>
+          </q-item>
+          <q-item-label header>Appearance</q-item-label>
+          <q-item>
+            <q-item-section>
+              <q-select
+                v-model="groupAlignment"
+                label="Group Alignment"
+                :options="[
+                  { label: 'Vertical', value: 'vertical' },
+                  { label: 'Horizontal', value: 'horizontal' },
+                ]"
+                emit-value
+                map-options
+                rounded
+                outlined
+                dense
+              />
+            </q-item-section>
+          </q-item>
+          <q-item>
+            <q-item-section>
+              <q-select
+                v-model="groupStyle"
+                label="Group Alignment"
+                :options="[
+                  { label: 'Dashed', value: 'dashed' },
+                  { label: 'Highlighted', value: 'highlighted' },
+                ]"
+                emit-value
+                map-options
+                rounded
+                outlined
+                dense
               />
             </q-item-section>
           </q-item>
@@ -130,6 +165,8 @@ const {
   showPersonWeight,
   showVehicleWeight,
   personDefaultWeight,
+  groupAlignment,
+  groupStyle,
 } = storeToRefs(settingsStore);
 
 const { name } = defineProps<{

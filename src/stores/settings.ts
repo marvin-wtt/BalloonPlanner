@@ -14,6 +14,8 @@ export const useSettingsStore = defineStore('settings', () => {
     showPersonWeight: false,
     showVehicleWeight: false,
     personDefaultWeight: 80,
+    groupAlignment: 'horizontal',
+    groupStyle: 'dashed',
   };
 
   const settings = reactive<ProjectSettings>({ ...defaultSettings });
