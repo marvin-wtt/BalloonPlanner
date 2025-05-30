@@ -198,6 +198,8 @@ export const useFlightStore = defineStore('flight', () => {
           return {
             ...person,
             flights: person.firstTime && flights === 0 ? -1 : flights,
+            weight:
+              person.weight ?? project.value.settings?.personDefaultWeight,
           };
         }),
       groups: flight.value?.vehicleGroups ?? [],
