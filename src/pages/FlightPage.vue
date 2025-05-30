@@ -202,6 +202,7 @@
               label="Smart Fill"
               icon="auto_awesome"
               color="accent"
+              :disable="!editable"
               @click="onSmartFill"
             />
           </q-fab>
