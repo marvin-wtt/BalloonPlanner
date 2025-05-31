@@ -149,11 +149,11 @@
                   title="Participants"
                   item-name="Participant"
                   :items="availableParticipants"
+                  :dense="availableParticipants.length > 10"
                   @add="showAddPeople('participant')"
                   @create="showCreatePerson"
                   @edit="(person) => showEditPerson(person)"
                   @delete="(person) => showDeletePerson(person)"
-                  :dense="availableParticipants.length > 10"
                 >
                   <template #main="{ item }: { item: Person }">
                     {{ item.name }}
