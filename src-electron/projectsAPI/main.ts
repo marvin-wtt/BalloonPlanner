@@ -21,6 +21,7 @@ export default () => {
   ipcMain.handle('project:store', projectApiHandler.store);
   ipcMain.handle('project:update', projectApiHandler.update);
   ipcMain.handle('project:destroy', projectApiHandler.destroy);
+  ipcMain.handle('project:remove', projectApiHandler.remove);
 
   ipcMain.on('project:ready', () => {
     loadFromArgs(process.argv).catch((err) => {
@@ -101,12 +102,13 @@ const handleEvent = (next: (...args: unknown[]) => unknown) => {
 const projectApiHandler = {
   index: handleEvent(getProjectIndex),
   show: handleEvent(load),
-  store: handleEvent(create),
+  store: handleEvent(store),
   update: handleEvent(update),
-  destroy: handleEvent(remove),
+  destroy: handleEvent(destroy),
+  remove: handleEvent(remove),
 };
 
-async function create(project: Project) {
+async function store(project: Project) {
   const projectDir = app.getPath('userData');
   const fileName = `project-${project.id}.bpp`;
   const fullPath = path.join(projectDir, fileName);
@@ -136,10 +138,14 @@ async function update(project: Project) {
   });
 }
 
-async function remove(id: string) {
+async function destroy(id: string) {
   const filePath = projectFilePath(id);
 
   await deleteProjectFromPath(filePath);
 
+  removeProjectMeta(id);
+}
+
+function remove(id: string) {
   removeProjectMeta(id);
 }

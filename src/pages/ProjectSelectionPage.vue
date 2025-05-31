@@ -6,9 +6,20 @@
           v-for="project in projectIndex"
           :project="project"
           :key="project.id"
-          class="project-card"
+          class="project-card position-relative"
           @click="openProject(project)"
         >
+          <q-btn
+            icon="close"
+            class="absolute q‐ma‐xs z-top"
+            style="top: 3px; right: 3px"
+            size="sm"
+            dense
+            flat
+            round
+            @click.stop="removeProject(project)"
+          />
+
           <q-card-section class="col-grow">
             <div class="text-h6">
               {{ project.name }}
@@ -128,6 +139,29 @@ function deleteProject(project: ProjectMeta) {
     })
     .onOk(() => {
       void projectStore.deleteProject(project.id);
+    });
+}
+
+function removeProject(project: ProjectMeta) {
+  quasar
+    .dialog({
+      title: `Remove project ${project.name}?`,
+      message:
+        'Are you sure you want to remove this project from the list? ' +
+        'This action does not delete the project, it only removes it from ' +
+        'the index.',
+      ok: {
+        label: 'Remove',
+        rounded: true,
+      },
+      cancel: {
+        label: 'Cancel',
+        rounded: true,
+        outline: true,
+      },
+    })
+    .onOk(() => {
+      void projectStore.removeProject(project.id);
     });
 }
 

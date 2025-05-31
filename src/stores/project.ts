@@ -105,6 +105,21 @@ export const useProjectStore = defineStore('project', () => {
     }
   }
 
+  async function removeProject(projectId: string) {
+    try {
+      await window.projectAPI.remove(projectId);
+    } catch (e) {
+      quasar.notify({
+        message: 'Failed to remove project',
+        caption: e.message,
+        color: 'negative',
+        group: 'project-error',
+      });
+    }
+
+    await loadIndex();
+  }
+
   return {
     projectIndex,
     project,
@@ -116,6 +131,7 @@ export const useProjectStore = defineStore('project', () => {
     loadIndex,
     loadProject,
     saveProject,
+    removeProject,
   };
 });
 
