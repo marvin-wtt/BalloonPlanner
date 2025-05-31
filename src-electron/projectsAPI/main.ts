@@ -13,6 +13,7 @@ import {
   removeProjectMeta,
   updateProjectMeta,
 } from 'app/src-electron/projectsAPI/index-store';
+import log from 'electron-log';
 
 export default () => {
   ipcMain.handle('project:index', projectApiHandler.index);
@@ -46,6 +47,8 @@ async function loadFromArgs(args: string[]) {
 }
 
 async function loadExternalFile(fullFilePath: string) {
+  log.info(`Loading project from external file: ${fullFilePath}`);
+
   const project = await readProjectFromPath(fullFilePath);
 
   const conflict = getProjectIndex().find(
@@ -61,6 +64,9 @@ async function loadExternalFile(fullFilePath: string) {
   };
 
   if (conflict) {
+    log.info(
+      `Project with id ${project.id} or file path ${fullFilePath} already exists. Updating index.`,
+    );
     updateProjectMeta(meta);
   } else {
     addProjectMeta(meta);
@@ -71,7 +77,7 @@ async function loadExternalFile(fullFilePath: string) {
       return;
     }
 
-    if (!win.webContents.isLoading()) {
+    if (win.webContents.isLoading()) {
       win.webContents.on('did-finish-load', () => {
         win.webContents.send('project:request-open', project);
       });

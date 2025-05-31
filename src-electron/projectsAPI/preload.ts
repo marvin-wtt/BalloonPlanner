@@ -9,9 +9,7 @@ const api: ProjectsAPI = {
   destroy: (...args: unknown[]) =>
     ipcRenderer.invoke('project:destroy', ...args),
   onOpenRequest: (callback) =>
-    ipcRenderer.on('project:request-open', (_event, id) => {
-      callback(id);
-    }),
+    ipcRenderer.on('project:request-open', (_event, id) => callback(id)),
 };
 
 export default api;
