@@ -31,33 +31,6 @@ export const useProjectStore = defineStore('project', () => {
     { deep: true },
   );
 
-  window.projectAPI.onOpenRequest((newProject) => {
-    // Directly switch to the new project if it's already loaded or not project is loaded
-    if (!project.value || project.value.id === newProject.id) {
-      project.value = newProject;
-    }
-
-    quasar
-      .dialog({
-        title: 'Switch Projects',
-        message: `Do you want to switch to project "${newProject.name}"?`,
-        ok: {
-          label: 'Open Project',
-          color: 'primary',
-          rounded: true,
-        },
-        cancel: {
-          label: 'Cancel',
-          color: 'primary',
-          rounded: true,
-          outline: true,
-        },
-      })
-      .onOk(() => {
-        project.value = newProject;
-      });
-  });
-
   async function loadIndex() {
     projectIndex.value = await window.projectAPI.index();
   }
