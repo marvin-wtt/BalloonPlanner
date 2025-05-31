@@ -110,6 +110,24 @@ export function useFlightOperations() {
     );
   }
 
+  function clearBalloon(balloonId: string) {
+    const balloon = flightStore.flight.vehicleGroups.find(
+      (group) => group.balloon.id === balloonId,
+    ).balloon;
+
+    balloon.operatorId = null;
+    balloon.passengerIds = [];
+  }
+
+  function clearCar(balloonId: string, carId: string) {
+    const balloon = flightStore.flight.vehicleGroups
+      .find((group) => group.balloon.id === balloonId)
+      .cars.find((c) => c.id === carId);
+
+    balloon.operatorId = null;
+    balloon.passengerIds = [];
+  }
+
   function createPerson(person: Omit<Person, 'id'>) {
     projectStore.project.people.push({
       ...person,
@@ -222,6 +240,8 @@ export function useFlightOperations() {
     addCarPassenger,
     removeBalloonPassenger,
     removeCarPassenger,
+    clearBalloon,
+    clearCar,
     createPerson,
     editPerson,
     removePerson,

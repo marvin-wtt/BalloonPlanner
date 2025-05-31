@@ -49,7 +49,13 @@
                 clickable
                 v-close-popup
               >
-                <q-item-section @click="onVehicleEdit()"> Edit</q-item-section>
+                <q-item-section @click="onVehicleEdit()">Edit</q-item-section>
+              </q-item>
+              <q-item
+                clickable
+                v-close-popup
+              >
+                <q-item-section @click="onVehicleClear()">Clear</q-item-section>
               </q-item>
               <q-item
                 clickable
@@ -138,8 +144,14 @@ import EditCarDialog from 'components/dialog/EditCarDialog.vue';
 import { useSettingsStore } from 'stores/settings';
 import { useProjectStore } from 'stores/project';
 
-const { removeCarFromVehicleGroup, removeVehicleGroup, editBalloon, editCar } =
-  useFlightOperations();
+const {
+  removeCarFromVehicleGroup,
+  removeVehicleGroup,
+  clearBalloon,
+  clearCar,
+  editBalloon,
+  editCar,
+} = useFlightOperations();
 const quasar = useQuasar();
 const { remainingCapacity } = useFlightUtils();
 const projectStore = useProjectStore();
@@ -235,6 +247,14 @@ function onVehicleRemoved() {
     removeVehicleGroup(assignment.id);
   } else {
     removeCarFromVehicleGroup(group.balloon.id, assignment.id);
+  }
+}
+
+function onVehicleClear() {
+  if (vehicle.value.type === 'balloon') {
+    clearBalloon(assignment.id);
+  } else {
+    clearCar(group.balloon.id, assignment.id);
   }
 }
 
