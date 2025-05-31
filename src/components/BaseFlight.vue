@@ -45,7 +45,11 @@ import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import { useFlightOperations } from 'src/composables/flight-operations';
 import { useSettingsStore } from 'stores/settings';
 import { storeToRefs } from 'pinia';
+import { useFlightStore } from 'stores/flight';
 
+const flightStore = useFlightStore();
+const { availablePeople, availableCars, availableBalloons } =
+  storeToRefs(flightStore);
 const settingsStore = useSettingsStore();
 const { groupAlignment } = storeToRefs(settingsStore);
 const { addVehicleGroup } = useFlightOperations();
@@ -63,6 +67,10 @@ function elementIsBalloon(element: Identifiable): element is Balloon {
   return flight.balloonIds.includes(element.id);
 }
 
+function elementIsCar(element: Identifiable): element is Balloon {
+  return flight.carIds.includes(element.id);
+}
+
 function elementIsPerson(element: Identifiable): element is Person {
   return flight.personIds.includes(element.id);
 }
@@ -73,18 +81,22 @@ function isDropAllowed(element: Identifiable): boolean {
   }
 
   if (elementIsPerson(element)) {
-    return true;
+    return !availablePeople.value.some((person) => person.id === element.id);
   }
 
-  return elementIsBalloon(element) && !flightContainsBalloon(element);
+  if (elementIsCar(element)) {
+    return !availableCars.value.some((car) => car.id === element.id);
+  }
+
+  if (elementIsBalloon(element)) {
+    return !flightContainsBalloon(element);
+  }
+
+  return false;
 }
 
 function flightContainsBalloon(balloon: Balloon): boolean {
-  return (
-    flight.vehicleGroups.findIndex(
-      (value) => value.balloon.id === balloon.id,
-    ) >= 0
-  );
+  return !availableBalloons.value.some((b) => b.id === balloon.id);
 }
 
 function onDrop(element: Identifiable) {
