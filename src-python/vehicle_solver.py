@@ -44,12 +44,29 @@ def solve(
     w_diversity: int = 3,
     w_new_vehicle: int = 5,
     w_second_leg: int = 20,
+    w_second_leg_weight: int = 30,
     # misc
     default_person_weight: int = 80,
     time_limit_s: int = 30,
 ):
     """Solve a *single* leg; call once per flight."""
     frozen = frozen or []
+
+    # ------------------------------------------------------------------
+    # 0. Input validation
+    # ------------------------------------------------------------------
+
+    if w_second_leg_weight < 0:
+        raise ValueError("w_second_leg_weight must be non-negative")
+
+    if default_person_weight < 0:
+        raise ValueError("default_person_weight must be non-negative")
+
+    if time_limit_s <= 0:
+        raise ValueError("time_limit_s must be positive")
+
+    if leg is not None and (leg > 2 or leg < 0):
+        raise ValueError("leg must be 0, 1, or 2")
 
     if leg is not None and leg > 1:
         if len(past_flights) == 0:
@@ -58,7 +75,7 @@ def solve(
             raise ValueError("Cluster must be provided for multi-leg flights")
 
     # ------------------------------------------------------------------
-    # 0. Fast look-ups
+    # 0.a Fast look-ups
     # ------------------------------------------------------------------
     vehicles = [dict(**b, kind="balloon") for b in balloons] + [
         dict(**c, kind="car") for c in cars
@@ -244,6 +261,17 @@ def solve(
             model.Add(short >= target - low_in_cars)
 
             objective_terms.append(+w_second_leg * short)
+
+        for bid, car_ids in cluster.items():
+            weight_budget = vehicles_by_id[bid]["max_weight"]
+
+            low_weight_in_cars = sum(
+                weight[p] * low[p] * pax[p, v] for v in car_ids for p in person_ids
+            )
+
+            over = model.NewIntVar(0, weight_budget, f"over_{bid}")
+            model.Add(over >= low_weight_in_cars - weight_budget)
+            objective_terms.append(w_second_leg_weight * over)
 
     model.Minimize(sum(objective_terms))
 
