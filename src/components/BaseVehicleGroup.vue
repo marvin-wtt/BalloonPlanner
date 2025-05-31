@@ -14,7 +14,7 @@
       </div>
 
       <div
-        class="row q-gutter-md q-pa-md q-pb-lg"
+        class="q-gutter-md q-pa-md q-pb-lg"
         :class="groupAlignment === 'vertical' ? 'row' : 'column'"
       >
         <q-badge
@@ -44,10 +44,11 @@
         </div>
 
         <!-- Cars -->
-        <div>
+        <div
+          v-for="car in group.cars"
+          :key="car.id"
+        >
           <base-vehicle
-            v-for="car in group.cars"
-            :key="car.id"
             type="car"
             :assignment="car"
             :group
@@ -178,7 +179,7 @@ function drop(element: Identifiable) {
   border-style: dashed;
   border-width: 2px;
   border-color: $grey-7;
-  background-color: inherit;
+  background-color: $grey-3;
 
   .vehicle-group__label {
     background-color: $grey-3;
