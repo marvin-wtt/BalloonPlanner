@@ -57,27 +57,6 @@
         </project-card>
 
         <project-card>
-          <q-file
-            v-model="file"
-            ref="uploaderRef"
-            accept="application/json"
-            style="display: none"
-            @update:model-value="onFilesAdded"
-          />
-
-          <q-btn
-            class="add-btn"
-            icon="folder_open"
-            size="md"
-            stack
-            flat
-            @click="loadProject()"
-          >
-            Import Project
-          </q-btn>
-        </project-card>
-
-        <project-card>
           <q-btn
             class="add-btn"
             icon="add"
@@ -98,12 +77,10 @@
 import ProjectCard from 'components/ProjectCard.vue';
 import type { ProjectMeta } from 'app/src-common/entities';
 import { useRouter } from 'vue-router';
-import { QFile, useQuasar } from 'quasar';
+import { useQuasar } from 'quasar';
 import { useProjectStore } from 'stores/project';
 import { storeToRefs } from 'pinia';
-import { onBeforeMount, ref } from 'vue';
-import { readJsonFile } from 'src/util/json-file-reader';
-import { isProject } from 'src/util/validate-project';
+import { onBeforeMount } from 'vue';
 import ProjectEditDialog from 'components/dialog/ProjectEditDialog.vue';
 
 const router = useRouter();
@@ -112,31 +89,9 @@ const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { projectIndex } = storeToRefs(projectStore);
 
-const file = ref<File>();
-const uploaderRef = ref<QFile>(null);
-
 onBeforeMount(async () => {
   await projectStore.loadIndex();
 });
-
-function loadProject() {
-  uploaderRef.value.pickFiles();
-}
-
-async function onFilesAdded() {
-  const data = await readJsonFile(file.value);
-
-  if (!isProject(data)) {
-    quasar.notify({
-      message: 'Invalid project file',
-      caption: 'The file does not contain a valid project.',
-      type: 'negative',
-    });
-    return;
-  }
-
-  await projectStore.createProject(data);
-}
 
 async function downloadProject(project: ProjectMeta) {
   await projectStore.loadProject(project.id);
