@@ -180,7 +180,7 @@ export default defineConfig(() => {
       builder: {
         // https://www.electron.build/configuration/configuration
 
-        appId: 'balloon-organizer',
+        appId: 'balloon-planner',
 
         extraResources: [
           {

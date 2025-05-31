@@ -1,4 +1,4 @@
-# Balloon Organizer
+# Balloon Planner
 
 An application to organize hot air balloon crews for youth camps. This tool helps manage balloons, cars, counselors, and participants for balloon flights during youth camp activities.
 
