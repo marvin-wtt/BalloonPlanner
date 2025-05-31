@@ -17,7 +17,7 @@
     >
       <div
         id="flight-content"
-        class="full-width"
+        class="full-width q-gutter-md q-pa-sm q-mt-xs"
         :class="groupAlignment === 'vertical' ? 'column' : 'row'"
       >
         <base-vehicle-group

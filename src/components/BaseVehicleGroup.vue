@@ -1,7 +1,7 @@
 <template>
   <drop-zone
     :accepted="isDropAccepted"
-    class="q-ma-md vehicle-group"
+    class="vehicle-group"
     :class="styleClass"
     @dropped="drop"
   >
