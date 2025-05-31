@@ -173,7 +173,7 @@
       <!-- Flight overview -->
       <div
         v-if="showFlightView"
-        class="col-grow bg-grey-3 flex"
+        class="col-grow flex flight-view"
       >
         <base-flight
           :flight
@@ -343,7 +343,7 @@ async function smartFill(options: SmartFillOptions) {
 
 async function onExportImage() {
   const container = document.createElement('div');
-  container.classList.add('exporter-wrapper');
+  container.classList.add('exporter-wrapper', 'flight-view');
   const src = document.getElementById('flight-content');
   const clone = src.cloneNode(true) as HTMLElement;
   clone.classList.add('no-wrap', 'fit');
@@ -352,7 +352,6 @@ async function onExportImage() {
     top: 0,
     left: 0,
     zIndex: -1,
-    backgroundColor: 'white', // TODO Set correct background color
     width: 'auto',
     height: 'auto',
   });
@@ -499,12 +498,16 @@ function formatPersonMeta(person: Person): string {
 }
 </script>
 
-<style>
+<style lang="scss">
 .q-tab__content {
   width: 90px !important;
 }
 
 .q-tab .q-badge {
   right: 0 !important;
+}
+
+.flight-view {
+  background-color: $grey-3;
 }
 </style>

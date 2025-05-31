@@ -171,6 +171,7 @@ function drop(element: Identifiable) {
   padding: 0 5px;
   border-radius: 10px;
   margin-left: 1em;
+  font-weight: bold;
 }
 
 .vehicle-group__dashed {
