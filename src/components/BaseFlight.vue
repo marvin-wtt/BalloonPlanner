@@ -23,6 +23,7 @@
         <base-vehicle-group
           v-for="(group, i) in flight.vehicleGroups"
           :key="`vg-${i}`"
+          :label="`Group ${String.fromCharCode(65 + i)}`"
           :group
           :editable
         />

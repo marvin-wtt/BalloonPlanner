@@ -54,6 +54,7 @@ export interface Flight extends Identifiable {
 export interface ProjectSettings {
   showVehicleIndex?: boolean;
   showVehicleLabel?: boolean;
+  showGroupLabel?: boolean;
   showNumberOfFlights?: boolean;
   showPersonWeight?: boolean;
   showVehicleWeight?: boolean;

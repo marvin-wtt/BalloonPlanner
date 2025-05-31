@@ -22,7 +22,24 @@
               />
             </q-item-section>
             <q-item-section>
-              <q-item-label>Show vehicle names</q-item-label>
+              <q-item-label>Show vehicle name</q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-item
+            tag="label"
+            v-ripple
+          >
+            <q-item-section
+              avatar
+              top
+            >
+              <q-checkbox
+                v-model="showGroupLabel"
+                color="primary"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Show group name</q-item-label>
             </q-item-section>
           </q-item>
           <q-item
@@ -161,6 +178,7 @@ const settingsStore = useSettingsStore();
 const {
   showVehicleIndex,
   showVehicleLabel,
+  showGroupLabel,
   showNumberOfFlights,
   showPersonWeight,
   showVehicleWeight,

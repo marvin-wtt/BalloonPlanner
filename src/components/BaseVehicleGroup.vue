@@ -5,46 +5,55 @@
     :class="styleClass"
     @dropped="drop"
   >
-    <div
-      class="relative-position row q-gutter-md q-pa-md q-pb-lg"
-      :class="groupAlignment === 'vertical' ? 'row' : 'column'"
-    >
-      <q-badge
-        v-if="showWarning"
-        color="warning"
-        floating
-        rounded
+    <div class="relative-position">
+      <div
+        v-if="label && showGroupLabel"
+        class="vehicle-group__label"
       >
-        <q-icon
-          name="warning"
-          color="white"
-          size="1rem"
-        />
-        <q-tooltip>
-          {{ warningText }}
-        </q-tooltip>
-      </q-badge>
-      <!-- Balloon -->
-      <div>
-        <base-vehicle
-          :key="group.balloon.id"
-          type="balloon"
-          :assignment="group.balloon"
-          :group
-          :editable
-        />
+        {{ label }}
       </div>
 
-      <!-- Cars -->
-      <div>
-        <base-vehicle
-          v-for="car in group.cars"
-          :key="car.id"
-          type="car"
-          :assignment="car"
-          :group
-          :editable
-        />
+      <div
+        class="row q-gutter-md q-pa-md q-pb-lg"
+        :class="groupAlignment === 'vertical' ? 'row' : 'column'"
+      >
+        <q-badge
+          v-if="showWarning"
+          color="warning"
+          floating
+          rounded
+        >
+          <q-icon
+            name="warning"
+            color="white"
+            size="1rem"
+          />
+          <q-tooltip>
+            {{ warningText }}
+          </q-tooltip>
+        </q-badge>
+        <!-- Balloon -->
+        <div>
+          <base-vehicle
+            :key="group.balloon.id"
+            type="balloon"
+            :assignment="group.balloon"
+            :group
+            :editable
+          />
+        </div>
+
+        <!-- Cars -->
+        <div>
+          <base-vehicle
+            v-for="car in group.cars"
+            :key="car.id"
+            type="car"
+            :assignment="car"
+            :group
+            :editable
+          />
+        </div>
       </div>
     </div>
   </drop-zone>
@@ -66,13 +75,19 @@ import { useFlightOperations } from 'src/composables/flight-operations';
 import { useSettingsStore } from 'stores/settings';
 
 const settingsStore = useSettingsStore();
-const { groupAlignment, groupStyle } = storeToRefs(settingsStore);
+const { groupAlignment, groupStyle, showGroupLabel } =
+  storeToRefs(settingsStore);
 const flightStore = useFlightStore();
 const { flight, carMap, balloonMap } = storeToRefs(flightStore);
 const { addCarToVehicleGroup } = useFlightOperations();
 
-const { group, editable = false } = defineProps<{
+const {
+  group,
+  label,
+  editable = false,
+} = defineProps<{
   group: VehicleGroup;
+  label?: string;
   editable?: boolean;
 }>();
 
@@ -140,20 +155,37 @@ function drop(element: Identifiable) {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .vehicle-group {
   border-radius: 15px;
+}
+
+.vehicle-group > div {
+  padding: 0 3px;
+  margin-top: -0.8em;
+}
+
+.vehicle-group__label {
+  background: white none repeat scroll 0 0;
+  display: inline-block;
+  padding: 0 5px;
+  border-radius: 10px;
+  margin-left: 1em;
 }
 
 .vehicle-group__dashed {
   border-style: dashed;
   border-width: 2px;
-  border-color: #757575;
+  border-color: $grey-7;
   background-color: inherit;
+
+  .vehicle-group__label {
+    background-color: $grey-3;
+  }
 }
 
 .vehicle-group__highlighted {
   border: none;
-  background-color: #bdbdbd;
+  background-color: $grey-5;
 }
 </style>

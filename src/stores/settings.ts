@@ -10,6 +10,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const defaultSettings: ProjectSettings = {
     showVehicleIndex: true,
     showVehicleLabel: true,
+    showGroupLabel: true,
     showNumberOfFlights: true,
     showPersonWeight: false,
     showVehicleWeight: false,
