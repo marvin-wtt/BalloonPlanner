@@ -114,7 +114,10 @@ const syncIcon = computed<string>(() => {
 });
 
 const inIndexPage = computed<boolean>(() => {
-  return project.value == null || route.name === 'projects';
+  return (
+    project.value == null ||
+    (route.name !== 'flights' && route.name !== 'flight')
+  );
 });
 
 const label = computed<string>(() => {

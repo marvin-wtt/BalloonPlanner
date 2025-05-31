@@ -26,10 +26,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import('pages/ProjectCreationPage.vue'),
       },
       {
-        path: ':project',
-        component: () => undefined,
-      },
-      {
         path: ':projectId/flights',
         name: 'flights',
         component: () => import('pages/FlightPage.vue'),
