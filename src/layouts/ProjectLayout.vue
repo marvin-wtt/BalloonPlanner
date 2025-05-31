@@ -117,6 +117,7 @@ window.projectAPI.onOpenRequest((newProject) => {
     route.name === 'projects'
   ) {
     void openProject(newProject);
+    return;
   }
 
   quasar
@@ -136,7 +137,13 @@ window.projectAPI.onOpenRequest((newProject) => {
       },
     })
     .onOk(() => {
-      void openProject(newProject);
+      openProject(newProject).catch((error) => {
+        quasar.notify({
+          type: 'negative',
+          message: `Failed to open project "${newProject.name}"`,
+          caption: error.message,
+        });
+      });
     });
 });
 
@@ -169,6 +176,11 @@ async function onSaveProject() {
 
 async function openProject(newProject: Project) {
   project.value = newProject;
+
+  quasar.notify({
+    type: 'info',
+    message: `Opening project "${newProject.name}"...`,
+  });
 
   await router.push({
     name: 'flights',

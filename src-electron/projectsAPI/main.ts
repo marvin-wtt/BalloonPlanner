@@ -22,28 +22,39 @@ export default () => {
   ipcMain.handle('project:update', projectApiHandler.update);
   ipcMain.handle('project:destroy', projectApiHandler.destroy);
 
-  void loadFromArgs(process.argv);
+  ipcMain.on('project:ready', () => {
+    loadFromArgs(process.argv).catch((err) => {
+      log.error(
+        `Failed to load project from process args: ${process.argv.join(' | ')}`,
+        err,
+      );
+    });
+  });
 
-  app.on('open-file', (event, fullFilePath) => {
-    void loadExternalFile(fullFilePath);
+  app.on('open-file', (_event, fullFilePath) => {
+    loadExternalFile(fullFilePath).catch((err) => {
+      log.error(`Failed to load project from file: ${fullFilePath}`, err);
+    });
   });
 
   app.on('second-instance', (_event, argv) => {
-    void loadFromArgs(argv);
+    loadFromArgs(argv).catch((err) => {
+      log.error(`Failed to load project from args: ${argv.join(' | ')}`, err);
+    });
   });
 };
 
-async function loadFromArgs(args: string[]) {
-  if (args.length < 2) {
-    return;
-  }
+async function loadFromArgs(argv: string[]) {
+  for (let i = 1; i < argv.length; i++) {
+    if (argv[i].startsWith('-')) {
+      continue;
+    }
 
-  const fullFilePath = args[1];
-  if (!fullFilePath) {
-    return;
+    if (argv[i].endsWith('.bpp') || argv[i].endsWith('.json')) {
+      await loadExternalFile(argv[i]);
+      break;
+    }
   }
-
-  await loadExternalFile(fullFilePath);
 }
 
 async function loadExternalFile(fullFilePath: string) {
@@ -77,13 +88,7 @@ async function loadExternalFile(fullFilePath: string) {
       return;
     }
 
-    if (win.webContents.isLoading()) {
-      win.webContents.on('did-finish-load', () => {
-        win.webContents.send('project:request-open', project);
-      });
-    } else {
-      win.webContents.send('project:request-open', project);
-    }
+    win.webContents.send('project:request-open', project);
   });
 }
 
