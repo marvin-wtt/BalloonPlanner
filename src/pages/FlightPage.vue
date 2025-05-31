@@ -15,7 +15,7 @@
         :class="menuClasses"
       >
         <q-tabs
-          v-model="menuTabs"
+          :model-value="menuTab"
           vertical
           active-bg-color="grey-6"
           class="bg-grey-10 text-white column justify-between"
@@ -24,6 +24,7 @@
             label="Overview"
             name="overview"
             icon="home"
+            @click.prevent="changeTab('overview')"
           />
           <q-separator
             spaced
@@ -34,6 +35,7 @@
             label="Balloons"
             name="balloons"
             icon="mdi-airballoon"
+            @click.prevent="changeTab('balloons')"
           >
             <q-badge
               v-if="showBalloonsMenuBadge"
@@ -47,6 +49,7 @@
             label="Cars"
             name="cars"
             icon="airport_shuttle"
+            @click.prevent="changeTab('cars')"
           >
             <q-badge
               v-if="showCarsMenuBadge"
@@ -58,8 +61,9 @@
           </q-tab>
           <q-tab
             label="Counselors"
-            name="supervisors"
+            name="counselors"
             icon="supervisor_account"
+            @click.prevent="changeTab('counselors')"
           >
             <q-badge
               v-if="showCounselorsMenuBadge"
@@ -73,6 +77,7 @@
             label="Participants"
             name="participants"
             icon="group"
+            @click.prevent="changeTab('participants')"
           >
             <q-badge
               v-if="showParticipantsMenuBadge"
@@ -91,15 +96,16 @@
             label="Settings"
             name="settings"
             icon="settings"
+            @click.prevent="changeTab('settings')"
           />
         </q-tabs>
 
         <div
           class="col-grow self-stretch column"
-          v-if="menuTabs !== 'overview'"
+          v-if="menuTab !== 'overview'"
         >
           <q-tab-panels
-            v-model="menuTabs"
+            v-model="menuTab"
             animated
             transition-next="jump-up"
             transition-prev="jump-down"
@@ -117,7 +123,7 @@
             />
 
             <q-tab-panel
-              name="supervisors"
+              name="counselors"
               class="column bg-grey-2 q-pa-none"
             >
               <q-scroll-area class="col-grow self-stretch q-pa-md">
@@ -258,7 +264,7 @@ const { showNumberOfFlights, showPersonWeight } = storeToRefs(settingsStore);
 const { createPerson, editPerson, removePerson, addPerson } =
   useFlightOperations();
 
-const menuTabs = ref('overview');
+const menuTab = ref('overview');
 const editable = ref<boolean>(true);
 
 onMounted(init);
@@ -432,6 +438,10 @@ function showDeletePerson(person: Person) {
     });
 }
 
+function changeTab(name: string) {
+  menuTab.value = menuTab.value !== name ? name : 'overview';
+}
+
 const showBalloonsMenuBadge = computed<boolean>(() => {
   return availableBalloons.value.length > 0;
 });
@@ -472,11 +482,11 @@ const availableCounselors = computed<Person[]>(() => {
 });
 
 const showFlightView = computed<boolean>(() => {
-  return !quasar.screen.xs || menuTabs.value === 'overview';
+  return !quasar.screen.xs || menuTab.value === 'overview';
 });
 
 const menuClasses = computed<string>(() => {
-  return menuTabs.value !== 'overview'
+  return menuTab.value !== 'overview'
     ? 'col-xl-3 col-lg-3 col-md-4 col-sm-6 col-xs-12'
     : '';
 });
