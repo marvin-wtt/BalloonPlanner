@@ -18,6 +18,7 @@
 
 import { contextBridge } from 'electron';
 import windowAPI from './windowAPI/preload';
+import appAPI from './appAPI/preload';
 import solverAPI from './solverAPI/preload';
 import projectAPI from './projectsAPI/preload';
 import { ipcRenderer } from 'electron';
@@ -41,5 +42,6 @@ ipcRenderer.invoke = async (channel: string, ...args: unknown[]) => {
 };
 
 contextBridge.exposeInMainWorld('windowAPI', windowAPI);
+contextBridge.exposeInMainWorld('appAPI', appAPI);
 contextBridge.exposeInMainWorld('solverAPI', solverAPI);
 contextBridge.exposeInMainWorld('projectAPI', projectAPI);

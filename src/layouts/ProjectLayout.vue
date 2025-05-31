@@ -45,35 +45,40 @@
         </div>
         <q-space />
 
+        <update-btn
+          icon="info"
+          dense
+          flat
+          rounded
+        />
+
         <q-separator
           vertical
           dark
           inset
         />
 
-        <template v-if="quasar.platform.is.electron">
-          <q-btn
-            icon="minimize"
-            dense
-            flat
-            rounded
-            @click="minimize()"
-          />
-          <q-btn
-            icon="crop_square"
-            dense
-            flat
-            rounded
-            @click="toggleMaximize()"
-          />
-          <q-btn
-            icon="close"
-            dense
-            flat
-            rounded
-            @click="closeApp()"
-          />
-        </template>
+        <q-btn
+          icon="minimize"
+          dense
+          flat
+          rounded
+          @click="minimize()"
+        />
+        <q-btn
+          icon="crop_square"
+          dense
+          flat
+          rounded
+          @click="toggleMaximize()"
+        />
+        <q-btn
+          icon="close"
+          dense
+          flat
+          rounded
+          @click="closeApp()"
+        />
       </q-bar>
     </q-header>
 
@@ -89,14 +94,12 @@
 
 <script lang="ts" setup>
 import { minimize, toggleMaximize, closeApp } from 'src/composables/windowAPI';
-import { useQuasar } from 'quasar';
 import { useRoute } from 'vue-router';
 import { useProjectStore } from 'stores/project';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import FlightSelectionItem from 'components/toolbar/FlightSelectionItem.vue';
-
-const quasar = useQuasar();
+import UpdateBtn from 'components/UpdateBtn.vue';
 
 const route = useRoute();
 const projectStore = useProjectStore();

@@ -1,11 +1,11 @@
 import { app, BrowserWindow } from 'electron';
+import initAppApiHandler from 'app/src-electron/appAPI/main';
 import initWindowApiHandler from 'app/src-electron/windowAPI/main';
 import initProjectApiHandler from 'app/src-electron/projectsAPI/main';
 import initSolverApiHandler from 'app/src-electron/solverAPI/main';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'node:url';
-import electronUpdater, { type AppUpdater } from 'electron-updater';
 import log from 'electron-log';
 
 // needed in case process is undefined under Linux
@@ -68,23 +68,13 @@ async function createWindow() {
   }
 }
 
-export function getAutoUpdater(): AppUpdater {
-  // Using destructuring to access autoUpdater due to the CommonJS module of 'electron-updater'.
-  // It is a workaround for ESM compatibility issues, see https://github.com/electron-userland/electron-builder/issues/7976.
-  const { autoUpdater } = electronUpdater;
-
-  autoUpdater.logger = log;
-
-  return autoUpdater;
-}
-
 app
   .whenReady()
   .then(initWindowApiHandler)
+  .then(initAppApiHandler)
   .then(initProjectApiHandler)
   .then(initSolverApiHandler)
   .then(createWindow)
-  .then(() => getAutoUpdater().checkForUpdatesAndNotify())
   .catch((reason) => {
     console.error(`Failed to start application: ${reason}`);
   });
