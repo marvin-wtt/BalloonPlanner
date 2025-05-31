@@ -21,22 +21,29 @@ export default () => {
   ipcMain.handle('project:update', projectApiHandler.update);
   ipcMain.handle('project:destroy', projectApiHandler.destroy);
 
+  void loadFromArgs(process.argv);
+
   app.on('open-file', (event, fullFilePath) => {
     void loadExternalFile(fullFilePath);
   });
 
   app.on('second-instance', (_event, argv) => {
-    if (argv.length < 2) {
-      return;
-    }
-
-    const filePath = argv[1];
-    if (!filePath) {
-      return;
-    }
-    void loadExternalFile(filePath);
+    void loadFromArgs(argv);
   });
 };
+
+async function loadFromArgs(args: string[]) {
+  if (args.length < 2) {
+    return;
+  }
+
+  const fullFilePath = args[1];
+  if (!fullFilePath) {
+    return;
+  }
+
+  await loadExternalFile(fullFilePath);
+}
 
 async function loadExternalFile(fullFilePath: string) {
   const project = await readProjectFromPath(fullFilePath);
@@ -60,7 +67,17 @@ async function loadExternalFile(fullFilePath: string) {
   }
 
   BrowserWindow.getAllWindows().forEach((win) => {
-    win.webContents.send('project:request-open', project);
+    if (win.isDestroyed()) {
+      return;
+    }
+
+    if (!win.webContents.isLoading()) {
+      win.webContents.on('did-finish-load', () => {
+        win.webContents.send('project:request-open', project);
+      });
+    } else {
+      win.webContents.send('project:request-open', project);
+    }
   });
 }
 
