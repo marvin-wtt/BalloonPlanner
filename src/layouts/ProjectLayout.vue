@@ -21,7 +21,7 @@
             />
 
             <q-btn
-              v-if="project"
+              v-if="project && !inIndexPage"
               :icon="syncIcon"
               :disable="!isDorty"
               :loading="isSaving"
