@@ -489,12 +489,16 @@ function formatPersonMeta(person: Person): string {
   const parts: string[] = [];
 
   if (showPersonWeight.value) {
-    parts.push(`${person.weight ?? '?'} kg`);
+    const weight = person.weight ?? personDefaultWeight.value ?? '?';
+    const suffix = !person.weight && personDefaultWeight.value ? '*' : '';
+
+    parts.push(`${weight}${suffix} kg`);
   }
 
   if (showNumberOfFlights.value) {
     const flights = numberOfFlights.value[person.id] ?? 0;
     const suffix = flights === 0 && person.firstTime ? '*' : '';
+
     parts.push(`${flights}${suffix}`);
   }
 
