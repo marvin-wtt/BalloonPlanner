@@ -44,6 +44,7 @@
                 step="1"
                 :rules="[signedIntegerRule]"
                 hide-bottom-space
+                clearablex
                 dense
                 outlined
                 rounded
@@ -55,6 +56,7 @@
                 step="1"
                 :rules="[signedIntegerRule]"
                 hide-bottom-space
+                clearable
                 dense
                 outlined
                 rounded
@@ -66,6 +68,7 @@
                 step="1"
                 :rules="[signedIntegerRule]"
                 hide-bottom-space
+                clearable
                 dense
                 outlined
                 rounded
@@ -78,6 +81,7 @@
                 step="1"
                 :rules="[signedIntegerRule]"
                 hide-bottom-space
+                clearable
                 dense
                 outlined
                 rounded
@@ -90,6 +94,7 @@
                 step="1"
                 :rules="[signedIntegerRule]"
                 hide-bottom-space
+                clearable
                 dense
                 outlined
                 rounded
@@ -101,6 +106,7 @@
                 step="1"
                 :rules="[signedIntegerRule]"
                 hide-bottom-space
+                clearable
                 dense
                 outlined
                 rounded
@@ -112,6 +118,7 @@
                 step="1"
                 :rules="[signedIntegerRule]"
                 hide-bottom-space
+                clearable
                 dense
                 outlined
                 rounded
@@ -123,6 +130,7 @@
                 step="1"
                 :rules="[signedIntegerRule]"
                 hide-bottom-space
+                clearable
                 dense
                 outlined
                 rounded
@@ -134,6 +142,7 @@
                 step="1"
                 :rules="[signedIntegerRule]"
                 hide-bottom-space
+                clearable
                 dense
                 outlined
                 rounded
@@ -145,6 +154,7 @@
                 step="1"
                 :rules="[signedIntegerRule]"
                 hide-bottom-space
+                clearable
                 dense
                 outlined
                 rounded
