@@ -1,4 +1,10 @@
-import { app, BrowserWindow, ipcMain, type IpcMainEvent } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  type IpcMainEvent,
+  dialog,
+} from 'electron';
 import type { Project } from 'app/src-common/entities';
 import {
   deleteProjectFromPath,
@@ -22,6 +28,7 @@ export default () => {
   ipcMain.handle('project:update', projectApiHandler.update);
   ipcMain.handle('project:destroy', projectApiHandler.destroy);
   ipcMain.handle('project:remove', projectApiHandler.remove);
+  ipcMain.on('project:open-file', projectApiHandler.openFile);
 
   ipcMain.on('project:ready', () => {
     loadFromArgs(process.argv).catch((err) => {
@@ -106,6 +113,7 @@ const projectApiHandler = {
   update: handleEvent(update),
   destroy: handleEvent(destroy),
   remove: handleEvent(remove),
+  openFile: handleEvent(openFile),
 };
 
 async function store(project: Project) {
@@ -148,4 +156,19 @@ async function destroy(id: string) {
 
 function remove(id: string) {
   removeProjectMeta(id);
+}
+
+async function openFile() {
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile'],
+    buttonLabel: 'Open',
+    filters: [{ name: 'Projects', extensions: ['bpp', 'json'] }],
+  });
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return;
+  }
+
+  const fullFilePath = result.filePaths[0];
+  await loadExternalFile(fullFilePath);
 }

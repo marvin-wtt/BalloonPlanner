@@ -19,6 +19,7 @@ export interface ProjectsAPI {
   destroy: (id: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
   onOpenRequest: (callback: (meta: Project) => void) => void;
+  openFile: () => void;
 }
 
 export interface SolverAPI {

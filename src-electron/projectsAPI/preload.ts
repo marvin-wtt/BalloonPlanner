@@ -14,6 +14,8 @@ const api: ProjectsAPI = {
 
     ipcRenderer.send('project:ready');
   },
+  openFile: (...args: unknown[]) =>
+    ipcRenderer.send('project:open-file', ...args),
 };
 
 export default api;

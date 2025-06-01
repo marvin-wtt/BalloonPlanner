@@ -69,6 +69,19 @@
 
         <project-card>
           <q-btn
+            icon="folder_open"
+            class="add-btn"
+            size="md"
+            stack
+            flat
+            @click="loadProject()"
+          >
+            Open Project
+          </q-btn>
+        </project-card>
+
+        <project-card>
+          <q-btn
             class="add-btn"
             icon="add"
             size="md"
@@ -193,6 +206,10 @@ async function editProject(
 
 async function createProject() {
   await router.push('/projects/create');
+}
+
+function loadProject() {
+  window.projectAPI.openFile();
 }
 </script>
 
