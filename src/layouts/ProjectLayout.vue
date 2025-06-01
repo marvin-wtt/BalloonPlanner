@@ -188,3 +188,9 @@ async function openProject(newProject: Project) {
   });
 }
 </script>
+
+<style>
+body {
+  overflow: hidden;
+}
+</style>
