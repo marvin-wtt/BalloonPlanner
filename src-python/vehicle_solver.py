@@ -215,7 +215,7 @@ def solve(
             bonus = max_flights - flights_so_far[p]
             objective_terms.append(-w_fair * bonus * op[p, v])
 
-    # 3.2 low-flight pax in balloons  (participants > counselors)
+    # 3.2 low-flight pax in balloons (participants > counselors)
     for p, v in product(person_ids, vehicle_ids):
         if kind[v] == "balloon":
             bonus = max_flights - flights_so_far[p]
@@ -263,7 +263,10 @@ def solve(
             objective_terms.append(+w_second_leg * short)
 
         for bid, car_ids in cluster.items():
-            weight_budget = vehicles_by_id[bid]["max_weight"]
+            if max_weight[bid] <= 0:
+                continue
+
+            weight_budget = max_weight[bid]
 
             low_weight_in_cars = sum(
                 weight[p] * low[p] * pax[p, v] for v in car_ids for p in person_ids
