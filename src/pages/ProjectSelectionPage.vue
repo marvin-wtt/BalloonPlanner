@@ -9,7 +9,7 @@
           @click="openProject(meta)"
         >
           <q-btn
-            v-if="meta.isInternal"
+            v-if="!meta.isInternal"
             icon="close"
             class="absolute q‐ma‐xs z-top"
             style="top: 3px; right: 3px"
