@@ -197,7 +197,7 @@ def main(argv: List[str] | None = None) -> None:
             time_limit_s=args.time_limit,
         )
 
-        output = transform_output(manifest, cluster)
+        output = transform_output(manifest, cluster, groups)
         json.dump(output, sys.stdout)
         sys.stdout.write("\n")
         sys.exit(0)

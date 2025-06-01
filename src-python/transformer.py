@@ -1,3 +1,6 @@
+from typing import Dict, List, Any
+
+
 def transform_input_payload(balloons, cars, people, groups, history):
     balloons = _transform_list(
         balloons,
@@ -140,40 +143,126 @@ def _transform_flights(flights: list[dict]) -> list[dict]:
 
 
 def transform_output(
-    vehicle_info: dict[str, dict[str, str]], clusters: dict[str, list[str]]
-) -> list[list[str]]:
-    """
-    Given:
-      - vehicle_info: a dict mapping vehicle_id -> {
-            'operator': str,
-            'passengers': List[str]
-        }
-      - groups: a list of groups, each with:
-          {
-            'balloon': {'id': str, ...},
-            'cars':   [{'id': str, ...}, ...]
-          }
-    Returns a new list of groups where each balloon and car gets
-    'operatorId' and 'passengerIds' populated from vehicle_info.
-    """
-    groups = []
+    vehicle_info: Dict[str, Dict[str, Any]],
+    clusters: Dict[str, List[str]],
+    original_groups: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    result_groups: List[Dict[str, Any]] = []
+    seen_balloons = set()
 
-    for b_id, vehicles in clusters.items():
-        # Copy the group to avoid mutating the input
-        new_group = {"balloon": {}, "cars": []}
+    # Helper to merge “original order” vs “final assignment” for passengers
+    def _ordered_passengers(
+        vid: str,  # vehicle ID (balloon or car)
+        orig_list: List[
+            str
+        ],  # original payload’s passengerIds for this vid (might be [])
+        final_list: List[str],  # vehicle_info[vid]["passengers"]
+    ) -> List[str]:
+        ordered = []
+        seen = set()
 
-        # Enrich balloon
-        info = vehicle_info.get(b_id, {})
-        new_group["balloon"] = {
+        # 1) take everyone from orig_list that still appears in final_list, in that order
+        for p in orig_list:
+            if p in final_list:
+                ordered.append(p)
+                seen.add(p)
+
+        # 2) append any remaining from final_list that weren’t in orig_list
+        for p in final_list:
+            if p not in seen:
+                ordered.append(p)
+
+        return ordered
+
+    # --- 1) First pass: process every group in original_groups, in the given order ---
+    for group in original_groups:
+        # a) what balloon ID did this original group have?
+        b_obj = group.get("balloon", {})
+        b_id = b_obj.get("id")
+        if b_id is None:
+            continue
+
+        # b) if that balloon isn’t actually in clusters, skip it
+        if b_id not in clusters:
+            continue
+
+        # c) Build a new group entry for b_id
+        seen_balloons.add(b_id)
+
+        #   (i) balloon’s operatorId from vehicle_info
+        balloon_info = vehicle_info.get(b_id, {})
+        new_balloon_block: Dict[str, Any] = {
             "id": b_id,
-            "operatorId": info.get("operator", None),
-            "passengerIds": info.get("passengers", []),
+            "operatorId": balloon_info.get("operator", None),
+            # preserve passenger‐order: compare orig vs final
+            "passengerIds": _ordered_passengers(
+                b_id,
+                b_obj.get("passengerIds", []),
+                balloon_info.get("passengers", []),
+            ),
         }
 
-        # Enrich cars
-        for c_id in vehicles:
+        #   (ii) figure out which cars from original “group['cars']” still ended up in clusters[b_id],
+        #        in the exact same order, then append any brand‐new cars afterward
+        orig_car_ids = [
+            c.get("id") for c in group.get("cars", []) if c.get("id") is not None
+        ]
+        assigned_car_ids = clusters[b_id]
+
+        #   (ii.a) those original cars that the solver still assigned under this balloon
+        kept_cars = [c_id for c_id in orig_car_ids if c_id in assigned_car_ids]
+
+        #   (ii.b) any cars in assigned_car_ids that weren’t already in kept_cars
+        #          (in the order they appear in assigned_car_ids)
+        new_cars = [c_id for c_id in assigned_car_ids if c_id not in kept_cars]
+
+        ordered_car_ids = kept_cars + new_cars
+
+        #   (iii) build each car’s block, preserving its passenger‐order vs final assignment
+        new_car_blocks: List[Dict[str, Any]] = []
+        #     to look up the original “passengerIds” for a given car-id:
+        orig_car_map = {
+            c["id"]: c.get("passengerIds", []) for c in group.get("cars", [])
+        }
+
+        for c_id in ordered_car_ids:
             c_info = vehicle_info.get(c_id, {})
-            new_group["cars"].append(
+            orig_pax = orig_car_map.get(c_id, [])
+            final_pax = c_info.get("passengers", [])
+            new_car_blocks.append(
+                {
+                    "id": c_id,
+                    "operatorId": c_info.get("operator", None),
+                    "passengerIds": _ordered_passengers(c_id, orig_pax, final_pax),
+                }
+            )
+
+        #   (iv) append this new group to the result
+        result_groups.append(
+            {
+                "balloon": new_balloon_block,
+                "cars": new_car_blocks,
+            }
+        )
+
+    # --- 2) Second pass: append any leftover balloons that never appeared in original_groups ---
+    for b_id, assigned_car_ids in clusters.items():
+        if b_id in seen_balloons:
+            continue
+
+        #   (i) balloon block, with final passengers
+        balloon_info = vehicle_info.get(b_id, {})
+        new_balloon_block = {
+            "id": b_id,
+            "operatorId": balloon_info.get("operator", None),
+            "passengerIds": balloon_info.get("passengers", []),
+        }
+
+        #   (ii) cars, in the order clusters[b_id] provides
+        new_car_blocks: List[Dict[str, Any]] = []
+        for c_id in assigned_car_ids:
+            c_info = vehicle_info.get(c_id, {})
+            new_car_blocks.append(
                 {
                     "id": c_id,
                     "operatorId": c_info.get("operator", None),
@@ -181,8 +270,14 @@ def transform_output(
                 }
             )
 
-        groups.append(new_group)
-    return groups
+        result_groups.append(
+            {
+                "balloon": new_balloon_block,
+                "cars": new_car_blocks,
+            }
+        )
+
+    return result_groups
 
 
 def _transform_list(items: list[dict], mapping: dict[str, str]) -> list[dict]:

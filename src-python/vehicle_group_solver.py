@@ -82,13 +82,22 @@ def build_clusters(
     for bal in balloons:
         bid = bal["id"]
         need = bal["capacity"]  # seats to reserve
-        for cid in clusters[bid]:
-            if need == 0:
+
+        existing = precluster.get(bid, [])
+        cluster_cars = clusters.get(bid, [])
+
+        # (1) Keep only those existing cars that actually ended up in this cluster
+        existing_in_cluster = [c for c in existing if c in cluster_cars]
+        # (2) All the others in clusters[bid] that were not in `existing_in_cluster`
+        new_cars = [c for c in cluster_cars if c not in existing_in_cluster]
+
+        for cid in existing_in_cluster + new_cars:
+            if need <= 0:
                 break
             car = car_by_id[cid]
-            pass_cap = car["capacity"] - 1  # seats excl. driver
+            pass_cap = max(car["capacity"] - 1, 0)  # seats excl. driver
             take = min(need, pass_cap)
-            car["capacity"] -= take  # reserve seats
+            car["capacity"] -= take
             need -= take
         if need > 0:
             raise RuntimeError(
