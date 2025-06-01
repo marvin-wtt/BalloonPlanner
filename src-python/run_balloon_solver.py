@@ -125,12 +125,20 @@ def main(argv: List[str] | None = None) -> None:
         ),
     )
     parser.add_argument(
+        "--counselor-flight-discount",
+        type=int,
+        default=1,
+        help=(
+            "Amount of flights added to a counselor's flight count in order to "
+            "prefer participants over counselors."
+        ),
+    )
+    parser.add_argument(
         "--default-person-weight",
         type=int,
         default=80,
         help="Fallback weight in kilograms for people whose weight is unknown.",
     )
-
     parser.add_argument(
         "--time-limit",
         type=int,
@@ -184,6 +192,7 @@ def main(argv: List[str] | None = None) -> None:
             w_divers_nationalities=args.w_nationality_diversity,
             w_low_flights_second_leg=args.w_second_leg,
             w_overweight_second_leg=args.w_second_leg_overweight,
+            counselor_flight_discount=args.counselor_flight_discount,
             default_person_weight=args.default_person_weight,
             time_limit_s=args.time_limit,
         )

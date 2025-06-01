@@ -47,6 +47,7 @@ def solve(
     w_vehicle_rotation: int,
     w_low_flights_second_leg: int,
     w_overweight_second_leg: int,
+    counselor_flight_discount: int,
     # misc
     default_person_weight: int,
     time_limit_s: int,
@@ -224,7 +225,7 @@ def solve(
         if kind[v] == "balloon":
             bonus = max_flights - flights_so_far[p]
             if not is_participant[p]:
-                bonus *= 0.5  # halve importance
+                bonus = max(bonus - counselor_flight_discount, 0)
             objective_terms.append(-w_passenger_fairness * bonus * pax[p, v])
 
     # 3.3 mo participants alone

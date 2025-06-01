@@ -138,6 +138,12 @@ function buildFlagArgs(opts?: SmartFillOptions): string[] {
   if (opts.wSecondLegOverweight != null) {
     args.push('--w-second-leg-overweight', String(opts.wSecondLegOverweight));
   }
+  if (opts.counselorFlightDiscount != null) {
+    args.push(
+      '--counselor-flight-discount',
+      String(opts.counselorFlightDiscount),
+    );
+  }
   if (opts.timeLimit != null) {
     args.push('--time-limit', String(opts.timeLimit));
   }

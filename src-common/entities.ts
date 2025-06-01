@@ -101,6 +101,7 @@ export interface SmartFillOptions {
   wSecondLegOverweight?: number;
   wNoSoloParticipant?: number;
   wClusterPassengerBalance?: number;
+  counselorFlightDiscount?: number;
   timeLimit?: number;
   defaultPersonWeight?: number;
   leg?: 'first' | 'second' | undefined;

@@ -38,75 +38,113 @@
               </q-item>
 
               <q-input
-                v-model="options.wPassengerFairness"
+                v-model.number="options.wPassengerFairness"
                 label="Passenger Fairness Weight"
                 type="number"
+                step="1"
+                :rules="[signedIntegerRule]"
+                hide-bottom-space
                 dense
                 outlined
                 rounded
               />
               <q-input
-                v-model="options.wClusterPassengerBalance"
+                v-model.number="options.counselorFlightDiscount"
+                label="Counselor Flight Disadvantage over Participants"
+                type="number"
+                step="1"
+                :rules="[signedIntegerRule]"
+                hide-bottom-space
+                dense
+                outlined
+                rounded
+              />
+              <q-input
+                v-model.number="options.wClusterPassengerBalance"
                 label="Group Passenger Distribution Weight"
                 type="number"
+                step="1"
+                :rules="[signedIntegerRule]"
+                hide-bottom-space
                 dense
                 outlined
                 rounded
               />
               <q-input
                 v-if="options.leg != null"
-                v-model="options.wSecondLegFairness"
+                v-model.number="options.wSecondLegFairness"
                 label="Second Leg Fairness Weight"
                 type="number"
+                step="1"
+                :rules="[signedIntegerRule]"
+                hide-bottom-space
                 dense
                 outlined
                 rounded
               />
               <q-input
                 v-if="options.leg != null"
-                v-model="options.wSecondLegOverweight"
+                v-model.number="options.wSecondLegOverweight"
                 label="Second Leg Overweight Penalty Weight"
                 type="number"
+                step="1"
+                :rules="[signedIntegerRule]"
+                hide-bottom-space
                 dense
                 outlined
                 rounded
               />
               <q-input
-                v-model="options.wPilotFairness"
+                v-model.number="options.wPilotFairness"
                 label="Pilot Fairness Weight"
                 type="number"
+                step="1"
+                :rules="[signedIntegerRule]"
+                hide-bottom-space
                 dense
                 outlined
                 rounded
               />
               <q-input
-                v-model="options.wVehicleRotation"
+                v-model.number="options.wVehicleRotation"
                 label="Vehicle Rotation Weight"
                 type="number"
+                step="1"
+                :rules="[signedIntegerRule]"
+                hide-bottom-space
                 dense
                 outlined
                 rounded
               />
               <q-input
-                v-model="options.wNoSoloParticipant"
+                v-model.number="options.wNoSoloParticipant"
                 label="No Solo Participants Weight"
                 type="number"
+                step="1"
+                :rules="[signedIntegerRule]"
+                hide-bottom-space
                 dense
                 outlined
                 rounded
               />
               <q-input
-                v-model="options.wNationalityDiversity"
+                v-model.number="options.wNationalityDiversity"
                 label="Nationality Diversity Weight"
                 type="number"
+                step="1"
+                :rules="[signedIntegerRule]"
+                hide-bottom-space
                 dense
                 outlined
                 rounded
               />
               <q-input
-                v-model="options.timeLimit"
+                v-model.number="options.timeLimit"
                 label="Time Limit (seconds)"
                 type="number"
+                step="1"
+                :rules="[signedIntegerRule]"
+                hide-bottom-space
                 dense
                 outlined
                 rounded
@@ -157,6 +195,10 @@ const flightLegOptions = [
   { label: 'First', value: 'first' },
   { label: 'Second', value: 'second' },
 ];
+
+const signedIntegerRule = (val?: number): boolean | string => {
+  return !val || Number.isInteger(val) || 'Must be an integer';
+};
 
 function onSubmit() {
   onDialogOK(toRaw(options));
