@@ -225,7 +225,7 @@ const infoMessage = computed<InfoMessage | null>(() => {
   if (assignment.passengerIds.length > capacity.value - 1) {
     return {
       message: 'Too many passengers for this vehicle.',
-      color: 'negative'
+      color: 'negative',
     };
   }
 
@@ -246,7 +246,7 @@ const infoMessage = computed<InfoMessage | null>(() => {
   ) {
     return {
       message: 'Total weight exceeds maximum weight.',
-      color: 'warning'
+      color: 'warning',
     };
   }
 
