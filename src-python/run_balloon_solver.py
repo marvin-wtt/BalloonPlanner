@@ -58,7 +58,7 @@ def main(argv: List[str] | None = None) -> None:
     parser.add_argument(
         "--w-second-leg",
         type=int,
-        default=10,
+        default=20,
         help="Weight for balancing car passengers for the second leg",
     )
     parser.add_argument(
@@ -82,7 +82,7 @@ def main(argv: List[str] | None = None) -> None:
     parser.add_argument(
         "--w-nationality-diversity",
         type=int,
-        default=1,
+        default=3,
         help=(
             "Weight for distributing nationalities evenly across each vehicle "
             "(higher → vehicles are more nationally diverse)."
@@ -97,6 +97,40 @@ def main(argv: List[str] | None = None) -> None:
             "across multiple flights (higher → more rotation)."
         ),
     )
+    parser.add_argument(
+        "--w-no-solo-participant",
+        type=int,
+        default=30,
+        help=(
+            "Weight that penalizes assignments where a participant is the only human "
+            "in a vehicle (higher → discourage solo assignments)."
+        ),
+    )
+    parser.add_argument(
+        "--w-cluster-passenger-balance",
+        type=int,
+        default=7,
+        help=(
+            "Weight for balancing the number of passengers across predefined "
+            "vehicle clusters (higher → clusters receive similar passenger counts)."
+        ),
+    )
+    parser.add_argument(
+        "--w-second-leg-overweight",
+        type=int,
+        default=50,
+        help=(
+            "Weight that penalizes vehicles whose total passenger weight exceeds "
+            "capacity on the second leg (higher → fewer overweight vehicles)."
+        ),
+    )
+    parser.add_argument(
+        "--default-person-weight",
+        type=int,
+        default=80,
+        help="Fallback weight in kilograms for people whose weight is unknown.",
+    )
+
     parser.add_argument(
         "--time-limit",
         type=int,
@@ -142,11 +176,15 @@ def main(argv: List[str] | None = None) -> None:
             frozen=frozen,
             past_flights=history,
             leg=args.flight_leg,
-            w_fair=args.w_pilot_fairness,
-            w_low_flights=args.w_passenger_fairness,
-            w_new_vehicle=args.w_vehicle_rotation,
-            w_diversity=args.w_nationality_diversity,
-            w_second_leg=args.w_second_leg,
+            w_pilot_fairness=args.w_pilot_fairness,
+            w_passenger_fairness=args.w_passenger_fairness,
+            w_no_solo_participant=args.w_no_solo_participant,
+            w_cluster_passenger_balance=args.w_cluster_passenger_balance,
+            w_vehicle_rotation=args.w_vehicle_rotation,
+            w_divers_nationalities=args.w_nationality_diversity,
+            w_low_flights_second_leg=args.w_second_leg,
+            w_overweight_second_leg=args.w_second_leg_overweight,
+            default_person_weight=args.default_person_weight,
             time_limit_s=args.time_limit,
         )
 

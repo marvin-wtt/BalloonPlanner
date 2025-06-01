@@ -253,7 +253,8 @@ const settingsStore = useSettingsStore();
 const { project, isLoading } = storeToRefs(projectStore);
 const { flight, numberOfFlights } = storeToRefs(flightStore);
 
-const { showNumberOfFlights, showPersonWeight } = storeToRefs(settingsStore);
+const { showNumberOfFlights, showPersonWeight, personDefaultWeight } =
+  storeToRefs(settingsStore);
 
 const { createPerson, editPerson, removePerson, addPerson } =
   useFlightOperations();
@@ -322,7 +323,10 @@ async function smartFill(options: SmartFillOptions) {
   });
   editable.value = false;
   try {
-    await flightStore.smartFillFlight(options);
+    await flightStore.smartFillFlight({
+      ...options,
+      defaultPersonWeight: personDefaultWeight.value,
+    });
 
     notify({
       type: 'positive',

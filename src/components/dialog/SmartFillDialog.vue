@@ -23,6 +23,20 @@
 
           <q-expansion-item label="Advanced Options">
             <div class="column q-gutter-sm">
+              <q-item dense>
+                <q-item-section>
+                  <q-item-label>
+                    Usual weights are between 0 and 50</q-item-label
+                  >
+                  <q-item-label caption>
+                    Zero disables an optimization
+                  </q-item-label>
+                  <q-item-label caption>
+                    Negative weights result in the reverse action
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+
               <q-input
                 v-model="options.wPassengerFairness"
                 label="Passenger Fairness Weight"
@@ -32,9 +46,26 @@
                 rounded
               />
               <q-input
+                v-model="options.wClusterPassengerBalance"
+                label="Group Passenger Distribution Weight"
+                type="number"
+                dense
+                outlined
+                rounded
+              />
+              <q-input
                 v-if="options.leg != null"
                 v-model="options.wSecondLegFairness"
                 label="Second Leg Fairness Weight"
+                type="number"
+                dense
+                outlined
+                rounded
+              />
+              <q-input
+                v-if="options.leg != null"
+                v-model="options.wSecondLegOverweight"
+                label="Second Leg Overweight Penalty Weight"
                 type="number"
                 dense
                 outlined
@@ -51,6 +82,14 @@
               <q-input
                 v-model="options.wVehicleRotation"
                 label="Vehicle Rotation Weight"
+                type="number"
+                dense
+                outlined
+                rounded
+              />
+              <q-input
+                v-model="options.wNoSoloParticipant"
+                label="No Solo Participants Weight"
                 type="number"
                 dense
                 outlined

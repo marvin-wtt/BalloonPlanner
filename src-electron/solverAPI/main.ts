@@ -117,6 +117,15 @@ function buildFlagArgs(opts?: SmartFillOptions): string[] {
   if (opts.wPassengerFairness != null) {
     args.push('--w-passenger-fairness', String(opts.wPassengerFairness));
   }
+  if (opts.wNoSoloParticipant != null) {
+    args.push('--w-no-solo-participant', String(opts.wNoSoloParticipant));
+  }
+  if (opts.wClusterPassengerBalance != null) {
+    args.push(
+      '--w-cluster-passenger-balance',
+      String(opts.wClusterPassengerBalance),
+    );
+  }
   if (opts.wNationalityDiversity != null) {
     args.push('--w-nationality-diversity', String(opts.wNationalityDiversity));
   }
@@ -126,8 +135,14 @@ function buildFlagArgs(opts?: SmartFillOptions): string[] {
   if (opts.wSecondLegFairness != null) {
     args.push('--w-second-leg', String(opts.wSecondLegFairness));
   }
+  if (opts.wSecondLegOverweight != null) {
+    args.push('--w-second-leg-overweight', String(opts.wSecondLegOverweight));
+  }
   if (opts.timeLimit != null) {
     args.push('--time-limit', String(opts.timeLimit));
+  }
+  if (opts.defaultPersonWeight != null) {
+    args.push('--default-person-weight', String(opts.defaultPersonWeight));
   }
   if (opts.leg != null) {
     args.push('--flight-leg', opts.leg === 'first' ? '1' : '2');

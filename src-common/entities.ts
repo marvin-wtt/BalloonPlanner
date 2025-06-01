@@ -97,6 +97,10 @@ export interface SmartFillOptions {
   wNationalityDiversity?: number;
   wVehicleRotation?: number;
   wSecondLegFairness?: number;
+  wSecondLegOverweight?: number;
+  wNoSoloParticipant?: number;
+  wClusterPassengerBalance?: number;
   timeLimit?: number;
+  defaultPersonWeight?: number;
   leg?: 'first' | 'second' | undefined;
 }

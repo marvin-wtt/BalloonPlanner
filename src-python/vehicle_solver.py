@@ -39,17 +39,17 @@ def solve(
     leg: int = None,
     # soft weights
     # Defaults are overwritten by command-line args
-    w_fair: int = 1,
-    w_low_flights: int = 20,
-    w_solo: int = 30,
-    w_diversity: int = 3,
-    w_passenger_deviation: int = 7,
-    w_new_vehicle: int = 5,
-    w_second_leg: int = 20,
-    w_second_leg_weight: int = 30,
+    w_pilot_fairness: int,
+    w_passenger_fairness: int,
+    w_no_solo_participant: int,
+    w_divers_nationalities: int,
+    w_cluster_passenger_balance: int,
+    w_vehicle_rotation: int,
+    w_low_flights_second_leg: int,
+    w_overweight_second_leg: int,
     # misc
-    default_person_weight: int = 80,
-    time_limit_s: int = 30,
+    default_person_weight: int,
+    time_limit_s: int,
 ):
     """Solve a *single* leg; call once per flight."""
     frozen = frozen or []
@@ -57,8 +57,7 @@ def solve(
     # ------------------------------------------------------------------
     # 0. Input validation
     # ------------------------------------------------------------------
-
-    if w_second_leg_weight < 0:
+    if w_overweight_second_leg < 0:
         raise ValueError("w_second_leg_weight must be non-negative")
 
     if default_person_weight < 0:
@@ -218,7 +217,7 @@ def solve(
     for p, v in product(person_ids, vehicle_ids):
         if p in allowed_op[v]:
             bonus = max_flights - flights_so_far[p]
-            objective_terms.append(-w_fair * bonus * op[p, v])
+            objective_terms.append(-w_pilot_fairness * bonus * op[p, v])
 
     # 3.2 low-flight pax in balloons (participants > counselors)
     for p, v in product(person_ids, vehicle_ids):
@@ -226,7 +225,7 @@ def solve(
             bonus = max_flights - flights_so_far[p]
             if not is_participant[p]:
                 bonus *= 0.5  # halve importance
-            objective_terms.append(-w_low_flights * bonus * pax[p, v])
+            objective_terms.append(-w_passenger_fairness * bonus * pax[p, v])
 
     # 3.3 mo participants alone
     for v in vehicle_ids:
@@ -240,7 +239,7 @@ def solve(
         model.Add(part_sat == 1).OnlyEnforceIf(solo_part)
         model.Add(part_sat != 1).OnlyEnforceIf(solo_part.Not())
 
-        objective_terms.append(+w_solo * solo_part)
+        objective_terms.append(+w_no_solo_participant * solo_part)
 
     # 3.4 cluster passenger deviation
     if leg is None or leg == 1:
@@ -255,7 +254,7 @@ def solve(
             dev_pos = model.NewIntVar(0, n_people, f"devP_{bid}")
             dev_neg = model.NewIntVar(0, n_people, f"devN_{bid}")
             model.Add(crew_cars - avg_ground == dev_pos - dev_neg)
-            objective_terms.append(w_passenger_deviation * (dev_pos + dev_neg))
+            objective_terms.append(w_cluster_passenger_balance * (dev_pos + dev_neg))
 
     # 3.5 diversity
     for v in vehicle_ids:
@@ -276,12 +275,12 @@ def solve(
         minority = model.NewIntVar(0, capacity[v], f"minor_{v}")
         model.Add(minority == total - maj)
 
-        objective_terms.append(-w_diversity * minority)
+        objective_terms.append(-w_divers_nationalities * minority)
 
     # 3.6 fresh vehicle (passengers only)
     for p, v in product(person_ids, vehicle_ids):
         if v not in seen[p]:
-            objective_terms.append(-w_new_vehicle * (pax[p, v] - op[p, v]))
+            objective_terms.append(-w_vehicle_rotation * (pax[p, v] - op[p, v]))
 
     # 3.7 soft cluster balance
     if leg is not None and leg == 1:
@@ -306,7 +305,7 @@ def solve(
             short = model.NewIntVar(0, target, f"short_{bid}")
             model.Add(short >= target - low_in_cars)
 
-            objective_terms.append(+w_second_leg * short)
+            objective_terms.append(+w_low_flights_second_leg * short)
 
         for bid, car_ids in cluster.items():
             if max_weight[bid] <= 0:
@@ -320,7 +319,7 @@ def solve(
 
             over = model.NewIntVar(0, weight_budget, f"over_{bid}")
             model.Add(over >= low_weight_in_cars - weight_budget)
-            objective_terms.append(w_second_leg_weight * over)
+            objective_terms.append(w_overweight_second_leg * over)
 
     model.Minimize(sum(objective_terms))
 
