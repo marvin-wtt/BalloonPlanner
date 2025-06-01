@@ -50,25 +50,23 @@
                 <q-item
                   clickable
                   v-close-popup
+                  @click="onVehicleEdit()"
                 >
-                  <q-item-section @click="onVehicleEdit()">Edit</q-item-section>
+                  <q-item-section>Edit</q-item-section>
                 </q-item>
                 <q-item
                   clickable
                   v-close-popup
+                  @click="onVehicleClear()"
                 >
-                  <q-item-section @click="onVehicleClear()">
-                    Clear
-                  </q-item-section>
+                  <q-item-section>Clear</q-item-section>
                 </q-item>
                 <q-item
                   clickable
                   v-close-popup
+                  @click="onVehicleRemoved()"
                 >
-                  <q-item-section
-                    class="text-negative"
-                    @click="onVehicleRemoved()"
-                  >
+                  <q-item-section class="text-negative">
                     Remove
                   </q-item-section>
                 </q-item>
