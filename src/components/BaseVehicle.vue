@@ -215,7 +215,7 @@ const capacity = computed<number>(() => {
 });
 
 const errorMessage = computed<string | null>(() => {
-  if (assignment.passengerIds.length > capacity.value) {
+  if (assignment.passengerIds.length > (capacity.value - 1)) {
     return 'Too many passengers for this vehicle.';
   }
 
