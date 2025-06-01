@@ -41,7 +41,9 @@ def solve(
     # Defaults are overwritten by command-line args
     w_fair: int = 1,
     w_low_flights: int = 20,
+    w_solo: int = 30,
     w_diversity: int = 3,
+    w_passenger_deviation=7,
     w_new_vehicle: int = 5,
     w_second_leg: int = 20,
     w_second_leg_weight: int = 30,
@@ -92,8 +94,10 @@ def solve(
     }
     flights_so_far = {p: people_by_id[p]["flights"] for p in person_ids}
     nationality = {p: people_by_id[p]["nationality"] for p in person_ids}
-    is_counselor = {
-        p: people_by_id[p].get("role", "participant") == "counselor" for p in person_ids
+    nationalities = set(nationality.values())
+    is_participant = {
+        p: people_by_id[p].get("role", "participant") == "participant"
+        for p in person_ids
     }
 
     capacity = {v: vehicles_by_id[v]["capacity"] for v in vehicle_ids}
@@ -219,25 +223,66 @@ def solve(
     for p, v in product(person_ids, vehicle_ids):
         if kind[v] == "balloon":
             bonus = max_flights - flights_so_far[p]
-            if is_counselor[p]:
+            if not is_participant[p]:
                 bonus *= 0.5  # halve importance
             objective_terms.append(-w_low_flights * bonus * pax[p, v])
 
-    # 3.3 diversity
+    # 3.3 mo participants alone
     for v in vehicle_ids:
-        for p1, p2 in combinations(person_ids, 2):
-            if nationality[p1] == nationality[p2]:
-                continue
-            pair = model.NewBoolVar(f"mix_{p1}_{p2}_{v}")
-            model.AddMinEquality(pair, [pax[p1, v], pax[p2, v]])
-            objective_terms.append(-w_diversity * pair)
+        if kind[v] != "car":
+            continue
 
-    # 3.4 fresh vehicle (passengers only)
+        part_sat = sum(is_participant[p] * pax[p, v] for p in person_ids)
+
+        solo_part = model.NewBoolVar(f"solo_part_{v}")
+
+        model.Add(part_sat == 1).OnlyEnforceIf(solo_part)
+        model.Add(part_sat != 1).OnlyEnforceIf(solo_part.Not())
+
+        objective_terms.append(+w_solo * solo_part)
+
+    # 3.4 cluster passenger deviation
+    if leg is None or leg == 1:
+        n_people = len(person_ids)
+        seats_in_air = sum(b["capacity"] for b in balloons)
+        avg_ground = (n_people - seats_in_air) // len(cluster)
+
+        for bid, car_ids in cluster.items():
+            crew_cars = sum(pax[p, v] for v in car_ids for p in person_ids)
+
+            # absolute deviation |crew - avg_ground|
+            dev_pos = model.NewIntVar(0, n_people, f"devP_{bid}")
+            dev_neg = model.NewIntVar(0, n_people, f"devN_{bid}")
+            model.Add(crew_cars - avg_ground == dev_pos - dev_neg)
+            objective_terms.append(w_passenger_deviation * (dev_pos + dev_neg))
+
+    # 3.5 diversity
+    for v in vehicle_ids:
+        cnt_nat = {}
+        for nat in nationalities:
+            cnt = model.NewIntVar(0, capacity[v], f"cnt_{v}_{nat}")
+            model.Add(
+                cnt == sum(pax[p, v] for p in person_ids if nationality[p] == nat)
+            )
+            cnt_nat[nat] = cnt
+
+        maj = model.NewIntVar(0, capacity[v], f"maj_{v}")
+        model.AddMaxEquality(maj, list(cnt_nat.values()))
+
+        total = model.NewIntVar(0, capacity[v], f"tot_{v}")
+        model.Add(total == sum(pax[p, v] for p in person_ids))
+
+        minority = model.NewIntVar(0, capacity[v], f"minor_{v}")
+        model.Add(minority == total - maj)
+
+        objective_terms.append(-w_diversity * minority)
+
+    # 3.6 fresh vehicle (passengers only)
     for p, v in product(person_ids, vehicle_ids):
         if v not in seen[p]:
             objective_terms.append(-w_new_vehicle * (pax[p, v] - op[p, v]))
 
-    # 3.5 soft cluster balance
+    # 3.7 soft cluster balance
     if leg is not None and leg == 1:
         future_seats = sum(b["capacity"] for b in balloons)
         sorted_f = sorted(flights_so_far.values())
