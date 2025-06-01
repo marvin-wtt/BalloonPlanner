@@ -43,7 +43,7 @@ def solve(
     w_low_flights: int = 20,
     w_solo: int = 30,
     w_diversity: int = 3,
-    w_passenger_deviation=7,
+    w_passenger_deviation: int = 7,
     w_new_vehicle: int = 5,
     w_second_leg: int = 20,
     w_second_leg_weight: int = 30,
@@ -73,8 +73,9 @@ def solve(
     if leg is not None and leg > 1:
         if len(past_flights) == 0:
             raise ValueError("Flight history must be provided for multi-leg flights")
-        if cluster is None:
-            raise ValueError("Cluster must be provided for multi-leg flights")
+
+    if cluster is None:
+        raise ValueError("Cluster must be provided")
 
     # ------------------------------------------------------------------
     # 0.a Fast look-ups
