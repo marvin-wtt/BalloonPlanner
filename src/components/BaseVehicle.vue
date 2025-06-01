@@ -12,18 +12,18 @@
       @dragleave.stop
     >
       <q-badge
-        v-if="errorMessage != null"
-        color="negative"
+        v-if="infoMessage"
+        :color="infoMessage.color"
         floating
         rounded
       >
         <q-icon
-          name="warning"
+          name="priority_high"
           color="white"
           size="1rem"
         />
         <q-tooltip>
-          {{ errorMessage }}
+          {{ infoMessage.message }}
         </q-tooltip>
       </q-badge>
 
@@ -219,16 +219,24 @@ const capacity = computed<number>(() => {
   return hideEmptyCapacity.value ? assignment.passengerIds.length : capacity;
 });
 
-const errorMessage = computed<string | null>(() => {
+type InfoMessage = { message: string; color: string };
+
+const infoMessage = computed<InfoMessage | null>(() => {
   if (assignment.passengerIds.length > capacity.value - 1) {
-    return 'Too many passengers for this vehicle.';
+    return {
+      message: 'Too many passengers for this vehicle.',
+      color: 'negative'
+    };
   }
 
   if (
     assignment.operatorId !== null &&
     !vehicle.value.allowedOperatorIds.includes(assignment.operatorId)
   ) {
-    return 'This operator is not allowed for this vehicle.';
+    return {
+      message: 'This operator is not allowed for this vehicle.',
+      color: 'negative',
+    };
   }
 
   if (
@@ -236,7 +244,10 @@ const errorMessage = computed<string | null>(() => {
     vehicle.value.maxWeight !== null &&
     totalWeight.value > vehicle.value.maxWeight
   ) {
-    return 'Total weight exceeds maximum weight.';
+    return {
+      message: 'Total weight exceeds maximum weight.',
+      color: 'warning'
+    };
   }
 
   return null;

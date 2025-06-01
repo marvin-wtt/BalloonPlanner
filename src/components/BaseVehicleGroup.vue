@@ -6,32 +6,32 @@
     @dropped="drop"
   >
     <div class="relative-position">
-      <div
-        v-if="label && showGroupLabel"
-        class="vehicle-group__label"
-      >
-        {{ label }}
+      <div class="vehicle-group__label">
+        <span v-if="label && showGroupLabel">
+          {{ label }}
+        </span>
+
+        <q-badge
+          v-if="warningText"
+          color="warning"
+          class="q-ml-sm"
+          rounded
+        >
+          <q-icon
+            name="priority_high"
+            color="white"
+            size="1em"
+          />
+          <q-tooltip>
+            {{ warningText }}
+          </q-tooltip>
+        </q-badge>
       </div>
 
       <div
         class="q-gutter-md q-pa-md q-pb-lg"
         :class="groupAlignment === 'vertical' ? 'row' : 'column'"
       >
-        <q-badge
-          v-if="showWarning"
-          color="warning"
-          floating
-          rounded
-        >
-          <q-icon
-            name="warning"
-            color="white"
-            size="1rem"
-          />
-          <q-tooltip>
-            {{ warningText }}
-          </q-tooltip>
-        </q-badge>
         <!-- Balloon -->
         <div>
           <base-vehicle
@@ -98,16 +98,16 @@ const styleClass = computed<string>(() => {
     : 'vehicle-group__highlighted';
 });
 
-const showWarning = computed<boolean>(() => {
-  return trailerHitchWarning.value || reservedCapacityWarning.value;
-});
+const warningText = computed<string | null>(() => {
+  if (trailerHitchWarning.value) {
+    return 'The group is missing a trailer clutch';
+  }
 
-const warningText = computed<string>(() => {
-  return trailerHitchWarning.value
-    ? 'The group is missing a trailer clutch'
-    : reservedCapacityWarning.value
-      ? 'The group does not have enough car capacity'
-      : 'Unknown error';
+  if (reservedCapacityWarning.value) {
+    return 'The group does not have enough car capacity';
+  }
+
+  return null;
 });
 
 const cars = computed<Car[]>(() => {
