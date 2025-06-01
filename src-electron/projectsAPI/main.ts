@@ -141,9 +141,9 @@ async function update(project: Project) {
 async function destroy(id: string) {
   const filePath = projectFilePath(id);
 
-  await deleteProjectFromPath(filePath);
-
   removeProjectMeta(id);
+
+  await deleteProjectFromPath(filePath);
 }
 
 function remove(id: string) {

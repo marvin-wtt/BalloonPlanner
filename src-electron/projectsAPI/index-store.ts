@@ -1,5 +1,9 @@
 import Store from 'electron-store';
 import type { ProjectMeta } from 'app/src-common/entities';
+import { app } from 'electron';
+import path from 'path';
+
+type RawProjectMeta = Omit<ProjectMeta, 'isInternal'>;
 
 const indexStore = new Store<{
   metas: ProjectMeta[];
@@ -19,7 +23,7 @@ export function projectFilePath(id: string): string {
   return filePath;
 }
 
-export function addProjectMeta(meta: ProjectMeta) {
+export function addProjectMeta(meta: RawProjectMeta) {
   const metas = getProjectIndex();
 
   if (metas.findIndex((m) => m.id === meta.id) !== -1) {
@@ -29,7 +33,7 @@ export function addProjectMeta(meta: ProjectMeta) {
   indexStore.set('metas', metas);
 }
 
-export function updateProjectMeta(meta: ProjectMeta) {
+export function updateProjectMeta(meta: RawProjectMeta) {
   const metas = getProjectIndex();
 
   metas.splice(
@@ -47,12 +51,21 @@ export function removeProjectMeta(id: string) {
   indexStore.set('metas', metas);
 }
 
-function buildMeta(meta: ProjectMeta) {
+function buildMeta(meta: RawProjectMeta): ProjectMeta {
   return {
     id: meta.id,
     name: meta.name,
     description: meta.description,
     createdAt: meta.createdAt,
     filePath: meta.filePath,
+    isInternal: isPathInternal(meta.filePath),
   };
+}
+
+function isPathInternal(filePath: string): boolean {
+  const userData = app.getPath('userData');
+  const normalizedUserData = path.normalize(userData + path.sep);
+  const normalizedFile = path.normalize(filePath);
+
+  return normalizedFile.startsWith(normalizedUserData);
 }

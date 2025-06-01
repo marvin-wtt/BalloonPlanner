@@ -74,7 +74,7 @@ const name = ref<string>(project.name);
 const description = ref<string | undefined>(project.description);
 
 function onSubmit() {
-  const payload: Omit<ProjectMeta, 'id'> = {
+  const payload: Pick<ProjectMeta, 'name' | 'description'> = {
     name: toRaw(name.value).trim(),
     description: toRaw(description.value).trim(),
   };

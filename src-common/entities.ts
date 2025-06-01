@@ -81,6 +81,7 @@ export interface ProjectMeta {
   createdAt: string;
   description?: string;
   filePath: string;
+  isInternal?: boolean;
 }
 
 export interface SmartFillPayload {
