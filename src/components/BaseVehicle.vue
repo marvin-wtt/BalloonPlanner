@@ -27,100 +27,105 @@
         </q-tooltip>
       </q-badge>
 
-      <tr>
-        <th
-          v-if="showVehicleLabel"
-          class="vehicle-label"
-          :class="{ 'vehicle-label--rounded': !hasFooter }"
-          :rowspan="capacity"
-        >
-          <span>
-            {{ vehicle.name ?? '&#160;' }}
-          </span>
-          <q-menu
-            touch-position
-            context-menu
+      <!-- thead and tfoot are not used on purpose to preserve the style -->
+      <tbody>
+        <tr>
+          <th
+            v-if="showVehicleLabel"
+            class="vehicle-label"
+            :class="{ 'vehicle-label--rounded': !hasFooter }"
+            :rowspan="capacity"
           >
-            <q-list
-              dense
-              style="min-width: 100px"
+            <span>
+              {{ vehicle.name ?? '&#160;' }}
+            </span>
+            <q-menu
+              touch-position
+              context-menu
             >
-              <q-item
-                clickable
-                v-close-popup
+              <q-list
+                dense
+                style="min-width: 100px"
               >
-                <q-item-section @click="onVehicleEdit()">Edit</q-item-section>
-              </q-item>
-              <q-item
-                clickable
-                v-close-popup
-              >
-                <q-item-section @click="onVehicleClear()">Clear</q-item-section>
-              </q-item>
-              <q-item
-                clickable
-                v-close-popup
-              >
-                <q-item-section
-                  class="text-negative"
-                  @click="onVehicleRemoved()"
+                <q-item
+                  clickable
+                  v-close-popup
                 >
-                  Remove
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-menu>
-        </th>
-        <th
-          v-if="showVehicleIndex"
-          class="vehicle-index"
-        >
-          {{ vehicle.type === 'balloon' ? 'P' : 'D' }}
-        </th>
-        <base-vehicle-person-cell
-          class="vehicle-person"
-          :class="showVehicleIndex ? 'vehicle-person__indexed' : ''"
-          :person="personMap[assignment.operatorId]"
-          :vehicle
-          :group
-          :assignment
-          operator
-          :editable
-        />
-      </tr>
+                  <q-item-section @click="onVehicleEdit()">Edit</q-item-section>
+                </q-item>
+                <q-item
+                  clickable
+                  v-close-popup
+                >
+                  <q-item-section @click="onVehicleClear()">
+                    Clear
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  clickable
+                  v-close-popup
+                >
+                  <q-item-section
+                    class="text-negative"
+                    @click="onVehicleRemoved()"
+                  >
+                    Remove
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </th>
+          <th
+            v-if="showVehicleIndex"
+            class="vehicle-index"
+          >
+            {{ vehicle.type === 'balloon' ? 'P' : 'D' }}
+          </th>
+          <base-vehicle-person-cell
+            class="vehicle-person"
+            :class="showVehicleIndex ? 'vehicle-person__indexed' : ''"
+            :person="personMap[assignment.operatorId]"
+            :vehicle
+            :group
+            :assignment
+            operator
+            :editable
+          />
+        </tr>
 
-      <tr
-        v-for="c in capacity - 1"
-        :key="c"
-      >
-        <td
-          v-if="showVehicleIndex"
-          class="vehicle-index q-px-sm"
+        <tr
+          v-for="c in capacity - 1"
+          :key="c"
         >
-          {{ c }}
-        </td>
-        <base-vehicle-person-cell
-          class="vehicle-person"
-          :class="showVehicleIndex ? 'vehicle-person__indexed' : ''"
-          :person="personMap[assignment.passengerIds[c - 1]]"
-          :vehicle
-          :group
-          :assignment
-          :editable
-        />
-      </tr>
+          <td
+            v-if="showVehicleIndex"
+            class="vehicle-index q-px-sm"
+          >
+            {{ c }}
+          </td>
+          <base-vehicle-person-cell
+            class="vehicle-person"
+            :class="showVehicleIndex ? 'vehicle-person__indexed' : ''"
+            :person="personMap[assignment.passengerIds[c - 1]]"
+            :vehicle
+            :group
+            :assignment
+            :editable
+          />
+        </tr>
 
-      <tr v-if="vehicle.type === 'balloon' && showVehicleWeight">
-        <td
-          colspan="3"
-          class="vehicle-footer"
-        >
-          <span v-if="vehicle.maxWeight">
-            {{ totalWeight }} kg / {{ vehicle.maxWeight }} kg
-          </span>
-          <span v-else>{{ totalWeight }} kg</span>
-        </td>
-      </tr>
+        <tr v-if="vehicle.type === 'balloon' && showVehicleWeight">
+          <td
+            colspan="3"
+            class="vehicle-footer"
+          >
+            <span v-if="vehicle.maxWeight">
+              {{ totalWeight }} kg / {{ vehicle.maxWeight }} kg
+            </span>
+            <span v-else>{{ totalWeight }} kg</span>
+          </td>
+        </tr>
+      </tbody>
     </table>
   </draggable-item>
 </template>
@@ -215,7 +220,7 @@ const capacity = computed<number>(() => {
 });
 
 const errorMessage = computed<string | null>(() => {
-  if (assignment.passengerIds.length > (capacity.value - 1)) {
+  if (assignment.passengerIds.length > capacity.value - 1) {
     return 'Too many passengers for this vehicle.';
   }
 
