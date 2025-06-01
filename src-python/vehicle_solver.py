@@ -18,7 +18,7 @@ All weights are user‑tunable kwargs.
 Dependencies: `ortools>=9.9`.  Run the smoke‑test at bottom to verify.
 """
 
-from itertools import product, combinations
+from itertools import product
 from collections import defaultdict
 from typing import List, Dict, Any, Optional
 
@@ -257,25 +257,26 @@ def solve(
             objective_terms.append(w_cluster_passenger_balance * (dev_pos + dev_neg))
 
     # 3.5 diversity
-    for v in vehicle_ids:
-        cnt_nat = {}
-        for nat in nationalities:
-            cnt = model.NewIntVar(0, capacity[v], f"cnt_{v}_{nat}")
-            model.Add(
-                cnt == sum(pax[p, v] for p in person_ids if nationality[p] == nat)
-            )
-            cnt_nat[nat] = cnt
+    if len(nationalities) > 1:
+      for v in vehicle_ids:
+          cnt_nat = {}
+          for nat in nationalities:
+              cnt = model.NewIntVar(0, capacity[v], f"cnt_{v}_{nat}")
+              model.Add(
+                  cnt == sum(pax[p, v] for p in person_ids if nationality[p] == nat)
+              )
+              cnt_nat[nat] = cnt
 
-        maj = model.NewIntVar(0, capacity[v], f"maj_{v}")
-        model.AddMaxEquality(maj, list(cnt_nat.values()))
+          maj = model.NewIntVar(0, capacity[v], f"maj_{v}")
+          model.AddMaxEquality(maj, list(cnt_nat.values()))
 
-        total = model.NewIntVar(0, capacity[v], f"tot_{v}")
-        model.Add(total == sum(pax[p, v] for p in person_ids))
+          total = model.NewIntVar(0, capacity[v], f"tot_{v}")
+          model.Add(total == sum(pax[p, v] for p in person_ids))
 
-        minority = model.NewIntVar(0, capacity[v], f"minor_{v}")
-        model.Add(minority == total - maj)
+          minority = model.NewIntVar(0, capacity[v], f"minor_{v}")
+          model.Add(minority == total - maj)
 
-        objective_terms.append(-w_divers_nationalities * minority)
+          objective_terms.append(-w_divers_nationalities * minority)
 
     # 3.6 fresh vehicle (passengers only)
     for p, v in product(person_ids, vehicle_ids):
