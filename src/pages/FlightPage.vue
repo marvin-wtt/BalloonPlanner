@@ -330,6 +330,7 @@ async function smartFill(options: SmartFillOptions) {
 
     notify({
       type: 'positive',
+      color: 'secondary',
       message: 'Successfully filled flight!',
       timeout: 1000,
     });

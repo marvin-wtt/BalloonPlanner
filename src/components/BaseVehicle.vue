@@ -20,7 +20,7 @@
         <q-icon
           name="priority_high"
           color="white"
-          size="1rem"
+          size="1em"
         />
         <q-tooltip>
           {{ infoMessage.message }}
