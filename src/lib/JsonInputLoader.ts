@@ -17,22 +17,24 @@ export async function loadJson(
   }
 
   // Normalize and validate each entry
-  const normalized = unwrapped.map((entry, idx) => {
-    const personData = unwrapComputed(entry);
+  const normalized = unwrapped
+    .filter((entry) => !entry.waitingList)
+    .map((entry, idx) => {
+      const personData = unwrapComputed(entry);
 
-    if (!isValidPersonData(personData)) {
-      throw new Error(`Invalid person record at index ${idx}`);
-    }
+      if (!isValidPersonData(personData)) {
+        throw new Error(`Invalid person record at index ${idx}`);
+      }
 
-    const { firstName, lastName, address, role } = personData;
+      const { firstName, lastName, address, role } = personData;
 
-    return {
-      firstName,
-      lastName,
-      role: normalizeRole(role),
-      nationality: address.country.toLowerCase(),
-    };
-  });
+      return {
+        firstName,
+        lastName,
+        role: normalizeRole(role),
+        nationality: address.country.toLowerCase(),
+      };
+    });
 
   const unique = makeUniqueNames(normalized);
   return unique.map(({ name, role, nationality }) => ({
