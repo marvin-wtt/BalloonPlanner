@@ -70,8 +70,6 @@ async function createWindow() {
   // Disable CORS
   mainWindow.webContents.session.webRequest.onHeadersReceived(
     (details, callback) => {
-      console.log(details.responseHeaders);
-
       callback({
         responseHeaders: {
           ...details.responseHeaders,

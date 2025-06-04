@@ -1,161 +1,173 @@
 <template>
-  <q-dialog
-    ref="dialogRef"
-    @hide="onDialogCancel"
+  <q-step
+    :name
+    title="Server URL"
+    icon="cloud"
+    :done="url?.length > 0"
   >
-    <q-card style="min-width: 400px">
-      <q-card-section>
-        <q-stepper
-          v-model="step"
-          vertical
-          animated
-          flat
-        >
-          <q-step
-            name="server"
-            title="Server URL"
-            icon="cloud"
-            :done="url?.length > 0"
-          >
-            <q-input
-              v-model="url"
-              type="url"
-              label="Server URL"
-              :error
-              :error-message
-              hide-bottom-space
-              :loading
-              outlined
-              rounded
-            />
+    <q-input
+      v-model="url"
+      type="url"
+      label="Server URL"
+      :error
+      :error-message
+      hide-bottom-space
+      :loading
+      outlined
+      rounded
+    />
 
-            <q-stepper-navigation>
-              <q-btn
-                label="Continue"
-                color="primary"
-                :loading
-                rounded
-                :disable="url?.length === 0"
-                @click="verifyUrl"
-              />
-            </q-stepper-navigation>
-          </q-step>
+    <q-stepper-navigation class="row q-gutter-sm">
+      <q-btn
+        label="Continue"
+        color="primary"
+        :loading
+        rounded
+        :disable="url?.length === 0"
+        @click="verifyUrl"
+      />
 
-          <q-step
-            name="login"
-            title="Login"
-            icon="login"
-            :done="email?.length > 0 && password?.length > 0"
-          >
-            <div class="column q-gutter-md">
-              <q-input
-                v-model="email"
-                label="E-Mail"
-                type="email"
-                :error
-                :error-message
-                hide-bottom-space
-                outlined
-                rounded
-              />
+      <q-btn
+        label="Back"
+        color="primary"
+        :disable="loading"
+        rounded
+        outline
+        @click="emit('back')"
+      />
+    </q-stepper-navigation>
+  </q-step>
 
-              <q-input
-                v-model="password"
-                label="Password"
-                type="password"
-                :error
-                :error-message
-                hide-bottom-space
-                outlined
-                rounded
-              />
-            </div>
+  <q-step
+    name="login"
+    title="Login"
+    icon="login"
+    :done="email?.length > 0 && password?.length > 0"
+  >
+    <div class="column q-gutter-md">
+      <q-input
+        v-model="email"
+        label="E-Mail"
+        type="email"
+        :error
+        :error-message
+        hide-bottom-space
+        outlined
+        rounded
+        @change="errorMessage = undefined"
+      />
 
-            <q-stepper-navigation>
-              <q-btn
-                label="Continue"
-                color="primary"
-                :loading
-                rounded
-                :disable="email?.length === 0 || password?.length === 0"
-                @click="login"
-              />
-            </q-stepper-navigation>
-          </q-step>
+      <q-input
+        v-model="password"
+        label="Password"
+        type="password"
+        :error
+        :error-message
+        hide-bottom-space
+        outlined
+        rounded
+        @change="errorMessage = undefined"
+      />
+    </div>
 
-          <q-step
-            v-if="partialToken"
-            name="2fa"
-            title="2FA Token"
-            icon="security"
-            :done="otp?.length === 6"
-          >
-            <q-input
-              v-model="otp"
-              label="2FA Token"
-              type="text"
-              maxlength="6"
-              :error
-              :error-message
-              hide-bottom-space
-              outlined
-              rounded
-            />
+    <q-stepper-navigation>
+      <q-btn
+        label="Continue"
+        color="primary"
+        :loading
+        rounded
+        :disable="
+          !email || email?.length === 0 || !password || password?.length === 0
+        "
+        @click="login"
+      />
+    </q-stepper-navigation>
+  </q-step>
 
-            <q-stepper-navigation>
-              <q-btn
-                label="Continue"
-                color="primary"
-                :loading
-                :disable="otp?.length !== 6"
-                rounded
-                @click="twoFactorLogin"
-              />
-            </q-stepper-navigation>
-          </q-step>
+  <q-step
+    v-if="partialToken"
+    name="2fa"
+    title="2FA Token"
+    icon="security"
+    :done="otp?.length === 6"
+  >
+    <q-input
+      v-model="otp"
+      label="2FA Token"
+      type="text"
+      maxlength="6"
+      :error
+      :error-message
+      hide-bottom-space
+      outlined
+      rounded
+      @change="errorMessage = undefined"
+    />
 
-          <q-step
-            name="select"
-            title="Select Camp"
-            icon="list"
-          >
-            <q-select
-              v-model="campId"
-              label="Select Camp"
-              :options="campOptions"
-              map-options
-              emit-value
-              :error
-              :error-message
-              hide-bottom-space
-              outlined
-              rounded
-            />
+    <q-stepper-navigation>
+      <q-btn
+        label="Continue"
+        color="primary"
+        :loading
+        :disable="otp?.length !== 6"
+        rounded
+        @click="twoFactorLogin"
+      />
+    </q-stepper-navigation>
+  </q-step>
 
-            <q-stepper-navigation>
-              <q-btn
-                label="Continue"
-                color="primary"
-                :loading
-                rounded
-                @click="downloadPeople"
-              />
-            </q-stepper-navigation>
-          </q-step>
-        </q-stepper>
-      </q-card-section>
-    </q-card>
-  </q-dialog>
+  <q-step
+    name="select-camp"
+    title="Select Camp"
+    icon="list"
+    :done="campId != undefined"
+  >
+    <q-select
+      v-model="campId"
+      label="Select Camp"
+      :options="campOptions"
+      map-options
+      emit-value
+      :error
+      :error-message
+      hide-bottom-space
+      outlined
+      rounded
+      @change="errorMessage = undefined"
+    />
+
+    <q-stepper-navigation>
+      <q-btn
+        label="Continue"
+        color="primary"
+        :loading
+        rounded
+        @click="downloadPeople"
+      />
+    </q-stepper-navigation>
+  </q-step>
 </template>
 
 <script lang="ts" setup>
 import { computed, ref, toRaw } from 'vue';
-import { type QSelectOption, useDialogPluginComponent } from 'quasar';
+import type { QSelectOption } from 'quasar';
 import { loadJson } from 'src/lib/JsonInputLoader';
+import { type Person } from 'app/src-common/entities';
+
+const modelValue = defineModel<Person[]>();
+
+const { name } = defineProps<{
+  name: string;
+}>();
+
+const emit = defineEmits<{
+  (e: 'to', name: string): void;
+  (e: 'continue'): void;
+  (e: 'back'): void;
+}>();
 
 const loading = ref<boolean>(false);
 const errorMessage = ref<string | null>(null);
-const step = ref<string>('server');
 
 const url = ref<string>();
 const email = ref<string>();
@@ -166,10 +178,6 @@ const campId = ref<string>();
 const partialToken = ref<string>();
 const accessToken = ref<string>();
 const campOptions = ref<QSelectOption[]>();
-
-defineEmits([...useDialogPluginComponent.emits]);
-
-const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const error = computed<boolean>(() => errorMessage.value != null);
 
@@ -204,7 +212,7 @@ async function verifyUrl() {
       return;
     }
 
-    step.value = 'login';
+    emit('to', 'login');
   } catch {
     errorMessage.value =
       'Failed to connect to the server. Please check the URL.';
@@ -231,7 +239,8 @@ async function login() {
       const errorData = await response.json();
       if (response.status === 403 && errorData.status === 'PARTIAL_AUTH') {
         partialToken.value = errorData.token;
-        step.value = '2fa';
+
+        emit('to', '2fa');
         return;
       }
 
@@ -242,7 +251,7 @@ async function login() {
 
     const data = await response.json();
     extractCamps(data);
-    step.value = 'select';
+    emit('to', 'select-camp');
   } catch (error) {
     errorMessage.value = error.message;
   } finally {
@@ -273,7 +282,7 @@ async function twoFactorLogin() {
 
     const data = await response.json();
     extractCamps(data);
-    step.value = 'select';
+    emit('to', 'select-camp');
   } catch (error) {
     errorMessage.value = error.message;
     return;
@@ -340,9 +349,9 @@ async function downloadPeople() {
     }
 
     const data = await response.json();
-    const people = loadJson(data);
+    modelValue.value = loadJson(data);
 
-    onDialogOK(people);
+    emit('continue');
   } catch (error) {
     errorMessage.value = error.message;
     return;

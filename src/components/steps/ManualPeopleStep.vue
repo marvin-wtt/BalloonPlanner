@@ -54,19 +54,12 @@
       </template>
     </q-table>
 
-    <q-stepper-navigation class="row q-gutter-sm">
+    <q-stepper-navigation>
       <q-btn
         label="Continue"
         color="primary"
         rounded
         @click="emit('continue')"
-      />
-      <q-btn
-        label="Back"
-        color="primary"
-        rounded
-        outline
-        @click="emit('back')"
       />
     </q-stepper-navigation>
   </q-step>
@@ -87,7 +80,6 @@ const { name } = defineProps<{
 
 const emit = defineEmits<{
   (e: 'continue'): void;
-  (e: 'back'): void;
   (e: 'to', destination: string): void;
 }>();
 

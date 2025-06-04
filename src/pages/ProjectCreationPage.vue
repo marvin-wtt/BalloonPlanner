@@ -54,7 +54,7 @@
       <import-people-step
         v-model="people"
         name="people"
-        @continue="step = 'balloons'"
+        @continue="step = 'people_manual'"
         @to="(dest) => (step = dest)"
       />
 

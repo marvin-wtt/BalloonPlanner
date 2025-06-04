@@ -89,78 +89,30 @@
     </q-stepper-navigation>
   </q-step>
 
-  <q-step
-    v-if="loadingMethod === 'online'"
-    :name="name + '_online'"
-    title="Online Import"
-    icon="cloud_download"
-    :done="modelValue.length > 0"
-  >
-    <q-btn
-      label="Download"
-      color="primary"
-      rounded
-      @click="download()"
-    />
-  </q-step>
-
-  <q-step
+  <import-json-step
     v-if="loadingMethod === 'json'"
+    v-model="modelValue"
     :name="name + '_json'"
-    title="Upload JSON File"
-    icon="upload"
-    :done="file !== undefined"
-  >
-    <div
-      class="q-pa-md"
-      style="max-width: 300px"
-    >
-      <div class="q-gutter-md">
-        <q-file
-          v-model="file"
-          label="Select JSON file"
-          accept="application/JSON"
-          :error="inputErrorMessage !== undefined"
-          :error-message="inputErrorMessage"
-          @change="inputErrorMessage = undefined"
-          :loading="fileUploadOngoing"
-          rounded
-          outlined
-        >
-          <template v-slot:prepend>
-            <q-icon name="attach_file" />
-          </template>
-        </q-file>
-      </div>
-    </div>
+    @to="(destination) => emit('to', destination)"
+    @continue="emit('continue')"
+    @back="emit('to', name)"
+  />
 
-    <q-stepper-navigation class="row q-gutter-sm">
-      <q-btn
-        label="Continue"
-        color="primary"
-        :disable="file === undefined"
-        rounded
-        @click="processJson()"
-      />
-      <q-btn
-        label="Back"
-        color="primary"
-        rounded
-        outline
-        @click="emit('to', name)"
-      />
-    </q-stepper-navigation>
-  </q-step>
+  <import-online-steps
+    v-if="loadingMethod === 'online'"
+    v-model="modelValue"
+    :name="name + '_online'"
+    @to="(destination) => emit('to', destination)"
+    @continue="emit('continue')"
+    @back="emit('to', name)"
+  />
 </template>
 
 <script lang="ts" setup>
 import type { Person } from 'app/src-common/entities';
 import { ref } from 'vue';
-import { loadJsonFile } from 'src/lib/JsonInputLoader';
-import { useQuasar } from 'quasar';
-import OnlinePeopleImportDialog from 'components/dialog/OnlinePeopleImportDialog.vue';
-
-const quasar = useQuasar();
+import ImportOnlineSteps from 'components/steps/ImportOnlineSteps.vue';
+import ImportJsonStep from 'components/steps/ImportJsonStep.vue';
 
 const modelValue = defineModel<Person[]>();
 
@@ -174,39 +126,6 @@ const emit = defineEmits<{
 }>();
 
 const loadingMethod = ref<string>();
-const fileUploadOngoing = ref(false);
-const inputErrorMessage = ref<string>();
-
-const file = ref<File>();
-
-async function processJson() {
-  fileUploadOngoing.value = true;
-  inputErrorMessage.value = undefined;
-
-  try {
-    modelValue.value = await loadJsonFile(file.value);
-
-    emit('to', 'people_manual');
-  } catch (reason) {
-    inputErrorMessage.value = reason.message;
-  } finally {
-    fileUploadOngoing.value = false;
-  }
-}
-
-function download() {
-  quasar
-    .dialog({
-      component: OnlinePeopleImportDialog,
-    })
-    .onOk((payload) => {
-      modelValue.value = payload;
-      emit('to', 'people_manual');
-    })
-    .onCancel(() => {
-      emit('to', name);
-    });
-}
 </script>
 
 <style scoped></style>
