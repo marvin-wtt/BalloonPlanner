@@ -68,13 +68,14 @@ async function createWindow() {
   }
 
   // Disable CORS
+  const URL = mainWindow.webContents.getURL();
   mainWindow.webContents.session.webRequest.onHeadersReceived(
     (details, callback) => {
       callback({
         responseHeaders: {
           ...details.responseHeaders,
           'access-control-allow-origin': ['*'],
-          'content-security-policy': undefined,
+          'content-security-policy': `Content-Security-Policy: default-src 'self'; img-src 'self' ${URL}`,
         },
       });
     },
