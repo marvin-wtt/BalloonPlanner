@@ -71,7 +71,7 @@ You can import people data using a CSV file with the following fields:
 | Field       | Required | Description                                                | Example     |
 | ----------- | -------- | ---------------------------------------------------------- | ----------- |
 | Id          | No       | Unique identifier (generated if not provided)              | uuidv4      |
-| Name        | Yes      | Person's full name                                         | John Doe    |
+| Name        | Yes      | Person's unique name                                       | John Doe    |
 | Nationality | Yes      | Two-letter country code (de, fr)                           | de          |
 | Role        | No       | Either 'participant' or 'counselor' (default: participant) | participant |
 | Weight      | No       | Person's weight as a positive number                       | 75          |
