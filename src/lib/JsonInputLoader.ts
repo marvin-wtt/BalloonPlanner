@@ -6,11 +6,19 @@ import { makeUniqueNames } from 'src/util/unique-name';
  * Reads a JSON file, unwraps nested `data` properties, validates
  * and normalizes person records, and assigns unique display names.
  */
-export async function loadJson(
+
+export async function loadJsonFile(
   file: File,
 ): Promise<Pick<Person, 'id' | 'name' | 'role' | 'nationality'>[]> {
-  const raw = await readJsonFile(file);
-  const unwrapped = unwrapData(raw);
+  const data = await readJsonFile(file);
+
+  return loadJson(data);
+}
+
+export function loadJson(
+  data: unknown,
+): Pick<Person, 'id' | 'name' | 'role' | 'nationality'>[] {
+  const unwrapped = unwrapData(data);
 
   if (!Array.isArray(unwrapped)) {
     throw new Error('Expected top-level array of person records');

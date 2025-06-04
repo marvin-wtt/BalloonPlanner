@@ -14,11 +14,10 @@
           <q-radio
             v-model="loadingMethod"
             val="online"
-            disable
           />
         </q-item-section>
         <q-item-section>
-          <q-item-label> Online</q-item-label>
+          <q-item-label>Online</q-item-label>
           <q-item-label caption>
             Download data from camp registration server
           </q-item-label>
@@ -91,6 +90,21 @@
   </q-step>
 
   <q-step
+    v-if="loadingMethod === 'online'"
+    :name="name + '_online'"
+    title="Online Import"
+    icon="cloud_download"
+    :done="modelValue.length > 0"
+  >
+    <q-btn
+      label="Download"
+      color="primary"
+      rounded
+      @click="download()"
+    />
+  </q-step>
+
+  <q-step
     v-if="loadingMethod === 'json'"
     :name="name + '_json'"
     title="Upload JSON File"
@@ -142,7 +156,11 @@
 <script lang="ts" setup>
 import type { Person } from 'app/src-common/entities';
 import { ref } from 'vue';
-import { loadJson } from 'src/lib/JsonInputLoader';
+import { loadJsonFile } from 'src/lib/JsonInputLoader';
+import { useQuasar } from 'quasar';
+import OnlinePeopleImportDialog from 'components/dialog/OnlinePeopleImportDialog.vue';
+
+const quasar = useQuasar();
 
 const modelValue = defineModel<Person[]>();
 
@@ -166,7 +184,7 @@ async function processJson() {
   inputErrorMessage.value = undefined;
 
   try {
-    modelValue.value = await loadJson(file.value);
+    modelValue.value = await loadJsonFile(file.value);
 
     emit('to', 'people_manual');
   } catch (reason) {
@@ -174,6 +192,20 @@ async function processJson() {
   } finally {
     fileUploadOngoing.value = false;
   }
+}
+
+function download() {
+  quasar
+    .dialog({
+      component: OnlinePeopleImportDialog,
+    })
+    .onOk((payload) => {
+      modelValue.value = payload;
+      emit('to', 'people_manual');
+    })
+    .onCancel(() => {
+      emit('to', name);
+    });
 }
 </script>
 
