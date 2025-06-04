@@ -27,16 +27,19 @@ export function loadJson(
   // Normalize and validate each entry
   const normalized = unwrapped
     .filter((entry) => !entry.waitingList)
-    .map((entry, idx) => {
+    .map((entry, i) => {
+      const id = entry.id ?? crypto.randomUUID();
+
       const personData = unwrapComputed(entry);
 
       if (!isValidPersonData(personData)) {
-        throw new Error(`Invalid person record at index ${idx}`);
+        throw new Error(`Invalid person record at index ${i}`);
       }
 
       const { firstName, lastName, address, role } = personData;
 
       return {
+        id,
         firstName,
         lastName,
         role: normalizeRole(role),
@@ -45,8 +48,8 @@ export function loadJson(
     });
 
   const unique = makeUniqueNames(normalized);
-  return unique.map(({ name, role, nationality }) => ({
-    id: crypto.randomUUID(),
+  return unique.map(({ id, name, role, nationality }) => ({
+    id: id ?? crypto.randomUUID(),
     name,
     role,
     nationality,
