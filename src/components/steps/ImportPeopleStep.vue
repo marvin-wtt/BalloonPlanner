@@ -50,11 +50,10 @@
           <q-radio
             v-model="loadingMethod"
             val="csv"
-            disable
           />
         </q-item-section>
         <q-item-section>
-          <q-item-label> CSV</q-item-label>
+          <q-item-label>CSV</q-item-label>
           <q-item-label caption>
             Upload CSV file based on template
           </q-item-label>
@@ -106,6 +105,15 @@
     @continue="emit('continue')"
     @back="emit('to', name)"
   />
+
+  <import-csv-step
+    v-if="loadingMethod === 'csv'"
+    v-model="modelValue"
+    :name="name + '_csv'"
+    @to="(destination) => emit('to', destination)"
+    @continue="emit('continue')"
+    @back="emit('to', name)"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -113,6 +121,7 @@ import type { Person } from 'app/src-common/entities';
 import { ref } from 'vue';
 import ImportOnlineSteps from 'components/steps/ImportOnlineSteps.vue';
 import ImportJsonStep from 'components/steps/ImportJsonStep.vue';
+import ImportCsvStep from 'components/steps/ImportCsvStep.vue';
 
 const modelValue = defineModel<Person[]>();
 
