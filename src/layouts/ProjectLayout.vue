@@ -2,7 +2,19 @@
   <q-layout view="hHh LpR lFf">
     <q-header elevated>
       <q-bar class="q-electron-drag">
-        <q-icon name="mdi-airballoon" />
+        <q-icon
+          v-if="route.name === 'projects'"
+          name="mdi-airballoon"
+        />
+
+        <q-btn
+          v-else
+          icon="arrow_back"
+          dense
+          round
+          flat
+          @click="router.back()"
+        />
 
         <div class="row q-gutter-x-xs no-wrap">
           <q-separator
