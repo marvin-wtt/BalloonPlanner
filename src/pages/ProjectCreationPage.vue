@@ -167,6 +167,12 @@ async function finish() {
 
   await projectStore.createProject(project);
 
-  await router.push(`/projects/${project.id}/flights/${project.flights[0].id}`);
+  await router.push({
+    name: 'flight',
+    params: {
+      projectId: project.id,
+      flightId: project.flights[0].id,
+    },
+  });
 }
 </script>

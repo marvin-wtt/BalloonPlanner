@@ -296,7 +296,7 @@ async function init() {
   if (project.value && project.value.flights.length > 0) {
     flightId = project.value.flights[project.value.flights.length - 1]?.id;
 
-    await router.push({
+    await router.replace({
       name: 'flight',
       params: {
         projectId,

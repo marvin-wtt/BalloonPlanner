@@ -10,13 +10,7 @@
         :key="flight.id"
         clickable
         v-close-popup
-        :to="{
-          name: 'flight',
-          params: {
-            projectId: project.id,
-            flightId: flight.id,
-          },
-        }"
+        @click="changeFlight(flight.id)"
       >
         <q-item-section>
           <q-item-label>
@@ -103,16 +97,21 @@ async function addFlight() {
     return false;
   }
 
-  const projectId = project.value.id;
   const flight = flightStore.createFlight();
-  await router.push({
+  await changeFlight(flight.id);
+  addFlightLoading.value = false;
+}
+
+async function changeFlight(flightId: string) {
+  const projectId = project.value.id;
+
+  await router.replace({
     name: 'flight',
     params: {
       projectId,
-      flightId: flight.id,
+      flightId,
     },
   });
-  addFlightLoading.value = false;
 }
 
 function deleteFlight(flight: Flight) {

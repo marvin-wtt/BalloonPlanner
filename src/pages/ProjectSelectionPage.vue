@@ -130,7 +130,10 @@ async function downloadProject(project: ProjectMeta) {
 }
 
 async function openProject(project: ProjectMeta) {
-  await router.push(`/projects/${project.id}/flights`);
+  await router.push({
+    name: 'flights',
+    params: { projectId: project.id },
+  });
 }
 
 function deleteProject(project: ProjectMeta) {
@@ -205,7 +208,9 @@ async function editProject(
 }
 
 async function createProject() {
-  await router.push('/projects/create');
+  await router.push({
+    name: 'create-project',
+  });
 }
 
 function loadProject() {
