@@ -5,17 +5,22 @@
     icon="cloud"
     :done="url?.length > 0"
   >
-    <q-input
-      v-model="url"
-      type="url"
-      label="Server URL"
-      :error
-      :error-message
-      hide-bottom-space
-      :loading
-      outlined
-      rounded
-    />
+    <div
+      class="column q-gutter-md"
+      style="max-width: 300px"
+    >
+      <q-input
+        v-model="url"
+        type="url"
+        label="Server URL"
+        :error
+        :error-message
+        hide-bottom-space
+        :loading
+        outlined
+        rounded
+      />
+    </div>
 
     <q-stepper-navigation class="row q-gutter-sm">
       <q-btn
@@ -44,7 +49,10 @@
     icon="login"
     :done="email?.length > 0 && password?.length > 0"
   >
-    <div class="column q-gutter-md">
+    <div
+      class="column q-gutter-md"
+      style="max-width: 300px"
+    >
       <q-input
         v-model="email"
         label="E-Mail"
@@ -91,18 +99,23 @@
     icon="security"
     :done="otp?.length === 6"
   >
-    <q-input
-      v-model="otp"
-      label="2FA Token"
-      type="text"
-      maxlength="6"
-      :error
-      :error-message
-      hide-bottom-space
-      outlined
-      rounded
-      @change="errorMessage = undefined"
-    />
+    <div
+      class="column q-gutter-md"
+      style="max-width: 300px"
+    >
+      <q-input
+        v-model="otp"
+        label="2FA Token"
+        type="text"
+        maxlength="6"
+        :error
+        :error-message
+        hide-bottom-space
+        outlined
+        rounded
+        @change="errorMessage = undefined"
+      />
+    </div>
 
     <q-stepper-navigation>
       <q-btn
