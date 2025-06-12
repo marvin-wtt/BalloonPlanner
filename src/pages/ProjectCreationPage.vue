@@ -90,7 +90,7 @@
         icon="flag"
         :done="completed"
       >
-        All done! You may edit the data later too.
+        All done! You may edit the data later.
         <q-stepper-navigation class="row q-gutter-sm">
           <q-btn
             label="Create"
