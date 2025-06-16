@@ -5,7 +5,7 @@
     icon="input"
     :done="loadingMethod !== undefined"
   >
-    <q-list>
+    <q-list style="max-width: 300px">
       <q-item
         tag="label"
         v-ripple
