@@ -125,7 +125,7 @@ async function downloadProject(project: ProjectMeta) {
   });
   const element = document.createElement('a');
   element.href = URL.createObjectURL(file);
-  element.download = `${project.name}.json`;
+  element.download = `${project.name}.bpp`;
   element.click();
 }
 
