@@ -369,7 +369,7 @@ async function onExportImage() {
 
   document.body.removeChild(container);
 
-  const fileName = `flight-${project.value.flights.indexOf(flight.value) + 1}.png`;
+  const fileName = `${project.value.name}-flight-${project.value.flights.indexOf(flight.value) + 1}.png`;
   const link = document.createElement('a');
   link.download = fileName;
   link.href = dataUrl;
