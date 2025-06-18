@@ -3,6 +3,7 @@
     v-if="person"
     :tag="operator ? 'th' : 'td'"
     :item="person"
+    :label="person.name"
     :disabled="!editable"
     :class="error ? 'text-negative' : ''"
     @remove="onDragEnd()"

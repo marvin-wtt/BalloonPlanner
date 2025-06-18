@@ -1,6 +1,7 @@
 <template>
   <draggable-item
     :item="vehicle"
+    :label="vehicle.name"
     :disabled="!editable"
     class="row"
     @remove="onVehicleRemoved"

@@ -17,10 +17,12 @@ import { ref } from 'vue';
 
 const {
   item,
+  label,
   tag = 'div',
   disabled = false,
 } = defineProps<{
   item: Identifiable;
+  label?: string;
   tag?: string | object;
   disabled?: boolean;
 }>();
@@ -39,7 +41,7 @@ function onDragStart(event: DragEvent) {
   dragged.value = true;
 
   const dragContent = document.createElement('div');
-  dragContent.textContent = eventContentLabel(event);
+  dragContent.textContent = label ?? eventContentLabel(event);
   dragContent.className = 'drag-content';
   document.body.appendChild(dragContent);
 
@@ -65,8 +67,9 @@ function onDragEnd(event: DragEvent) {
 function eventContentLabel(event: DragEvent): string {
   const str = (event.target as HTMLElement).textContent;
   const index = str.search(/[0-9(]/);
+  const label = index !== -1 ? str.slice(0, index) : str;
 
-  return index !== -1 ? str.slice(0, index).trim() : '';
+  return label.trim();
 }
 </script>
 
