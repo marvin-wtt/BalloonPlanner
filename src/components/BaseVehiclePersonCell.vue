@@ -4,6 +4,7 @@
     :tag="operator ? 'th' : 'td'"
     :item="person"
     :disabled="!editable"
+    :class="error ? 'text-negative' : ''"
     @remove="onDragEnd()"
   >
     <span>
@@ -102,6 +103,7 @@ const {
   assignment,
   editable = false,
   operator = false,
+  error = false,
 } = defineProps<{
   person?: Person;
   vehicle: Vehicle;
@@ -109,6 +111,7 @@ const {
   group: VehicleGroup;
   operator?: boolean;
   editable?: boolean;
+  error?: boolean;
 }>();
 
 const flightsLabel = computed<string>(() => {

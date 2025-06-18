@@ -34,7 +34,7 @@
             v-if="showVehicleLabel"
             class="vehicle-label"
             :class="{ 'vehicle-label--rounded': !hasFooter }"
-            :rowspan="capacity"
+            :rowspan="rowCount"
           >
             <span>
               {{ vehicle.name ?? '&#160;' }}
@@ -92,14 +92,22 @@
         </tr>
 
         <tr
-          v-for="c in capacity - 1"
+          v-for="c in rowCount - 1"
           :key="c"
         >
           <td
             v-if="showVehicleIndex"
             class="vehicle-index q-px-sm"
           >
-            {{ c }}
+            <template v-if="c <= capacity - 1">
+              {{ c }}
+            </template>
+            <span
+              v-else
+              class="text-negative"
+            >
+              -
+            </span>
           </td>
           <base-vehicle-person-cell
             class="vehicle-person"
@@ -109,6 +117,7 @@
             :group
             :assignment
             :editable
+            :error="c > capacity - 1"
           />
         </tr>
 
@@ -215,6 +224,10 @@ const capacity = computed<number>(() => {
   }
 
   return hideEmptyCapacity.value ? assignment.passengerIds.length : capacity;
+});
+
+const rowCount = computed<number>(() => {
+  return Math.max(capacity.value, assignment.passengerIds.length + 1);
 });
 
 type InfoMessage = { message: string; color: string };
