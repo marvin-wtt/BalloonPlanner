@@ -15,7 +15,7 @@
 <script lang="ts" setup>
 import { DragHelper } from 'src/util/DragHelper';
 import { ref } from 'vue';
-import type { Identifiable } from 'src/lib/utils/Identifiable';
+import type { Identifiable } from 'app/src-common/entities';
 
 const { tag = 'div', accepted = () => true } = defineProps<{
   accepted?: (element: Identifiable) => boolean;
