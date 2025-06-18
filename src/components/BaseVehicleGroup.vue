@@ -80,7 +80,8 @@ const { groupAlignment, groupStyle, showGroupLabel } =
   storeToRefs(settingsStore);
 const flightStore = useFlightStore();
 const { flight, carMap, balloonMap } = storeToRefs(flightStore);
-const { addCarToVehicleGroup } = useFlightOperations();
+const { addCarToVehicleGroup, addCarOperator, addCarPassenger } =
+  useFlightOperations();
 
 const {
   group,
@@ -152,7 +153,23 @@ function drop(element: Identifiable) {
     return;
   }
 
+  const previousCar = flight.value.vehicleGroups
+    .flatMap((g) => g.cars)
+    .find((c) => c.id === element.id);
+
   addCarToVehicleGroup(group.balloon.id, element.id);
+
+  if (!previousCar) {
+    return;
+  }
+
+  if (previousCar.operatorId) {
+    addCarOperator(group.balloon.id, previousCar.id, previousCar.operatorId);
+  }
+
+  for (const passengerId of previousCar.passengerIds) {
+    addCarPassenger(group.balloon.id, previousCar.id, passengerId);
+  }
 }
 </script>
 
