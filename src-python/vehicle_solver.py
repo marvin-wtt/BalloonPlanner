@@ -1,21 +1,23 @@
 """Balloon‑camp crew optimiser
 ================================
-A single‐slot (one flight) solver with:
-• **Hard rules**
+A single‑slot (one flight) solver with:
+
+• Hard rules
   – exactly one qualified operator per occupied vehicle
   – every passenger (incl. operator) occupies a seat
   – seat‑capacity and optional max‑weight per vehicle
   – each person appears in ≤ 1 vehicle and operates ≤ 1 vehicle
   – optional *frozen* assignments (operator / passenger / absent)
-• **Soft rules** (linear objective)
-  – give airtime to low‑flight pilots (w_fair)
-  – prefer low‑flight passengers in balloons (w_low_flights)
-  – reward mixed nationalities in each vehicle (w_diversity)
-  – discourage putting someone in the same vehicle again (w_new_vehicle)
+
+• Soft rules (linear objective)
+  – give airtime to low‑flight pilots (w_pilot_fairness)
+  – prefer low‑flight passengers in balloons (w_passenger_fairness)
+  – reward mixed nationalities in each vehicle (w_divers_nationalities)
+  – discourage “same vehicle again” (w_vehicle_rotation)
+  – discourage exactly one participant alone in a car (w_no_solo_participant)
+  – cluster balance terms for leg 1 and leg 2
 
 All weights are user‑tunable kwargs.
-
-Dependencies: `ortools>=9.9`.  Run the smoke‑test at bottom to verify.
 """
 
 from itertools import product
@@ -38,7 +40,6 @@ def solve(
     past_flights: Optional[List[Dict[str, Any]]] = None,
     leg: int = None,
     # soft weights
-    # Defaults are overwritten by command-line args
     w_pilot_fairness: int,
     w_passenger_fairness: int,
     w_no_solo_participant: int,
@@ -51,29 +52,26 @@ def solve(
     # misc
     default_person_weight: int,
     time_limit_s: int,
+    num_search_workers: int = 8,
+    random_seed: Optional[int] = None,
 ):
     """Solve a *single* leg; call once per flight."""
     frozen = frozen or []
+    past_flights = past_flights or []
 
     # ------------------------------------------------------------------
     # 0. Input validation
     # ------------------------------------------------------------------
     if w_overweight_second_leg < 0:
-        raise ValueError("w_second_leg_weight must be non-negative")
-
+        raise ValueError("w_overweight_second_leg must be non-negative")
     if default_person_weight < 0:
         raise ValueError("default_person_weight must be non-negative")
-
     if time_limit_s <= 0:
         raise ValueError("time_limit_s must be positive")
-
     if leg is not None and (leg > 2 or leg < 0):
         raise ValueError("leg must be 0, 1, or 2")
-
-    if leg is not None and leg > 1:
-        if len(past_flights) == 0:
-            raise ValueError("Flight history must be provided for multi-leg flights")
-
+    if leg is not None and leg > 1 and len(past_flights) == 0:
+        raise ValueError("Flight history must be provided for multi-leg flights")
     if cluster is None:
         raise ValueError("Cluster must be provided")
 
@@ -91,20 +89,24 @@ def solve(
     vehicle_ids = list(vehicles_by_id)
 
     weight = {
-        p: people_by_id[p].get("weight", default_person_weight) for p in person_ids
+        p: int(people_by_id[p].get("weight", default_person_weight)) for p in person_ids
     }
-    flights_so_far = {p: people_by_id[p]["flights"] for p in person_ids}
-    nationality = {p: people_by_id[p]["nationality"] for p in person_ids}
+    flights_so_far = {p: int(people_by_id[p].get("flights", 0)) for p in person_ids}
+    nationality = {
+        p: (people_by_id[p].get("nationality") or "unknown") for p in person_ids
+    }
     nationalities = set(nationality.values())
     is_participant = {
-        p: people_by_id[p].get("role", "participant") == "participant"
+        p: (people_by_id[p].get("role", "participant") == "participant")
         for p in person_ids
     }
 
-    capacity = {v: vehicles_by_id[v]["capacity"] for v in vehicle_ids}
+    capacity = {v: int(vehicles_by_id[v]["capacity"]) for v in vehicle_ids}
     kind = {v: vehicles_by_id[v]["kind"] for v in vehicle_ids}
-    allowed_op = {v: set(vehicles_by_id[v]["allowed_operators"]) for v in vehicle_ids}
-    max_weight = {v: vehicles_by_id[v].get("max_weight", -1) for v in vehicle_ids}
+    allowed_op = {
+        v: set(vehicles_by_id[v].get("allowed_operators", [])) for v in vehicle_ids
+    }
+    max_weight = {v: int(vehicles_by_id[v].get("max_weight", -1)) for v in vehicle_ids}
 
     # ------------------------------------------------------------------
     # 0.b  Historic “fresh vehicle” map
@@ -112,7 +114,7 @@ def solve(
     seen = defaultdict(set)
     if past_flights:
         for fl in past_flights:
-            for grp in fl["groups"]:
+            for grp in fl.get("groups", []):
                 bid = grp["balloon"]["id"]
                 seen[grp["balloon"]["operator"]].add(bid)
                 for p in grp["balloon"]["passengers"]:
@@ -179,11 +181,11 @@ def solve(
             model.Add(pax[p, v] == 1)
             model.Add(op[p, v] == 0)
         else:
-            raise ValueError("unknown role")
+            raise ValueError("unknown role in frozen assignment")
 
-    # 2.7 stay-in-cluster after leg-0
+    # 2.7 stay-in-cluster after leg-1 (i.e., solving leg 2)
     if leg is not None and leg > 1:
-        # take cluster from *previous* leg (last entry)
+        # take cluster from previous leg (last entry)
         prev = past_flights[-1]
         allowed = defaultdict(set)
 
@@ -200,19 +202,19 @@ def solve(
                 allowed[pid].update(cluster_vids)
 
         for p in person_ids:
+            if not allowed.get(p):
+                raise ValueError(
+                    f"Person {people_by_id[p].get('name', p)} not allowed in any vehicle"
+                )
             for v in vehicle_ids:
-                if not allowed.get(p):
-                    raise ValueError(
-                        f"Person {people_by_id[p]['name']} not allowed in any vehicle"
-                    )
-                if v not in allowed.get(p, set()):
+                if v not in allowed[p]:
                     model.Add(pax[p, v] == 0)
 
     # ------------------------------------------------------------------
     # 3. Objective
     # ------------------------------------------------------------------
     objective_terms = []
-    max_flights = max(flights_so_far.values()) + 1
+    max_flights = max(flights_so_far.values()) + 1 if flights_so_far else 1
 
     # 3.1 pilot fairness
     for p, v in product(person_ids, vehicle_ids):
@@ -228,29 +230,25 @@ def solve(
                 bonus = max(bonus - counselor_flight_discount, 0)
             objective_terms.append(-w_passenger_fairness * bonus * pax[p, v])
 
-    # 3.3 mo participants alone
+    # 3.3 no participants alone in a car
     for v in vehicle_ids:
         if kind[v] != "car":
             continue
-
-        part_sat = sum(is_participant[p] * pax[p, v] for p in person_ids)
-
+        part_sat = sum(int(is_participant[p]) * pax[p, v] for p in person_ids)
         solo_part = model.NewBoolVar(f"solo_part_{v}")
-
         model.Add(part_sat == 1).OnlyEnforceIf(solo_part)
         model.Add(part_sat != 1).OnlyEnforceIf(solo_part.Not())
-
         objective_terms.append(+w_no_solo_participant * solo_part)
 
-    # 3.4 cluster passenger deviation
+    # 3.4 cluster passenger deviation (leg 0 or 1)
     if leg is None or leg == 1:
         n_people = len(person_ids)
         seats_in_air = sum(b["capacity"] for b in balloons)
-        avg_ground = (n_people - seats_in_air) // len(cluster)
+        # integer target; fair rounding happens via deviation vars
+        avg_ground = (n_people - seats_in_air) // max(len(cluster), 1)
 
         for bid, car_ids in cluster.items():
             crew_cars = sum(pax[p, v] for v in car_ids for p in person_ids)
-
             # absolute deviation |crew - avg_ground|
             dev_pos = model.NewIntVar(0, n_people, f"devP_{bid}")
             dev_neg = model.NewIntVar(0, n_people, f"devN_{bid}")
@@ -284,8 +282,8 @@ def solve(
         if v not in seen[p]:
             objective_terms.append(-w_vehicle_rotation * (pax[p, v] - op[p, v]))
 
-    # 3.7 soft cluster balance
-    if leg is not None and leg == 1:
+    # 3.7 leg-2: prioritise low-flight pax in cars, and avoid overweight (low-flight mass)
+    if leg is not None and leg == 2:
         future_seats = sum(b["capacity"] for b in balloons)
         sorted_f = sorted(flights_so_far.values())
         cutoff = (
@@ -295,32 +293,31 @@ def solve(
         )
         low = {p: int(flights_so_far[p] <= cutoff) for p in person_ids}
 
+        # a) achieve at least balloon.capacity low-flight pax within each cluster's cars
         for b in balloons:
             bid = b["id"]
-            target = b["capacity"]
-
+            target = int(b["capacity"])
             car_ids = cluster[bid]
 
-            # how many low-flight pax we actually placed in those cars
             low_in_cars = sum(low[p] * pax[p, v] for v in car_ids for p in person_ids)
 
             short = model.NewIntVar(0, target, f"short_{bid}")
             model.Add(short >= target - low_in_cars)
-
             objective_terms.append(+w_low_flights_second_leg * short)
 
+        # b) overweight penalty using *low-flight mass* in those cars
         for bid, car_ids in cluster.items():
-            if max_weight[bid] <= 0:
+            # If a balloon has max_weight, use it as a budget proxy for its road cluster
+            max_w = max_weight.get(bid, -1)
+            if max_w <= 0:
                 continue
-
-            weight_budget = max_weight[bid]
 
             low_weight_in_cars = sum(
                 weight[p] * low[p] * pax[p, v] for v in car_ids for p in person_ids
             )
 
-            over = model.NewIntVar(0, weight_budget, f"over_{bid}")
-            model.Add(over >= low_weight_in_cars - weight_budget)
+            over = model.NewIntVar(0, max_w, f"over_{bid}")
+            model.Add(over >= low_weight_in_cars - max_w)
             objective_terms.append(w_overweight_second_leg * over)
 
     model.Minimize(sum(objective_terms))
@@ -329,8 +326,10 @@ def solve(
     # 4. Solve
     # ------------------------------------------------------------------
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = time_limit_s
-    solver.parameters.num_search_workers = 8
+    solver.parameters.max_time_in_seconds = float(time_limit_s)
+    solver.parameters.num_search_workers = int(max(1, num_search_workers))
+    if random_seed is not None:
+        solver.parameters.random_seed = int(random_seed)
 
     if solver.Solve(model) not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         raise RuntimeError("No feasible assignment")
@@ -342,8 +341,7 @@ def solve(
     for p, v in product(person_ids, vehicle_ids):
         if solver.BooleanValue(op[p, v]):
             manifest[v]["operator"] = p
-            continue
-        if solver.BooleanValue(pax[p, v]):
+        elif solver.BooleanValue(pax[p, v]):
             manifest[v]["passengers"].append(p)
 
     return manifest

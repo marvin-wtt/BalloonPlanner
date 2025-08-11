@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from ortools.sat.python import cp_model
 
 
@@ -7,21 +7,35 @@ def build_clusters(
     cars: List[Dict[str, Any]],
     people: List[Dict[str, Any]],
     precluster: dict[str, list[str]] | None = None,
+    *,
+    time_limit_s: int = 5,
+    num_search_workers: Optional[int] = None,
+    random_seed: Optional[int] = None,
 ) -> Dict[str, List[str]]:
+    """
+    Partition cars into balloon clusters, ensuring:
+      - each car belongs to at most one balloon
+      - each cluster has at least one trailer-equipped car
+      - passenger seats in a cluster cover that balloon's capacity (reserved for balloon pax)
+      - total *car* seats cover everyone who is NOT in balloons
+
+    Also reserves balloon seats out of their cluster cars (mutates `cars` capacity).
+    """
     precluster = precluster or {}
 
     car_ids = [c["id"] for c in cars]
     balloon_ids = [b["id"] for b in balloons]
 
-    cap = {c["id"]: c["capacity"] for c in cars}
-    pass_cap = {cid: cap[cid] - 1 for cid in car_ids}  # seats for pax
-    trailer = {c["id"]: c.get("trailer_clutch", False) for c in cars}
-    bal_need = {b["id"]: b["capacity"] for b in balloons}
+    cap = {c["id"]: int(c["capacity"]) for c in cars}
+    pax_cap = {cid: max(cap[cid] - 1, 0) for cid in car_ids}  # seats for passengers
+    trailer = {c["id"]: bool(c.get("trailer_clutch", False)) for c in cars}
+    bal_need = {b["id"]: int(b["capacity"]) for b in balloons}
 
     # sanity checks ----------------------------------------------------
-    if sum(trailer[c] for c in car_ids) < len(balloons):
+    if sum(1 for c in car_ids if trailer[c]) < len(balloons):
         raise ValueError("not enough trailer-equipped cars for balloons")
     if sum(cap.values()) < len(people):
+        # This is a coarse check (ignores balloon seats on purpose); we’ll refine below.
         raise ValueError("fleet lacks passenger seats for all people")
 
     for bid, fixed_cars in precluster.items():
@@ -47,25 +61,29 @@ def build_clusters(
 
     # (2) ≥ 1 trailer car in each cluster
     for b in balloon_ids:
-        model.Add(sum(trailer[c] * x[c, b] for c in car_ids) >= 1)
+        model.Add(sum((1 if trailer[c] else 0) * x[c, b] for c in car_ids) >= 1)
 
-    # (3) passenger seats per balloon ≥ balloon.capacity
+    # (3) passenger seats per balloon ≥ balloon.capacity  (reserve for balloon pax)
     for b in balloon_ids:
-        model.Add(sum(pass_cap[c] * x[c, b] for c in car_ids) >= bal_need[b])
+        model.Add(sum(pax_cap[c] * x[c, b] for c in car_ids) >= bal_need[b])
 
-    # (4) passenger seats across all clusters ≥ |people|
-    model.Add(sum(cap[c] * x[c, b] for c, b in x) >= len(people))
+    # (4) across all clusters, *car* seats must cover everyone not seated in balloons
+    car_seats_needed = max(len(people) - sum(bal_need.values()), 0)
+    model.Add(sum(cap[c] * x[c, b] for c, b in x) >= car_seats_needed)
 
-    # objective: minimise unused passenger seats
-    unused = model.NewIntVar(0, sum(pass_cap.values()), "unused")
-    model.Add(
-        unused == sum(pass_cap.values()) - sum(pass_cap[c] * x[c, b] for c, b in x)
-    )
+    # objective: minimise unused passenger seats across all clusters
+    unused = model.NewIntVar(0, sum(pax_cap.values()), "unused")
+    model.Add(unused == sum(pax_cap.values()) - sum(pax_cap[c] * x[c, b] for c, b in x))
     model.Minimize(unused)
 
     # solve ------------------------------------------------------------
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 5
+    solver.parameters.max_time_in_seconds = float(time_limit_s)
+    if num_search_workers is not None:
+        solver.parameters.num_search_workers = int(num_search_workers)
+    if random_seed is not None:
+        solver.parameters.random_seed = int(random_seed)
+
     status = solver.Solve(model)
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         raise RuntimeError("no feasible clustering")
@@ -76,28 +94,28 @@ def build_clusters(
             clusters[b].append(c)
 
     # ----------------------------------------------------------------
-    # 2.  Reserve seats for balloon passengers inside their own cars
+    # 2. Reserve seats for balloon passengers inside their own cars
+    #    (mutates `cars`: capacity -= reserved seats)
     # ----------------------------------------------------------------
     car_by_id = {c["id"]: c for c in cars}  # live reference
     for bal in balloons:
         bid = bal["id"]
-        need = bal["capacity"]  # seats to reserve
+        need = int(bal["capacity"])  # seats to reserve for balloon pax
 
         existing = precluster.get(bid, [])
         cluster_cars = clusters.get(bid, [])
 
-        # (1) Keep only those existing cars that actually ended up in this cluster
+        # keep original car order from precluster first, then add new ones
         existing_in_cluster = [c for c in existing if c in cluster_cars]
-        # (2) All the others in clusters[bid] that were not in `existing_in_cluster`
         new_cars = [c for c in cluster_cars if c not in existing_in_cluster]
 
         for cid in existing_in_cluster + new_cars:
             if need <= 0:
                 break
             car = car_by_id[cid]
-            pass_cap = max(car["capacity"] - 1, 0)  # seats excl. driver
-            take = min(need, pass_cap)
-            car["capacity"] -= take
+            car_pax_cap = max(int(car["capacity"]) - 1, 0)  # seats excl. driver
+            take = min(need, car_pax_cap)
+            car["capacity"] = int(car["capacity"]) - take
             need -= take
         if need > 0:
             raise RuntimeError(
