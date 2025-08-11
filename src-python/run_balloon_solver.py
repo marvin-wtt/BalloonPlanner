@@ -19,7 +19,11 @@ from typing import List, Any, NoReturn
 
 from vehicle_solver import solve
 from transformer import transform_input_payload, transform_output
-from vehicle_group_solver import build_clusters
+from vehicle_group_solver import (
+    build_clusters,
+    extract_fixed_cluster_from_history,
+    reserve_cluster_seats,
+)
 
 
 def _emit_error(exc: Exception, exit_code: int) -> NoReturn:
@@ -216,14 +220,26 @@ def main(argv: List[str] | None = None) -> None:
             history=history,
         )
 
-        cluster = build_clusters(
+        if args.flight_leg is None or args.flight_leg is 1:
+            cluster = build_clusters(
+                balloons=balloons,
+                cars=cars,
+                people=people,
+                precluster=precluster,
+                time_limit_s=args.cluster_time_limit,
+                num_search_workers=args.cluster_workers,
+                random_seed=args.seed,
+            )
+        else:
+            cluster = extract_fixed_cluster_from_history(
+                groups=groups,
+                history=history,
+            )
+
+        reserve_cluster_seats(
             balloons=balloons,
             cars=cars,
-            people=people,
-            precluster=precluster,
-            time_limit_s=args.cluster_time_limit,
-            num_search_workers=args.cluster_workers,
-            random_seed=args.seed,
+            cluster=cluster,
         )
 
         manifest = solve(
