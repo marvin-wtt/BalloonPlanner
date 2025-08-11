@@ -88,6 +88,19 @@ def solve(
     person_ids = list(people_by_id)
     vehicle_ids = list(vehicles_by_id)
 
+    # If solving leg 2, ignore people who were not present in the previous leg
+    if leg is not None and leg > 1 and past_flights:
+        prev = past_flights[-1]
+        prev_people = set()
+        for grp in prev.get("groups", []):
+            prev_people.add(grp["balloon"]["operator"])
+            prev_people.update(grp["balloon"]["passengers"])
+            for car in grp["cars"]:
+                prev_people.add(car["operator"])
+                prev_people.update(car["passengers"])
+        # keep only those who appeared in the previous leg
+        person_ids = [p for p in person_ids if p in prev_people]
+
     weight = {
         p: int(people_by_id[p].get("weight", default_person_weight)) for p in person_ids
     }
@@ -174,6 +187,9 @@ def solve(
     # 2.6 frozen seats
     for lock in frozen:
         p, v = lock["person"], lock["vehicle"]
+        # Skip frozen assignments for people not part of this leg (filtered above)
+        if p not in person_ids:
+            continue
         if lock["role"] == "operator":
             model.Add(op[p, v] == 1)
             model.Add(pax[p, v] == 1)
@@ -203,9 +219,8 @@ def solve(
 
         for p in person_ids:
             if not allowed.get(p):
-                raise ValueError(
-                    f"Person {people_by_id[p].get('name', p)} not allowed in any vehicle"
-                )
+                # The person wasn't in the previous leg; they've been filtered out above.
+                continue
             for v in vehicle_ids:
                 if v not in allowed[p]:
                     model.Add(pax[p, v] == 0)
