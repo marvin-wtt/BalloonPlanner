@@ -171,6 +171,12 @@ def main(argv: List[str] | None = None) -> None:
         ),
     )
     parser.add_argument(
+        "--w-language-mismatch",
+        type=int,
+        default=10,
+        help="Penalty when a vehicle’s operator and a seated passenger share no common language.",
+    )
+    parser.add_argument(
         "--counselor-flight-discount",
         type=int,
         default=1,
@@ -258,6 +264,7 @@ def main(argv: List[str] | None = None) -> None:
             w_divers_nationalities=args.w_nationality_diversity,
             w_low_flights_second_leg=w_low_second,
             w_overweight_second_leg=args.w_second_leg_overweight,
+            w_language_mismatch=args.w_language_mismatch,
             counselor_flight_discount=args.counselor_flight_discount,
             default_person_weight=args.default_person_weight,
             time_limit_s=args.time_limit,

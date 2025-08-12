@@ -48,6 +48,7 @@ def solve(
     w_vehicle_rotation: int,
     w_low_flights_second_leg: int,
     w_overweight_second_leg: int,
+    w_language_mismatch: int,
     counselor_flight_discount: int,
     # misc
     default_person_weight: int,
@@ -120,6 +121,17 @@ def solve(
         v: set(vehicles_by_id[v].get("allowed_operators", [])) for v in vehicle_ids
     }
     max_weight = {v: int(vehicles_by_id[v].get("max_weight", -1)) for v in vehicle_ids}
+
+    langs = {
+        p: set(str(l).lower() for l in people_by_id[p].get("languages", []) if l)
+        for p in person_ids
+    }
+    # Precompute operator/passenger language compatibility (constant 0/1)
+    common_lang = {
+        (p, q): int(len(langs[p] & langs[q]) > 0)
+        for p in person_ids
+        for q in person_ids
+    }
 
     # ------------------------------------------------------------------
     # 0.b  Historic “fresh vehicle” map
@@ -334,6 +346,24 @@ def solve(
             over = model.NewIntVar(0, max_w, f"over_{bid}")
             model.Add(over >= low_weight_in_cars - max_w)
             objective_terms.append(w_overweight_second_leg * over)
+
+    # 3.8 Language match: penalize when seated passenger and operator share no language
+    if w_language_mismatch > 0:
+        for v in vehicle_ids:
+            if kind[v] != "balloon":
+                continue  # <-- do NOT penalize cars
+            for q in person_ids:  # potential operator
+                for p in person_ids:  # potential passenger
+                    if p == q:
+                        continue
+                    if common_lang[(p, q)] == 1:
+                        continue  # no penalty if there is a shared language
+                    # z = pax[p,v] AND op[q,v]
+                    z = model.NewBoolVar(f"lang_mismatch_{p}_{q}_{v}")
+                    model.Add(z <= pax[p, v])
+                    model.Add(z <= op[q, v])
+                    model.Add(z >= pax[p, v] + op[q, v] - 1)
+                    objective_terms.append(w_language_mismatch * z)
 
     model.Minimize(sum(objective_terms))
 

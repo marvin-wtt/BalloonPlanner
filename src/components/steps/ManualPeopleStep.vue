@@ -110,6 +110,14 @@ const columns: QTableColumn[] = [
     format: (val: string) => nationMap[val] ?? val,
   },
   {
+    name: 'languages',
+    label: 'Languages',
+    field: 'languages',
+    align: 'left',
+    sortable: false,
+    format: (val: string[]) => val.join(', '),
+  },
+  {
     name: 'role',
     label: 'Role',
     field: 'role',

@@ -36,6 +36,7 @@ def transform_input_payload(balloons, cars, people, groups, history):
             "role": "role",
             "weight": "weight",
             "flights": "flights",
+            "languages": "languages",
         },
     )
     for p in people:
@@ -43,6 +44,8 @@ def transform_input_payload(balloons, cars, people, groups, history):
         nat = p.get("nationality")
         p["nationality"] = nat or "unknown"
         p["flights"] = int(p.get("flights") or 0)
+        langs = p.get("languages") or []
+        p["languages"] = [str(l).lower() for l in langs if l]
 
     precluster, frozen = _transform_vehicle_groups(groups)
     history = _transform_flights(history)

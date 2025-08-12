@@ -9,8 +9,8 @@
         @submit="onSubmit"
       >
         <q-card-section class="text-h6">
-          <template v-if="mode === 'create'"> Create Person</template>
-          <template v-else> Edit Person</template>
+          <template v-if="mode === 'create'">Create Person</template>
+          <template v-else>Edit Person</template>
         </q-card-section>
 
         <q-card-section class="q-pt-none q-gutter-y-md">
@@ -47,6 +47,19 @@
             v-model="firstTime"
             label="Is first time"
             toggle-indeterminate
+          />
+
+          <q-select
+            v-model="languages"
+            label="Languages"
+            :options="languagesOptions"
+            multiple
+            emit-value
+            map-options
+            use-chips
+            hide-bottom-space
+            outlined
+            rounded
           />
 
           <q-input
@@ -121,6 +134,7 @@ const nationality = ref<string>(person?.nationality ?? null);
 const role = ref<PersonRole>(person?.role ?? 'participant');
 const weight = ref<number>(person?.weight ?? undefined);
 const firstTime = ref<boolean>(person?.firstTime ?? undefined);
+const languages = ref<string[]>(person?.languages ?? undefined);
 
 const mode = computed<'create' | 'edit'>(() => {
   return person ? 'edit' : 'create';
@@ -134,6 +148,21 @@ const nationalityOptions = [
   {
     label: 'French',
     value: 'fr',
+  },
+];
+
+const languagesOptions = [
+  {
+    label: 'German',
+    value: 'de',
+  },
+  {
+    label: 'French',
+    value: 'fr',
+  },
+  {
+    label: 'English',
+    value: 'en',
   },
 ];
 
@@ -155,6 +184,7 @@ function onSubmit() {
     role: toRaw(role.value),
     weight: toRaw(weight.value) ?? undefined,
     firstTime: toRaw(firstTime.value) ?? undefined,
+    languages: toRaw(languages.value) ?? undefined,
   };
 
   onDialogOK(payload);
