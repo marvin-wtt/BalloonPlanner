@@ -12,6 +12,8 @@ const DEFAULTS: Readonly<ProjectSettings> = {
   personDefaultWeight: 80,
   groupAlignment: 'horizontal',
   groupStyle: 'dashed',
+  balloonColor: '#999999',
+  carColor: '#999999',
 };
 
 function merged(src?: Partial<ProjectSettings> | null): ProjectSettings {

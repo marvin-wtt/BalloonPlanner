@@ -7,7 +7,7 @@
       <div class="text-h6">Settings</div>
       <div class="q-gutter-sm">
         <q-list separator>
-          <q-item-label header>General</q-item-label>
+          <q-item-label header>Information</q-item-label>
           <q-item
             tag="label"
             v-ripple
@@ -163,6 +163,70 @@
               />
             </q-item-section>
           </q-item>
+          <q-item>
+            <q-item-section>
+              <q-input
+                v-model="balloonColor"
+                label="Balloon Color"
+                :rules="['anyColor']"
+                hide-bottom-space
+                rounded
+                outlined
+                dense
+              >
+                <template v-slot:append>
+                  <q-icon
+                    name="colorize"
+                    class="cursor-pointer"
+                  >
+                    <q-popup-proxy
+                      cover
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
+                      <q-color
+                        v-model="balloonColor"
+                        no-header
+                        default-view="palette"
+                      />
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </q-item-section>
+          </q-item>
+          <q-item>
+            <q-item-section>
+              <q-input
+                v-model="carColor"
+                label="Car Color"
+                :rules="['anyColor']"
+                hide-bottom-space
+                rounded
+                outlined
+                dense
+              >
+                <template v-slot:append>
+                  <q-icon
+                    name="colorize"
+                    class="cursor-pointer"
+                  >
+                    <q-popup-proxy
+                      cover
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
+                      <q-color
+                        v-model="carColor"
+                        no-header
+                        default-view="palette"
+                      />
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </q-item-section>
+          </q-item>
         </q-list>
       </div>
     </q-scroll-area>
@@ -183,6 +247,8 @@ const {
   personDefaultWeight,
   groupAlignment,
   groupStyle,
+  balloonColor,
+  carColor,
 } = useProjectSettings();
 
 const { name } = defineProps<{

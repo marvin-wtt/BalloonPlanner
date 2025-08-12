@@ -35,6 +35,7 @@
             v-if="showVehicleLabel"
             class="vehicle-label"
             :class="{ 'vehicle-label--rounded': !hasFooter }"
+            :style="{ backgroundColor: color }"
             :rowspan="rowCount"
           >
             <span>
@@ -176,6 +177,8 @@ const {
   showVehicleIndex,
   showVehicleLabel,
   personDefaultWeight,
+  balloonColor,
+  carColor,
 } = useProjectSettings();
 
 const {
@@ -228,6 +231,10 @@ const capacity = computed<number>(() => {
 
 const rowCount = computed<number>(() => {
   return Math.max(capacity.value, assignment.passengerIds.length + 1);
+});
+
+const color = computed<string>(() => {
+  return vehicle.value.type === 'balloon' ? balloonColor.value : carColor.value;
 });
 
 type InfoMessage = { message: string; color: string };
