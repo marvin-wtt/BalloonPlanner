@@ -73,11 +73,9 @@ import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import BaseVehicle from 'components/BaseVehicle.vue';
 import { useFlightOperations } from 'src/composables/flight-operations';
-import { useSettingsStore } from 'stores/settings';
+import { useProjectSettings } from 'src/composables/projectSettings';
 
-const settingsStore = useSettingsStore();
-const { groupAlignment, groupStyle, showGroupLabel } =
-  storeToRefs(settingsStore);
+const { groupAlignment, groupStyle, showGroupLabel } = useProjectSettings();
 const flightStore = useFlightStore();
 const { flight, carMap, balloonMap } = storeToRefs(flightStore);
 const { addCarToVehicleGroup, addCarOperator, addCarPassenger } =

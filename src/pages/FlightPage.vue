@@ -232,7 +232,6 @@ import type {
   SmartFillOptions,
 } from 'app/src-common/entities';
 import EditableList from 'components/EditableList.vue';
-import { useSettingsStore } from 'stores/settings';
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import { useFlightStore } from 'stores/flight';
 import { useFlightOperations } from 'src/composables/flight-operations';
@@ -242,20 +241,19 @@ import FlightCarsPanel from 'components/panels/FlightCarsPanel.vue';
 import SmartFillDialog from 'components/dialog/SmartFillDialog.vue';
 import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';
 import { toPng } from 'html-to-image';
+import { useProjectSettings } from 'src/composables/projectSettings';
 
 const route = useRoute();
 const router = useRouter();
 const quasar = useQuasar();
 const projectStore = useProjectStore();
 const flightStore = useFlightStore();
-const settingsStore = useSettingsStore();
 
 const { project, isLoading } = storeToRefs(projectStore);
 const { flight, numberOfFlights } = storeToRefs(flightStore);
 
 const { showNumberOfFlights, showPersonWeight, personDefaultWeight } =
-  storeToRefs(settingsStore);
-
+  useProjectSettings();
 const { createPerson, editPerson, removePerson, addPerson } =
   useFlightOperations();
 

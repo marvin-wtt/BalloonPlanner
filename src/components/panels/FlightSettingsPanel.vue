@@ -171,10 +171,8 @@
 
 <script lang="ts" setup>
 import { QItem, QList } from 'quasar';
-import { storeToRefs } from 'pinia';
-import { useSettingsStore } from 'stores/settings';
+import { useProjectSettings } from 'src/composables/projectSettings';
 
-const settingsStore = useSettingsStore();
 const {
   showVehicleIndex,
   showVehicleLabel,
@@ -185,7 +183,7 @@ const {
   personDefaultWeight,
   groupAlignment,
   groupStyle,
-} = storeToRefs(settingsStore);
+} = useProjectSettings();
 
 const { name } = defineProps<{
   name: string;

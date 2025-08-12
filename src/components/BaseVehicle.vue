@@ -154,8 +154,8 @@ import { useFlightOperations } from 'src/composables/flight-operations';
 import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
 import { useQuasar } from 'quasar';
 import EditCarDialog from 'components/dialog/EditCarDialog.vue';
-import { useSettingsStore } from 'stores/settings';
 import { useProjectStore } from 'stores/project';
+import { useProjectSettings } from 'src/composables/projectSettings';
 
 const {
   removeCarFromVehicleGroup,
@@ -171,13 +171,12 @@ const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
 const { balloonMap, carMap, personMap } = storeToRefs(flightStore);
-const settingsStore = useSettingsStore();
 const {
   showVehicleWeight,
   showVehicleIndex,
   showVehicleLabel,
   personDefaultWeight,
-} = storeToRefs(settingsStore);
+} = useProjectSettings();
 
 const {
   group,

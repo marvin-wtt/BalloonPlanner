@@ -43,15 +43,14 @@ import DropZone from 'components/drag/DropZone.vue';
 import { computed } from 'vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
 import { useFlightOperations } from 'src/composables/flight-operations';
-import { useSettingsStore } from 'stores/settings';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
+import { useProjectSettings } from 'src/composables/projectSettings';
 
 const flightStore = useFlightStore();
 const { availablePeople, availableCars, availableBalloons } =
   storeToRefs(flightStore);
-const settingsStore = useSettingsStore();
-const { groupAlignment } = storeToRefs(settingsStore);
+const { groupAlignment } = useProjectSettings();
 const { addVehicleGroup } = useFlightOperations();
 
 const { flight, editable = false } = defineProps<{

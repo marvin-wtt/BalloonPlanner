@@ -71,20 +71,19 @@ import DropZone from 'components/drag/DropZone.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import { useFlightStore } from 'stores/flight';
 import { storeToRefs } from 'pinia';
-import { useSettingsStore } from 'stores/settings';
 import { useFlightOperations } from 'src/composables/flight-operations';
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import { useQuasar } from 'quasar';
 import { useProjectStore } from 'stores/project';
+import { useProjectSettings } from 'src/composables/projectSettings';
 
 const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
 const { personMap, numberOfFlights } = storeToRefs(flightStore);
-const settingsStore = useSettingsStore();
 const { showPersonWeight, showNumberOfFlights, personDefaultWeight } =
-  storeToRefs(settingsStore);
+  useProjectSettings();
 const {
   editPerson,
   addCarPassenger,

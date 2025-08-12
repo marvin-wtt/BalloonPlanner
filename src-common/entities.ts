@@ -62,6 +62,8 @@ export interface ProjectSettings {
   personDefaultWeight?: number;
   groupAlignment?: 'horizontal' | 'vertical';
   groupStyle?: 'dashed' | 'highlighted';
+  balloonColor?: string;
+  carColor?: string;
 }
 
 export interface Project extends Identifiable {
