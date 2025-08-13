@@ -234,7 +234,7 @@ import type {
 import EditableList from 'components/EditableList.vue';
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import { useFlightStore } from 'stores/flight';
-import { useFlightOperations } from 'src/composables/flight-operations';
+import { useFlightOperations } from 'src/composables/flightOperations';
 import FlightSettingsPanel from 'components/panels/FlightSettingsPanel.vue';
 import FlightBalloonsPanel from 'components/panels/FlightBalloonsPanel.vue';
 import FlightCarsPanel from 'components/panels/FlightCarsPanel.vue';

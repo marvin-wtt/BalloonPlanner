@@ -28,7 +28,7 @@
 import { useQuasar } from 'quasar';
 import { useFlightStore } from 'stores/flight';
 import { storeToRefs } from 'pinia';
-import { useFlightOperations } from 'src/composables/flight-operations';
+import { useFlightOperations } from 'src/composables/flightOperations';
 import type { Car } from 'app/src-common/entities';
 import EditableList from 'components/EditableList.vue';
 import EditCarDialog from 'components/dialog/EditCarDialog.vue';

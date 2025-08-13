@@ -29,7 +29,7 @@ import type { Balloon } from 'app/src-common/entities';
 import EditableList from 'components/EditableList.vue';
 import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
 import { useQuasar } from 'quasar';
-import { useFlightOperations } from 'src/composables/flight-operations';
+import { useFlightOperations } from 'src/composables/flightOperations';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';

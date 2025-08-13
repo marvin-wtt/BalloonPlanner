@@ -72,7 +72,7 @@ import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import BaseVehicle from 'components/BaseVehicle.vue';
-import { useFlightOperations } from 'src/composables/flight-operations';
+import { useFlightOperations } from 'src/composables/flightOperations';
 import { useProjectSettings } from 'src/composables/projectSettings';
 
 const { groupAlignment, groupStyle, showGroupLabel } = useProjectSettings();

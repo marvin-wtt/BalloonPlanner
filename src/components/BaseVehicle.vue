@@ -151,7 +151,7 @@ import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import { useFlightUtils } from 'src/composables/reservedCapacity';
-import { useFlightOperations } from 'src/composables/flight-operations';
+import { useFlightOperations } from 'src/composables/flightOperations';
 import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
 import { useQuasar } from 'quasar';
 import EditCarDialog from 'components/dialog/EditCarDialog.vue';

@@ -42,7 +42,7 @@ import type {
 import DropZone from 'components/drag/DropZone.vue';
 import { computed } from 'vue';
 import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
-import { useFlightOperations } from 'src/composables/flight-operations';
+import { useFlightOperations } from 'src/composables/flightOperations';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import { useProjectSettings } from 'src/composables/projectSettings';
