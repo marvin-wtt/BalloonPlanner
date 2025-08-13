@@ -1,23 +1,29 @@
-"""Balloon‑camp crew optimiser
+"""Balloon-camp crew optimiser
 ================================
-A single‑slot (one flight) solver with:
+A single-slot (one flight) solver with:
 
 • Hard rules
   – exactly one qualified operator per occupied vehicle
   – every passenger (incl. operator) occupies a seat
-  – seat‑capacity and optional max‑weight per vehicle
-  – each person appears in ≤ 1 vehicle and operates ≤ 1 vehicle
+  – seat-capacity and optional max-weight per vehicle
+  – each person appears in ≤ 1 vehicle and operates ≤ 1 vehicle
   – optional *frozen* assignments (operator / passenger / absent)
+  – leg-2 “stay in cluster” restriction based on previous flight
+  – language compatibility for balloons:
+      * None, missing, or [] in `languages` → speaks all languages
+      * non-empty list → speaks only those languages (lowercased in transformer)
+      * Every passenger in a balloon must share ≥ 1 language with the operator,
+        or be the operator themselves.
 
 • Soft rules (linear objective)
-  – give airtime to low‑flight pilots (w_pilot_fairness)
-  – prefer low‑flight passengers in balloons (w_passenger_fairness)
+  – give airtime to low-flight pilots (w_pilot_fairness)
+  – prefer low-flight passengers in balloons (w_passenger_fairness)
   – reward mixed nationalities in each vehicle (w_divers_nationalities)
   – discourage “same vehicle again” (w_vehicle_rotation)
   – discourage exactly one participant alone in a car (w_no_solo_participant)
-  – cluster balance terms for leg 1 and leg 2
+  – cluster passenger balance terms for leg 1 and leg 2
 
-All weights are user‑tunable kwargs.
+All weights are user-tunable kwargs.
 """
 
 from itertools import product
