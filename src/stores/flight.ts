@@ -76,13 +76,15 @@ export const useFlightStore = defineStore('flight', () => {
     flightId.value = id;
   }
 
-  function createFlight(): Flight {
+  function createFlight(flight?: Partial<Omit<Flight, 'id'>>): Flight {
     const newFlight = {
       id: crypto.randomUUID(),
-      vehicleGroups: [],
-      carIds: project.value.cars.map(({ id }) => id),
-      balloonIds: project.value.balloons.map(({ id }) => id),
-      personIds: project.value.people.map(({ id }) => id),
+      date: flight.date ?? new Date().toISOString(),
+      vehicleGroups: flight.vehicleGroups ?? [],
+      carIds: flight.carIds ?? project.value.cars.map(({ id }) => id),
+      balloonIds:
+        flight.balloonIds ?? project.value.balloons.map(({ id }) => id),
+      personIds: flight.personIds ?? project.value.people.map(({ id }) => id),
     };
 
     project.value.flights.push(newFlight);

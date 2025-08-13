@@ -66,7 +66,10 @@ import { useProjectStore } from 'stores/project';
 import { useRouter } from 'vue-router';
 import { useFlightStore } from 'stores/flight';
 import type { Flight } from 'app/src-common/entities';
+import { useQuasar } from 'quasar';
+import CreateFlightDialog from 'components/dialog/CreateFlightDialog.vue';
 
+const quasar = useQuasar();
 const router = useRouter();
 const projectStore = useProjectStore();
 const flightStore = useFlightStore();
@@ -90,16 +93,28 @@ function flightName(index: number): string {
   return `Flight ${index + 1}`;
 }
 
-async function addFlight() {
+function addFlight() {
   addFlightLoading.value = true;
 
   if (!project.value) {
     return false;
   }
 
-  const flight = flightStore.createFlight();
-  await changeFlight(flight.id);
-  addFlightLoading.value = false;
+  quasar
+    .dialog({
+      component: CreateFlightDialog,
+      componentProps: {
+        flights: project.value.flights,
+      },
+    })
+    .onOk((data: Partial<Omit<Flight, 'id'>>) => {
+      const flight = flightStore.createFlight(data);
+
+      void changeFlight(flight.id);
+    })
+    .onDismiss(() => {
+      addFlightLoading.value = false;
+    });
 }
 
 async function changeFlight(flightId: string) {
