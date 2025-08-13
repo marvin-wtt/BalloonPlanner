@@ -14,8 +14,15 @@ def build_clusters(
 ) -> Dict[str, List[str]]:
     """
     Compute a mapping balloon_id -> [car_id, ...] for the current leg.
-    NOTE: This function NO LONGER reserves seats. Call reserve_cluster_seats()
+
+    NOTE: This function does NOT reserve seats. Call reserve_cluster_seats()
           afterwards to apply seat reservations based on the returned cluster.
+
+    Ordering policy:
+      - If a precluster is provided for a balloon, the cars listed there will
+        appear first in the returned list, preserving the exact input order.
+      - Any additional selected cars will follow, preserving the original
+        `cars` input order.
     """
     precluster = precluster or {}
 
@@ -27,11 +34,14 @@ def build_clusters(
     trailer = {c["id"]: bool(c.get("trailer_clutch", False)) for c in cars}
     bal_need = {b["id"]: int(b["capacity"]) for b in balloons}
 
-    # sanity checks
+    # sanity checks ----------------------------------------------------
     if sum(1 for c in car_ids if trailer[c]) < len(balloons):
         raise ValueError("not enough trailer-equipped cars for balloons")
-    if sum(cap.values()) < len(people):
-        raise ValueError("fleet lacks passenger seats for all people")
+
+    # across all clusters, *car* seats must cover everyone not seated in balloons
+    car_seats_needed = max(len(people) - sum(bal_need.values()), 0)
+    if sum(cap.values()) < car_seats_needed:
+        raise ValueError("fleet lacks passenger seats for ground crew")
 
     for bid, fixed_cars in precluster.items():
         if bid not in balloon_ids:
@@ -40,6 +50,7 @@ def build_clusters(
             if cid not in car_ids:
                 raise ValueError(f"car {cid} not found")
 
+    # model ------------------------------------------------------------
     model = cp_model.CpModel()
     x = {(c, b): model.NewBoolVar(f"x_{c}_{b}") for c in car_ids for b in balloon_ids}
 
@@ -61,7 +72,6 @@ def build_clusters(
         model.Add(sum(pax_cap[c] * x[c, b] for c in car_ids) >= bal_need[b])
 
     # across all clusters, *car* seats must cover everyone not seated in balloons
-    car_seats_needed = max(len(people) - sum(bal_need.values()), 0)
     model.Add(sum(cap[c] * x[c, b] for c, b in x) >= car_seats_needed)
 
     # objective: minimise unused passenger seats
@@ -69,6 +79,7 @@ def build_clusters(
     model.Add(unused == sum(pax_cap.values()) - sum(pax_cap[c] * x[c, b] for c, b in x))
     model.Minimize(unused)
 
+    # solve ------------------------------------------------------------
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = float(time_limit_s)
     if num_search_workers is not None:
@@ -80,24 +91,19 @@ def build_clusters(
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         raise RuntimeError("no feasible clustering")
 
-    clusters: Dict[str, List[str]] = {b: [] for b in balloon_ids}
-    for (c, b), var in x.items():
-        if solver.BooleanValue(var):
-            clusters[b].append(c)
-
     # Build ordered clusters:
     # - precluster cars first, preserving the input order
     # - then any additional selected cars, preserving `car_ids` input order
     clusters: Dict[str, List[str]] = {b: [] for b in balloon_ids}
     for b in balloon_ids:
-        # all cars selected for this balloon
+        # all cars selected for this balloon (iterate in car_ids order for stability)
         selected = [c for c in car_ids if solver.BooleanValue(x[c, b])]
         pc = precluster.get(b, []) or []
 
-        # keep only those precluster cars that were actually selected (they should be, due to x==1)
+        # keep only those precluster cars that were actually selected
         pc_kept = [c for c in pc if c in selected]
 
-        # then append any selected cars not already in precluster, in the original `car_ids` order
+        # then append any selected cars not already in precluster, in `car_ids` order
         rest = [c for c in selected if c not in pc_kept]
 
         clusters[b] = pc_kept + rest
@@ -111,10 +117,12 @@ def extract_fixed_cluster_from_history(
 ) -> dict[str, list[str]]:
     """
     Copy the last flight's cluster (balloon -> list[carId]) and VALIDATE ONLY:
-    - If the current input already assigns cars under a balloon, they must be a subset
-      of the previous cluster for that balloon; otherwise raise a ValueError.
-    - No mutation of the current groups happens here.
-    Returns the copied cluster mapping from history.
+      - If the current input already assigns cars under a balloon, they must be a subset
+        of the previous cluster for that balloon; otherwise raise a ValueError.
+      - No mutation of the current groups happens here.
+
+    Returns:
+      dict: {balloon_id: [car_id, ...]} in the same order as the last flight.
     """
     if not history:
         raise ValueError("No flight history available to fix second-leg clusters.")
@@ -164,21 +172,21 @@ def reserve_cluster_seats(
     """
     Reserve seats for each balloon's passengers inside *its own cluster cars*.
     Mutates `cars[*]['capacity']` only (does NOT touch groups or the cluster).
-    Safe to call for any leg.
+    Safe to call for any leg. Uses the order given by `cluster[balloon_id]`.
     """
     car_by_id = {c["id"]: c for c in cars}
     for bal in balloons:
         bid = bal["id"]
-        need = int(bal.get("capacity", 0))
+        need = int(bal["capacity"])
         for cid in cluster.get(bid, []):
             if need <= 0:
                 break
-            if cid not in car_by_id:
+            car = car_by_id.get(cid)
+            if car is None:
                 raise ValueError(f"Car {cid} from cluster not found in current input.")
-            car = car_by_id[cid]
-            pax_cap_excl_driver = max(int(car.get("capacity", 0)) - 1, 0)
+            pax_cap_excl_driver = max(int(car["capacity"]) - 1, 0)
             take = min(need, pax_cap_excl_driver)
-            car["capacity"] = int(car.get("capacity", 0)) - take
+            car["capacity"] = int(car["capacity"]) - take
             need -= take
         if need > 0:
             raise RuntimeError(
