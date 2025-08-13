@@ -48,7 +48,6 @@ def solve(
     w_vehicle_rotation: int,
     w_low_flights_second_leg: int,
     w_overweight_second_leg: int,
-    w_language_mismatch: int,
     counselor_flight_discount: int,
     # misc
     default_person_weight: int,
@@ -122,16 +121,7 @@ def solve(
     }
     max_weight = {v: int(vehicles_by_id[v].get("max_weight", -1)) for v in vehicle_ids}
 
-    langs = {
-        p: set(str(l).lower() for l in people_by_id[p].get("languages", []) if l)
-        for p in person_ids
-    }
-    # Precompute operator/passenger language compatibility (constant 0/1)
-    common_lang = {
-        (p, q): int(len(langs[p] & langs[q]) > 0)
-        for p in person_ids
-        for q in person_ids
-    }
+    langs = {p: people_by_id[p].get("languages") for p in person_ids}
 
     # ------------------------------------------------------------------
     # 0.b  Historic “fresh vehicle” map
@@ -236,6 +226,37 @@ def solve(
             for v in vehicle_ids:
                 if v not in allowed[p]:
                     model.Add(pax[p, v] == 0)
+
+    # 2.8 language compatibility (balloons only):
+    for v in vehicle_ids:
+        if kind[v] != "balloon":
+            continue
+
+        for p in person_ids:
+            lp = langs[p]
+            # Passenger speaks all languages -> always compatible
+            if lp is None or len(lp) == 0:
+                continue
+
+            lp_set = set(lp)
+            compatible_ops = [
+                q
+                for q in person_ids
+                if q != p
+                and (
+                    langs[q] is None
+                    or len(langs[q]) == 0  # operator speaks all
+                    or lp_set.intersection(langs[q])  # or shares a language
+                )
+            ]
+
+            # Allow "self" to satisfy the language requirement when p is the operator.
+            # This makes the constraint:  (some compatible op) OR (p is the operator)
+            if compatible_ops:
+                model.Add(sum(op[q, v] for q in compatible_ops) + op[p, v] >= pax[p, v])
+            else:
+                # No other compatible operator exists → only valid if p is the operator
+                model.Add(op[p, v] >= pax[p, v])
 
     # ------------------------------------------------------------------
     # 3. Objective
@@ -346,24 +367,6 @@ def solve(
             over = model.NewIntVar(0, max_w, f"over_{bid}")
             model.Add(over >= low_weight_in_cars - max_w)
             objective_terms.append(w_overweight_second_leg * over)
-
-    # 3.8 Language match: penalize when seated passenger and operator share no language
-    if w_language_mismatch > 0:
-        for v in vehicle_ids:
-            if kind[v] != "balloon":
-                continue  # <-- do NOT penalize cars
-            for q in person_ids:  # potential operator
-                for p in person_ids:  # potential passenger
-                    if p == q:
-                        continue
-                    if common_lang[(p, q)] == 1:
-                        continue  # no penalty if there is a shared language
-                    # z = pax[p,v] AND op[q,v]
-                    z = model.NewBoolVar(f"lang_mismatch_{p}_{q}_{v}")
-                    model.Add(z <= pax[p, v])
-                    model.Add(z <= op[q, v])
-                    model.Add(z >= pax[p, v] + op[q, v] - 1)
-                    objective_terms.append(w_language_mismatch * z)
 
     model.Minimize(sum(objective_terms))
 
