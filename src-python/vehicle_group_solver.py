@@ -85,6 +85,23 @@ def build_clusters(
         if solver.BooleanValue(var):
             clusters[b].append(c)
 
+    # Build ordered clusters:
+    # - precluster cars first, preserving the input order
+    # - then any additional selected cars, preserving `car_ids` input order
+    clusters: Dict[str, List[str]] = {b: [] for b in balloon_ids}
+    for b in balloon_ids:
+        # all cars selected for this balloon
+        selected = [c for c in car_ids if solver.BooleanValue(x[c, b])]
+        pc = precluster.get(b, []) or []
+
+        # keep only those precluster cars that were actually selected (they should be, due to x==1)
+        pc_kept = [c for c in pc if c in selected]
+
+        # then append any selected cars not already in precluster, in the original `car_ids` order
+        rest = [c for c in selected if c not in pc_kept]
+
+        clusters[b] = pc_kept + rest
+
     return clusters
 
 
