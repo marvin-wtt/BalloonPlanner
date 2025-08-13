@@ -59,7 +59,9 @@ const { flights } = defineProps<{
 
 defineEmits([...useDialogPluginComponent.emits]);
 
-const referenceFlight = ref<Flight | null>(null);
+const referenceFlight = ref<Flight | null>(
+  flights.length > 0 ? flights[flights.length - 1] : null,
+);
 
 const flightOptions = computed<QSelectOption<Flight>[]>(() => {
   const none = {
