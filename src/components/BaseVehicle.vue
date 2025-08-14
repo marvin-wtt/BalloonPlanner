@@ -12,29 +12,13 @@
       @dragover.stop
       @dragleave.stop
     >
-      <q-badge
-        v-if="infoMessage"
-        :color="infoMessage.color"
-        floating
-        rounded
-      >
-        <q-icon
-          name="priority_high"
-          color="white"
-          size="1em"
-        />
-        <q-tooltip>
-          {{ infoMessage.message }}
-        </q-tooltip>
-      </q-badge>
-
       <!-- thead and tfoot are not used on purpose to preserve the style -->
       <tbody>
         <tr>
           <th
             v-if="showVehicleLabel"
             class="vehicle-label"
-            :class="{ 'vehicle-label--rounded': !hasFooter }"
+            :class="{ 'vehicle-label--rounded': !showFooter }"
             :style="{ backgroundColor: color }"
             :rowspan="rowCount"
           >
@@ -90,6 +74,8 @@
             :assignment
             operator
             :editable
+            :error="!vehicle.allowedOperatorIds.includes(assignment.operatorId)"
+            error-text="This operator is not allowed for this vehicle."
           />
         </tr>
 
@@ -120,18 +106,36 @@
             :assignment
             :editable
             :error="c > capacity - 1"
+            error-text="Vehicle capacity exceeded"
           />
         </tr>
 
-        <tr v-if="vehicle.type === 'balloon' && showVehicleWeight">
+        <tr v-if="showFooter">
           <td
             colspan="3"
             class="vehicle-footer"
           >
-            <span v-if="vehicle.maxWeight">
-              {{ totalWeight }} kg / {{ vehicle.maxWeight }} kg
-            </span>
-            <span v-else>{{ totalWeight }} kg</span>
+            <div class="row no-wrap items-center">
+              <div class="col-grow">
+                <template v-if="vehicle.maxWeight">
+                  <span :class="isOverweight ? 'text-negative text-bold' : ''">
+                    {{ totalWeight }} kg
+                  </span>
+                  <span>/ {{ vehicle.maxWeight }} kg</span>
+                </template>
+                <template v-else>{{ totalWeight }} kg</template>
+              </div>
+              <div v-if="isOverweight">
+                <q-icon
+                  name="sym_o_error"
+                  color="warning"
+                  size="sm"
+                  dense
+                >
+                  <q-tooltip>Total weight exceeds maximum weight. </q-tooltip>
+                </q-icon>
+              </div>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -212,6 +216,14 @@ const totalWeight = computed<number>(() => {
     );
 });
 
+const isOverweight = computed<boolean>(() => {
+  return (
+    vehicle.value.type === 'balloon' &&
+    vehicle.value.maxWeight !== null &&
+    totalWeight.value > vehicle.value.maxWeight
+  );
+});
+
 const capacity = computed<number>(() => {
   let capacity: number = vehicle.value.maxCapacity;
 
@@ -237,44 +249,13 @@ const color = computed<string>(() => {
   return vehicle.value.type === 'balloon' ? balloonColor.value : carColor.value;
 });
 
-type InfoMessage = { message: string; color: string };
-
-const infoMessage = computed<InfoMessage | null>(() => {
-  if (assignment.passengerIds.length > capacity.value - 1) {
-    return {
-      message: 'Too many passengers for this vehicle.',
-      color: 'negative',
-    };
+const showFooter = computed<boolean>(() => {
+  if (isOverweight.value) {
+    return true;
   }
 
-  if (
-    assignment.operatorId !== null &&
-    !vehicle.value.allowedOperatorIds.includes(assignment.operatorId)
-  ) {
-    return {
-      message: 'This operator is not allowed for this vehicle.',
-      color: 'negative',
-    };
-  }
-
-  if (
-    vehicle.value.type === 'balloon' &&
-    vehicle.value.maxWeight !== null &&
-    totalWeight.value > vehicle.value.maxWeight
-  ) {
-    return {
-      message: 'Total weight exceeds maximum weight.',
-      color: 'warning',
-    };
-  }
-
-  return null;
+  return vehicle.value.type === 'balloon' && showVehicleWeight.value;
 });
-
-// Determine if footer row is rendered
-const hasFooter = computed<boolean>(
-  () => vehicle.value.type === 'balloon' && showVehicleWeight.value,
-);
 
 function onVehicleRemoved() {
   if (vehicle.value.type === 'balloon') {
@@ -387,3 +368,5 @@ td.vehicle-person {
   border-bottom: 0.5px dotted;
 }
 </style>
+
+<script setup lang="ts"></script>

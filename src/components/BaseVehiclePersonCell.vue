@@ -8,21 +8,41 @@
     :class="error ? 'text-negative' : ''"
     @remove="onDragEnd()"
   >
-    <span>
-      {{ person.name }}
-    </span>
-    <span
-      v-if="showNumberOfFlights"
-      :class="coloredLabels ? 'text-blue' : ''"
-    >
-      {{ flightsLabel }}
-    </span>
-    <span
-      v-if="showPersonWeight"
-      :class="coloredLabels ? 'text-orange' : ''"
-    >
-      {{ weightLabel }}
-    </span>
+    <div class="row no-wrap items-center">
+      <div class="col-grow">
+        <span>
+          {{ person.name }}
+        </span>
+        <span
+          v-if="showNumberOfFlights"
+          :class="coloredLabels ? 'text-blue' : ''"
+        >
+          {{ flightsLabel }}
+        </span>
+        <span
+          v-if="showPersonWeight"
+          :class="coloredLabels ? 'text-orange' : ''"
+        >
+          {{ weightLabel }}
+        </span>
+      </div>
+
+      <div
+        v-if="showInfo"
+        class="q-ml-xs"
+      >
+        <q-icon
+          name="sym_o_error"
+          :color="infoColor"
+          size="sm"
+          dense
+        >
+          <q-tooltip>
+            {{ infoText }}
+          </q-tooltip>
+        </q-icon>
+      </div>
+    </div>
 
     <q-menu
       touch-position
@@ -104,6 +124,7 @@ const {
   editable = false,
   operator = false,
   error = false,
+  errorText,
 } = defineProps<{
   person?: Person;
   vehicle: Vehicle;
@@ -112,6 +133,7 @@ const {
   operator?: boolean;
   editable?: boolean;
   error?: boolean;
+  errorText?: string;
 }>();
 
 const flightsLabel = computed<string>(() => {
@@ -130,6 +152,47 @@ const weightLabel = computed<string>(() => {
 
 const coloredLabels = computed<boolean>(() => {
   return showPersonWeight.value && showNumberOfFlights.value;
+});
+
+const showInfo = computed<boolean>(() => {
+  return error || hasLanguageWarning.value;
+});
+
+const infoColor = computed<string>(() => {
+  if (error) {
+    return 'negative';
+  }
+
+  if (hasLanguageWarning.value) {
+    return 'warning';
+  }
+
+  return 'info';
+});
+
+const infoText = computed<string>(() => {
+  if (error) {
+    return errorText ?? 'Unknown error';
+  }
+
+  if (hasLanguageWarning.value) {
+    return 'No common language between operator and passenger';
+  }
+
+  return '';
+});
+
+const hasLanguageWarning = computed<boolean>(() => {
+  if (operator || !assignment.operatorId || !person.languages) {
+    return false;
+  }
+
+  const languages = personMap.value[assignment.operatorId]?.languages;
+  if (languages == undefined) {
+    return false;
+  }
+
+  return !languages.some((language) => person.languages.includes(language));
 });
 
 function isDropAllowed(element: Identifiable): boolean {
