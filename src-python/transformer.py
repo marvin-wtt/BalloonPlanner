@@ -161,31 +161,45 @@ def transform_output(
     vehicle_info: Dict[str, Dict[str, Any]],
     clusters: Dict[str, List[str]],
     original_groups: List[Dict[str, Any]],
+    role_by_id: Dict[str, str],
 ) -> List[Dict[str, Any]]:
     result_groups: List[Dict[str, Any]] = []
     seen_balloons = set()
 
-    # Helper to merge “original order” vs “final assignment” for passengers
     def _ordered_passengers(
-        vid: str,
         orig_list: List[str],
         final_list: List[str],
     ) -> List[str]:
-        ordered = []
-        seen = set()
+        """
+        Order passengers counselor-first but preserve *original order* for anyone who
+        already appeared in the original group. For passengers that didn’t appear
+        originally (new additions), append them after, counselors first, preserving
+        their relative order in final_list.
+        """
+        # Set membership for quick checks
+        final_set = set(final_list)
 
-        # 1) keep original order for overlapping passengers
-        for p in orig_list:
-            if p in final_list:
-                ordered.append(p)
-                seen.add(p)
+        # Keep original order for overlaps
+        orig_overlap = [p for p in orig_list if p in final_set]
 
-        # 2) append any remaining from final_list
-        for p in final_list:
-            if p not in seen:
-                ordered.append(p)
+        # Split by role, preserving order
+        orig_counselors = [
+            p for p in orig_overlap if role_by_id.get(p, "participant") != "participant"
+        ]
+        orig_participants = [
+            p for p in orig_overlap if role_by_id.get(p, "participant") == "participant"
+        ]
 
-        return ordered
+        # Any remaining (new) passengers not in the original list: preserve solver order
+        remaining = [p for p in final_list if p not in orig_overlap]
+        rem_counselors = [
+            p for p in remaining if role_by_id.get(p, "participant") != "participant"
+        ]
+        rem_participants = [
+            p for p in remaining if role_by_id.get(p, "participant") == "participant"
+        ]
+
+        return orig_counselors + orig_participants + rem_counselors + rem_participants
 
     # 1) Keep original group order where possible
     for group in original_groups or []:
@@ -201,7 +215,6 @@ def transform_output(
             "id": b_id,
             "operatorId": balloon_info.get("operator", None),
             "passengerIds": _ordered_passengers(
-                b_id,
                 b_obj.get("passengerIds", []) or [],
                 balloon_info.get("passengers", []) or [],
             ),
@@ -230,7 +243,7 @@ def transform_output(
                 {
                     "id": c_id,
                     "operatorId": c_info.get("operator", None),
-                    "passengerIds": _ordered_passengers(c_id, orig_pax, final_pax),
+                    "passengerIds": _ordered_passengers(orig_pax, final_pax),
                 }
             )
 

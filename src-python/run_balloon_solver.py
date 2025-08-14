@@ -265,7 +265,9 @@ def main(argv: List[str] | None = None) -> None:
             random_seed=args.seed,
         )
 
-        output = transform_output(manifest, cluster, groups)
+        role_by_id = {p["id"]: p.get("role", "participant") for p in people}
+        output = transform_output(manifest, cluster, groups, role_by_id)
+
         json.dump(output, sys.stdout)
         sys.stdout.write("\n")
         sys.exit(0)
