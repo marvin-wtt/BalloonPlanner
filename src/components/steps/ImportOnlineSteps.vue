@@ -135,19 +135,24 @@
     icon="list"
     :done="campId != undefined"
   >
-    <q-select
-      v-model="campId"
-      label="Select Camp"
-      :options="campOptions"
-      map-options
-      emit-value
-      :error
-      :error-message
-      hide-bottom-space
-      outlined
-      rounded
-      @change="errorMessage = undefined"
-    />
+    <div
+      class="column q-gutter-md"
+      style="max-width: 300px"
+    >
+      <q-select
+        v-model="campId"
+        label="Select Camp"
+        :options="campOptions"
+        map-options
+        emit-value
+        :error
+        :error-message
+        hide-bottom-space
+        outlined
+        rounded
+        @change="errorMessage = undefined"
+      />
+    </div>
 
     <q-stepper-navigation>
       <q-btn
