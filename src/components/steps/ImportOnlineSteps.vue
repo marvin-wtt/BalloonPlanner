@@ -164,7 +164,7 @@
 <script lang="ts" setup>
 import { computed, ref, toRaw } from 'vue';
 import type { QSelectOption } from 'quasar';
-import { loadJson } from 'src/lib/JsonInputLoader';
+import { loadJson } from 'components/steps/JsonInputLoader';
 import { type Person } from 'app/src-common/entities';
 
 const modelValue = defineModel<Person[]>();
