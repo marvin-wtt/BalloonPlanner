@@ -74,8 +74,6 @@
             :assignment
             operator
             :editable
-            :error="!vehicle.allowedOperatorIds.includes(assignment.operatorId)"
-            error-text="This operator is not allowed for this vehicle."
           />
         </tr>
 
@@ -105,8 +103,7 @@
             :group
             :assignment
             :editable
-            :error="c > capacity - 1"
-            error-text="Vehicle capacity exceeded"
+            :overfilled="c > capacity - 1"
           />
         </tr>
 
@@ -117,7 +114,9 @@
           >
             <div class="row no-wrap items-center">
               <div class="col-grow">
-                <template v-if="vehicle.maxWeight">
+                <template
+                  v-if="vehicle.type === 'balloon' && vehicle.maxWeight"
+                >
                   <span :class="isOverweight ? 'text-negative text-bold' : ''">
                     {{ totalWeight }} kg
                   </span>

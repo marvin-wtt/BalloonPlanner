@@ -5,7 +5,7 @@
     :item="person"
     :label="person.name"
     :disabled="!editable"
-    :class="error ? 'text-negative' : ''"
+    :class="overfilled ? 'text-negative' : ''"
     @remove="onDragEnd()"
   >
     <div class="row no-wrap items-center">
@@ -85,6 +85,7 @@ import type {
   Identifiable,
   VehicleAssignment,
   VehicleGroup,
+  Flight,
 } from 'app/src-common/entities';
 import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
@@ -101,7 +102,7 @@ const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
-const { personMap, numberOfFlights } = storeToRefs(flightStore);
+const { personMap, numberOfFlights, flight } = storeToRefs(flightStore);
 const { showPersonWeight, showNumberOfFlights, personDefaultWeight } =
   useProjectSettings();
 const {
@@ -123,8 +124,7 @@ const {
   assignment,
   editable = false,
   operator = false,
-  error = false,
-  errorText,
+  overfilled = false,
 } = defineProps<{
   person?: Person;
   vehicle: Vehicle;
@@ -132,8 +132,7 @@ const {
   group: VehicleGroup;
   operator?: boolean;
   editable?: boolean;
-  error?: boolean;
-  errorText?: string;
+  overfilled?: boolean;
 }>();
 
 const flightsLabel = computed<string>(() => {
@@ -155,11 +154,16 @@ const coloredLabels = computed<boolean>(() => {
 });
 
 const showInfo = computed<boolean>(() => {
-  return error || hasLanguageWarning.value;
+  return (
+    overfilled ||
+    hasInvalidOperator.value ||
+    hasMultiLegError.value ||
+    hasLanguageWarning.value
+  );
 });
 
 const infoColor = computed<string>(() => {
-  if (error) {
+  if (overfilled || hasInvalidOperator.value || hasMultiLegError.value) {
     return 'negative';
   }
 
@@ -171,12 +175,20 @@ const infoColor = computed<string>(() => {
 });
 
 const infoText = computed<string>(() => {
-  if (error) {
-    return errorText ?? 'Unknown error';
+  if (overfilled) {
+    return 'Vehicle capacity exceeded';
+  }
+
+  if (hasInvalidOperator.value) {
+    return 'Person not allowed to operate this vehicle';
+  }
+
+  if (hasMultiLegError.value) {
+    return 'Person was not assigned to this group in previous flight';
   }
 
   if (hasLanguageWarning.value) {
-    return 'No common language between operator and passenger';
+    return 'No common language with passenger';
   }
 
   return '';
@@ -193,6 +205,44 @@ const hasLanguageWarning = computed<boolean>(() => {
   }
 
   return !languages.some((language) => person.languages.includes(language));
+});
+
+const hasMultiLegError = computed<boolean>(() => {
+  if (!flight.value?.isContinuationLeg) {
+    return false;
+  }
+
+  const index = project.value.flights.indexOf(flight.value);
+  if (index <= 0) {
+    return false;
+  }
+
+  const previousFlight: Flight = project.value.flights[index - 1];
+  const previousGroup = previousFlight.vehicleGroups.find(
+    (prevGroup) => group.balloon.id === prevGroup.balloon.id,
+  );
+
+  // There is an error with the group assignments
+  if (!previousGroup) {
+    return false;
+  }
+
+  return (
+    previousGroup.balloon.operatorId !== person.id &&
+    !previousGroup.balloon.passengerIds.includes(person.id) &&
+    !previousGroup.cars.some(
+      (car) =>
+        car.operatorId === person.id || car.passengerIds.includes(person.id),
+    )
+  );
+});
+
+const hasInvalidOperator = computed<boolean>(() => {
+  if (!operator) {
+    return false;
+  }
+
+  return !vehicle.allowedOperatorIds.includes(person.id);
 });
 
 function isDropAllowed(element: Identifiable): boolean {
