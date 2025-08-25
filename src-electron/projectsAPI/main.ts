@@ -20,6 +20,7 @@ import {
   updateProjectMeta,
 } from 'app/src-electron/projectsAPI/index-store';
 import log from 'electron-log';
+import { migrateProject } from 'app/src-electron/projectsAPI/migrations';
 
 export default () => {
   ipcMain.handle('project:index', projectApiHandler.index);
@@ -132,7 +133,9 @@ async function store(project: Project) {
 async function load(id: string) {
   const filePath = projectFilePath(id);
 
-  return readProjectFromPath(filePath);
+  const data = await readProjectFromPath(filePath);
+
+  return migrateProject(data);
 }
 
 async function update(project: Project) {
