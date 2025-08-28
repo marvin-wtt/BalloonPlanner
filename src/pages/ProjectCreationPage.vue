@@ -171,7 +171,7 @@ async function finish() {
     name: 'flight',
     params: {
       projectId: project.id,
-      flightId: project.flights[0].id,
+      flightId: project.flights[0].legs[0].id,
     },
   });
 }

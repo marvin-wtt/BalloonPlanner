@@ -1,98 +1,109 @@
-import type { Balloon, Car, Person } from 'app/src-common/entities';
+import type { Balloon, Car, ID, Person } from 'app/src-common/entities';
 import { useFlightStore } from 'stores/flight';
 import { useProjectStore } from 'stores/project';
+import { storeToRefs } from 'pinia';
 
 export function useFlightOperations() {
   const flightStore = useFlightStore();
   const projectStore = useProjectStore();
 
+  const { flightSeries, flightLeg } = storeToRefs(flightStore);
+
   function addVehicleGroup(balloonId: string) {
-    flightStore.flight.vehicleGroups.push({
-      balloon: {
-        id: balloonId,
-        operatorId: null,
-        passengerIds: [],
-      },
-      cars: [],
+    flightSeries.value.vehicleGroups.push({
+      balloonId,
+      carIds: [],
     });
   }
 
   function removeVehicleGroup(balloonId: string) {
-    const groups = flightStore.flight.vehicleGroups;
+    const groups = flightSeries.value.vehicleGroups;
+    const group = groups.find((g) => g.balloonId === balloonId);
 
-    groups.splice(
-      groups.findIndex((g) => g.balloon.id === balloonId),
-      1,
-    );
+    const index = groups.findIndex((g) => g.balloonId === balloonId);
+    groups.splice(index, 1);
+
+    const vehicleIds = [group.balloonId, ...group.carIds];
+    vehicleIds.forEach(clearVehicle);
   }
 
   function addCarToVehicleGroup(balloonId: string, carId: string) {
-    flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .cars.push({
-        id: carId,
-        operatorId: null,
-        passengerIds: [],
-      });
+    flightSeries.value.vehicleGroups
+      .find((group) => group.balloonId === balloonId)
+      .carIds.push(carId);
   }
 
   function removeCarFromVehicleGroup(balloonId: string, carId: string) {
-    const cars = flightStore.flight.vehicleGroups.find(
-      (group) => group.balloon.id === balloonId,
-    ).cars;
+    const carIds = flightSeries.value.vehicleGroups.find(
+      (group) => group.balloonId === balloonId,
+    ).carIds;
 
-    cars.splice(
-      cars.findIndex((c) => c.id === carId),
-      1,
-    );
+    carIds.forEach(clearVehicle);
+
+    const index = carIds.findIndex((id) => id === carId);
+    carIds.splice(index, 1);
+  }
+
+  function setVehicleOperator(vehicleId: ID, personId: ID | null) {
+    flightLeg.value.assignments[vehicleId].operatorId = personId;
+  }
+
+  function addVehiclePassenger(vehicleId: ID, personId: ID) {
+    const assignment = flightLeg.value.assignments[vehicleId];
+    if (assignment.passengerIds.includes(personId)) {
+      return;
+    }
+
+    assignment.passengerIds.push(personId);
+  }
+
+  function removeVehiclePassenger(vehicleId: ID, personId: ID) {
+    if (!(vehicleId in flightLeg.value.assignments)) {
+      throw new Error(`Vehicle ${vehicleId} not found in current flight leg`);
+    }
+
+    const assignment = flightLeg.value.assignments[vehicleId];
+    const index = assignment.passengerIds.findIndex((p) => p === personId);
+    if (index === -1) {
+      return;
+    }
+
+    assignment.passengerIds.splice(index, 1);
+  }
+
+  function clearVehicle(vehicleId: string) {
+    flightLeg.value.assignments[vehicleId] = {
+      operatorId: null,
+      passengerIds: [],
+    };
   }
 
   function addBalloonOperator(balloonId: string, personId: string) {
-    flightStore.flight.vehicleGroups.find(
-      (group) => group.balloon.id === balloonId,
-    ).balloon.operatorId = personId;
+    setVehicleOperator(balloonId, personId);
   }
 
   function addCarOperator(balloonId: string, carId: string, personId: string) {
-    flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .cars.find((c) => c.id === carId).operatorId = personId;
+    setVehicleOperator(carId, personId);
   }
 
   function removeBalloonOperator(balloonId: string) {
-    flightStore.flight.vehicleGroups.find(
-      (group) => group.balloon.id === balloonId,
-    ).balloon.operatorId = null;
+    setVehicleOperator(balloonId, null);
   }
 
   function removeCarOperator(balloonId: string, carId: string) {
-    flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .cars.find((c) => c.id === carId).operatorId = null;
+    setVehicleOperator(carId, null);
   }
 
   function addBalloonPassenger(balloonId: string, personId: string) {
-    flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .balloon.passengerIds.push(personId);
+    addVehiclePassenger(balloonId, personId);
   }
 
   function addCarPassenger(balloonId: string, carId: string, personId: string) {
-    flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .cars.find((c) => c.id === carId)
-      .passengerIds.push(personId);
+    addVehiclePassenger(carId, personId);
   }
 
   function removeBalloonPassenger(balloonId: string, personId: string) {
-    const passengerIds = flightStore.flight.vehicleGroups.find(
-      (group) => group.balloon.id === balloonId,
-    ).balloon.passengerIds;
-
-    passengerIds.splice(
-      passengerIds.findIndex((p) => p === personId),
-      1,
-    );
+    removeVehiclePassenger(balloonId, personId);
   }
 
   function removeCarPassenger(
@@ -100,32 +111,15 @@ export function useFlightOperations() {
     carId: string,
     personId: string,
   ) {
-    const passengerIds = flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .cars.find((c) => c.id === carId).passengerIds;
-
-    passengerIds.splice(
-      passengerIds.findIndex((p) => p === personId),
-      1,
-    );
+    removeVehiclePassenger(carId, personId);
   }
 
   function clearBalloon(balloonId: string) {
-    const balloon = flightStore.flight.vehicleGroups.find(
-      (group) => group.balloon.id === balloonId,
-    ).balloon;
-
-    balloon.operatorId = null;
-    balloon.passengerIds = [];
+    clearVehicle(balloonId);
   }
 
   function clearCar(balloonId: string, carId: string) {
-    const balloon = flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .cars.find((c) => c.id === carId);
-
-    balloon.operatorId = null;
-    balloon.passengerIds = [];
+    clearVehicle(carId);
   }
 
   function createPerson(person: Omit<Person, 'id'>) {
@@ -147,7 +141,7 @@ export function useFlightOperations() {
   }
 
   function removePerson(personId: string) {
-    const personIds = flightStore.flight.personIds;
+    const personIds = flightSeries.value.personIds;
 
     personIds.splice(
       personIds.findIndex((b) => b === personId),
@@ -162,7 +156,7 @@ export function useFlightOperations() {
       ...balloon,
       id,
     });
-    flightStore.flight.balloonIds.push(id);
+    flightSeries.value.balloonIds.push(id);
   }
 
   function editBalloon(balloonId: string, balloon: Omit<Balloon, 'id'>) {
@@ -177,7 +171,7 @@ export function useFlightOperations() {
   }
 
   function removeBalloon(balloonId: string) {
-    const balloonIds = flightStore.flight.balloonIds;
+    const balloonIds = flightSeries.value.balloonIds;
 
     balloonIds.splice(
       balloonIds.findIndex((b) => b === balloonId),
@@ -192,7 +186,7 @@ export function useFlightOperations() {
       ...car,
       id,
     });
-    flightStore.flight.carIds.push(id);
+    flightSeries.value.carIds.push(id);
   }
 
   function editCar(carId: string, car: Omit<Car, 'id'>) {
@@ -207,7 +201,7 @@ export function useFlightOperations() {
   }
 
   function removeCar(carId: string) {
-    const carIds = flightStore.flight.carIds;
+    const carIds = flightSeries.value.carIds;
 
     carIds.splice(
       carIds.findIndex((b) => b === carId),
@@ -216,15 +210,15 @@ export function useFlightOperations() {
   }
 
   function addPerson(personId: string) {
-    flightStore.flight.personIds.push(personId);
+    flightSeries.value.personIds.push(personId);
   }
 
   function addBalloon(balloonId: string) {
-    flightStore.flight.balloonIds.push(balloonId);
+    flightSeries.value.balloonIds.push(balloonId);
   }
 
   function addCar(carId: string) {
-    flightStore.flight.carIds.push(carId);
+    flightSeries.value.carIds.push(carId);
   }
 
   return {
@@ -232,12 +226,15 @@ export function useFlightOperations() {
     removeVehicleGroup,
     addCarToVehicleGroup,
     removeCarFromVehicleGroup,
+    setVehicleOperator,
     addBalloonOperator,
     addCarOperator,
     removeBalloonOperator,
     removeCarOperator,
+    addVehiclePassenger,
     addBalloonPassenger,
     addCarPassenger,
+    removeVehiclePassenger,
     removeBalloonPassenger,
     removeCarPassenger,
     clearBalloon,

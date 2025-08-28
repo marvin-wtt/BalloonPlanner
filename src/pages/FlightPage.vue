@@ -7,7 +7,7 @@
       />
     </template>
 
-    <template v-else-if="flight">
+    <template v-else-if="flightSeries">
       <!-- Menu -->
       <div
         v-if="editable"
@@ -176,7 +176,7 @@
         class="col-grow flex flight-view"
       >
         <base-flight
-          :flight
+          :flight="flightSeries"
           :editable
           class="fit"
         />
@@ -250,7 +250,7 @@ const projectStore = useProjectStore();
 const flightStore = useFlightStore();
 
 const { project, isLoading } = storeToRefs(projectStore);
-const { flight, numberOfFlights } = storeToRefs(flightStore);
+const { flightSeries, numberOfFlights } = storeToRefs(flightStore);
 
 const { showNumberOfFlights, showPersonWeight, personDefaultWeight } =
   useProjectSettings();
@@ -282,26 +282,38 @@ async function init() {
   }
 
   if (Array.isArray(flightId)) {
-    throw new Error('Received multiple flight ids');
+    flightId = flightId[0];
   }
 
   if (flightId) {
-    flightStore.loadFlight(flightId);
+    flightStore.loadFlightLeg(flightId);
     return;
   }
 
-  // If not flight specified, load the last flight
-  if (project.value && project.value.flights.length > 0) {
-    flightId = project.value.flights[project.value.flights.length - 1]?.id;
-
-    await router.replace({
-      name: 'flight',
-      params: {
-        projectId,
-        flightId,
-      },
-    });
+  // If not flight leg specified, load the last flight
+  if (!project.value) {
+    return;
   }
+
+  if (project.value.flights.length === 0) {
+    return;
+  }
+
+  const series = project.value.flights[project.value.flights.length - 1];
+  if (series.legs.length === 0) {
+    return;
+  }
+
+  const leg = series.legs[series.legs.length - 1];
+  flightId = leg.id;
+
+  await router.replace({
+    name: 'flight',
+    params: {
+      projectId,
+      flightId,
+    },
+  });
 }
 
 function onSmartFill() {
@@ -367,7 +379,7 @@ async function onExportImage() {
 
   document.body.removeChild(container);
 
-  const fileName = `${project.value.name}-flight-${project.value.flights.indexOf(flight.value) + 1}.png`;
+  const fileName = `${project.value.name}-flight-${project.value.flights.indexOf(flightSeries.value) + 1}.png`;
   const link = document.createElement('a');
   link.download = fileName;
   link.href = dataUrl;
@@ -382,7 +394,7 @@ function showAddPeople(role: Person['role']) {
         itemName: role.charAt(0).toUpperCase() + role.slice(1),
         items: project.value.people
           .filter(({ role: personRole }) => personRole === role)
-          .filter(({ id }) => !flight.value?.personIds.includes(id)),
+          .filter(({ id }) => !flightSeries.value?.personIds.includes(id)),
       },
     })
     .onOk((ids) => ids.forEach(addPerson));

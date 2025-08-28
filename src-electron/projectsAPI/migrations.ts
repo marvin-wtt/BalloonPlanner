@@ -8,7 +8,37 @@ type AnyProject = Record<string, any>;
 type Migration = (data: AnyProject) => AnyProject;
 
 const migrations: Record<string, Migration> = {
-  // Add migrations here
+  '1.0.0-beta-12': (data): Pick<Project, 'flights'> => {
+    // Create flight legs and separate groups and assignments
+    return {
+      ...data,
+      flights: data.flights.map((flight) => ({
+        ...flight,
+        vehicleGroups: flight.vehicleGroups.map((group) => ({
+          balloonId: group.balloon.id,
+          carIds: group.cars.map((car) => car.id),
+        })),
+        legs: [
+          {
+            id: crypto.randomUUID(),
+            assignments: flight.vehicleGroups.reduce((map, group) => {
+              map[group.balloon.id] = {
+                operatorId: group.balloon.operatorId,
+                passengerIds: group.balloon.passengerIds,
+              };
+              group.cars.forEach((car) => {
+                map[car.id] = {
+                  operatorId: car.operatorId,
+                  passengerIds: car.passengerIds,
+                };
+              });
+              return map;
+            }, {}),
+          },
+        ],
+      })),
+    };
+  },
 };
 
 export function migrateProject(data: AnyProject): Project {
@@ -16,7 +46,7 @@ export function migrateProject(data: AnyProject): Project {
     throw new Error('Invalid project data');
   }
 
-  // Use app version if available, otherwise use the latest migration version
+  // Use the app version if available, otherwise use the latest migration version
   const appVersion = app.isPackaged
     ? app.getVersion()
     : (Object.keys(migrations).sort(semver.compare).pop() ?? '0.0.0');

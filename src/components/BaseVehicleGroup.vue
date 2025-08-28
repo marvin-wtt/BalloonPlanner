@@ -35,9 +35,10 @@
         <!-- Balloon -->
         <div>
           <base-vehicle
-            :key="group.balloon.id"
+            :key="group.balloonId"
             type="balloon"
-            :assignment="group.balloon"
+            :id="group.balloonId"
+            :assignment="flightLeg.assignments[group.balloonId]"
             :group
             :editable
           />
@@ -45,12 +46,13 @@
 
         <!-- Cars -->
         <div
-          v-for="car in group.cars"
-          :key="car.id"
+          v-for="id in group.carIds"
+          :key="id"
         >
           <base-vehicle
             type="car"
-            :assignment="car"
+            :id
+            :assignment="flightLeg.assignments[id]"
             :group
             :editable
           />
@@ -77,9 +79,9 @@ import { useProjectSettings } from 'src/composables/projectSettings';
 
 const { groupAlignment, groupStyle, showGroupLabel } = useProjectSettings();
 const flightStore = useFlightStore();
-const { flight, carMap, balloonMap } = storeToRefs(flightStore);
-const { addCarToVehicleGroup, addCarOperator, addCarPassenger } =
-  useFlightOperations();
+const { flightSeries, flightLeg, carMap, balloonMap } =
+  storeToRefs(flightStore);
+const { addCarToVehicleGroup } = useFlightOperations();
 
 const {
   group,
@@ -110,11 +112,11 @@ const warningText = computed<string | null>(() => {
 });
 
 const cars = computed<Car[]>(() => {
-  return group.cars.map(({ id }) => carMap.value[id]);
+  return group.carIds.map((id) => carMap.value[id]);
 });
 
 const balloon = computed<Balloon>(() => {
-  return balloonMap.value[group.balloon.id];
+  return balloonMap.value[group.balloonId];
 });
 
 const trailerHitchWarning = computed<boolean>(() => {
@@ -131,7 +133,7 @@ const reservedCapacityWarning = computed<boolean>(() => {
 });
 
 function elementIsCar(element: Identifiable): element is Car {
-  return flight.value.carIds.includes(element.id);
+  return flightSeries.value.carIds.includes(element.id);
 }
 
 function isDropAccepted(element: Identifiable): boolean {
@@ -143,7 +145,7 @@ function isDropAccepted(element: Identifiable): boolean {
     return false;
   }
 
-  return !group.cars.some((car) => car.id === element.id);
+  return !group.carIds.some((id) => id === element.id);
 }
 
 function drop(element: Identifiable) {
@@ -151,23 +153,19 @@ function drop(element: Identifiable) {
     return;
   }
 
-  const previousCar = flight.value.vehicleGroups
-    .flatMap((g) => g.cars)
-    .find((c) => c.id === element.id);
+  // Search for the current assignment before applying the changes
+  const previousCarId = flightSeries.value.vehicleGroups
+    .flatMap((g) => g.carIds)
+    .find((id) => id === element.id);
+  const previousAssignment = flightLeg.value.assignments[previousCarId];
 
-  addCarToVehicleGroup(group.balloon.id, element.id);
+  addCarToVehicleGroup(group.balloonId, element.id);
 
-  if (!previousCar) {
+  if (!previousCarId) {
     return;
   }
 
-  if (previousCar.operatorId) {
-    addCarOperator(group.balloon.id, previousCar.id, previousCar.operatorId);
-  }
-
-  for (const passengerId of previousCar.passengerIds) {
-    addCarPassenger(group.balloon.id, previousCar.id, passengerId);
-  }
+  flightLeg.value.assignments[element.id] = previousAssignment;
 }
 </script>
 

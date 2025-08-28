@@ -185,10 +185,12 @@ const {
 } = useProjectSettings();
 
 const {
+  id,
   group,
   assignment,
   editable = false,
 } = defineProps<{
+  id: string;
   group: VehicleGroup;
   assignment: VehicleAssignment;
   editable?: boolean;
@@ -197,11 +199,11 @@ const {
 const hideEmptyCapacity = ref<boolean>(false);
 
 const vehicle = computed<Vehicle>(() => {
-  if (carMap.value[assignment.id]) {
-    return carMap.value[assignment.id];
+  if (carMap.value[id]) {
+    return carMap.value[id];
   }
 
-  return balloonMap.value[assignment.id];
+  return balloonMap.value[id];
 });
 
 const totalWeight = computed<number>(() => {
@@ -227,7 +229,7 @@ const capacity = computed<number>(() => {
   let capacity: number = vehicle.value.maxCapacity;
 
   if (vehicle.value.type === 'car') {
-    capacity = remainingCapacity(group)[assignment.id] ?? 0;
+    capacity = remainingCapacity(group)[id] ?? 0;
   }
 
   if (capacity < 0) {
@@ -258,17 +260,17 @@ const showFooter = computed<boolean>(() => {
 
 function onVehicleRemoved() {
   if (vehicle.value.type === 'balloon') {
-    removeVehicleGroup(assignment.id);
+    removeVehicleGroup(id);
   } else {
-    removeCarFromVehicleGroup(group.balloon.id, assignment.id);
+    removeCarFromVehicleGroup(group.balloonId, id);
   }
 }
 
 function onVehicleClear() {
   if (vehicle.value.type === 'balloon') {
-    clearBalloon(assignment.id);
+    clearBalloon(id);
   } else {
-    clearCar(group.balloon.id, assignment.id);
+    clearCar(group.balloonId, id);
   }
 }
 
@@ -284,7 +286,7 @@ function onVehicleEdit() {
         },
       })
       .onOk((payload) => {
-        editBalloon(assignment.id, payload);
+        editBalloon(id, payload);
       });
   } else {
     quasar
@@ -297,7 +299,7 @@ function onVehicleEdit() {
         },
       })
       .onOk((payload) => {
-        editCar(assignment.id, payload);
+        editCar(id, payload);
       });
   }
 }
@@ -367,5 +369,3 @@ td.vehicle-person {
   border-bottom: 0.5px dotted;
 }
 </style>
-
-<script setup lang="ts"></script>

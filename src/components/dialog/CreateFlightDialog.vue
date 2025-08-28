@@ -48,22 +48,22 @@
 <script lang="ts" setup>
 import { type QSelectOption, useDialogPluginComponent } from 'quasar';
 import { computed, ref } from 'vue';
-import type { Flight } from 'app/src-common/entities';
+import type { FlightSeries } from 'app/src-common/entities';
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
 const { flights } = defineProps<{
-  flights: Flight[];
+  flights: FlightSeries[];
 }>();
 
 defineEmits([...useDialogPluginComponent.emits]);
 
-const referenceFlight = ref<Flight | null>(
+const referenceFlight = ref<FlightSeries | null>(
   flights.length > 0 ? flights[flights.length - 1] : null,
 );
 
-const flightOptions = computed<QSelectOption<Flight>[]>(() => {
+const flightOptions = computed<QSelectOption<FlightSeries>[]>(() => {
   const none = {
     label: 'None',
     value: null,
@@ -80,20 +80,9 @@ const flightOptions = computed<QSelectOption<Flight>[]>(() => {
 });
 
 function onSubmit() {
-  const data: Partial<Omit<Flight, 'id'>> = {
+  const data: Partial<Omit<FlightSeries, 'id'>> = {
     vehicleGroups: referenceFlight.value
-      ? referenceFlight.value.vehicleGroups.map((group) => ({
-          balloon: {
-            id: group.balloon.id,
-            operatorId: null,
-            passengerIds: [],
-          },
-          cars: group.cars.map((car) => ({
-            id: car.id,
-            operatorId: null,
-            passengerIds: [],
-          })),
-        }))
+      ? referenceFlight.value.vehicleGroups
       : undefined,
   };
 

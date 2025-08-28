@@ -39,7 +39,7 @@ const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
-const { flight, balloonMap } = storeToRefs(flightStore);
+const { flightSeries, balloonMap } = storeToRefs(flightStore);
 const { createBalloon, editBalloon, removeBalloon, addBalloon } =
   useFlightOperations();
 
@@ -55,7 +55,7 @@ function showAddBalloons() {
       componentProps: {
         itemName: 'Balloon',
         items: project.value.balloons.filter(
-          ({ id }) => !flight.value?.balloonIds.includes(id),
+          ({ id }) => !flightSeries.value?.balloonIds.includes(id),
         ),
       },
     })

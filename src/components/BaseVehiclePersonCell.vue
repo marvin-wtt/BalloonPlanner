@@ -85,7 +85,7 @@ import type {
   Identifiable,
   VehicleAssignment,
   VehicleGroup,
-  Flight,
+  FlightLeg,
 } from 'app/src-common/entities';
 import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
@@ -102,19 +102,14 @@ const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
-const { personMap, numberOfFlights, flight } = storeToRefs(flightStore);
+const { personMap, numberOfFlights, flightSeries } = storeToRefs(flightStore);
 const { showPersonWeight, showNumberOfFlights, personDefaultWeight } =
   useProjectSettings();
 const {
   editPerson,
-  addCarPassenger,
-  addBalloonPassenger,
-  addCarOperator,
-  addBalloonOperator,
-  removeCarPassenger,
-  removeBalloonPassenger,
-  removeCarOperator,
-  removeBalloonOperator,
+  setVehicleOperator,
+  addVehiclePassenger,
+  removeVehiclePassenger,
 } = useFlightOperations();
 
 const {
@@ -208,32 +203,22 @@ const hasLanguageWarning = computed<boolean>(() => {
 });
 
 const hasMultiLegError = computed<boolean>(() => {
-  if (!flight.value?.isContinuationLeg) {
+  if (flightSeries.value.legs.length <= 1) {
     return false;
   }
 
-  const index = project.value.flights.indexOf(flight.value);
-  if (index <= 0) {
-    return false;
-  }
-
-  const previousFlight: Flight = project.value.flights[index - 1];
-  const previousGroup = previousFlight.vehicleGroups.find(
-    (prevGroup) => group.balloon.id === prevGroup.balloon.id,
-  );
-
-  // There is an error with the group assignments
-  if (!previousGroup) {
-    return false;
-  }
+  const firstLeg: FlightLeg = flightSeries.value.legs[0];
+  const firstVehicle = Object.entries(firstLeg.assignments).find(
+    ([, assignment]) => {
+      return (
+        assignment.operatorId === person.id ||
+        assignment.passengerIds.includes(person.id)
+      );
+    },
+  )[0];
 
   return (
-    previousGroup.balloon.operatorId !== person.id &&
-    !previousGroup.balloon.passengerIds.includes(person.id) &&
-    !previousGroup.cars.some(
-      (car) =>
-        car.operatorId === person.id || car.passengerIds.includes(person.id),
-    )
+    group.balloonId === firstVehicle || group.carIds.includes(firstVehicle)
   );
 });
 
@@ -284,34 +269,18 @@ function onEdit() {
 }
 
 function addPersonToVehicle(personId: string) {
-  if (vehicle.type === 'balloon') {
-    if (operator) {
-      addBalloonOperator(assignment.id, personId);
-    } else {
-      addBalloonPassenger(assignment.id, personId);
-    }
+  if (operator) {
+    setVehicleOperator(vehicle.id, personId);
   } else {
-    if (operator) {
-      addCarOperator(group.balloon.id, assignment.id, personId);
-    } else {
-      addCarPassenger(group.balloon.id, assignment.id, personId);
-    }
+    addVehiclePassenger(vehicle.id, personId);
   }
 }
 
 function removePersonFromVehicle(personId: string) {
-  if (vehicle.type === 'balloon') {
-    if (operator) {
-      removeBalloonOperator(assignment.id);
-    } else {
-      removeBalloonPassenger(assignment.id, personId);
-    }
+  if (operator) {
+    setVehicleOperator(vehicle.id, null);
   } else {
-    if (operator) {
-      removeCarOperator(group.balloon.id, assignment.id);
-    } else {
-      removeCarPassenger(group.balloon.id, assignment.id, personId);
-    }
+    removeVehiclePassenger(vehicle.id, personId);
   }
 }
 </script>

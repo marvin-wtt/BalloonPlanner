@@ -35,7 +35,7 @@
 <script lang="ts" setup>
 import type {
   Balloon,
-  Flight,
+  FlightSeries,
   Person,
   Identifiable,
 } from 'app/src-common/entities';
@@ -54,7 +54,7 @@ const { groupAlignment } = useProjectSettings();
 const { addVehicleGroup } = useFlightOperations();
 
 const { flight, editable = false } = defineProps<{
-  flight: Flight;
+  flight: FlightSeries;
   editable?: boolean;
 }>();
 

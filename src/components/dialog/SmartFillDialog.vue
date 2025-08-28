@@ -197,7 +197,7 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
 defineEmits([...useDialogPluginComponent.emits]);
 
 const options = reactive<SmartFillOptions>({
-  leg: null,
+  flightLeg: null,
 });
 
 const flightLegOptions = [

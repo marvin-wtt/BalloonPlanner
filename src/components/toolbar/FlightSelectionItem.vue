@@ -1,20 +1,20 @@
 <template>
   <template v-if="project != null">
     <q-btn-dropdown
-      :label="label"
+      :label
       rounded
       flat
     >
       <q-item
-        v-for="(flight, index) in project.flights"
-        :key="flight.id"
+        v-for="{ legId, label } in items"
+        :key="legId"
         clickable
         v-close-popup
-        @click="changeFlight(flight.id)"
+        @click="changeFlight(legId)"
       >
         <q-item-section>
           <q-item-label>
-            {{ flightName(index) }}
+            {{ label }}
           </q-item-label>
         </q-item-section>
         <q-item-section side>
@@ -31,7 +31,7 @@
                 <q-item
                   clickable
                   v-close-popup
-                  @click="deleteFlight(flight)"
+                  @click="deleteFlight(legId)"
                 >
                   <q-item-section class="text-negative">
                     Delete
@@ -65,7 +65,7 @@ import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import { useRouter } from 'vue-router';
 import { useFlightStore } from 'stores/flight';
-import type { Flight } from 'app/src-common/entities';
+import type { FlightSeries, ID } from 'app/src-common/entities';
 import { useQuasar } from 'quasar';
 import CreateFlightDialog from 'components/dialog/CreateFlightDialog.vue';
 
@@ -75,11 +75,11 @@ const projectStore = useProjectStore();
 const flightStore = useFlightStore();
 
 const { project } = storeToRefs(projectStore);
-const { flight } = storeToRefs(flightStore);
+const { flightSeries } = storeToRefs(flightStore);
 const addFlightLoading = ref(false);
 
 const label = computed<string>(() => {
-  const flightId = flight.value?.id;
+  const flightId = flightSeries.value?.id;
   if (!project.value || !flightId) {
     return 'Flights';
   }
@@ -87,6 +87,24 @@ const label = computed<string>(() => {
   return flightName(
     project.value.flights.findIndex((value) => value.id === flightId),
   );
+});
+
+interface Item {
+  legId: ID;
+  seriesId: ID;
+  label: string;
+}
+
+const items = computed<Item[]>(() => {
+  return project.value?.flights.flatMap((series, flightIndex) => {
+    return series.legs.map((leg, legIndex) => {
+      return {
+        seriesId: series.id,
+        legId: leg.id,
+        label: `Flight ${flightIndex + 1}.${legIndex + 1}`,
+      };
+    });
+  });
 });
 
 function flightName(index: number): string {
@@ -100,6 +118,8 @@ function addFlight() {
     return false;
   }
 
+  // TODO Either add series or leg
+
   quasar
     .dialog({
       component: CreateFlightDialog,
@@ -107,10 +127,10 @@ function addFlight() {
         flights: project.value.flights,
       },
     })
-    .onOk((data: Partial<Omit<Flight, 'id'>>) => {
+    .onOk((data: Partial<Omit<FlightSeries, 'id'>>) => {
       const flight = flightStore.createFlight(data);
 
-      void changeFlight(flight.id);
+      void changeFlight(flight.id, flight.legs[0].id);
     })
     .onDismiss(() => {
       addFlightLoading.value = false;
@@ -129,8 +149,8 @@ async function changeFlight(flightId: string) {
   });
 }
 
-function deleteFlight(flight: Flight) {
-  flightStore.deleteFlight(flight.id);
+function deleteFlight(flightId: ID) {
+  flightStore.deleteFlightLeg(flightId);
 }
 </script>
 
