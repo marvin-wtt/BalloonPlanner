@@ -119,7 +119,6 @@ const {
   assignment,
   flightSeries,
   flightLeg,
-  group,
   editable = false,
   operator = false,
   overfilled = false,
@@ -218,36 +217,11 @@ const hasLanguageWarning = computed<boolean>(() => {
 });
 
 const hasMultiLegError = computed<boolean>(() => {
-  if (
-    !person ||
-    flightSeries.legs.length <= 1 ||
-    flightSeries.legs.indexOf(flightLeg) <= 0
-  ) {
+  if (!person) {
     return false;
   }
 
-  const firstLeg = flightSeries.legs[0];
-  if (!firstLeg) {
-    return false;
-  }
-
-  const vehicleIds = Object.entries(firstLeg.assignments).find(
-    ([, assignment]) => {
-      return (
-        assignment.operatorId === person.id ||
-        assignment.passengerIds.includes(person.id)
-      );
-    },
-  );
-  if (!vehicleIds) {
-    return false;
-  }
-
-  const firstVehicleId = vehicleIds[0];
-
-  return (
-    group.balloonId === firstVehicleId || group.carIds.includes(firstVehicleId)
-  );
+  return !wasInSameVehicleGroupInFirstLeg(person.id);
 });
 
 const hasInvalidOperator = computed<boolean>(() => {
@@ -323,11 +297,17 @@ function removePersonFromVehicle(personId: string) {
 }
 
 function wasInSameVehicleGroupInFirstLeg(personId: string): boolean {
-  if (flightSeries.legs.length < 1) {
+  if (
+    flightSeries.legs.length < 1 ||
+    flightSeries.legs.indexOf(flightLeg) === 0
+  ) {
     return true;
   }
 
   const firstLeg = flightSeries.legs[0];
+  if (!firstLeg) {
+    return false;
+  }
 
   // Find the vehicle group containing the current vehicle
   const currentGroup = flightSeries.vehicleGroups.find(
