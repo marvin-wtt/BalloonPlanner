@@ -88,8 +88,7 @@ const { name, people } = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'continue'): void;
-  (e: 'back'): void;
+  (e: 'continue' | 'back'): void;
   (e: 'to', destination: string): void;
 }>();
 

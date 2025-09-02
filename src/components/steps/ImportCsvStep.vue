@@ -62,8 +62,7 @@ const { name } = defineProps<{
 
 const emit = defineEmits<{
   (e: 'to', name: string): void;
-  (e: 'continue'): void;
-  (e: 'back'): void;
+  (e: 'continue' | 'back'): void;
 }>();
 
 const loading = ref(false);
@@ -113,6 +112,18 @@ function validateHeaders(fields: string[] | undefined) {
   }
 }
 
+function parseOptionalStringField(
+  record: Record<string, unknown>,
+  key: string,
+  rowNum: number,
+): string | undefined {
+  if (key in record) {
+    return parseRequiredStringField(record, key, rowNum);
+  }
+
+  return undefined;
+}
+
 function parseRequiredStringField(
   record: Record<string, unknown>,
   key: string,
@@ -121,7 +132,7 @@ function parseRequiredStringField(
   const raw = record[key];
   if (typeof raw !== 'string' || raw.trim() === '') {
     throw new Error(
-      `Row ${rowNum}: missing or invalid "${key}". ` +
+      `Row ${rowNum.toString()}: missing or invalid "${key}". ` +
         `Expected a non‐empty string.`,
     );
   }
@@ -140,12 +151,14 @@ function parseOptionalEnumField<T extends string>(
     return defaultValue;
   }
   if (typeof raw !== 'string') {
-    throw new Error(`Row ${rowNum}: "${key}" must be a string if provided.`);
+    throw new Error(
+      `Row ${rowNum.toString()}: "${key}" must be a string if provided.`,
+    );
   }
   const candidate = raw.trim().toLowerCase();
   if (!allowedValues.includes(candidate as T)) {
     throw new Error(
-      `Row ${rowNum}: invalid "${key}" value "${candidate}". ` +
+      `Row ${rowNum.toString()}: invalid "${key}" value "${candidate}". ` +
         `Valid options are: ${allowedValues.join(', ')}.`,
     );
   }
@@ -161,13 +174,13 @@ function parseRequiredEnumField<T extends string>(
   const raw = record[key];
   if (typeof raw !== 'string') {
     throw new Error(
-      `Row ${rowNum}: missing or invalid "${key}". Expected one of ${allowedValues.join(', ')}.`,
+      `Row ${rowNum.toString()}: missing or invalid "${key}". Expected one of ${allowedValues.join(', ')}.`,
     );
   }
   const candidate = raw.trim().toLowerCase();
   if (!allowedValues.includes(candidate as T)) {
     throw new Error(
-      `Row ${rowNum}: invalid "${key}" value "${candidate}". ` +
+      `Row ${rowNum.toString()}: invalid "${key}" value "${candidate}". ` +
         `Valid options are: ${allowedValues.join(', ')}.`,
     );
   }
@@ -194,13 +207,13 @@ function parseOptionalPositiveNumberField(
     num = Number(trimmed);
   } else {
     throw new Error(
-      `Row ${rowNum}: "${key}" must be a string or number if provided.`,
+      `Row ${rowNum.toString()}: "${key}" must be a string or number if provided.`,
     );
   }
 
   if (Number.isNaN(num) || num <= 0) {
     throw new Error(
-      `Row ${rowNum}: "${key}" must be a positive number if provided; got "${raw}".`,
+      `Row ${rowNum.toString()}: "${key}" must be a positive number if provided; got "${String(raw)}".`,
     );
   }
   return num;
@@ -220,7 +233,7 @@ function parseOptionalBooleanField(
     if (lowered === 'true') return true;
     if (lowered === 'false') return false;
     throw new Error(
-      `Row ${rowNum}: "${key}" string must be "true" or "false" (case-insensitive); got "${raw}".`,
+      `Row ${rowNum.toString()}: "${key}" string must be "true" or "false" (case-insensitive); got "${raw}".`,
     );
   }
 
@@ -237,13 +250,13 @@ function processData(data: unknown[]): Person[] {
     // 1) Ensure it’s an object
     if (typeof item !== 'object' || item == null || Array.isArray(item)) {
       throw new Error(
-        `Row ${rowNum}: expected an object, but got ${typeof item}.`,
+        `Row ${rowNum.toString()}: expected an object, but got ${typeof item}.`,
       );
     }
     const record = item as Record<string, unknown>;
 
     const id =
-      parseRequiredStringField(record, 'Id', rowNum) ?? crypto.randomUUID();
+      parseOptionalStringField(record, 'Id', rowNum) ?? crypto.randomUUID();
     const name = parseRequiredStringField(record, 'Name', rowNum);
     const role = parseOptionalEnumField(
       record,

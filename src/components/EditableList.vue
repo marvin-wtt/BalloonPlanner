@@ -144,10 +144,8 @@ const {
 }>();
 
 const emit = defineEmits<{
-  (e: 'create'): void;
-  (e: 'add'): void;
+  (e: 'create' | 'add' | 'delete'): void;
   (e: 'edit', item: T): void;
-  (e: 'delete', item: T): void;
 }>();
 
 const editable = ref(false);

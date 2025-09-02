@@ -134,14 +134,14 @@ const flightsLabel = computed<string>(() => {
   const flights = numberOfFlights.value[person.id] ?? 0;
   const suffix = flights === 0 && person.firstTime ? '*' : '';
 
-  return ` (${flights}${suffix})`;
+  return ` (${flights.toString()}${suffix})`;
 });
 
 const weightLabel = computed<string>(() => {
   const weight = person.weight ?? personDefaultWeight.value ?? '?';
   const suffix = !person.weight && personDefaultWeight.value ? '*' : '';
 
-  return ` (${weight}${suffix} kg)`;
+  return ` (${weight.toString()}${suffix} kg)`;
 });
 
 const coloredLabels = computed<boolean>(() => {
@@ -235,7 +235,7 @@ function isDropAllowed(element: Identifiable): boolean {
     return false;
   }
 
-  if (!personMap.value[element.id]) {
+  if (element.id in personMap.value) {
     return false;
   }
 

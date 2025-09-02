@@ -156,7 +156,7 @@ const flightOptions = computed<QSelectOption<FlightSeries>[]>(() => {
 
   const options = flights
     .map((flight, index) => ({
-      label: `Flight-${index + 1}`,
+      label: `Flight-${(index + 1).toString()}`,
       value: flight,
     }))
     .reverse();
@@ -176,7 +176,7 @@ function onSubmit() {
       mode: 'leg',
       assignments: createAssignments(),
     });
-  } else if (mode.value === 'series') {
+  } else {
     submit({
       mode: 'series',
       vehicleGroups: referenceFlight.value

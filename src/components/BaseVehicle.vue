@@ -192,14 +192,14 @@ const {
 } = defineProps<{
   vehicleId: string;
   group: VehicleGroup;
-  assignment: VehicleAssignment;
+  assignment: VehicleAssignment | undefined;
   editable?: boolean;
 }>();
 
 const hideEmptyCapacity = ref<boolean>(false);
 
 const vehicle = computed<Vehicle>(() => {
-  if (carMap.value[vehicleId]) {
+  if (vehicleId in carMap.value) {
     return carMap.value[vehicleId];
   }
 
@@ -209,18 +209,22 @@ const vehicle = computed<Vehicle>(() => {
 const totalWeight = computed<number>(() => {
   const fallback = personDefaultWeight.value ?? 0;
 
+  const operatorWeight = assignment.operatorId
+    ? (personMap.value[assignment.operatorId]?.weight ?? fallback)
+    : fallback;
+
   return assignment.passengerIds
     .map((id) => personMap.value[id])
     .reduce<number>(
       (acc, person) => acc + (person?.weight ?? fallback),
-      personMap.value[assignment.operatorId]?.weight ?? fallback,
+      operatorWeight,
     );
 });
 
 const isOverweight = computed<boolean>(() => {
   return (
     vehicle.value.type === 'balloon' &&
-    vehicle.value.maxWeight !== null &&
+    vehicle.value.maxWeight !== undefined &&
     totalWeight.value > vehicle.value.maxWeight
   );
 });

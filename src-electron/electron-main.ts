@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import log from 'electron-log';
 
 // needed in case process is undefined under Linux
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 const platform = process.platform || os.platform();
 const currentDir = fileURLToPath(new URL('.', import.meta.url));
 
@@ -45,6 +46,7 @@ async function createWindow() {
         currentDir,
         path.join(
           process.env.QUASAR_ELECTRON_PRELOAD_FOLDER,
+          // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
           'electron-preload' + process.env.QUASAR_ELECTRON_PRELOAD_EXTENSION,
         ),
       ),
@@ -89,8 +91,8 @@ app
   .then(initProjectApiHandler)
   .then(initSolverApiHandler)
   .then(createWindow)
-  .catch((reason) => {
-    console.error(`Failed to start application: ${reason}`);
+  .catch((reason: unknown) => {
+    console.error(`Failed to start application: ${String(reason)}`);
   });
 
 app.on('window-all-closed', () => {
@@ -101,8 +103,8 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow().catch((reason) => {
-      console.error(`Failed to create window: ${reason}`);
+    createWindow().catch((reason: unknown) => {
+      console.error(`Failed to create window: ${String(reason)}`);
     });
   }
 });

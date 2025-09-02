@@ -379,7 +379,8 @@ async function onExportImage() {
 
   document.body.removeChild(container);
 
-  const fileName = `${project.value.name}-flight-${project.value.flights.indexOf(flightSeries.value) + 1}.png`;
+  const flightNr = project.value.flights.indexOf(flightSeries.value) + 1;
+  const fileName = `${project.value.name}-flight-${flightNr.toString()}.png`;
   const link = document.createElement('a');
   link.download = fileName;
   link.href = dataUrl;
@@ -503,14 +504,14 @@ function formatPersonMeta(person: Person): string {
     const weight = person.weight ?? personDefaultWeight.value ?? '?';
     const suffix = !person.weight && personDefaultWeight.value ? '*' : '';
 
-    parts.push(`${weight}${suffix} kg`);
+    parts.push(`${weight.toString()}${suffix} kg`);
   }
 
   if (showNumberOfFlights.value) {
     const flights = numberOfFlights.value[person.id] ?? 0;
     const suffix = flights === 0 && person.firstTime ? '*' : '';
 
-    parts.push(`${flights}${suffix}`);
+    parts.push(`${flights.toString()}${suffix}`);
   }
 
   return parts.join(' | ');

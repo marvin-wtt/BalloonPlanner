@@ -1,12 +1,13 @@
 import type { Identifiable } from 'app/src-common/entities';
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class DragHelper {
   private static _element: Identifiable | null;
 
   static startDrag(event: DragEvent, element: Identifiable) {
     DragHelper._element = element;
 
-    if (event.dataTransfer === null || element === undefined) {
+    if (event.dataTransfer === null) {
       return;
     }
 

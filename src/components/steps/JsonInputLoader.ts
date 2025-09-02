@@ -38,7 +38,7 @@ export function loadJson(
       const computedData = unwrapComputed(entry);
 
       if (!isValidPersonData(computedData)) {
-        throw new Error(`Invalid person record at index ${i}`);
+        throw new Error(`Invalid person record at index ${i.toString()}`);
       }
 
       const { firstName, lastName, address, role } = computedData;
@@ -48,13 +48,14 @@ export function loadJson(
         firstName,
         lastName,
         role: normalizeRole(role),
-        nationality: String(address.country).toLowerCase(),
+        nationality: address.country.toLowerCase(),
         languages: extractLanguages(entry),
       };
     });
 
   const unique = makeUniqueNames(normalized);
   return unique.map(({ id, name, role, nationality, languages }) => ({
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     id: id ?? crypto.randomUUID(),
     name,
     role,
@@ -135,7 +136,7 @@ function extractLanguages(entry: unknown): string[] | undefined {
   const result: string[] = [];
   for (const [lang, val] of Object.entries(raw)) {
     if (speaksEnough(val)) {
-      result.push(String(lang).toLowerCase());
+      result.push(lang.toLowerCase());
     }
   }
   // unique + stable order

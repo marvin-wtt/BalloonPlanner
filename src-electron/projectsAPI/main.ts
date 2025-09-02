@@ -32,7 +32,7 @@ export default () => {
   ipcMain.on('project:open-file', projectApiHandler.openFile);
 
   ipcMain.on('project:ready', () => {
-    loadFromArgs(process.argv).catch((err) => {
+    loadFromArgs(process.argv).catch((err: unknown) => {
       log.error(
         `Failed to load project from process args: ${process.argv.join(' | ')}`,
         err,
@@ -41,13 +41,13 @@ export default () => {
   });
 
   app.on('open-file', (_event, fullFilePath) => {
-    loadExternalFile(fullFilePath).catch((err) => {
+    loadExternalFile(fullFilePath).catch((err: unknown) => {
       log.error(`Failed to load project from file: ${fullFilePath}`, err);
     });
   });
 
   app.on('second-instance', (_event, argv) => {
-    loadFromArgs(argv).catch((err) => {
+    loadFromArgs(argv).catch((err: unknown) => {
       log.error(`Failed to load project from args: ${argv.join(' | ')}`, err);
     });
   });

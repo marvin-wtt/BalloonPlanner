@@ -149,11 +149,11 @@ window.projectAPI.onOpenRequest((newProject) => {
       },
     })
     .onOk(() => {
-      openProject(newProject).catch((error) => {
+      openProject(newProject).catch((error: unknown) => {
         quasar.notify({
           type: 'negative',
           message: `Failed to open project "${newProject.name}"`,
-          caption: error.message,
+          caption: String(error?.message),
         });
       });
     });

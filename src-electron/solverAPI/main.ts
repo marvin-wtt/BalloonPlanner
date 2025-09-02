@@ -37,13 +37,13 @@ function runSolver(
 
   let stdoutData = '';
   proc.stdout.setEncoding('utf8');
-  proc.stdout.on('data', (chunk) => {
+  proc.stdout.on('data', (chunk: string) => {
     stdoutData += chunk;
   });
 
   let stderrData = '';
   proc.stderr.setEncoding('utf8');
-  proc.stderr.on('data', (chunk) => {
+  proc.stderr.on('data', (chunk: string) => {
     stderrData += chunk;
   });
 
@@ -66,14 +66,16 @@ function runSolver(
       clearTimeout(timeout);
 
       if (code !== 0) {
-        return reject(handleError(code, stderrData));
+        reject(handleError(code, stderrData));
+        return;
       }
 
       try {
         const data = JSON.parse(stdoutData);
         if (!Array.isArray(data)) {
           log.error('Invalid solver output', data);
-          return reject(new Error('Invalid solver output'));
+          reject(new Error('Invalid solver output'));
+          return;
         }
         resolve(data as VehicleGroup[]);
       } catch (e) {
@@ -177,7 +179,7 @@ function handleError(code: number, stderrData: string): Error {
   }
 
   log.error(
-    `Solver exited with code ${code} but no structured error.`,
+    `Solver exited with code ${code.toString()} but no structured error.`,
     stderrData,
   );
   return new Error('An unexpected error occurred in the solver.');

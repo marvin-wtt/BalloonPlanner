@@ -42,7 +42,7 @@ const migrations: Record<string, Migration> = {
 };
 
 export function migrateProject(data: AnyProject): Project {
-  if (typeof data !== 'object' || data === null) {
+  if (typeof data !== 'object') {
     throw new Error('Invalid project data');
   }
 
@@ -51,7 +51,7 @@ export function migrateProject(data: AnyProject): Project {
     ? app.getVersion()
     : (Object.keys(migrations).sort(semver.compare).pop() ?? '0.0.0');
 
-  const version = data.version ?? '0.0.0';
+  const version: string = data.version ?? '0.0.0';
 
   if (semver.gt(version, appVersion)) {
     throw new Error(

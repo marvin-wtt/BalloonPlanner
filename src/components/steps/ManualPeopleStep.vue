@@ -123,7 +123,8 @@ const columns: QTableColumn[] = [
     field: 'role',
     align: 'left',
     sortable: true,
-    format: (val: string) => val.charAt(0).toUpperCase() + String(val).slice(1),
+    format: (val: string | undefined) =>
+      val.charAt(0).toUpperCase() + String(val).slice(1),
   },
   {
     name: 'weight',
@@ -138,7 +139,7 @@ const columns: QTableColumn[] = [
     label: 'First Time',
     field: 'firstTime',
     align: 'center',
-    format: (val: boolean) =>
+    format: (val: boolean | undefined) =>
       val === true ? '\u2713' : val === false ? 'X' : '',
   },
   {

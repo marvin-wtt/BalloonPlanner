@@ -281,9 +281,6 @@ export const useFlightStore = defineStore('flight', () => {
     for (const l of history.value) {
       for (const person of project.value.people) {
         const pid = person.id;
-        if (!(pid in counts)) {
-          counts[pid] = 0;
-        }
 
         // check if this person is flying on any of the balloons
         const isFlying = balloonIds
@@ -294,7 +291,7 @@ export const useFlightStore = defineStore('flight', () => {
               assignment.passengerIds.some((pIds) => pIds === pid),
           );
 
-        counts[pid] += isFlying ? 1 : 0;
+        counts[pid] = (counts[pid] ?? 0) + (isFlying ? 1 : 0);
       }
     }
 

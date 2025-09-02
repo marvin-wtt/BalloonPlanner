@@ -158,11 +158,11 @@ const legLabel = computed<string>(() => {
 });
 
 function seriesName(index: number): string {
-  return `Flight ${index + 1}`;
+  return `Flight ${(index + 1).toString()}`;
 }
 
 function legName(index: number): string {
-  return `Leg ${index + 1}`;
+  return `Leg ${(index + 1).toString()})`;
 }
 
 function addFlight() {

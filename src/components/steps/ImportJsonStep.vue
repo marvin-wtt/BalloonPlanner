@@ -62,8 +62,7 @@ const { name } = defineProps<{
 
 const emit = defineEmits<{
   (e: 'to', name: string): void;
-  (e: 'continue'): void;
-  (e: 'back'): void;
+  (e: 'continue' | 'back'): void;
 }>();
 
 const loading = ref(false);

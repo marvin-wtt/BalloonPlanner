@@ -38,12 +38,7 @@
             :key="group.balloonId"
             :vehicle-id="group.balloonId"
             type="balloon"
-            :assignment="
-              flightLeg.assignments[group.balloonId] ?? {
-                operatorId: null,
-                passengerIds: [],
-              }
-            "
+            :assignment="flightLeg.assignments[group.balloonId]"
             :group
             :editable
           />

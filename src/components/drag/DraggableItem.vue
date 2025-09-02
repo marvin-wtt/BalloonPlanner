@@ -28,9 +28,7 @@ const {
 }>();
 
 const emit = defineEmits<{
-  (e: 'cancel', element: Identifiable): void;
-  (e: 'move', element: Identifiable): void;
-  (e: 'remove', element: Identifiable): void;
+  (e: 'cancel' | 'move' | 'remove', element: Identifiable): void;
 }>();
 
 const dragged = ref(false);
