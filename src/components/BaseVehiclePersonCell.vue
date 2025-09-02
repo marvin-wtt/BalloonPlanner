@@ -104,8 +104,12 @@ const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
 const { personMap, numberOfFlights } = storeToRefs(flightStore);
-const { showPersonWeight, showNumberOfFlights, personDefaultWeight } =
-  useProjectSettings();
+const {
+  showPersonWeight,
+  showNumberOfFlights,
+  personDefaultWeight,
+  disableAssignmentProtection,
+} = useProjectSettings();
 const {
   editPerson,
   setVehicleOperator,
@@ -241,7 +245,10 @@ function isDropAllowed(element: Identifiable): boolean {
     return false;
   }
 
-  if (!wasInSameVehicleGroupInFirstLeg(element.id)) {
+  if (
+    !wasInSameVehicleGroupInFirstLeg(element.id) &&
+    !disableAssignmentProtection.value
+  ) {
     return false;
   }
 

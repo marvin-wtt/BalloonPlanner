@@ -3,6 +3,7 @@ import { useProjectStore } from 'stores/project';
 import type { ProjectSettings } from 'app/src-common/entities';
 
 const DEFAULTS: Readonly<ProjectSettings> = {
+  disableAssignmentProtection: false,
   showVehicleIndex: true,
   showVehicleLabel: true,
   showGroupLabel: true,
@@ -60,6 +61,7 @@ export function useProjectSettings() {
   }
 
   // expose v-model friendly refs
+  const disableAssignmentProtection = field('disableAssignmentProtection');
   const showVehicleIndex = field('showVehicleIndex');
   const showVehicleLabel = field('showVehicleLabel');
   const showGroupLabel = field('showGroupLabel');
@@ -76,6 +78,7 @@ export function useProjectSettings() {
     settings,
     patch,
     reset,
+    disableAssignmentProtection,
     showVehicleIndex,
     showVehicleLabel,
     showGroupLabel,

@@ -7,6 +7,24 @@
       <div class="text-h6">Settings</div>
       <div class="q-gutter-sm">
         <q-list separator>
+          <q-item-label header>Behaviour</q-item-label>
+          <q-item
+            v-ripple
+            tag="label"
+          >
+            <q-item-section
+              avatar
+              top
+            >
+              <q-checkbox
+                v-model="disableAssignmentProtection"
+                color="primary"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Disable assignment protection</q-item-label>
+            </q-item-section>
+          </q-item>
           <q-item-label header>Information</q-item-label>
           <q-item
             v-ripple
@@ -238,6 +256,7 @@ import { QItem, QList } from 'quasar';
 import { useProjectSettings } from 'src/composables/projectSettings';
 
 const {
+  disableAssignmentProtection,
   showVehicleIndex,
   showVehicleLabel,
   showGroupLabel,
