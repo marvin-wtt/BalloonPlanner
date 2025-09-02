@@ -324,9 +324,19 @@ async function init() {
 }
 
 function onSmartFill() {
+  if (!flightSeries.value || !flightLeg.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: SmartFillDialog,
+      componentProps: {
+        firstLeg: flightSeries.value.legs[0]?.id === flightLeg.value.id,
+        hasSuccessorLeg:
+          flightSeries.value.legs.length >
+          flightSeries.value.legs.indexOf(flightLeg.value) + 1,
+      },
     })
     .onOk((options: SmartFillOptions) => {
       void smartFill(options);

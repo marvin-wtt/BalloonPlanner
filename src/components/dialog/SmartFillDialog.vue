@@ -8,17 +8,13 @@
         @reset="onDialogCancel"
         @submit="onSubmit"
       >
-        <q-card-section class="text-h6"> Smart Fill </q-card-section>
+        <q-card-section class="text-h6">Smart Fill</q-card-section>
 
         <q-card-section class="q-pt-none q-gutter-y-md">
-          <q-select
-            v-model="options.leg"
-            label="Flight Leg"
-            :options="flightLegOptions"
-            emit-value
-            map-options
-            outlined
-            rounded
+          <q-toggle
+            v-if="firstLeg && !hasSuccessorLeg"
+            v-model="moreLegsPlanned"
+            label="More legs planned"
           />
 
           <q-expansion-item label="Advanced Options">
@@ -187,7 +183,7 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, toRaw } from 'vue';
+import { reactive, ref, toRaw } from 'vue';
 import { useDialogPluginComponent } from 'quasar';
 import type { SmartFillOptions } from 'app/src-common/entities';
 
@@ -196,22 +192,23 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
 
 defineEmits([...useDialogPluginComponent.emits]);
 
-const options = reactive<SmartFillOptions>({
-  flightLeg: null,
-});
+const { firstLeg, hasSuccessorLeg } = defineProps<{
+  firstLeg: boolean;
+  hasSuccessorLeg: boolean;
+}>();
 
-const flightLegOptions = [
-  { label: 'None', value: null },
-  { label: 'First', value: 'first' },
-  { label: 'Second', value: 'second' },
-];
+const options = reactive<SmartFillOptions>({});
+const moreLegsPlanned = ref<boolean>(hasSuccessorLeg);
 
 const signedIntegerRule = (val?: number): boolean | string => {
   return !val || Number.isInteger(val) || 'Must be an integer';
 };
 
 function onSubmit() {
-  onDialogOK(toRaw(options));
+  onDialogOK({
+    ...toRaw(options),
+    leg: !firstLeg ? 'second' : moreLegsPlanned.value ? 'first' : null,
+  });
 }
 </script>
 
