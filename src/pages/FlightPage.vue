@@ -127,8 +127,8 @@
                   :items="availableCounselors"
                   @add="showAddPeople('counselor')"
                   @create="showCreatePerson"
-                  @edit="(person) => showEditPerson(person)"
-                  @delete="(person) => showDeletePerson(person)"
+                  @edit="(person: Person) => showEditPerson(person)"
+                  @delete="(person: Person) => showDeletePerson(person)"
                 >
                   <template #main="{ item }">
                     {{ item.name }}
@@ -152,8 +152,8 @@
                   :dense="availableParticipants.length > 10"
                   @add="showAddPeople('participant')"
                   @create="showCreatePerson"
-                  @edit="(person) => showEditPerson(person)"
-                  @delete="(person) => showDeletePerson(person)"
+                  @edit="(person: Person) => showEditPerson(person)"
+                  @delete="(person: Person) => showDeletePerson(person)"
                 >
                   <template #main="{ item }: { item: Person }">
                     {{ item.name }}
@@ -172,11 +172,12 @@
 
       <!-- Flight overview -->
       <div
-        v-if="showFlightView"
+        v-if="showFlightView && flightSeries && flightLeg"
         class="col-grow flex flight-view"
       >
         <base-flight
-          :flight="flightSeries"
+          :flight-series
+          :flight-leg
           :editable
           class="fit"
         />
@@ -250,7 +251,7 @@ const projectStore = useProjectStore();
 const flightStore = useFlightStore();
 
 const { project, isLoading } = storeToRefs(projectStore);
-const { flightSeries, numberOfFlights } = storeToRefs(flightStore);
+const { flightSeries, flightLeg, numberOfFlights } = storeToRefs(flightStore);
 
 const { showNumberOfFlights, showPersonWeight, personDefaultWeight } =
   useProjectSettings();
@@ -265,6 +266,10 @@ watch(() => route.params, init);
 
 async function init() {
   let { projectId, flightId } = route.params;
+
+  if (projectId === undefined) {
+    return;
+  }
 
   if (Array.isArray(projectId)) {
     projectId = projectId[0];
@@ -299,12 +304,14 @@ async function init() {
     return;
   }
 
-  const series = project.value.flights[project.value.flights.length - 1];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const series = project.value.flights[project.value.flights.length - 1]!;
   if (series.legs.length === 0) {
     return;
   }
 
-  const leg = series.legs[series.legs.length - 1];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const leg = series.legs[series.legs.length - 1]!;
   flightId = leg.id;
 
   await router.replace({
@@ -357,10 +364,14 @@ async function smartFill(options: SmartFillOptions) {
 }
 
 async function onExportImage() {
+  if (!project.value || !flightSeries.value) {
+    return;
+  }
+
   const container = document.createElement('div');
   container.classList.add('exporter-wrapper', 'flight-view');
   const src = document.getElementById('flight-content');
-  const clone = src.cloneNode(true) as HTMLElement;
+  const clone = src?.cloneNode(true) as HTMLElement;
   clone.classList.add('no-wrap', 'fit');
   Object.assign(container.style, {
     position: 'fixed',
@@ -388,6 +399,10 @@ async function onExportImage() {
 }
 
 function showAddPeople(role: Person['role']) {
+  if (!project.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: AddEntityToFlightDialog,
@@ -402,6 +417,10 @@ function showAddPeople(role: Person['role']) {
 }
 
 function showCreatePerson() {
+  if (!project.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: EditPersonDialog,
@@ -412,7 +431,7 @@ function showCreatePerson() {
     .onOk(createPerson);
 }
 
-function showEditPerson(person: Person) {
+function showEditPerson(person: Person): void {
   quasar
     .dialog({
       component: EditPersonDialog,
@@ -426,7 +445,7 @@ function showEditPerson(person: Person) {
     });
 }
 
-function showDeletePerson(person: Person) {
+function showDeletePerson(person: Person): void {
   quasar
     .dialog({
       title: 'Delete person',

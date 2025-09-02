@@ -68,9 +68,15 @@
           <base-vehicle-person-cell
             class="vehicle-person"
             :class="showVehicleIndex ? 'vehicle-person__indexed' : ''"
-            :person="personMap[assignment.operatorId]"
-            :vehicle
+            :person="
+              assignment.operatorId
+                ? personMap[assignment.operatorId]
+                : undefined
+            "
+            :flight-leg
+            :flight-series
             :group
+            :vehicle
             :assignment
             operator
             :editable
@@ -98,9 +104,15 @@
           <base-vehicle-person-cell
             class="vehicle-person"
             :class="showVehicleIndex ? 'vehicle-person__indexed' : ''"
-            :person="personMap[assignment.passengerIds[c - 1]]"
-            :vehicle
+            :person="
+              assignment.passengerIds[c - 1]
+                ? personMap[assignment.passengerIds[c - 1]!]
+                : undefined
+            "
+            :flight-leg
+            :flight-series
             :group
+            :vehicle
             :assignment
             :editable
             :overfilled="c > capacity - 1"
@@ -146,6 +158,8 @@
 import BaseVehiclePersonCell from 'components/BaseVehiclePersonCell.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import type {
+  FlightLeg,
+  FlightSeries,
   Vehicle,
   VehicleAssignment,
   VehicleGroup,
@@ -164,8 +178,7 @@ import { useProjectSettings } from 'src/composables/projectSettings';
 const {
   removeCarFromVehicleGroup,
   removeVehicleGroup,
-  clearBalloon,
-  clearCar,
+  clearVehicle,
   editBalloon,
   editCar,
 } = useFlightOperations();
@@ -191,8 +204,10 @@ const {
   editable = false,
 } = defineProps<{
   vehicleId: string;
+  flightSeries: FlightSeries;
+  flightLeg: FlightLeg;
   group: VehicleGroup;
-  assignment: VehicleAssignment | undefined;
+  assignment: VehicleAssignment;
   editable?: boolean;
 }>();
 
@@ -200,10 +215,12 @@ const hideEmptyCapacity = ref<boolean>(false);
 
 const vehicle = computed<Vehicle>(() => {
   if (vehicleId in carMap.value) {
-    return carMap.value[vehicleId];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return carMap.value[vehicleId]!;
   }
 
-  return balloonMap.value[vehicleId];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return balloonMap.value[vehicleId]!;
 });
 
 const totalWeight = computed<number>(() => {
@@ -251,7 +268,9 @@ const rowCount = computed<number>(() => {
 });
 
 const color = computed<string>(() => {
-  return vehicle.value.type === 'balloon' ? balloonColor.value : carColor.value;
+  return vehicle.value.type === 'balloon'
+    ? (balloonColor.value ?? '')
+    : (carColor.value ?? '');
 });
 
 const showFooter = computed<boolean>(() => {
@@ -259,7 +278,7 @@ const showFooter = computed<boolean>(() => {
     return true;
   }
 
-  return vehicle.value.type === 'balloon' && showVehicleWeight.value;
+  return vehicle.value.type === 'balloon' && (showVehicleWeight.value ?? false);
 });
 
 function onVehicleRemoved() {
@@ -271,14 +290,14 @@ function onVehicleRemoved() {
 }
 
 function onVehicleClear() {
-  if (vehicle.value.type === 'balloon') {
-    clearBalloon(vehicleId);
-  } else {
-    clearCar(group.balloonId, vehicleId);
-  }
+  clearVehicle(vehicleId);
 }
 
 function onVehicleEdit() {
+  if (!project.value) {
+    return;
+  }
+
   if (vehicle.value.type === 'balloon') {
     quasar
       .dialog({

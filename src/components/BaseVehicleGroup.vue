@@ -38,7 +38,11 @@
             :key="group.balloonId"
             :vehicle-id="group.balloonId"
             type="balloon"
-            :assignment="flightLeg.assignments[group.balloonId]"
+            :assignment="
+              flightLeg?.assignments[group.balloonId] ?? emptyAssignment
+            "
+            :flight-series
+            :flight-leg
             :group
             :editable
           />
@@ -52,7 +56,9 @@
           <base-vehicle
             type="car"
             :vehicle-id="id"
-            :assignment="flightLeg.assignments[id]"
+            :assignment="flightLeg?.assignments[id] ?? emptyAssignment"
+            :flight-series
+            :flight-leg
             :group
             :editable
           />
@@ -66,9 +72,12 @@
 import DropZone from 'components/drag/DropZone.vue';
 import type {
   Car,
-  VehicleGroup,
   Identifiable,
   Balloon,
+  VehicleAssignment,
+  FlightSeries,
+  FlightLeg,
+  VehicleGroup,
 } from 'app/src-common/entities';
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
@@ -79,19 +88,27 @@ import { useProjectSettings } from 'src/composables/projectSettings';
 
 const { groupAlignment, groupStyle, showGroupLabel } = useProjectSettings();
 const flightStore = useFlightStore();
-const { flightSeries, flightLeg, carMap, balloonMap } =
-  storeToRefs(flightStore);
+const { carMap, balloonMap } = storeToRefs(flightStore);
 const { addCarToVehicleGroup } = useFlightOperations();
 
 const {
+  flightSeries,
+  flightLeg,
   group,
   label = '',
   editable = false,
 } = defineProps<{
   group: VehicleGroup;
+  flightSeries: FlightSeries;
+  flightLeg: FlightLeg;
   label?: string;
   editable?: boolean;
 }>();
+
+const emptyAssignment: VehicleAssignment = {
+  operatorId: null,
+  passengerIds: [],
+};
 
 const styleClass = computed<string>(() => {
   return groupStyle.value === 'dashed'
@@ -112,11 +129,13 @@ const warningText = computed<string | null>(() => {
 });
 
 const cars = computed<Car[]>(() => {
-  return group.carIds.map((id) => carMap.value[id]);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return group.carIds.map((id) => carMap.value[id]!);
 });
 
 const balloon = computed<Balloon>(() => {
-  return balloonMap.value[group.balloonId];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return balloonMap.value[group.balloonId]!;
 });
 
 const trailerHitchWarning = computed<boolean>(() => {
@@ -133,7 +152,7 @@ const reservedCapacityWarning = computed<boolean>(() => {
 });
 
 function elementIsCar(element: Identifiable): element is Car {
-  return flightSeries.value.carIds.includes(element.id);
+  return flightSeries.carIds.includes(element.id);
 }
 
 function isDropAccepted(element: Identifiable): boolean {
@@ -154,18 +173,23 @@ function drop(element: Identifiable) {
   }
 
   // Search for the current assignment before applying the changes
-  const previousCarId = flightSeries.value.vehicleGroups
+  const previousCarId = flightSeries.vehicleGroups
     .flatMap((g) => g.carIds)
     .find((id) => id === element.id);
-  const previousAssignment = flightLeg.value.assignments[previousCarId];
-
-  addCarToVehicleGroup(group.balloonId, element.id);
 
   if (!previousCarId) {
     return;
   }
 
-  flightLeg.value.assignments[element.id] = previousAssignment;
+  const previousAssignment = flightLeg.assignments[previousCarId];
+  addCarToVehicleGroup(group.balloonId, element.id);
+
+  if (!previousAssignment) {
+    return;
+  }
+
+  // TODO
+  //flightLeg.assignments[element.id] = previousAssignment;
 }
 </script>
 

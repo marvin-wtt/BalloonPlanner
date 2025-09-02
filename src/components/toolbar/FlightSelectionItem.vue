@@ -162,7 +162,7 @@ function seriesName(index: number): string {
 }
 
 function legName(index: number): string {
-  return `Leg ${(index + 1).toString()})`;
+  return `Leg ${(index + 1).toString()}`;
 }
 
 function addFlight() {

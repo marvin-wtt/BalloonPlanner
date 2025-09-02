@@ -84,8 +84,9 @@ import type {
   Vehicle,
   Identifiable,
   VehicleAssignment,
-  VehicleGroup,
   FlightLeg,
+  FlightSeries,
+  VehicleGroup,
 } from 'app/src-common/entities';
 import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
@@ -102,7 +103,7 @@ const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
-const { personMap, numberOfFlights, flightSeries } = storeToRefs(flightStore);
+const { personMap, numberOfFlights } = storeToRefs(flightStore);
 const { showPersonWeight, showNumberOfFlights, personDefaultWeight } =
   useProjectSettings();
 const {
@@ -115,8 +116,10 @@ const {
 const {
   person = undefined,
   vehicle,
-  group,
   assignment,
+  flightSeries,
+  flightLeg,
+  group,
   editable = false,
   operator = false,
   overfilled = false,
@@ -124,6 +127,8 @@ const {
   person?: Person;
   vehicle: Vehicle;
   assignment: VehicleAssignment;
+  flightSeries: FlightSeries;
+  flightLeg: FlightLeg;
   group: VehicleGroup;
   operator?: boolean;
   editable?: boolean;
@@ -131,6 +136,10 @@ const {
 }>();
 
 const flightsLabel = computed<string>(() => {
+  if (!person) {
+    return '';
+  }
+
   const flights = numberOfFlights.value[person.id] ?? 0;
   const suffix = flights === 0 && person.firstTime ? '*' : '';
 
@@ -138,6 +147,10 @@ const flightsLabel = computed<string>(() => {
 });
 
 const weightLabel = computed<string>(() => {
+  if (!person) {
+    return '';
+  }
+
   const weight = person.weight ?? personDefaultWeight.value ?? '?';
   const suffix = !person.weight && personDefaultWeight.value ? '*' : '';
 
@@ -145,7 +158,9 @@ const weightLabel = computed<string>(() => {
 });
 
 const coloredLabels = computed<boolean>(() => {
-  return showPersonWeight.value && showNumberOfFlights.value;
+  return (
+    (showPersonWeight.value ?? false) && (showNumberOfFlights.value ?? false)
+  );
 });
 
 const showInfo = computed<boolean>(() => {
@@ -190,7 +205,7 @@ const infoText = computed<string>(() => {
 });
 
 const hasLanguageWarning = computed<boolean>(() => {
-  if (operator || !assignment.operatorId || !person.languages) {
+  if (operator || !assignment.operatorId || !person || !person.languages) {
     return false;
   }
 
@@ -199,31 +214,44 @@ const hasLanguageWarning = computed<boolean>(() => {
     return false;
   }
 
-  return !languages.some((language) => person.languages.includes(language));
+  return !languages.some((language) => person.languages?.includes(language));
 });
 
 const hasMultiLegError = computed<boolean>(() => {
-  if (flightSeries.value.legs.length <= 1) {
+  if (
+    !person ||
+    flightSeries.legs.length <= 1 ||
+    flightSeries.legs.indexOf(flightLeg) <= 0
+  ) {
     return false;
   }
 
-  const firstLeg: FlightLeg = flightSeries.value.legs[0];
-  const firstVehicle = Object.entries(firstLeg.assignments).find(
+  const firstLeg = flightSeries.legs[0];
+  if (!firstLeg) {
+    return false;
+  }
+
+  const vehicleIds = Object.entries(firstLeg.assignments).find(
     ([, assignment]) => {
       return (
         assignment.operatorId === person.id ||
         assignment.passengerIds.includes(person.id)
       );
     },
-  )[0];
+  );
+  if (!vehicleIds) {
+    return false;
+  }
+
+  const firstVehicleId = vehicleIds[0];
 
   return (
-    group.balloonId === firstVehicle || group.carIds.includes(firstVehicle)
+    group.balloonId === firstVehicleId || group.carIds.includes(firstVehicleId)
   );
 });
 
 const hasInvalidOperator = computed<boolean>(() => {
-  if (!operator) {
+  if (!person || !operator) {
     return false;
   }
 
@@ -235,7 +263,11 @@ function isDropAllowed(element: Identifiable): boolean {
     return false;
   }
 
-  if (element.id in personMap.value) {
+  if (!(element.id in personMap.value)) {
+    return false;
+  }
+
+  if (!wasInSameVehicleGroupInFirstLeg(element.id)) {
     return false;
   }
 
@@ -251,10 +283,16 @@ function onDrop(element: Identifiable) {
 }
 
 function onDragEnd() {
+  if (!person) {
+    return;
+  }
   removePersonFromVehicle(person.id);
 }
 
 function onEdit() {
+  if (!project.value || !person) {
+    return;
+  }
   quasar
     .dialog({
       component: EditPersonDialog,
@@ -282,6 +320,37 @@ function removePersonFromVehicle(personId: string) {
   } else {
     removeVehiclePassenger(vehicle.id, personId);
   }
+}
+
+function wasInSameVehicleGroupInFirstLeg(personId: string): boolean {
+  if (flightSeries.legs.length < 1) {
+    return true;
+  }
+
+  const firstLeg = flightSeries.legs[0];
+
+  // Find the vehicle group containing the current vehicle
+  const currentGroup = flightSeries.vehicleGroups.find(
+    (g) => g.balloonId === vehicle.id || g.carIds.includes(vehicle.id),
+  );
+  if (!currentGroup) {
+    return false;
+  }
+
+  // Collect all vehicle IDs of this group
+  const groupVehicleIds = [currentGroup.balloonId, ...currentGroup.carIds];
+
+  // Check if person was in any of these vehicles in the first leg
+  return groupVehicleIds.some((vid) => {
+    const assignment = firstLeg.assignments[vid];
+    if (!assignment) {
+      return false;
+    }
+    return (
+      assignment.operatorId === personId ||
+      assignment.passengerIds.includes(personId)
+    );
+  });
 }
 </script>
 

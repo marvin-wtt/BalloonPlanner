@@ -21,9 +21,11 @@
         :class="groupAlignment === 'vertical' ? 'column' : 'row'"
       >
         <base-vehicle-group
-          v-for="(group, i) in flight.vehicleGroups"
+          v-for="(group, i) in flightSeries.vehicleGroups"
           :key="`vg-${i}`"
           :label="`Group ${String.fromCharCode(65 + i)}`"
+          :flight-series
+          :flight-leg
           :group
           :editable
         />
@@ -38,6 +40,7 @@ import type {
   FlightSeries,
   Person,
   Identifiable,
+  FlightLeg,
 } from 'app/src-common/entities';
 import DropZone from 'components/drag/DropZone.vue';
 import { computed } from 'vue';
@@ -53,25 +56,26 @@ const { availablePeople, availableCars, availableBalloons } =
 const { groupAlignment } = useProjectSettings();
 const { addVehicleGroup } = useFlightOperations();
 
-const { flight, editable = false } = defineProps<{
-  flight: FlightSeries;
+const { flightSeries, editable = false } = defineProps<{
+  flightSeries: FlightSeries;
+  flightLeg: FlightLeg;
   editable?: boolean;
 }>();
 
 const empty = computed<boolean>(() => {
-  return flight.vehicleGroups.length === 0;
+  return flightSeries.vehicleGroups.length === 0;
 });
 
 function elementIsBalloon(element: Identifiable): element is Balloon {
-  return flight.balloonIds.includes(element.id);
+  return flightSeries.balloonIds.includes(element.id);
 }
 
 function elementIsCar(element: Identifiable): element is Balloon {
-  return flight.carIds.includes(element.id);
+  return flightSeries.carIds.includes(element.id);
 }
 
 function elementIsPerson(element: Identifiable): element is Person {
-  return flight.personIds.includes(element.id);
+  return flightSeries.personIds.includes(element.id);
 }
 
 function isDropAllowed(element: Identifiable): boolean {
