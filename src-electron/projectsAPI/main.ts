@@ -55,12 +55,15 @@ export default () => {
 
 async function loadFromArgs(argv: string[]) {
   for (let i = 1; i < argv.length; i++) {
-    if (argv[i].startsWith('-')) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const arg = argv[i]!;
+
+    if (arg.startsWith('-')) {
       continue;
     }
 
-    if (argv[i].endsWith('.bpp') || argv[i].endsWith('.json')) {
-      await loadExternalFile(argv[i]);
+    if (arg.endsWith('.bpp') || arg.endsWith('.json')) {
+      await loadExternalFile(arg);
       break;
     }
   }
@@ -172,6 +175,7 @@ async function openFile() {
     return;
   }
 
-  const fullFilePath = result.filePaths[0];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const fullFilePath = result.filePaths[0]!;
   await loadExternalFile(fullFilePath);
 }

@@ -65,6 +65,11 @@ function runSolver(
     proc.on('close', (code) => {
       clearTimeout(timeout);
 
+      if (!code) {
+        reject(new Error('The solver process exited unexpectedly.'));
+        return;
+      }
+
       if (code !== 0) {
         reject(handleError(code, stderrData));
         return;

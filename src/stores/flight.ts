@@ -299,11 +299,23 @@ export const useFlightStore = defineStore('flight', () => {
   });
 
   async function smartFillFlight(options: SmartFillOptions) {
+    if (!flightSeries.value) {
+      return;
+    }
+
+    // Prepare data
+    const isDefined = <T>(v: T | undefined): v is T => v !== undefined;
+
     const data: SmartFillPayload = {
-      cars: flightSeries.value.carIds.map((id) => carMap.value[id]),
-      balloons: flightSeries.value.balloonIds.map((id) => balloonMap.value[id]),
+      cars: flightSeries.value.carIds
+        .map((id) => carMap.value[id])
+        .filter(isDefined),
+      balloons: flightSeries.value.balloonIds
+        .map((id) => balloonMap.value[id])
+        .filter(isDefined),
       people: flightSeries.value.personIds
         .map((id) => personMap.value[id])
+        .filter(isDefined)
         .map((person) => {
           const flights = numberOfFlights.value[person.id] ?? 0;
 
@@ -312,7 +324,7 @@ export const useFlightStore = defineStore('flight', () => {
             flights: person.firstTime && flights === 0 ? -1 : flights,
           };
         }),
-      groups: flightSeries.value?.vehicleGroups ?? [],
+      groups: flightSeries.value.vehicleGroups,
       history: history.value,
     };
 
