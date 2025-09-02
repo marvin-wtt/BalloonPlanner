@@ -1,20 +1,20 @@
 <template>
   <template v-if="project != null">
     <q-btn-dropdown
-      :label
+      :label="seriesLabel"
       rounded
       flat
     >
       <q-item
-        v-for="{ legId, label } in items"
-        :key="legId"
+        v-for="(series, index) in project.flights"
+        :key="series.id"
         clickable
         v-close-popup
-        @click="changeFlight(legId)"
+        @click="changeSeries(series.id)"
       >
         <q-item-section>
           <q-item-label>
-            {{ label }}
+            {{ seriesName(index) }}
           </q-item-label>
         </q-item-section>
         <q-item-section side>
@@ -31,7 +31,62 @@
                 <q-item
                   clickable
                   v-close-popup
-                  @click="deleteFlight(legId)"
+                  @click="deleteSeries(series.id)"
+                >
+                  <q-item-section class="text-negative">
+                    Delete
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
+        </q-item-section>
+      </q-item>
+    </q-btn-dropdown>
+    <q-separator
+      dark
+      vertical
+      inset
+    />
+    <q-btn-dropdown
+      :label="legLabel"
+      rounded
+      flat
+    >
+      <q-item
+        v-for="(leg, index) in flightSeries.legs"
+        :key="leg.id"
+        clickable
+        v-close-popup
+        @click="changeLeg(leg.id)"
+      >
+        <q-item-section>
+          <q-item-label>
+            {{ legName(index) }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-btn
+            dense
+            round
+            flat
+            size="sm"
+            icon="more_vert"
+            @click.prevent.stop
+          >
+            <q-menu>
+              <q-list>
+                <q-item
+                  clickable
+                  v-close-popup
+                  @click="detachLeg(leg.id)"
+                >
+                  Detach
+                </q-item>
+                <q-item
+                  clickable
+                  v-close-popup
+                  @click="deleteLeg(leg.id)"
                 >
                   <q-item-section class="text-negative">
                     Delete
@@ -50,8 +105,8 @@
     />
     <q-btn
       icon="add"
-      rounded
       flat
+      round
       dense
       :loading="addFlightLoading"
       @click="addFlight"
@@ -65,9 +120,11 @@ import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import { useRouter } from 'vue-router';
 import { useFlightStore } from 'stores/flight';
-import type { FlightSeries, ID } from 'app/src-common/entities';
+import type { ID } from 'app/src-common/entities';
 import { useQuasar } from 'quasar';
-import CreateFlightDialog from 'components/dialog/CreateFlightDialog.vue';
+import CreateFlightDialog, {
+  type CreateFlightDialogData,
+} from 'components/dialog/CreateFlightDialog.vue';
 
 const quasar = useQuasar();
 const router = useRouter();
@@ -75,50 +132,45 @@ const projectStore = useProjectStore();
 const flightStore = useFlightStore();
 
 const { project } = storeToRefs(projectStore);
-const { flightSeries } = storeToRefs(flightStore);
+const { flightSeries, flightLeg } = storeToRefs(flightStore);
 const addFlightLoading = ref(false);
 
-const label = computed<string>(() => {
-  const flightId = flightSeries.value?.id;
-  if (!project.value || !flightId) {
+const seriesLabel = computed<string>(() => {
+  const seriesId = flightSeries.value?.id;
+  if (!project.value || !seriesId) {
     return 'Flights';
   }
 
-  return flightName(
-    project.value.flights.findIndex((value) => value.id === flightId),
+  return seriesName(
+    project.value.flights.findIndex((value) => value.id === seriesId),
   );
 });
 
-interface Item {
-  legId: ID;
-  seriesId: ID;
-  label: string;
-}
+const legLabel = computed<string>(() => {
+  const legId = flightLeg.value?.id;
+  if (!flightSeries.value || !legId) {
+    return 'Legs';
+  }
 
-const items = computed<Item[]>(() => {
-  return project.value?.flights.flatMap((series, flightIndex) => {
-    return series.legs.map((leg, legIndex) => {
-      return {
-        seriesId: series.id,
-        legId: leg.id,
-        label: `Flight ${flightIndex + 1}.${legIndex + 1}`,
-      };
-    });
-  });
+  return legName(
+    flightSeries.value.legs.findIndex((value) => value.id === legId),
+  );
 });
 
-function flightName(index: number): string {
+function seriesName(index: number): string {
   return `Flight ${index + 1}`;
 }
 
-function addFlight() {
-  addFlightLoading.value = true;
+function legName(index: number): string {
+  return `Leg ${index + 1}`;
+}
 
+function addFlight() {
   if (!project.value) {
     return false;
   }
 
-  // TODO Either add series or leg
+  addFlightLoading.value = true;
 
   quasar
     .dialog({
@@ -127,29 +179,62 @@ function addFlight() {
         flights: project.value.flights,
       },
     })
-    .onOk((data: Partial<Omit<FlightSeries, 'id'>>) => {
-      const flight = flightStore.createFlight(data);
+    .onOk((data: CreateFlightDialogData) => {
+      if (data.mode === 'series') {
+        const flight = flightStore.createFlightSeries(
+          {
+            vehicleGroups: data.vehicleGroups,
+          },
+          data.assignments,
+        );
 
-      void changeFlight(flight.id, flight.legs[0].id);
+        void changeSeries(flight.legs[0].id);
+      }
+
+      if (data.mode === 'leg' && flightSeries.value != null) {
+        const leg = flightStore.createFlightLeg(
+          flightSeries.value.id,
+          data.assignments,
+        );
+
+        void changeSeries(leg.id);
+      }
     })
     .onDismiss(() => {
       addFlightLoading.value = false;
     });
 }
 
-async function changeFlight(flightId: string) {
+async function changeSeries(seriesId: string) {
+  const series = project.value?.flights.find((value) => value.id === seriesId);
+  if (!series || series.legs.length === 0) {
+    await changeLeg(undefined);
+  }
+
+  await changeLeg(series.legs[series.legs.length - 1].id);
+}
+
+async function changeLeg(legId: string | undefined) {
   const projectId = project.value.id;
 
   await router.replace({
     name: 'flight',
     params: {
       projectId,
-      flightId,
+      flightId: legId,
     },
   });
 }
 
-function deleteFlight(flightId: ID) {
+function detachLeg(legId: ID) {
+  flightStore.detachLeg(legId);
+}
+
+function deleteSeries(flightId: ID) {
+  flightStore.deleteFlightSeries(flightId);
+}
+
+function deleteLeg(flightId: ID) {
   flightStore.deleteFlightLeg(flightId);
 }
 </script>

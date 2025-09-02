@@ -45,8 +45,10 @@ export interface VehicleGroup {
   carIds: ID[];
 }
 
+export type VehicleAssignmentMap = Record<ID, VehicleAssignment>;
+
 export interface FlightLeg extends Identifiable {
-  assignments: Record<ID, VehicleAssignment>;
+  assignments: VehicleAssignmentMap;
 }
 
 export interface FlightSeries extends Identifiable {

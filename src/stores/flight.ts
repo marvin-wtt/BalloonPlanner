@@ -9,6 +9,7 @@ import type {
   SmartFillOptions,
   FlightLeg,
   ID,
+  VehicleAssignmentMap,
 } from 'app/src-common/entities';
 import { useProjectStore } from 'stores/project';
 
@@ -90,26 +91,44 @@ export const useFlightStore = defineStore('flight', () => {
     flightLegId.value = id;
   }
 
-  function createFlight(
-    flight?: Partial<Omit<FlightSeries, 'id'>>,
+  function createFlightLeg(
+    seriesId: string,
+    leg: Partial<FlightLeg>,
+  ): FlightLeg {
+    const series = project.value.flights.find((f) => f.id === seriesId);
+    if (!series) {
+      return;
+    }
+
+    const newLeg = {
+      id: crypto.randomUUID(),
+      assignments: leg.assignments ?? {},
+    };
+
+    series.legs.push(newLeg);
+
+    return newLeg;
+  }
+
+  function createFlightSeries(
+    seriesData?: Partial<Omit<FlightSeries, 'id' | 'legs'>>,
+    assignments?: VehicleAssignmentMap,
   ): FlightSeries {
     const newFlight = {
       id: crypto.randomUUID(),
-      date: flight.date ?? new Date().toISOString(),
-      vehicleGroups: flight.vehicleGroups ?? [],
-      legs: flight.legs ?? [
-        {
-          id: crypto.randomUUID(),
-          assignments: {},
-        },
-      ],
-      carIds: flight.carIds ?? project.value.cars.map(({ id }) => id),
+      date: seriesData.date ?? new Date().toISOString(),
+      vehicleGroups: seriesData.vehicleGroups ?? [],
+      legs: [],
+      carIds: seriesData.carIds ?? project.value.cars.map(({ id }) => id),
       balloonIds:
-        flight.balloonIds ?? project.value.balloons.map(({ id }) => id),
-      personIds: flight.personIds ?? project.value.people.map(({ id }) => id),
+        seriesData.balloonIds ?? project.value.balloons.map(({ id }) => id),
+      personIds:
+        seriesData.personIds ?? project.value.people.map(({ id }) => id),
     };
 
     project.value.flights.push(newFlight);
+
+    createFlightLeg(newFlight.id, { assignments });
 
     return newFlight;
   }
@@ -138,15 +157,66 @@ export const useFlightStore = defineStore('flight', () => {
       flightLegId.value = undefined;
     }
 
-    if (series.legs.length > 0) {
+    if (series.legs.length === 0) {
+      deleteFlightSeries(series.id);
+    }
+  }
+
+  function mergeSeries(seriesIdA: string, seriesIdB: string) {
+    const seriesA = project.value.flights.find((f) => f.id === seriesIdA);
+    const seriesB = project.value.flights.find((f) => f.id === seriesIdB);
+
+    // Merge available ids
+    seriesA.carIds = [...new Set([...seriesA.carIds, ...seriesB.carIds])];
+    seriesA.balloonIds = [
+      ...new Set([...seriesA.balloonIds, ...seriesB.balloonIds]),
+    ];
+    seriesA.personIds = [
+      ...new Set([...seriesA.personIds, ...seriesB.personIds]),
+    ];
+
+    // Append legs
+    seriesA.legs.push(...seriesB.legs);
+
+    deleteFlightSeries(seriesB.id);
+  }
+
+  function detachLeg(flightId: string) {
+    const series = project.value.flights.find((f) =>
+      f.legs.some((leg) => leg.id === flightId),
+    );
+
+    if (!series) {
       return;
     }
 
+    const leg = series.legs.find((leg) => leg.id === flightId);
+    if (!leg) {
+      return;
+    }
+
+    createFlightSeries({
+      carIds: series.carIds,
+      balloonIds: series.balloonIds,
+      personIds: series.personIds,
+      vehicleGroups: series.vehicleGroups,
+      legs: [leg],
+    });
+
+    deleteFlightLeg(flightId);
+  }
+
+  function deleteFlightSeries(seriesId: string) {
     const seriesIndex = project.value.flights.findIndex(
-      (f) => f.id === series.id,
+      (f) => f.id === seriesId,
     );
     if (seriesIndex < 0) {
       return;
+    }
+
+    // Reset store if the current flight is loaded
+    if (flightSeries.value?.id === seriesId) {
+      flightLegId.value = undefined;
     }
 
     project.value.flights.splice(seriesIndex, 1);
@@ -271,7 +341,11 @@ export const useFlightStore = defineStore('flight', () => {
     numberOfFlights,
     // Methods
     loadFlightLeg,
-    createFlight,
+    createFlightLeg,
+    createFlightSeries,
+    detachLeg,
+    mergeSeries,
+    deleteFlightSeries,
     deleteFlightLeg,
     smartFillFlight,
   };

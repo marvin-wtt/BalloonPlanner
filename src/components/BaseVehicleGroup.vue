@@ -38,7 +38,12 @@
             :key="group.balloonId"
             type="balloon"
             :id="group.balloonId"
-            :assignment="flightLeg.assignments[group.balloonId]"
+            :assignment="
+              flightLeg.assignments[group.balloonId] ?? {
+                operatorId: null,
+                passengerIds: [],
+              }
+            "
             :group
             :editable
           />
@@ -92,6 +97,8 @@ const {
   label?: string;
   editable?: boolean;
 }>();
+
+console.log(flightLeg.value.assignments);
 
 const styleClass = computed<string>(() => {
   return groupStyle.value === 'dashed'
