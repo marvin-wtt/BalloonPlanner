@@ -7,8 +7,8 @@
   >
     <q-list style="max-width: 300px">
       <q-item
-        tag="label"
         v-ripple
+        tag="label"
       >
         <q-item-section avatar>
           <q-radio
@@ -25,8 +25,8 @@
       </q-item>
 
       <q-item
-        tag="label"
         v-ripple
+        tag="label"
       >
         <q-item-section avatar>
           <q-radio
@@ -43,8 +43,8 @@
       </q-item>
 
       <q-item
-        tag="label"
         v-ripple
+        tag="label"
       >
         <q-item-section avatar>
           <q-radio
@@ -61,8 +61,8 @@
       </q-item>
 
       <q-item
-        tag="label"
         v-ripple
+        tag="label"
       >
         <q-item-section avatar>
           <q-radio

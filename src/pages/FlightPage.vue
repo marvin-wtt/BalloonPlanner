@@ -95,8 +95,8 @@
         </q-tabs>
 
         <div
-          class="col-grow self-stretch column"
           v-if="menuTabs !== 'overview'"
+          class="col-grow self-stretch column"
         >
           <q-tab-panels
             v-model="menuTabs"

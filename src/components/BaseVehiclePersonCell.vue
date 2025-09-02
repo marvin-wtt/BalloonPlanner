@@ -53,15 +53,15 @@
         style="min-width: 100px"
       >
         <q-item
-          clickable
           v-close-popup
+          clickable
           @click="onEdit()"
         >
           <q-item-section>Edit</q-item-section>
         </q-item>
         <q-item
-          clickable
           v-close-popup
+          clickable
           @click="onDragEnd()"
         >
           <q-item-section class="text-negative">Remove</q-item-section>
@@ -113,7 +113,7 @@ const {
 } = useFlightOperations();
 
 const {
-  person,
+  person = undefined,
   vehicle,
   group,
   assignment,

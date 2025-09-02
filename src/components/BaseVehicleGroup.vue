@@ -7,7 +7,7 @@
   >
     <div class="relative-position">
       <div class="vehicle-group__label">
-        <span v-if="label && showGroupLabel">
+        <span v-if="showGroupLabel">
           {{ label }}
         </span>
 
@@ -36,8 +36,8 @@
         <div>
           <base-vehicle
             :key="group.balloonId"
+            :vehicle-id="group.balloonId"
             type="balloon"
-            :id="group.balloonId"
             :assignment="
               flightLeg.assignments[group.balloonId] ?? {
                 operatorId: null,
@@ -56,7 +56,7 @@
         >
           <base-vehicle
             type="car"
-            :id
+            :vehicle-id="id"
             :assignment="flightLeg.assignments[id]"
             :group
             :editable
@@ -90,15 +90,13 @@ const { addCarToVehicleGroup } = useFlightOperations();
 
 const {
   group,
-  label,
+  label = '',
   editable = false,
 } = defineProps<{
   group: VehicleGroup;
   label?: string;
   editable?: boolean;
 }>();
-
-console.log(flightLeg.value.assignments);
 
 const styleClass = computed<string>(() => {
   return groupStyle.value === 'dashed'

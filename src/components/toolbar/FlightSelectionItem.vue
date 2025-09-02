@@ -8,8 +8,8 @@
       <q-item
         v-for="(series, index) in project.flights"
         :key="series.id"
-        clickable
         v-close-popup
+        clickable
         @click="changeSeries(series.id)"
       >
         <q-item-section>
@@ -29,8 +29,8 @@
             <q-menu>
               <q-list>
                 <q-item
-                  clickable
                   v-close-popup
+                  clickable
                   @click="deleteSeries(series.id)"
                 >
                   <q-item-section class="text-negative">
@@ -56,8 +56,8 @@
       <q-item
         v-for="(leg, index) in flightSeries.legs"
         :key="leg.id"
-        clickable
         v-close-popup
+        clickable
         @click="changeLeg(leg.id)"
       >
         <q-item-section>
@@ -77,15 +77,15 @@
             <q-menu>
               <q-list>
                 <q-item
-                  clickable
                   v-close-popup
+                  clickable
                   @click="detachLeg(leg.id)"
                 >
                   Detach
                 </q-item>
                 <q-item
-                  clickable
                   v-close-popup
+                  clickable
                   @click="deleteLeg(leg.id)"
                 >
                   <q-item-section class="text-negative">

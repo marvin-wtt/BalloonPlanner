@@ -21,8 +21,8 @@
           <q-item
             v-for="item in items"
             :key="item.id"
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               side

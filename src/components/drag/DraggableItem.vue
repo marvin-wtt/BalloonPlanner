@@ -2,9 +2,9 @@
   <component
     :is="tag"
     :class="{ dragged: dragged }"
+    :draggable="disabled ? 'false' : 'true'"
     @dragstart.stop="onDragStart($event)"
     @dragend.stop="onDragEnd($event)"
-    :draggable="disabled ? 'false' : 'true'"
   >
     <slot />
   </component>
@@ -17,7 +17,7 @@ import { ref } from 'vue';
 
 const {
   item,
-  label,
+  label = undefined,
   tag = 'div',
   disabled = false,
 } = defineProps<{

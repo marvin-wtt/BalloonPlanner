@@ -119,7 +119,7 @@ import { computed, ref, toRaw } from 'vue';
 import type { Person, PersonRole } from 'app/src-common/entities';
 import { useDialogPluginComponent } from 'quasar';
 
-const { person, existingNames } = defineProps<{
+const { person = undefined, existingNames = [] } = defineProps<{
   person?: Person;
   existingNames?: string[];
 }>();
@@ -196,7 +196,7 @@ function nameIsUnique(name: string): boolean {
     return true;
   }
 
-  return !existingNames?.some((existingName) => {
+  return !existingNames.some((existingName) => {
     return existingName.toLowerCase() === name;
   });
 }

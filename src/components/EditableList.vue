@@ -29,26 +29,27 @@
       </q-item>
 
       <!-- Draggable -->
-      <draggable-item
-        v-else-if="!editable"
-        :tag="QItem"
-        v-for="element in items"
-        :key="element.id"
-        :item="element"
-      >
-        <q-item-section>
-          <slot
-            name="main"
-            :item="element"
-          />
-        </q-item-section>
-        <q-item-section side>
-          <slot
-            name="side"
-            :item="element"
-          />
-        </q-item-section>
-      </draggable-item>
+      <template v-else-if="!editable">
+        <draggable-item
+          v-for="element in items"
+          :key="element.id"
+          :tag="QItem"
+          :item="element"
+        >
+          <q-item-section>
+            <slot
+              name="main"
+              :item="element"
+            />
+          </q-item-section>
+          <q-item-section side>
+            <slot
+              name="side"
+              :item="element"
+            />
+          </q-item-section>
+        </draggable-item>
+      </template>
 
       <!-- Editable -->
       <template v-else>
@@ -98,8 +99,8 @@
     >
       <q-list>
         <q-item
-          clickable
           v-close-popup
+          clickable
           @click="createItem()"
         >
           <q-item-section>
@@ -109,8 +110,8 @@
           </q-item-section>
         </q-item>
         <q-item
-          clickable
           v-close-popup
+          clickable
           @click="addItem()"
         >
           <q-item-section>

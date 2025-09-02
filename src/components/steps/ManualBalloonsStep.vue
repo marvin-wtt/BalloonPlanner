@@ -13,7 +13,7 @@
       row-key="id"
       flat
     >
-      <template v-slot:top-right>
+      <template #top-right>
         <q-btn
           label="Add balloon"
           color="primary"
@@ -22,7 +22,7 @@
         />
       </template>
 
-      <template v-slot:body-cell-action="props">
+      <template #body-cell-action="props">
         <td>
           <q-btn
             icon="more_vert"
@@ -34,15 +34,15 @@
             <q-menu style="min-width: 100px">
               <q-list>
                 <q-item
-                  clickable
                   v-close-popup
+                  clickable
                   @click="onEditBalloon(props.row)"
                 >
                   <q-item-section>Edit</q-item-section>
                 </q-item>
                 <q-item
-                  clickable
                   v-close-popup
+                  clickable
                   @click="onDeleteBalloon(props.row)"
                 >
                   <q-item-section>Delete</q-item-section>

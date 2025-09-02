@@ -55,9 +55,9 @@
             :options="filterOptions"
             emit-value
             map-options
-            @filter="filterFn"
             outlined
             rounded
+            @filter="filterFn"
           />
 
           <q-toggle
@@ -97,7 +97,11 @@ import { type QSelectOption, useDialogPluginComponent } from 'quasar';
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
-const { car, people, existingNames } = defineProps<{
+const {
+  car = undefined,
+  people,
+  existingNames = [],
+} = defineProps<{
   car?: Car;
   existingNames?: string[];
   people: Person[];
@@ -153,7 +157,7 @@ function nameIsUnique(name: string): boolean {
     return true;
   }
 
-  return !existingNames?.some((existingName) => {
+  return !existingNames.some((existingName) => {
     return existingName.toLowerCase() === name;
   });
 }

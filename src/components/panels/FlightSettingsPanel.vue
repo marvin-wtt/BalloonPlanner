@@ -9,8 +9,8 @@
         <q-list separator>
           <q-item-label header>Information</q-item-label>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -26,8 +26,8 @@
             </q-item-section>
           </q-item>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -43,8 +43,8 @@
             </q-item-section>
           </q-item>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -60,8 +60,8 @@
             </q-item-section>
           </q-item>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -79,8 +79,8 @@
           <q-separator />
           <q-item-label header>Weight</q-item-label>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -96,8 +96,8 @@
             </q-item-section>
           </q-item>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -174,7 +174,7 @@
                 outlined
                 dense
               >
-                <template v-slot:append>
+                <template #append>
                   <q-icon
                     name="colorize"
                     class="cursor-pointer"
@@ -206,7 +206,7 @@
                 outlined
                 dense
               >
-                <template v-slot:append>
+                <template #append>
                   <q-icon
                     name="colorize"
                     class="cursor-pointer"

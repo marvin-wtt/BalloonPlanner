@@ -42,8 +42,8 @@
             <q-item
               v-for="option in keepAssignmentOptions"
               :key="option.value"
-              tag="label"
               v-ripple
+              tag="label"
             >
               <q-item-section avatar>
                 <q-radio

@@ -34,22 +34,22 @@
                 style="min-width: 100px"
               >
                 <q-item
-                  clickable
                   v-close-popup
+                  clickable
                   @click="onVehicleEdit()"
                 >
                   <q-item-section>Edit</q-item-section>
                 </q-item>
                 <q-item
-                  clickable
                   v-close-popup
+                  clickable
                   @click="onVehicleClear()"
                 >
                   <q-item-section>Clear</q-item-section>
                 </q-item>
                 <q-item
-                  clickable
                   v-close-popup
+                  clickable
                   @click="onVehicleRemoved()"
                 >
                   <q-item-section class="text-negative">
@@ -185,12 +185,12 @@ const {
 } = useProjectSettings();
 
 const {
-  id,
+  vehicleId,
   group,
   assignment,
   editable = false,
 } = defineProps<{
-  id: string;
+  vehicleId: string;
   group: VehicleGroup;
   assignment: VehicleAssignment;
   editable?: boolean;
@@ -199,11 +199,11 @@ const {
 const hideEmptyCapacity = ref<boolean>(false);
 
 const vehicle = computed<Vehicle>(() => {
-  if (carMap.value[id]) {
-    return carMap.value[id];
+  if (carMap.value[vehicleId]) {
+    return carMap.value[vehicleId];
   }
 
-  return balloonMap.value[id];
+  return balloonMap.value[vehicleId];
 });
 
 const totalWeight = computed<number>(() => {
@@ -229,7 +229,7 @@ const capacity = computed<number>(() => {
   let capacity: number = vehicle.value.maxCapacity;
 
   if (vehicle.value.type === 'car') {
-    capacity = remainingCapacity(group)[id] ?? 0;
+    capacity = remainingCapacity(group)[vehicleId] ?? 0;
   }
 
   if (capacity < 0) {
@@ -260,17 +260,17 @@ const showFooter = computed<boolean>(() => {
 
 function onVehicleRemoved() {
   if (vehicle.value.type === 'balloon') {
-    removeVehicleGroup(id);
+    removeVehicleGroup(vehicleId);
   } else {
-    removeCarFromVehicleGroup(group.balloonId, id);
+    removeCarFromVehicleGroup(group.balloonId, vehicleId);
   }
 }
 
 function onVehicleClear() {
   if (vehicle.value.type === 'balloon') {
-    clearBalloon(id);
+    clearBalloon(vehicleId);
   } else {
-    clearCar(group.balloonId, id);
+    clearCar(group.balloonId, vehicleId);
   }
 }
 
@@ -286,7 +286,7 @@ function onVehicleEdit() {
         },
       })
       .onOk((payload) => {
-        editBalloon(id, payload);
+        editBalloon(vehicleId, payload);
       });
   } else {
     quasar
@@ -299,7 +299,7 @@ function onVehicleEdit() {
         },
       })
       .onOk((payload) => {
-        editCar(id, payload);
+        editCar(vehicleId, payload);
       });
   }
 }
