@@ -1,30 +1,39 @@
 import { ipcMain, type IpcMainEvent } from 'electron';
 import { spawn } from 'node:child_process';
-import type {
-  SmartFillPayload,
-  SmartFillOptions,
-  VehicleGroup,
-} from 'app/src-common/entities';
+import type { SmartFillOptions, VehicleGroup } from 'app/src-common/entities';
 import { fileURLToPath } from 'node:url';
 import path from 'path';
 import log from 'electron-log';
+import type {
+  BuildGroupsRequest,
+  SolveLegRequest,
+} from 'app/src-common/api/solver.api';
 
 const PROCESS_TIMEOUT_MS = 1_000_000;
 const SCRIPT_BASE = 'run_balloon_solver';
 
 export default () => {
   ipcMain.handle(
-    'solver:run',
+    'solve:vehicle-groups',
+    (_evt: IpcMainEvent, request: BuildGroupsRequest) =>
+      runVehicleGroupSolver(request),
+  );
+  ipcMain.handle(
+    'solve:flight-leg',
     (
       _evt: IpcMainEvent,
-      payload: SmartFillPayload,
+      request: SolveLegRequest,
       options?: SmartFillOptions,
     ) => runSolver(payload, options),
   );
 };
 
+function runVehicleGroupSolver(request: BuildGroupsRequest): Promise<unknown> {
+  // TODO
+}
+
 function runSolver(
-  payload: SmartFillPayload,
+  request: SolveLegRequest,
   options?: SmartFillOptions,
 ): Promise<VehicleGroup[]> {
   const [cmd, baseArgs] = spawnArgs();
@@ -32,7 +41,7 @@ function runSolver(
   const proc = spawn(cmd, args, { stdio: ['pipe', 'pipe', 'pipe'] });
 
   // send input
-  proc.stdin.write(JSON.stringify(payload));
+  proc.stdin.write(JSON.stringify(request));
   proc.stdin.end();
 
   let stdoutData = '';
@@ -50,7 +59,10 @@ function runSolver(
   return new Promise<VehicleGroup[]>((resolve, reject) => {
     const timeout = setTimeout(() => {
       proc.kill();
-      log.error('Solver timeout', { payload, timeout: PROCESS_TIMEOUT_MS });
+      log.error('Solver timeout', {
+        payload: request,
+        timeout: PROCESS_TIMEOUT_MS,
+      });
       reject(
         new Error('The solver took too long to respond. Please try again.'),
       );

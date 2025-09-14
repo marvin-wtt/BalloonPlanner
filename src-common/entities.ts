@@ -98,15 +98,8 @@ export interface ProjectMeta {
   isInternal?: boolean;
 }
 
-export interface SmartFillPayload {
-  people: (Person & { flights: number })[];
-  cars: Car[];
-  balloons: Balloon[];
-  groups: VehicleGroup[];
-  history: FlightLeg[];
-}
-
-export interface SmartFillOptions {
+// TODO Move type to API
+export interface SmartFillOptions extends Record<string, unknown> {
   wPilotFairness?: number;
   wPassengerFairness?: number;
   wNationalityDiversity?: number;
