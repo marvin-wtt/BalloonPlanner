@@ -29,56 +29,9 @@ All weights are user-tunable kwargs.
 import random
 from itertools import product
 from collections import defaultdict
-from typing import List, Dict, Optional, TypedDict, NotRequired, Literal, Union
-
+from typing import List, Dict, Optional, TypedDict, Literal
 from ortools.sat.python import cp_model
-
-
-class VehicleBase(TypedDict):
-    id: str
-    maxCapacity: int
-    allowedOperatorIds: list[str]
-    kind: Literal["balloon", "car"]
-
-
-class BalloonV(VehicleBase):
-    kind: Literal["balloon"]
-    maxWeight: NotRequired[int]
-
-
-class CarV(VehicleBase):
-    kind: Literal["car"]
-
-
-Vehicle = Union[BalloonV, CarV]
-
-
-class Balloon(TypedDict):
-    id: str
-    maxCapacity: int
-    allowedOperatorIds: list[str]
-    maxWeight: NotRequired[int]
-
-
-class Car(TypedDict):
-    id: str
-    maxCapacity: int
-    allowedOperatorIds: list[str]
-
-
-class Person(TypedDict):
-    id: str
-    role: Literal["participant", "counselor"]
-    flights: int
-    languages: list[str] | None
-    nationality: str | None
-    firstTime: bool | None
-    weight: NotRequired[int]
-
-
-class VehicleAssignment(TypedDict):
-    operatorId: str | None
-    passengerIds: list[str]
+from solver_types import Balloon, Car, Vehicle, Person, VehicleAssignment
 
 
 class Manifest(TypedDict):
