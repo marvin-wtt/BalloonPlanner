@@ -1,6 +1,5 @@
 import { ipcMain, type IpcMainEvent } from 'electron';
 import { spawn } from 'node:child_process';
-import type { SmartFillOptions, VehicleGroup } from 'app/src-common/entities';
 import { fileURLToPath } from 'node:url';
 import path from 'path';
 import log from 'electron-log';
@@ -10,7 +9,7 @@ import type {
 } from 'app/src-common/api/solver.api';
 
 const PROCESS_TIMEOUT_MS = 1_000_000;
-const SCRIPT_BASE = 'run_balloon_solver';
+const SCRIPT_BASE = 'solver_main';
 
 export default () => {
   ipcMain.handle(
@@ -20,28 +19,30 @@ export default () => {
   );
   ipcMain.handle(
     'solve:flight-leg',
-    (
-      _evt: IpcMainEvent,
-      request: SolveLegRequest,
-      options?: SmartFillOptions,
-    ) => runSolver(payload, options),
+    (_evt: IpcMainEvent, request: SolveLegRequest) => runSolver(request),
   );
 };
 
-function runVehicleGroupSolver(request: BuildGroupsRequest): Promise<unknown> {
-  // TODO
+function runVehicleGroupSolver(request: BuildGroupsRequest): Promise<object> {
+  return spawnProcess('solve_groups', request);
 }
 
-function runSolver(
-  request: SolveLegRequest,
-  options?: SmartFillOptions,
-): Promise<VehicleGroup[]> {
+function runSolver(request: SolveLegRequest): Promise<object> {
+  return spawnProcess('solve_leg', request);
+}
+
+function spawnProcess(
+  mode: string,
+  payload: Record<string, unknown>,
+  params: string[] = [],
+): Promise<object> {
   const [cmd, baseArgs] = spawnArgs();
-  const args = [...baseArgs, ...buildFlagArgs(options)];
+  const args = [...baseArgs, '--node', mode, ...params];
+
   const proc = spawn(cmd, args, { stdio: ['pipe', 'pipe', 'pipe'] });
 
   // send input
-  proc.stdin.write(JSON.stringify(request));
+  proc.stdin.write(JSON.stringify(payload));
   proc.stdin.end();
 
   let stdoutData = '';
@@ -56,11 +57,11 @@ function runSolver(
     stderrData += chunk;
   });
 
-  return new Promise<VehicleGroup[]>((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       proc.kill();
       log.error('Solver timeout', {
-        payload: request,
+        payload,
         timeout: PROCESS_TIMEOUT_MS,
       });
       reject(
@@ -94,7 +95,7 @@ function runSolver(
           reject(new Error('Invalid solver output'));
           return;
         }
-        resolve(data as VehicleGroup[]);
+        resolve(data);
       } catch (e) {
         log.error('Failed to parse solver output', e);
         reject(new Error(`Invalid solver response`));
@@ -122,58 +123,6 @@ function spawnArgs(): [string, string[]] {
     process.platform === 'win32' ? SCRIPT_BASE + '.exe' : SCRIPT_BASE;
   const binPath = path.join(process.resourcesPath, 'python-bin', execName);
   return [binPath, []];
-}
-
-function buildFlagArgs(opts?: SmartFillOptions): string[] {
-  const args: string[] = [];
-  if (!opts) {
-    return args;
-  }
-
-  if (opts.wPilotFairness != null) {
-    args.push('--w-pilot-fairness', String(opts.wPilotFairness));
-  }
-  if (opts.wPassengerFairness != null) {
-    args.push('--w-passenger-fairness', String(opts.wPassengerFairness));
-  }
-  if (opts.wNoSoloParticipant != null) {
-    args.push('--w-no-solo-participant', String(opts.wNoSoloParticipant));
-  }
-  if (opts.wClusterPassengerBalance != null) {
-    args.push(
-      '--w-cluster-passenger-balance',
-      String(opts.wClusterPassengerBalance),
-    );
-  }
-  if (opts.wNationalityDiversity != null) {
-    args.push('--w-nationality-diversity', String(opts.wNationalityDiversity));
-  }
-  if (opts.wVehicleRotation != null) {
-    args.push('--w-vehicle-rotation', String(opts.wVehicleRotation));
-  }
-  if (opts.wSecondLegFairness != null) {
-    args.push('--w-second-leg', String(opts.wSecondLegFairness));
-  }
-  if (opts.wSecondLegOverweight != null) {
-    args.push('--w-second-leg-overweight', String(opts.wSecondLegOverweight));
-  }
-  if (opts.counselorFlightDiscount != null) {
-    args.push(
-      '--counselor-flight-discount',
-      String(opts.counselorFlightDiscount),
-    );
-  }
-  if (opts.timeLimit != null) {
-    args.push('--time-limit', String(opts.timeLimit));
-  }
-  if (opts.defaultPersonWeight != null) {
-    args.push('--default-person-weight', String(opts.defaultPersonWeight));
-  }
-  if (opts.leg != null) {
-    args.push('--flight-leg', opts.leg === 'first' ? '1' : '2');
-  }
-
-  return args;
 }
 
 function handleError(code: number, stderrData: string): Error {

@@ -2,7 +2,7 @@ export interface SolverAPI {
   buildVehicleGroups: (
     data: BuildGroupsRequest,
   ) => Promise<BuildGroupsResponse>;
-  solveFlight: (
+  solveFlightLeg: (
     data: SolveLegRequest,
     options?: Record<string, unknown>,
   ) => Promise<SolveLegResponse>;
@@ -49,8 +49,9 @@ export interface SolveLegRequest {
       operatorId: ID | null;
       passengerIds: ID[];
     }
-  >; // key: vehicleId, value: assignment
+  >; // key: vehicleId
   groupHistory: Record<ID, ID[]>; // key: personId, value: balloonIds
+  fixedGroups: Record<ID, ID>;
 
   people: {
     id: ID;
