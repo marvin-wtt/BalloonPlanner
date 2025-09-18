@@ -6,7 +6,9 @@ import type {
   FlightLeg,
   FlightSeries,
   ID,
+  Person,
   Project,
+  VehicleAssignmentMap,
 } from 'app/src-common/entities';
 import type { SolveFlightLegOptions } from 'app/src-common/api/solver.api';
 
@@ -64,6 +66,7 @@ export function useSolver() {
       }),
     );
 
+    // TODO Sort
     flightSeries.value.vehicleGroups = Object.entries(
       response.vehicleGroups,
     ).map(([balloonId, carIds]) => ({
@@ -133,7 +136,15 @@ export function useSolver() {
       }),
     );
 
-    flightLeg.value.assignments = response.assignments;
+    flightLeg.value.assignments = Object.entries(
+      response.assignments,
+    ).reduce<VehicleAssignmentMap>((acc, [id, assignment]) => {
+      acc[id] = {
+        operatorId: assignment.operatorId,
+        passengerIds: orderPassengers(assignment.passengerIds, people),
+      };
+      return acc;
+    }, {});
   }
 
   return {
@@ -166,14 +177,18 @@ function countFlightsBeforeFlightLeg(
   }
   pastLegs.push(...series.legs.slice(0, legIndex));
 
+  const balloonIds = project.balloons.map((balloon) => balloon.id);
+  const balloonAssignments = pastLegs
+    .flatMap((leg) => Object.entries(leg.assignments))
+    .filter(([vehicleId]) => balloonIds.includes(vehicleId))
+    .map(([, assignments]) => assignments);
+
   return project.people.reduce<Record<string, number>>((acc, person) => {
-    const flownLegs = pastLegs.filter((leg) => {
-      return Object.values(leg.assignments).some((assignment) => {
-        return (
-          assignment.operatorId === person.id ||
-          assignment.passengerIds.includes(person.id)
-        );
-      });
+    const flownLegs = balloonAssignments.filter((assignment) => {
+      return (
+        assignment.operatorId === person.id ||
+        assignment.passengerIds.includes(person.id)
+      );
     });
 
     acc[person.id] = flownLegs.length;
@@ -226,5 +241,52 @@ function buildGroupPairs(series: FlightSeries) {
     return [a.operatorId, ...a.passengerIds]
       .filter((pid): pid is ID => !!pid)
       .map((pid) => [pid, groupId] as const);
+  });
+}
+
+type PersonWithFlights = Person & { flightsSoFar: number };
+
+function orderPassengers(
+  currentPassengers: ID[],
+  people: PersonWithFlights[],
+): ID[] {
+  const personById = people.reduce<Record<ID, PersonWithFlights>>(
+    (acc, person) => {
+      acc[person.id] = person;
+      return acc;
+    },
+    {},
+  );
+
+  // deterministic sort for newcomers
+  return currentPassengers.toSorted((a, b) => {
+    const personA = personById[a];
+    const personB = personById[b];
+
+    if (!personA || !personB) {
+      return 0;
+    }
+
+    // 1) counselors first
+    if (personA.role !== personB.role) {
+      return personA.role === 'counselor' ? -1 : 1;
+    }
+
+    // 2) fewer flights first
+    if (personA.flightsSoFar !== personB.flightsSoFar) {
+      return personA.flightsSoFar - personB.flightsSoFar;
+    }
+
+    // 3) first-timers first (optional but nice)
+    if (!!personA.firstTime !== !!personB.firstTime) {
+      return personA.firstTime ? -1 : 1;
+    }
+
+    // 4) name tiebreaker, then ID for full determinism
+    const nameCmp = personA.name.localeCompare(personB.name);
+    if (nameCmp !== 0) {
+      return nameCmp;
+    }
+    return a.localeCompare(b);
   });
 }
