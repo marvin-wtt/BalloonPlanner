@@ -23,6 +23,30 @@
             </q-item-section>
             <q-item-section>
               <q-item-label>Disable assignment protection</q-item-label>
+              <q-item-label caption>
+                The protections prohibits changes across vehicle groups
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-item
+            v-ripple
+            tag="label"
+          >
+            <q-item-section
+              avatar
+              top
+            >
+              <q-checkbox
+                v-model="disableVehicleGroupProtection"
+                color="primary"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Disable vehicle group protection</q-item-label>
+              <q-item-label caption>
+                The protections permits changes to the vehicle groups only in
+                the first leg
+              </q-item-label>
             </q-item-section>
           </q-item>
           <q-item-label header>Information</q-item-label>
@@ -257,6 +281,7 @@ import { useProjectSettings } from 'src/composables/projectSettings';
 
 const {
   disableAssignmentProtection,
+  disableVehicleGroupProtection,
   showVehicleIndex,
   showVehicleLabel,
   showGroupLabel,

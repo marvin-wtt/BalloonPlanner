@@ -63,6 +63,7 @@ export interface FlightSeries extends Identifiable {
 
 export interface ProjectSettings {
   disableAssignmentProtection?: boolean;
+  disableVehicleGroupProtection?: boolean;
   showVehicleIndex?: boolean;
   showVehicleLabel?: boolean;
   showGroupLabel?: boolean;

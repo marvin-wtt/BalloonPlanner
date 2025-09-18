@@ -2,7 +2,7 @@
   <draggable-item
     :item="vehicle"
     :label="vehicle.name"
-    :disabled="!editable"
+    :disabled="!editable || !allowVehicleGroupChange"
     class="row"
     @remove="onVehicleRemoved"
   >
@@ -50,6 +50,7 @@
                 <q-item
                   v-close-popup
                   clickable
+                  :disable="!allowVehicleGroupChange"
                   @click="onVehicleRemoved()"
                 >
                   <q-item-section class="text-negative">
@@ -189,6 +190,7 @@ const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
 const { balloonMap, carMap, personMap } = storeToRefs(flightStore);
 const {
+  disableVehicleGroupProtection,
   showVehicleWeight,
   showVehicleIndex,
   showVehicleLabel,
@@ -200,6 +202,8 @@ const {
 const {
   vehicleId,
   group,
+  flightSeries,
+  flightLeg,
   assignment,
   editable = false,
 } = defineProps<{
@@ -271,6 +275,13 @@ const color = computed<string>(() => {
   return vehicle.value.type === 'balloon'
     ? (balloonColor.value ?? '')
     : (carColor.value ?? '');
+});
+
+const allowVehicleGroupChange = computed<boolean>(() => {
+  return (
+    flightSeries.legs.findIndex((l) => l.id === flightLeg.id) === 0 ||
+    disableVehicleGroupProtection.value
+  );
 });
 
 const showFooter = computed<boolean>(() => {
