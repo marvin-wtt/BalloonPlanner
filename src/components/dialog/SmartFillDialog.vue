@@ -217,7 +217,7 @@ const signedIntegerRule = (val?: number): boolean | string => {
 function onSubmit() {
   onDialogOK({
     ...toRaw(options),
-    leg: !firstLeg ? 'second' : moreLegsPlanned.value ? 'first' : null,
+    planningHorizonDepth: moreLegsPlanned.value ? 1 : 0,
   });
 }
 </script>
