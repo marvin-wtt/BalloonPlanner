@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import path from 'path';
 import log from 'electron-log';
 import type {
-  BuildGroupsRequest,
-  SolveLegRequest,
+  SolveVehicleGroupsRequest,
+  SolveFlightLegRequest,
 } from 'app/src-common/api/solver.api';
 
 const PROCESS_TIMEOUT_MS = 1_000_000;
@@ -14,30 +14,32 @@ const SCRIPT_BASE = 'solver_main';
 export default () => {
   ipcMain.handle(
     'solve:vehicle-groups',
-    (_evt: IpcMainEvent, request: BuildGroupsRequest) =>
+    (_evt: IpcMainEvent, request: SolveVehicleGroupsRequest) =>
       runVehicleGroupSolver(request),
   );
   ipcMain.handle(
     'solve:flight-leg',
-    (_evt: IpcMainEvent, request: SolveLegRequest) => runSolver(request),
+    (_evt: IpcMainEvent, request: SolveFlightLegRequest) => runSolver(request),
   );
 };
 
-function runVehicleGroupSolver(request: BuildGroupsRequest): Promise<object> {
+function runVehicleGroupSolver(
+  request: SolveVehicleGroupsRequest,
+): Promise<object> {
   return spawnProcess('solve_groups', request);
 }
 
-function runSolver(request: SolveLegRequest): Promise<object> {
+function runSolver(request: SolveFlightLegRequest): Promise<object> {
   return spawnProcess('solve_leg', request);
 }
 
 function spawnProcess(
   mode: string,
-  payload: Record<string, unknown>,
+  payload: object,
   params: string[] = [],
 ): Promise<object> {
   const [cmd, baseArgs] = spawnArgs();
-  const args = [...baseArgs, '--node', mode, ...params];
+  const args = [...baseArgs, '--mode', mode, ...params];
 
   const proc = spawn(cmd, args, { stdio: ['pipe', 'pipe', 'pipe'] });
 
@@ -78,7 +80,7 @@ function spawnProcess(
     proc.on('close', (code) => {
       clearTimeout(timeout);
 
-      if (!code) {
+      if (code === null) {
         reject(new Error('The solver process exited unexpectedly.'));
         return;
       }
@@ -89,13 +91,7 @@ function spawnProcess(
       }
 
       try {
-        const data = JSON.parse(stdoutData);
-        if (!Array.isArray(data)) {
-          log.error('Invalid solver output', data);
-          reject(new Error('Invalid solver output'));
-          return;
-        }
-        resolve(data);
+        resolve(JSON.parse(stdoutData));
       } catch (e) {
         log.error('Failed to parse solver output', e);
         reject(new Error(`Invalid solver response`));

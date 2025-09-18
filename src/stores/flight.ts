@@ -5,16 +5,11 @@ import type {
   Car,
   FlightSeries,
   Person,
-  SmartFillOptions,
   FlightLeg,
   ID,
   VehicleAssignmentMap,
 } from 'app/src-common/entities';
 import { useProjectStore } from 'stores/project';
-import type { SolveLegRequest } from 'app/src-common/api/solver.api';
-
-// Prepare data
-const isDefined = <T>(v: T | undefined): v is T => v !== undefined;
 
 export const useFlightStore = defineStore('flight', () => {
   const projectStore = useProjectStore();
@@ -337,72 +332,6 @@ export const useFlightStore = defineStore('flight', () => {
     return counts;
   });
 
-  async function smartFillFlight(options: SmartFillOptions) {
-    if (!project.value || !flightSeries.value || !flightLeg.value) {
-      return;
-    }
-
-    // Build vehicle groups for the first flight in the series
-    if (flightSeries.value.legs.indexOf(flightLeg.value) !== 0) {
-      flightSeries.value.vehicleGroups = await window.solverAPI
-        .buildVehicleGroups({
-          cars: flightSeries.value.carIds
-            .map((id) => carMap.value[id])
-            .filter(isDefined),
-          balloons: flightSeries.value.balloonIds
-            .map((id) => balloonMap.value[id])
-            .filter(isDefined),
-          peopleCount: flightSeries.value.personIds.length,
-          vehicleGroups: flightSeries.value.vehicleGroups.reduce(
-            (acc, curr) => {
-              acc[curr.balloonId] = curr.carIds;
-              return acc;
-            },
-            {},
-          ),
-        })
-        .then((response) =>
-          Object.entries(response.vehicleGroups).map(([balloonId, carIds]) => ({
-            balloonId,
-            carIds,
-          })),
-        );
-    }
-
-    const data: Omit<SolveLegRequest, 'schema'> = {
-      cars: flightSeries.value.carIds
-        .map((id) => carMap.value[id])
-        .filter(isDefined),
-      balloons: flightSeries.value.balloonIds
-        .map((id) => balloonMap.value[id])
-        .filter(isDefined),
-      people: flightSeries.value.personIds
-        .map((id) => personMap.value[id])
-        .filter(isDefined)
-        .map((person) => {
-          const flights = numberOfFlights.value[person.id] ?? 0;
-          return {
-            ...person,
-            flightsSoFar: person.firstTime && flights === 0 ? -1 : flights,
-          };
-        }),
-      vehicleGroups: flightSeries.value.vehicleGroups.reduce((acc, curr) => {
-        acc[curr.balloonId] = curr.carIds;
-        return acc;
-      }, {}),
-      preAssignments: flightLeg.value.assignments,
-      // TODO
-      groupHistory: {},
-    };
-
-    // Remove all vue proxies
-    const payload = JSON.parse(JSON.stringify(data));
-
-    flightLeg.value.assignments = await window.solverAPI
-      .solveFlight(payload, options)
-      .then((value) => value.assignments);
-  }
-
   return {
     // Computed
     flightSeries,
@@ -422,7 +351,6 @@ export const useFlightStore = defineStore('flight', () => {
     mergeSeries,
     deleteFlightSeries,
     deleteFlightLeg,
-    smartFillFlight,
   };
 });
 

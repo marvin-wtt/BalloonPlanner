@@ -47,22 +47,22 @@ def solve_flight_leg(
     people: List[Person],
     vehicle_groups: Dict[str, List[str]],
     *,
-    group_history: Optional[Dict[str, List[str]]] = None,
-    frozen: Optional[Dict[str, VehicleAssignment]] = None,
-    fixed_groups: Optional[Dict[str, str]] = None,
-    planning_horizon_legs: int = 0,
+    group_history: Optional[Dict[str, List[str]]],
+    frozen: Optional[Dict[str, VehicleAssignment]],
+    fixed_groups: Optional[Dict[str, str]],
+    planning_horizon_legs: int,
     # soft weights
-    w_pilot_fairness: int = 1,
-    w_passenger_fairness: int = 20,
-    w_no_solo_participant: int = 30,
-    w_divers_nationalities: int = 3,
-    w_cluster_passenger_balance: int = 7,
-    w_vehicle_rotation: int = 5,
-    w_low_flights_lookahead: int = 20,
-    w_overweight_lookahead: int = 50,
-    counselor_flight_discount: int = 1,
+    w_pilot_fairness: int,
+    w_passenger_fairness: int,
+    w_no_solo_participant: int,
+    w_divers_nationalities: int,
+    w_group_passenger_balance: int,
+    w_group_rotation: int,
+    w_low_flights_lookahead: int,
+    w_overweight_lookahead: int,
+    counselor_flight_discount: int,
     # misc
-    default_person_weight: int = 80,
+    default_person_weight: int,
     time_limit_s: int = 60,
     num_search_workers: int = 8,
     random_seed: Optional[int] = None,
@@ -93,6 +93,8 @@ def solve_flight_leg(
     random.shuffle(balloons)
     random.shuffle(cars)
     random.shuffle(people)
+
+    reserve_cluster_seats(balloons, cars, vehicle_groups)
 
     # ------------------------------------------------------------------
     # 0.b Fast look-ups
@@ -130,16 +132,6 @@ def solve_flight_leg(
     max_weight = {v: int(vehicles_by_id[v].get("maxWeight", -1)) for v in vehicle_ids}
 
     langs = {p: people_by_id[p].get("languages") for p in person_ids}
-
-    # ------------------------------------------------------------------
-    # 0.c  Historic “fresh group” map
-    # ------------------------------------------------------------------
-    seen = defaultdict(set)
-    if group_history:
-        for pid, bids in group_history.items():
-            for bid in bids:
-                seen[pid].add(bid)
-                seen[pid].update(vehicle_groups.get(bid, []))
 
     # ------------------------------------------------------------------
     # 1. CP-SAT model
@@ -287,7 +279,7 @@ def solve_flight_leg(
             dev_pos = model.NewIntVar(0, n_people, f"devP_{bid}")
             dev_neg = model.NewIntVar(0, n_people, f"devN_{bid}")
             model.Add(crew_cars - avg_ground == dev_pos - dev_neg)
-            objective_terms.append(w_cluster_passenger_balance * (dev_pos + dev_neg))
+            objective_terms.append(w_group_passenger_balance * (dev_pos + dev_neg))
 
     # 3.5 diversity
     if len(nationalities) > 1:
@@ -312,10 +304,17 @@ def solve_flight_leg(
             objective_terms.append(-w_divers_nationalities * minority)
 
     # 3.6 fresh vehicle (passengers only)
-    if fixed_groups is None:
+    # TODO Account for multiple occurances
+    if fixed_groups is None and group_history:
+        seen = defaultdict(set)
+        for pid, bids in group_history.items():
+            for bid in bids:
+                seen[pid].add(bid)
+                seen[pid].update(vehicle_groups.get(bid, []))
+
         for p, v in product(person_ids, vehicle_ids):
             if v not in seen[p]:
-                objective_terms.append(-w_vehicle_rotation * (pax[p, v] - op[p, v]))
+                objective_terms.append(-w_group_rotation * (pax[p, v] - op[p, v]))
 
     # 3.7 leg-2: prioritise low-flight pax in cars, and avoid overweight (low-flight mass)
     if planning_horizon_legs >= 1:
@@ -382,3 +381,34 @@ def solve_flight_leg(
             manifest[v]["passengerIds"].append(p)
 
     return {"assignments": manifest}
+
+
+def reserve_cluster_seats(
+  balloons: List[Balloon],
+  cars: List[Car],
+  groups: Dict[str, list[str]],
+) -> None:
+  """
+  Reserve seats for each balloon's passengers inside *its own cluster cars*.
+  Mutates `cars[*]['capacity']` only (does NOT touch groups or the cluster).
+  Safe to call for any leg. Uses the order given by `cluster[balloon_id]`.
+  """
+  car_by_id = {c["id"]: c for c in cars}
+  for bal in balloons:
+    bid = bal["id"]
+    need = int(bal["maxCapacity"])
+    for cid in groups.get(bid, []):
+      if need <= 0:
+        break
+      car = car_by_id.get(cid)
+      if car is None:
+        raise ValueError(f"Car {cid} from cluster not found in current input.")
+      pax_cap_excl_driver = max(int(car["maxCapacity"]) - 1, 0)
+      take = min(need, pax_cap_excl_driver)
+      car["maxCapacity"] = int(car["maxCapacity"]) - take
+      need -= take
+    if need > 0:
+      raise RuntimeError(
+        f"Seat reservation failed for {bid}: short {need} passenger seats "
+        f"in cars {groups.get(bid, [])}."
+      )

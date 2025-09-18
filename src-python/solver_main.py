@@ -43,7 +43,7 @@ def _parse_args(argv: List[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--mode",
         type=str,
-        choices=["build_groups", "solve_leg"],
+        choices=["solve_groups", "solve_leg"],
         default=None,
         help="Operation mode for the solver",
     )
@@ -71,13 +71,7 @@ def _parse_args(argv: List[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _handle_build_groups(
-    payload: Dict[str, Any], args: argparse.Namespace
-) -> Dict[str, Any]:
-    options = payload.get("options", {})
-
-    # TODO Add weights
-
+def _handle_build_groups(payload: Dict[str, Any]) -> Dict[str, Any]:
     return solve_vehicle_groups(
         balloons=payload.get("balloons", []),
         cars=payload.get("cars", []),
@@ -88,21 +82,31 @@ def _handle_build_groups(
 def _handle_solve_leg(payload: Dict[str, Any], args: argparse.Namespace):
     options = payload.get("options", {})
 
-    # TODO Add weights
-
     return solve_flight_leg(
         balloons=payload.get("balloons", []),
         cars=payload.get("cars", []),
         people=payload.get("people", []),
-        vehicle_groups=payload.get("vehicleGroups", {}),
-        group_history=payload.get("groupHistory", {}),
-        frozen=payload.get("preAssignments", {}),
-        fixed_groups=payload.get("fixedGroups", {}),
-        planning_horizon_legs=0,
+        vehicle_groups=payload.get("vehicleGroups"),
+        group_history=payload.get("groupHistory"),
+        frozen=payload.get("preAssignments"),
+        fixed_groups=payload.get("fixedGroups"),
+        # problem params
+        planning_horizon_legs=options.get("planningHorizonDepth", 0),
+        default_person_weight=options.get("defaultPersonWeight", 80),
         # solver params
-        time_limit_s=args["time_limit"],
-        num_search_workers=args["workers"],
-        random_seed=args["seed"],
+        w_passenger_fairness=options.get("passengerFairness", 20),
+        w_pilot_fairness=options.get("pilotFairness", 5),
+        w_group_rotation=options.get("groupRotation", 5),
+        w_group_passenger_balance=options.get("groupPassengerBalance", 7),
+        w_no_solo_participant=options.get("noSoloParticipant", 100),
+        w_divers_nationalities=options.get("diverseNationalities", 3),
+        w_low_flights_lookahead=options.get("lowFlightsLookahead", 20),
+        w_overweight_lookahead=options.get("overweightLookahead", 50),
+        counselor_flight_discount=options.get("counselorFlightDiscount", 1),
+        # TODO Reactivate
+        #time_limit_s=args.get("time_limit"),
+        #num_search_workers=args.get("workers"),
+        #random_seed=args.get("seed"),
     )
 
 
@@ -111,7 +115,7 @@ def main(argv: List[str] | None = None) -> None:
     payload = _read_json_stdin()
 
     if args.mode == "solve_groups":
-        out = _handle_build_groups(payload, args)
+        out = _handle_build_groups(payload)
     elif args.mode == "solve_leg":
         out = _handle_solve_leg(payload, args)
     else:

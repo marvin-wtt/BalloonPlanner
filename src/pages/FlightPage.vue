@@ -226,12 +226,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import BaseFlight from 'components/BaseFlight.vue';
-import type {
-  Balloon,
-  Car,
-  Person,
-  SmartFillOptions,
-} from 'app/src-common/entities';
+import type { Balloon, Car, Person } from 'app/src-common/entities';
 import EditableList from 'components/EditableList.vue';
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import { useFlightStore } from 'stores/flight';
@@ -243,12 +238,15 @@ import SmartFillDialog from 'components/dialog/SmartFillDialog.vue';
 import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';
 import { toPng } from 'html-to-image';
 import { useProjectSettings } from 'src/composables/projectSettings';
+import { useSolver } from 'src/composables/solver';
+import type { SolveFlightLegOptions } from 'app/src-common/api/solver.api';
 
 const route = useRoute();
 const router = useRouter();
 const quasar = useQuasar();
 const projectStore = useProjectStore();
 const flightStore = useFlightStore();
+const { solve } = useSolver();
 
 const { project, isLoading } = storeToRefs(projectStore);
 const { flightSeries, flightLeg, numberOfFlights } = storeToRefs(flightStore);
@@ -267,12 +265,12 @@ watch(() => route.params, init);
 async function init() {
   let { projectId, flightId } = route.params;
 
-  if (projectId === undefined) {
-    return;
-  }
-
   if (Array.isArray(projectId)) {
     projectId = projectId[0];
+  }
+
+  if (projectId === undefined) {
+    return;
   }
 
   if (!project.value || project.value.id !== projectId) {
@@ -338,19 +336,19 @@ function onSmartFill() {
           flightSeries.value.legs.indexOf(flightLeg.value) + 1,
       },
     })
-    .onOk((options: SmartFillOptions) => {
+    .onOk((options: SolveFlightLegOptions) => {
       void smartFill(options);
     });
 }
 
-async function smartFill(options: SmartFillOptions) {
+async function smartFill(options: SolveFlightLegOptions) {
   const notify = quasar.notify({
     type: 'ongoing',
     message: 'Calculating optimal flight plan...',
   });
   editable.value = false;
   try {
-    await flightStore.smartFillFlight({
+    await solve({
       ...options,
       defaultPersonWeight: personDefaultWeight.value,
     });
@@ -362,6 +360,7 @@ async function smartFill(options: SmartFillOptions) {
       timeout: 1000,
     });
   } catch (error) {
+    console.warn(error);
     notify({
       type: 'warning',
       message: 'Failed to fill the flight',
@@ -447,7 +446,7 @@ function showEditPerson(person: Person): void {
       component: EditPersonDialog,
       componentProps: {
         person,
-        existingNames: project.value.people.map(({ name }) => name),
+        existingNames: project.value?.people.map(({ name }) => name) ?? [],
       },
     })
     .onOk((payload) => {

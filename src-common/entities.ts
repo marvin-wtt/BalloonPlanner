@@ -97,19 +97,3 @@ export interface ProjectMeta {
   filePath: string;
   isInternal?: boolean;
 }
-
-// TODO Move type to API
-export interface SmartFillOptions extends Record<string, unknown> {
-  wPilotFairness?: number;
-  wPassengerFairness?: number;
-  wNationalityDiversity?: number;
-  wVehicleRotation?: number;
-  wSecondLegFairness?: number;
-  wSecondLegOverweight?: number;
-  wNoSoloParticipant?: number;
-  wClusterPassengerBalance?: number;
-  counselorFlightDiscount?: number;
-  timeLimit?: number;
-  defaultPersonWeight?: number;
-  leg?: 'first' | 'second' | undefined;
-}

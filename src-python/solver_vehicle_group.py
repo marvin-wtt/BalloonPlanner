@@ -12,7 +12,7 @@ def solve_vehicle_groups(
     time_limit_s: int = 5,
     num_search_workers: Optional[int] = None,
     random_seed: Optional[int] = None,
-) -> Dict[str, List[str]]:
+):
     """
     Compute a mapping balloon_id -> [car_id, ...] for the current leg.
 
@@ -32,7 +32,7 @@ def solve_vehicle_groups(
 
     cap = {c["id"]: int(c["maxCapacity"]) for c in cars}
     pax_cap = {cid: max(cap[cid] - 1, 0) for cid in car_ids}  # seats for passengers
-    trailer = {c["id"]: bool(c.get("trailer_clutch", False)) for c in cars}
+    trailer = {c["id"]: bool(c.get("hasTrailerClutch", False)) for c in cars}
     bal_need = {b["id"]: int(b["maxCapacity"]) for b in balloons}
 
     # sanity checks ----------------------------------------------------
@@ -109,4 +109,6 @@ def solve_vehicle_groups(
 
         clusters[b] = pc_kept + rest
 
-    return clusters
+    return {
+      "vehicleGroups": clusters
+    }
