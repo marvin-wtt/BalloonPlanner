@@ -37,7 +37,7 @@ class Car(TypedDict):
 class Person(TypedDict):
     id: str
     role: Literal["participant", "counselor"]
-    flights: int
+    flightsSoFar: int
     languages: list[str] | None
     nationality: str | None
     firstTime: bool | None

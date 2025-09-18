@@ -112,7 +112,9 @@ def solve_flight_leg(
     weight = {
         p: int(people_by_id[p].get("weight", default_person_weight)) for p in person_ids
     }
-    flights_so_far = {p: int(people_by_id[p].get("flights", 0)) for p in person_ids}
+    flights_so_far = {
+        p: int(people_by_id[p].get("flightsSoFar", 0)) for p in person_ids
+    }
     nationality = {
         p: (people_by_id[p].get("nationality") or "unknown") for p in person_ids
     }
