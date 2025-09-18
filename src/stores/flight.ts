@@ -89,6 +89,26 @@ export const useFlightStore = defineStore('flight', () => {
     flightLegId.value = id;
   }
 
+  function loadLastFlight() {
+    if (!project.value) {
+      throw new Error('Project not loaded');
+    }
+
+    const allFlightLegs = project.value.flights.flatMap((f) => f.legs);
+    if (allFlightLegs.length === 0) {
+      flightLegId.value = undefined;
+      return;
+    }
+
+    const lastFlightLeg = allFlightLegs[allFlightLegs.length - 1];
+    if (!lastFlightLeg) {
+      flightLegId.value = undefined;
+      return;
+    }
+
+    flightLegId.value = lastFlightLeg.id;
+  }
+
   function createFlightLeg(
     seriesId: string,
     leg: Partial<FlightLeg>,
@@ -120,11 +140,16 @@ export const useFlightStore = defineStore('flight', () => {
       throw new Error('Project not loaded');
     }
 
+    const leg = seriesData?.legs?.[0] ?? {
+      id: crypto.randomUUID(),
+      assignments: assignments ?? {},
+    };
+
     const newFlight = {
       id: crypto.randomUUID(),
       date: seriesData?.date ?? new Date().toISOString(),
       vehicleGroups: seriesData?.vehicleGroups ?? [],
-      legs: [],
+      legs: [leg],
       carIds: seriesData?.carIds ?? project.value.cars.map(({ id }) => id),
       balloonIds:
         seriesData?.balloonIds ?? project.value.balloons.map(({ id }) => id),
@@ -133,8 +158,6 @@ export const useFlightStore = defineStore('flight', () => {
     };
 
     project.value.flights.push(newFlight);
-
-    createFlightLeg(newFlight.id, { assignments });
 
     return newFlight;
   }
@@ -150,9 +173,8 @@ export const useFlightStore = defineStore('flight', () => {
     const series = project.value.flights.find((f) =>
       f.legs.some((leg) => leg.id === flightId),
     );
-
     if (!series) {
-      return;
+      throw new Error('Flight series not found');
     }
 
     const legIndex = flightSeries.value.legs.findIndex(
@@ -165,13 +187,21 @@ export const useFlightStore = defineStore('flight', () => {
 
     series.legs.splice(legIndex, 1);
 
-    // Reset store if the current flight is loaded
-    if (flightLegId.value === flightId) {
-      flightLegId.value = undefined;
-    }
-
     if (series.legs.length === 0) {
       deleteFlightSeries(series.id);
+      loadLastFlight();
+      return;
+    }
+
+    // Reset store if the current flight is loaded
+    if (flightLegId.value === flightId) {
+      const leg = series.legs[series.legs.length - 1];
+      if (!leg) {
+        // This should never happen since we checked the length above
+        flightLegId.value = undefined;
+        return;
+      }
+      flightLegId.value = leg.id;
     }
   }
 
@@ -210,7 +240,6 @@ export const useFlightStore = defineStore('flight', () => {
     const series = project.value.flights.find((f) =>
       f.legs.some((leg) => leg.id === flightId),
     );
-
     if (!series) {
       return;
     }
@@ -229,6 +258,8 @@ export const useFlightStore = defineStore('flight', () => {
     });
 
     deleteFlightLeg(flightId);
+
+    loadFlightLeg(leg.id);
   }
 
   function deleteFlightSeries(seriesId: string) {
@@ -249,6 +280,10 @@ export const useFlightStore = defineStore('flight', () => {
     }
 
     project.value.flights.splice(seriesIndex, 1);
+
+    if (flightLegId.value === undefined) {
+      loadLastFlight();
+    }
   }
 
   const availableBalloons = computed<Balloon[]>(() => {

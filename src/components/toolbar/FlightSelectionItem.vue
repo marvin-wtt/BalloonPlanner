@@ -9,6 +9,7 @@
         v-for="(series, index) in project.flights"
         :key="series.id"
         v-close-popup
+        :active="series.id === flightSeries?.id"
         clickable
         @click="changeSeries(series.id)"
       >
@@ -54,9 +55,10 @@
       flat
     >
       <q-item
-        v-for="(leg, index) in flightSeries.legs"
+        v-for="(leg, index) in flightSeries?.legs ?? []"
         :key="leg.id"
         v-close-popup
+        :active="leg.id === flightLeg?.id"
         clickable
         @click="changeLeg(leg.id)"
       >
@@ -75,13 +77,14 @@
             @click.prevent.stop
           >
             <q-menu>
-              <q-list>
+              <q-list style="min-width: 100px">
                 <q-item
+                  v-if="flightSeries?.legs.indexOf(leg) !== 0"
                   v-close-popup
                   clickable
                   @click="detachLeg(leg.id)"
                 >
-                  Detach
+                  <q-item-section>Detach</q-item-section>
                 </q-item>
                 <q-item
                   v-close-popup
@@ -188,16 +191,18 @@ function addFlight() {
           data.assignments,
         );
 
-        void changeSeries(flight.legs[0].id);
+        const legId = flight.legs[0]?.id;
+        if (!legId) {
+          throw new Error('Flight series has no legs');
+        }
+
+        void changeSeries(legId);
       }
 
       if (data.mode === 'leg' && flightSeries.value != null) {
-        const leg = flightStore.createFlightLeg(
-          flightSeries.value.id,
-          data.assignments,
-        );
+        const leg = flightStore.createFlightLeg(flightSeries.value.id, data);
 
-        void changeSeries(leg.id);
+        void changeLeg(leg.id);
       }
     })
     .onDismiss(() => {
@@ -209,13 +214,14 @@ async function changeSeries(seriesId: string) {
   const series = project.value?.flights.find((value) => value.id === seriesId);
   if (!series || series.legs.length === 0) {
     await changeLeg(undefined);
+    return;
   }
 
-  await changeLeg(series.legs[series.legs.length - 1].id);
+  await changeLeg(series.legs[series.legs.length - 1]?.id);
 }
 
 async function changeLeg(legId: string | undefined) {
-  const projectId = project.value.id;
+  const projectId = project.value?.id;
 
   await router.replace({
     name: 'flight',
