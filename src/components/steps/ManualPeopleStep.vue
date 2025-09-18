@@ -124,7 +124,7 @@ const columns: QTableColumn[] = [
     align: 'left',
     sortable: true,
     format: (val: string | undefined) =>
-      val.charAt(0).toUpperCase() + String(val).slice(1),
+      val ? val.charAt(0).toUpperCase() + val.slice(1) : '',
   },
   {
     name: 'weight',
