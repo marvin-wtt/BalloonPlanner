@@ -104,9 +104,9 @@ def _handle_solve_leg(payload: Dict[str, Any], args: argparse.Namespace):
         w_overweight_lookahead=options.get("overweightLookahead", 50),
         counselor_flight_discount=options.get("counselorFlightDiscount", 1),
         # TODO Reactivate
-        #time_limit_s=args.get("time_limit"),
-        #num_search_workers=args.get("workers"),
-        #random_seed=args.get("seed"),
+        # time_limit_s=args.get("time_limit"),
+        # num_search_workers=args.get("workers"),
+        # random_seed=args.get("seed"),
     )
 
 

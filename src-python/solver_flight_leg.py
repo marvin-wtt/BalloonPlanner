@@ -386,31 +386,31 @@ def solve_flight_leg(
 
 
 def reserve_cluster_seats(
-  balloons: List[Balloon],
-  cars: List[Car],
-  groups: Dict[str, list[str]],
+    balloons: List[Balloon],
+    cars: List[Car],
+    groups: Dict[str, list[str]],
 ) -> None:
-  """
-  Reserve seats for each balloon's passengers inside *its own cluster cars*.
-  Mutates `cars[*]['capacity']` only (does NOT touch groups or the cluster).
-  Safe to call for any leg. Uses the order given by `cluster[balloon_id]`.
-  """
-  car_by_id = {c["id"]: c for c in cars}
-  for bal in balloons:
-    bid = bal["id"]
-    need = int(bal["maxCapacity"])
-    for cid in groups.get(bid, []):
-      if need <= 0:
-        break
-      car = car_by_id.get(cid)
-      if car is None:
-        raise ValueError(f"Car {cid} from cluster not found in current input.")
-      pax_cap_excl_driver = max(int(car["maxCapacity"]) - 1, 0)
-      take = min(need, pax_cap_excl_driver)
-      car["maxCapacity"] = int(car["maxCapacity"]) - take
-      need -= take
-    if need > 0:
-      raise RuntimeError(
-        f"Seat reservation failed for {bid}: short {need} passenger seats "
-        f"in cars {groups.get(bid, [])}."
-      )
+    """
+    Reserve seats for each balloon's passengers inside *its own cluster cars*.
+    Mutates `cars[*]['capacity']` only (does NOT touch groups or the cluster).
+    Safe to call for any leg. Uses the order given by `cluster[balloon_id]`.
+    """
+    car_by_id = {c["id"]: c for c in cars}
+    for bal in balloons:
+        bid = bal["id"]
+        need = int(bal["maxCapacity"])
+        for cid in groups.get(bid, []):
+            if need <= 0:
+                break
+            car = car_by_id.get(cid)
+            if car is None:
+                raise ValueError(f"Car {cid} from cluster not found in current input.")
+            pax_cap_excl_driver = max(int(car["maxCapacity"]) - 1, 0)
+            take = min(need, pax_cap_excl_driver)
+            car["maxCapacity"] = int(car["maxCapacity"]) - take
+            need -= take
+        if need > 0:
+            raise RuntimeError(
+                f"Seat reservation failed for {bid}: short {need} passenger seats "
+                f"in cars {groups.get(bid, [])}."
+            )
