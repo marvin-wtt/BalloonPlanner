@@ -177,11 +177,10 @@ function drop(element: Identifiable) {
     .flatMap((g) => g.carIds)
     .find((id) => id === element.id);
 
-  if (!previousCarId) {
-    return;
-  }
+  const previousAssignment = previousCarId
+    ? flightLeg.assignments[previousCarId]
+    : undefined;
 
-  const previousAssignment = flightLeg.assignments[previousCarId];
   addCarToVehicleGroup(group.balloonId, element.id);
 
   if (!previousAssignment) {

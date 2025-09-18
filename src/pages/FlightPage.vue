@@ -399,8 +399,11 @@ async function onExportImage() {
 
   document.body.removeChild(container);
 
-  const flightNr = project.value.flights.indexOf(flightSeries.value) + 1;
-  const fileName = `${project.value.name}-flight-${flightNr.toString()}.png`;
+  const flightNr =
+    project.value.flights.findIndex((s) => s.id === flightSeries.value?.id) + 1;
+  const legNr =
+    flightSeries.value.legs.findIndex((l) => l.id === flightLeg.value?.id) + 1;
+  const fileName = `${project.value.name}-flight-${flightNr.toString()}-leg-${legNr.toString()}.png`;
   const link = document.createElement('a');
   link.download = fileName;
   link.href = dataUrl;
