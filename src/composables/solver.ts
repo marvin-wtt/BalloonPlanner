@@ -64,8 +64,6 @@ export function useSolver() {
       }),
     );
 
-    console.log(response);
-
     flightSeries.value.vehicleGroups = Object.entries(
       response.vehicleGroups,
     ).map(([balloonId, carIds]) => ({
