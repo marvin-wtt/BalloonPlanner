@@ -48,12 +48,12 @@ export function useSolver() {
       .map((id) => carMap.value[id])
       .filter(isDefined);
 
-    const vehicleGroups = flightSeries.value.vehicleGroups.reduce<
-      Record<string, string[]>
-    >((acc, group) => {
-      acc[group.balloonId] = group.carIds;
-      return acc;
-    }, {});
+    const vehicleGroups = Object.fromEntries(
+      flightSeries.value.vehicleGroups.map((group) => [
+        group.balloonId,
+        group.carIds,
+      ]),
+    );
 
     const peopleCount = flightSeries.value.personIds.length;
 
@@ -66,13 +66,26 @@ export function useSolver() {
       }),
     );
 
-    // TODO Sort
-    flightSeries.value.vehicleGroups = Object.entries(
-      response.vehicleGroups,
-    ).map(([balloonId, carIds]) => ({
-      balloonId,
-      carIds,
+    const existingIds = flightSeries.value.vehicleGroups.map(
+      (g) => g.balloonId,
+    );
+
+    // 1) Keep existing group order; append new cars (without duplicates)
+    const updatedExisting = flightSeries.value.vehicleGroups.map((g) => ({
+      balloonId: g.balloonId,
+      carIds: g.carIds.concat(
+        (response.vehicleGroups[g.balloonId] ?? []).filter(
+          (id) => !g.carIds.includes(id),
+        ),
+      ),
     }));
+
+    // 2) Append new groups (in the solver’s order)
+    const appended = Object.entries(response.vehicleGroups)
+      .filter(([bId]) => !existingIds.includes(bId))
+      .map(([balloonId, carIds]) => ({ balloonId, carIds }));
+
+    flightSeries.value.vehicleGroups = updatedExisting.concat(appended);
   }
 
   async function solveFlightLeg(options?: SolveFlightLegOptions) {
