@@ -280,7 +280,7 @@ const color = computed<string>(() => {
 const allowVehicleGroupChange = computed<boolean>(() => {
   return (
     flightSeries.legs.findIndex((l) => l.id === flightLeg.id) === 0 ||
-    disableVehicleGroupProtection.value
+    (disableVehicleGroupProtection.value ?? false)
   );
 });
 
