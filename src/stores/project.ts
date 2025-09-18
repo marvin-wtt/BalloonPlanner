@@ -1,7 +1,8 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import type { Project, ProjectMeta } from 'app/src-common/entities';
-import { ref, toRaw, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { debounce, useQuasar } from 'quasar';
+import { deepToRaw } from 'src/util/deep-to-raw';
 
 export const useProjectStore = defineStore('project', () => {
   const quasar = useQuasar();
@@ -20,7 +21,7 @@ export const useProjectStore = defineStore('project', () => {
     project,
     (project, oldProject) => {
       // Skip initial load and updates
-      if (!oldProject || project.id !== oldProject.id) {
+      if (!oldProject || project?.id !== oldProject.id) {
         return;
       }
 
@@ -87,10 +88,17 @@ export const useProjectStore = defineStore('project', () => {
   }
 
   async function saveProject() {
+    if (!project.value) {
+      throw new Error('Project is not loaded');
+    }
+
     isSaving.value = true;
     isDorty.value = false;
+
+    console.log(deepToRaw(project.value));
+
     try {
-      await window.projectAPI.update(toRaw(project.value));
+      await window.projectAPI.update(deepToRaw(project.value));
     } catch (e) {
       isDorty.value = true;
       console.error(e);
