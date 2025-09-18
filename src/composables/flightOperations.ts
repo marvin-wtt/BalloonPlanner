@@ -72,6 +72,15 @@ export function useFlightOperations() {
     return assignment;
   }
 
+  function removeAllAssignments(vehicleId: ID) {
+    const series = requireSeries();
+
+    for (const leg of series.legs) {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete leg.assignments[vehicleId];
+    }
+  }
+
   function clearVehicle(vehicleId: ID) {
     const leg = requireLeg();
     // reset (keeps key stable if UI expects the entry to exist)
@@ -97,6 +106,7 @@ export function useFlightOperations() {
     for (const group of series.vehicleGroups) {
       removeFirst(group.carIds, (id) => id === carId);
     }
+    removeAllAssignments(carId);
   }
 
   function removeVehicleGroupByBalloon(balloonId: ID) {
@@ -110,7 +120,7 @@ export function useFlightOperations() {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const group = series.vehicleGroups[idx]!;
     // clear assignments for balloon and its cars
-    [group.balloonId, ...group.carIds].forEach(clearVehicle);
+    [group.balloonId, ...group.carIds].forEach(removeAllAssignments);
     series.vehicleGroups.splice(idx, 1);
   }
 
@@ -126,7 +136,6 @@ export function useFlightOperations() {
   }
 
   function removeVehicleGroup(balloonId: ID) {
-    requireSeries(); // throws if none
     removeVehicleGroupByBalloon(balloonId);
   }
 
@@ -146,8 +155,7 @@ export function useFlightOperations() {
       throw new Error(`No vehicle group found for balloon ${balloonId}`);
     }
 
-    // only clear the specific car, not all
-    clearVehicle(carId);
+    removeAllAssignments(carId);
     removeFirst(group.carIds, (id) => id === carId);
   }
 
@@ -214,9 +222,7 @@ export function useFlightOperations() {
 
   function removeBalloon(balloonId: ID) {
     const series = requireSeries();
-    // remove group (also clears assignments)
     removeVehicleGroupByBalloon(balloonId);
-    // unlink from series list
     removeFirst(series.balloonIds, (b) => b === balloonId);
   }
 
@@ -246,8 +252,6 @@ export function useFlightOperations() {
 
   function removeCar(carId: ID) {
     const series = requireSeries();
-    // clear any assignment for this car & unlink from all groups
-    clearVehicle(carId);
     removeCarFromAllGroups(carId);
     removeFirst(series.carIds, (c) => c === carId);
   }
