@@ -11,26 +11,35 @@
       Drop a balloon here to start.
     </div>
 
-    <q-scroll-area
+    <div
       v-else
-      class="col-grow"
+      class="full-width column"
     >
+      <q-scroll-area class="col-grow">
+        <div
+          id="flight-content"
+          class="full-width q-gutter-md q-pa-sm q-mt-xs"
+          :class="groupAlignment === 'vertical' ? 'column' : 'row'"
+        >
+          <base-vehicle-group
+            v-for="(group, i) in flightSeries.vehicleGroups"
+            :key="`vg-${i}`"
+            :label="`Group ${String.fromCharCode(65 + i)}`"
+            :flight-series
+            :flight-leg
+            :group
+            :editable
+          />
+        </div>
+      </q-scroll-area>
+
       <div
-        id="flight-content"
-        class="full-width q-gutter-md q-pa-sm q-mt-xs"
-        :class="groupAlignment === 'vertical' ? 'column' : 'row'"
+        v-if="errorText"
+        class="bg-negative text-white col-shrink q-px-md"
       >
-        <base-vehicle-group
-          v-for="(group, i) in flightSeries.vehicleGroups"
-          :key="`vg-${i}`"
-          :label="`Group ${String.fromCharCode(65 + i)}`"
-          :flight-series
-          :flight-leg
-          :group
-          :editable
-        />
+        Error: {{ errorText }}
       </div>
-    </q-scroll-area>
+    </div>
   </drop-zone>
 </template>
 
@@ -49,6 +58,7 @@ import { useFlightOperations } from 'src/composables/flightOperations';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import { useProjectSettings } from 'src/composables/projectSettings';
+import { validateFlightLegAndSeries } from 'src/util/flight-validator';
 
 const flightStore = useFlightStore();
 const { availablePeople, availableCars, availableBalloons } =
@@ -56,7 +66,11 @@ const { availablePeople, availableCars, availableBalloons } =
 const { groupAlignment } = useProjectSettings();
 const { addVehicleGroup } = useFlightOperations();
 
-const { flightSeries, editable = false } = defineProps<{
+const {
+  flightSeries,
+  flightLeg,
+  editable = false,
+} = defineProps<{
   flightSeries: FlightSeries;
   flightLeg: FlightLeg;
   editable?: boolean;
@@ -113,6 +127,10 @@ function onDrop(element: Identifiable) {
 
   addVehicleGroup(element.id);
 }
+
+const errorText = computed<string | null>(() => {
+  return validateFlightLegAndSeries(flightSeries, flightLeg);
+});
 </script>
 
 <style scoped>
