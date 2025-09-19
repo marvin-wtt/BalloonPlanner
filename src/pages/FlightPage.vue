@@ -343,10 +343,7 @@ function onSmartFill() {
     .dialog({
       component: SmartFillDialog,
       componentProps: {
-        firstLeg: flightSeries.value.legs[0]?.id === flightLeg.value.id,
-        hasSuccessorLeg:
-          flightSeries.value.legs.length >
-          flightSeries.value.legs.indexOf(flightLeg.value) + 1,
+        isFirstLeg: flightSeries.value.legs[0]?.id === flightLeg.value.id,
       },
     })
     .onOk((options: SolveFlightLegOptions) => {
