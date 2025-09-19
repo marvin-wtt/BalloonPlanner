@@ -10,7 +10,10 @@
       >
         <q-card-section class="text-h6">Smart Fill</q-card-section>
 
-        <q-card-section class="q-pt-none q-gutter-y-md">
+        <q-card-section
+          v-if="isFirstLeg"
+          class="q-pt-none q-gutter-y-md"
+        >
           <q-list dense>
             <q-item>
               <q-item-section>
@@ -217,6 +220,10 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
 defineEmits([...useDialogPluginComponent.emits]);
+
+const { isFirstLeg = true } = defineProps<{
+  isFirstLeg?: boolean;
+}>();
 
 const options = reactive<SolveFlightLegOptions>({
   planningHorizonDepth: 0,
