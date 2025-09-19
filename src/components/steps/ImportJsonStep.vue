@@ -76,6 +76,12 @@ async function processJson() {
   loading.value = true;
   errorMessage.value = undefined;
 
+  if (!file.value) {
+    errorMessage.value = 'No file selected';
+    loading.value = false;
+    return;
+  }
+
   try {
     modelValue.value = await loadJsonFile(file.value);
 
