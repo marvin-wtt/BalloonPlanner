@@ -95,8 +95,6 @@ export const useProjectStore = defineStore('project', () => {
     isSaving.value = true;
     isDorty.value = false;
 
-    console.log(deepToRaw(project.value));
-
     try {
       await window.projectAPI.update(deepToRaw(project.value));
     } catch (e) {
