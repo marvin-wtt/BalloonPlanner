@@ -28,10 +28,9 @@ All weights are user-tunable kwargs.
 
 import random
 from itertools import product
-from collections import defaultdict, Counter
+from collections import defaultdict
 from typing import List, Dict, Optional, TypedDict, Literal
 
-from ortools.math_opt.core.python import solver
 from ortools.sat.python import cp_model
 from solver_types import Balloon, Car, Vehicle, Person, VehicleAssignment
 
@@ -108,6 +107,7 @@ def solve_flight_leg(
 
     person_ids = list(people_by_id)
     vehicle_ids = list(vehicles_by_id)
+    balloon_ids = [b["id"] for b in balloons]
 
     weight = {
         p: int(people_by_id[p].get("weight", default_person_weight)) for p in person_ids
@@ -281,7 +281,7 @@ def solve_flight_leg(
     # 3.4 cluster passenger deviation
     if fixed_groups is None:
         n_people = len(person_ids)
-        seats_in_air = sum(b["maxCapacity"] for b in balloons)
+        seats_in_air = sum(capacity[bid] for bid in balloon_ids)
         # integer target; fair rounding happens via deviation vars
         avg_ground = (n_people - seats_in_air) // max(len(vehicle_groups), 1)
 
@@ -327,7 +327,7 @@ def solve_flight_leg(
     # 3.7 language-aware lookahead: prioritise low-flight pax in cluster cars (no overweight lookahead)
     if planning_horizon_legs >= 1 and person_ids:
         # Seats available across the next H legs
-        seats_per_leg = sum(b["maxCapacity"] for b in balloons)
+        seats_per_leg = sum(capacity[bid] for bid in balloon_ids)
         future_seats = planning_horizon_legs * seats_per_leg
 
         # Global cutoff: who counts as "low-flight"
@@ -362,9 +362,8 @@ def solve_flight_leg(
             return 0
 
         # Target: in each cluster's cars, achieve at least H * capacity(low-flight, lang-eligible) over horizon
-        for b in balloons:
-            bid = b["id"]
-            target = int(planning_horizon_legs * b["maxCapacity"])
+        for bid in balloon_ids:
+            target = int(planning_horizon_legs * capacity[bid])
             if target <= 0:
                 continue
 
@@ -424,7 +423,7 @@ def reserve_cluster_seats(
     balloons: List[Balloon],
     cars: List[Car],
     groups: Dict[str, list[str]],
-) -> None:
+):
     """
     Reserve seats for each balloon's passengers inside *its own cluster cars*.
     Mutates `cars[*]['capacity']` only (does NOT touch groups or the cluster).
