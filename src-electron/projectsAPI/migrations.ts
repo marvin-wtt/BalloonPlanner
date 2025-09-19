@@ -53,16 +53,19 @@ const migrations: Record<string, Migration> = {
   },
 };
 
+export function getAppVersion() {
+  return app.isPackaged
+    ? app.getVersion()
+    : (Object.keys(migrations).sort(semver.compare).pop() ?? '0.0.0');
+}
+
 export function migrateProject(data: AnyProject): Project {
   if (typeof data !== 'object') {
     throw new Error('Invalid project data');
   }
 
   // Use the app version if available, otherwise use the latest migration version
-  const appVersion = app.isPackaged
-    ? app.getVersion()
-    : (Object.keys(migrations).sort(semver.compare).pop() ?? '0.0.0');
-
+  const appVersion = getAppVersion();
   const version: string = data.version ?? '0.0.0';
 
   if (semver.gt(version, appVersion)) {

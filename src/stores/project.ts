@@ -36,12 +36,35 @@ export const useProjectStore = defineStore('project', () => {
     projectIndex.value = await window.projectAPI.index();
   }
 
-  async function createProject(project: Project): Promise<void> {
+  async function createProject(
+    data: Omit<Project, 'id' | 'version' | 'createdAt' | 'flights'>,
+  ) {
     // Clone the project to remove all vue proxies
-    const copy = JSON.parse(JSON.stringify(project));
+    const project: Omit<Project, 'version'> = {
+      ...deepToRaw(data),
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      flights: [
+        {
+          id: crypto.randomUUID(),
+          date: new Date().toISOString(),
+          vehicleGroups: [],
+          carIds: data.cars.map(({ id }) => id),
+          balloonIds: data.balloons.map(({ id }) => id),
+          personIds: data.people.map(({ id }) => id),
+          legs: [
+            {
+              id: crypto.randomUUID(),
+              assignments: {},
+              canceledBalloonIds: [],
+            },
+          ],
+        },
+      ],
+    };
 
     try {
-      await window.projectAPI.store(copy);
+      await window.projectAPI.store(project);
 
       await loadIndex();
     } catch (error) {
@@ -53,6 +76,8 @@ export const useProjectStore = defineStore('project', () => {
       });
       throw error;
     }
+
+    return project;
   }
 
   async function deleteProject(projectId: string): Promise<void> {

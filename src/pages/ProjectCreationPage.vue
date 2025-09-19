@@ -14,7 +14,7 @@
         name="details"
         title="Enter project details"
         icon="edit_note"
-        :done="name && name.length > 0"
+        :done="!!name && name.length > 0"
       >
         <div
           class="q-gutter-md"
@@ -113,7 +113,7 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
-import type { Balloon, Car, Person, Project } from 'app/src-common/entities';
+import type { Balloon, Car, Person } from 'app/src-common/entities';
 import ImportPeopleStep from 'components/steps/ImportPeopleStep.vue';
 import ManualPeopleStep from 'components/steps/ManualPeopleStep.vue';
 import ManualBalloonsStep from 'components/steps/ManualBalloonsStep.vue';
@@ -145,33 +145,19 @@ async function finish() {
     return;
   }
 
-  // Every ref needs to be converted to raw
-  const project: Project = {
-    id: crypto.randomUUID(),
+  const project = await projectStore.createProject({
     name: name.value,
     description: description.value,
-    createdAt: new Date().toISOString(),
-    flights: [
-      {
-        id: crypto.randomUUID(),
-        vehicleGroups: [],
-        carIds: cars.value.map(({ id }) => id),
-        balloonIds: balloons.value.map(({ id }) => id),
-        personIds: people.value.map(({ id }) => id),
-      },
-    ],
     balloons: balloons.value,
     cars: cars.value,
     people: people.value,
-  };
-
-  await projectStore.createProject(project);
+  });
 
   await router.push({
     name: 'flight',
     params: {
       projectId: project.id,
-      flightId: project.flights[0].legs[0].id,
+      flightId: project.flights[0]?.legs[0]?.id,
     },
   });
 }

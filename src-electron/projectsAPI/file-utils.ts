@@ -42,7 +42,7 @@ export async function writeProjectToPath(
     await fse.ensureDir(parentDir);
   } catch (err: unknown) {
     throw new Error(
-      `Cannot create directory "${parentDir}": ${String(err.message)}`,
+      `Cannot create directory "${parentDir}": ${getErrorMessage(err)}`,
     );
   }
 
@@ -50,11 +50,19 @@ export async function writeProjectToPath(
     await fse.writeJSON(fullFilePath, project, 'utf-8');
   } catch (err: unknown) {
     throw new Error(
-      `Failed to write project to "${fullFilePath}": ${String(err.message)}`,
+      `Failed to write project to "${fullFilePath}": ${getErrorMessage(err)}`,
     );
   }
 
   return fullFilePath;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  } else {
+    return String(error);
+  }
 }
 
 export async function deleteProjectFromPath(fullFilePath: string) {

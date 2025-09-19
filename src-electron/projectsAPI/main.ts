@@ -20,7 +20,10 @@ import {
   updateProjectMeta,
 } from 'app/src-electron/projectsAPI/index-store';
 import log from 'electron-log';
-import { migrateProject } from 'app/src-electron/projectsAPI/migrations';
+import {
+  getAppVersion,
+  migrateProject,
+} from 'app/src-electron/projectsAPI/migrations';
 
 export default () => {
   ipcMain.handle('project:index', projectApiHandler.index);
@@ -124,6 +127,8 @@ async function store(project: Project) {
   const projectDir = app.getPath('userData');
   const fileName = `project-${project.id}.bpp`;
   const fullPath = path.join(projectDir, fileName);
+
+  project.version = getAppVersion();
 
   addProjectMeta({
     ...project,
