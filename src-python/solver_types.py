@@ -1,4 +1,4 @@
-from typing import TypedDict, NotRequired, Literal, Union
+from typing import TypedDict, NotRequired, Literal, Union, Optional
 
 
 class VehicleBase(TypedDict):
@@ -38,12 +38,12 @@ class Person(TypedDict):
     id: str
     role: Literal["participant", "counselor"]
     flightsSoFar: int
-    languages: list[str] | None
-    nationality: str | None
-    firstTime: bool | None
+    languages: NotRequired[list[str]]
+    nationality: NotRequired[str]
+    firstTime: NotRequired[bool]
     weight: NotRequired[int]
 
 
 class VehicleAssignment(TypedDict):
-    operatorId: str | None
+    operatorId: Optional[str]
     passengerIds: list[str]
