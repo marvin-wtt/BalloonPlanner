@@ -10,11 +10,11 @@
       >
         <q-card-section class="text-h6">Smart Fill</q-card-section>
 
-        <q-card-section
-          v-if="isFirstLeg"
-          class="q-pt-none q-gutter-y-md"
-        >
-          <q-list dense>
+        <q-card-section class="q-pt-none q-gutter-y-md">
+          <q-list
+            v-if="isFirstLeg"
+            dense
+          >
             <q-item>
               <q-item-section>
                 <q-item-label> Planning Horizon Depth </q-item-label>
