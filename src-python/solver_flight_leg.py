@@ -135,7 +135,10 @@ def solve_flight_leg(
     langs = {p: people_by_id[p].get("languages") for p in person_ids}
 
     priorities = {
-        p: i for i, p in enumerate(sorted(person_ids, key=lambda p: flights_so_far[p]))
+        p: i
+        for i, p in enumerate(
+            sorted(person_ids, key=lambda p: flights_so_far[p] - int(first_time[p]))
+        )
     }
 
     # ------------------------------------------------------------------
