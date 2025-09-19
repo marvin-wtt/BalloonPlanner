@@ -113,6 +113,7 @@ def solve_flight_leg(
     flights_so_far = {
         p: int(people_by_id[p].get("flightsSoFar", 0)) for p in person_ids
     }
+    first_time = {p: bool(people_by_id[p].get("firstTime", False)) for p in person_ids}
     nationality = {
         p: (people_by_id[p].get("nationality") or "unknown") for p in person_ids
     }
@@ -256,6 +257,8 @@ def solve_flight_leg(
     for p, v in product(person_ids, vehicle_ids):
         if kind[v] == "balloon":
             bonus = max_flights - flights_so_far[p]
+            if flights_so_far[p] == 0 and first_time[p]:
+                bonus += 1
             if not is_participant[p]:
                 bonus = max(bonus - counselor_flight_discount, 0)
             objective_terms.append(-w_passenger_fairness * bonus * pax[p, v])
