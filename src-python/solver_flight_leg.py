@@ -28,7 +28,7 @@ All weights are user-tunable kwargs.
 
 import random
 from itertools import product
-from collections import defaultdict
+from collections import defaultdict, Counter
 from typing import List, Dict, Optional, TypedDict, Literal
 from ortools.sat.python import cp_model
 from solver_types import Balloon, Car, Vehicle, Person, VehicleAssignment
@@ -306,17 +306,24 @@ def solve_flight_leg(
             objective_terms.append(-w_divers_nationalities * minority)
 
     # 3.6 fresh vehicle (passengers only)
-    # TODO Account for multiple occurances
     if fixed_groups is None and group_history:
-        seen = defaultdict(set)
+        # how often each person has been with each *group member* (balloon or its cars)
+        seen_counts: dict[str, Counter[str]] = defaultdict(Counter)
+
         for pid, bids in group_history.items():
             for bid in bids:
-                seen[pid].add(bid)
-                seen[pid].update(vehicle_groups.get(bid, []))
+                # count the balloon itself
+                seen_counts[pid][bid] += 1
+                # and the cars that belong to that balloon's group
+                for cid in vehicle_groups.get(bid, []):
+                    seen_counts[pid][cid] += 1
 
         for p, v in product(person_ids, vehicle_ids):
-            if v not in seen[p]:
-                objective_terms.append(-w_group_rotation * (pax[p, v] - op[p, v]))
+            # 1 / (1 + repeats): 1.0 if never seen, 0.5 after 1 repeat, 0.33 after 2, ...
+            # Keeps a diminishing (never-negative) incentive for less-used vehicles.
+            nf = 1.0 / (1.0 + float(seen_counts[p][v]))
+            # scale the novelty reward for passengers; subtract op to avoid rewarding operators
+            objective_terms.append(-w_group_rotation * nf * (pax[p, v] - op[p, v]))
 
     # 3.7 leg-2: prioritise low-flight pax in cars, and avoid overweight (low-flight mass)
     if planning_horizon_legs >= 1:
