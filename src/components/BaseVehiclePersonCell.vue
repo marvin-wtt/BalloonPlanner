@@ -322,10 +322,7 @@ function removePersonFromVehicle(personId: string) {
 }
 
 function wasInSameVehicleGroupInFirstLeg(personId: string): boolean {
-  if (
-    flightSeries.legs.length < 1 ||
-    flightSeries.legs.findIndex((l) => l.id === flightLeg.id) === 0
-  ) {
+  if (flightSeries.legs.findIndex((l) => l.id === flightLeg.id) === 0) {
     return true;
   }
 
