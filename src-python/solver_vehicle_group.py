@@ -15,15 +15,6 @@ def solve_vehicle_groups(
 ):
     """
     Compute a mapping balloon_id -> [car_id, ...] for the current leg.
-
-    NOTE: This function does NOT reserve seats. Call reserve_cluster_seats()
-          afterwards to apply seat reservations based on the returned cluster.
-
-    Ordering policy:
-      - If a precluster is provided for a balloon, the cars listed there will
-        appear first in the returned list, preserving the exact input order.
-      - Any additional selected cars will follow, preserving the original
-        `cars` input order.
     """
     precluster = precluster or {}
 
@@ -92,23 +83,9 @@ def solve_vehicle_groups(
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         raise RuntimeError("no feasible clustering")
 
-    # Build ordered clusters:
-    # - precluster cars first, preserving the input order
-    # - then any additional selected cars, preserving `car_ids` input order
-    clusters: Dict[str, List[str]] = {b: [] for b in balloon_ids}
+    # Build clusters:
+    vehicle_groups: Dict[str, List[str]] = {}
     for b in balloon_ids:
-        # all cars selected for this balloon (iterate in car_ids order for stability)
-        selected = [c for c in car_ids if solver.BooleanValue(x[c, b])]
-        pc = precluster.get(b, []) or []
+        vehicle_groups[b] = [c for c in car_ids if solver.Value(x[c, b]) == 1]
 
-        # keep only those precluster cars that were actually selected
-        pc_kept = [c for c in pc if c in selected]
-
-        # then append any selected cars not already in precluster, in `car_ids` order
-        rest = [c for c in selected if c not in pc_kept]
-
-        clusters[b] = pc_kept + rest
-
-    return {
-      "vehicleGroups": clusters
-    }
+    return {"vehicleGroups": vehicle_groups}

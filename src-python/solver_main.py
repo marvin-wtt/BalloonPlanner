@@ -76,6 +76,7 @@ def _handle_build_groups(payload: Dict[str, Any]) -> Dict[str, Any]:
         balloons=payload.get("balloons", []),
         cars=payload.get("cars", []),
         people_count=payload.get("peopleCount", 0),
+        precluster=payload.get("vehicleGroups", {}),
     )
 
 
