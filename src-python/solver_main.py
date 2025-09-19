@@ -103,10 +103,9 @@ def _handle_solve_leg(payload: Dict[str, Any], args: argparse.Namespace):
         w_no_solo_participant=options.get("noSoloParticipant", 100),
         w_divers_nationalities=options.get("diverseNationalities", 3),
         w_low_flights_lookahead=options.get("lowFlightsLookahead", 20),
-        w_overweight_lookahead=options.get("overweightLookahead", 50),
         counselor_flight_discount=options.get("counselorFlightDiscount", 1),
+        time_limit_s=options.get("time_limit", 60),
         # TODO Reactivate
-        # time_limit_s=args.get("time_limit"),
         # num_search_workers=args.get("workers"),
         # random_seed=args.get("seed"),
     )

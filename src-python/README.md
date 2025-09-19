@@ -27,7 +27,7 @@ It contains two main solvers:
   - Vehicle rotation (discourage repeating the same vehicle).
   - Avoid exactly one participant alone in a car.
   - Passenger balance across ground clusters.
-  - Look-ahead terms for multi-leg planning (low-flight passengers, overweight avoidance).
+  - Look-ahead terms for multi-leg planning (low-flight passengers).
   - Random tie-break fairness.
 
 ---
@@ -71,12 +71,11 @@ cat input.json | python solver_main.py --mode solve_leg
 
 ### CLI Options
 
-| Flag           | Description                                       | Default |
-|----------------|---------------------------------------------------|---------|
-| `--mode`       | `solve_groups` or `solve_leg`                     | –       |
-| `--seed`       | Random seed for deterministic shuffles and solver | `42`    |
-| `--workers`    | Number of CP-SAT threads                          | `8`     |
-| `--time-limit` | Maximum solver runtime in seconds                 | `20`    |
+| Flag        | Description                                       | Default |
+|-------------|---------------------------------------------------|---------|
+| `--mode`    | `solve_groups` or `solve_leg`                     | –       |
+| `--seed`    | Random seed for deterministic shuffles and solver | `42`    |
+| `--workers` | Number of CP-SAT threads                          | `8`     |
 
 ---
 
@@ -204,7 +203,6 @@ cat input.json | python solver_main.py --mode solve_leg
     "noSoloParticipant": 100,
     "diverseNationalities": 3,
     "lowFlightsLookahead": 20,
-    "overweightLookahead": 50,
     "counselorFlightDiscount": 1
   }
 }

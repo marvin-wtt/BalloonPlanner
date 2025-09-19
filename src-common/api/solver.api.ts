@@ -72,7 +72,6 @@ export interface SolveFlightLegOptions extends Record<string, unknown> {
   noSoloParticipant?: number;
   groupPassengerBalance?: number;
   lowFlightsLookahead?: number;
-  overweightLookahead?: number;
   defaultPersonWeight?: number;
   planningHorizonDepth?: number;
   counselorFlightDiscount?: number;

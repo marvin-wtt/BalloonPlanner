@@ -60,11 +60,10 @@ def solve_flight_leg(
     w_group_passenger_balance: int,
     w_group_rotation: int,
     w_low_flights_lookahead: int,
-    w_overweight_lookahead: int,
     counselor_flight_discount: int,
     # misc
     default_person_weight: int,
-    time_limit_s: int = 60,
+    time_limit_s: int,
     num_search_workers: int = 8,
     random_seed: Optional[int] = None,
 ) -> Manifest:
@@ -73,8 +72,6 @@ def solve_flight_leg(
     # ------------------------------------------------------------------
     # 0. Input validation
     # ------------------------------------------------------------------
-    if w_overweight_lookahead < 0:
-        raise ValueError("w_overweight_lookahead must be non-negative")
     if default_person_weight < 0:
         raise ValueError("default_person_weight must be non-negative")
     if time_limit_s <= 0:
@@ -330,43 +327,60 @@ def solve_flight_leg(
             # scale the novelty reward for passengers; subtract op to avoid rewarding operators
             objective_terms.append(-w_group_rotation * nf * (pax[p, v] - op[p, v]))
 
-    # 3.7 leg-2: prioritise low-flight pax in cars, and avoid overweight (low-flight mass)
-    if planning_horizon_legs >= 1:
-        future_seats = sum(b["maxCapacity"] for b in balloons)
-        sorted_f = sorted(flights_so_far.values())
-        cutoff = (
-            sorted_f[-1]
-            if future_seats >= len(sorted_f)
-            else sorted_f[future_seats - 1]
-        )
+    # 3.7 language-aware lookahead: prioritise low-flight pax in cluster cars (no overweight lookahead)
+    if planning_horizon_legs >= 1 and person_ids:
+        # Seats available across the next H legs
+        seats_per_leg = sum(b["maxCapacity"] for b in balloons)
+        future_seats = planning_horizon_legs * seats_per_leg
+
+        # Global cutoff: who counts as "low-flight"
+        sorted_f = sorted(flights_so_far[p] for p in person_ids)
+        if future_seats <= 0:
+            cutoff = -(10**9)  # nobody qualifies
+        elif future_seats >= len(sorted_f):
+            cutoff = sorted_f[-1]
+        else:
+            cutoff = sorted_f[future_seats - 1]
+
         low = {p: int(flights_so_far[p] <= cutoff) for p in person_ids}
 
-        # a) achieve at least balloon.capacity low-flight pax within each cluster's cars
+        # Language eligibility for a cluster (balloon id = bid):
+        # A passenger is eligible if they share ≥1 language with at least one *potential*
+        # operator of that balloon (allowed_op[bid]), or if either side "speaks all"
+        # (None/[] means "all" per 2.8).
+        def lang_eligible(p: str, bid: str) -> int:
+            lp = langs.get(p)
+            speaks_all_p = (lp is None) or (len(lp) == 0)
+            if speaks_all_p:
+                return 1
+            lp_set = set(lp)
+
+            # check any potential operator for this balloon
+            for q in allowed_op.get(bid, set()):
+                lq = langs.get(q)
+                if lq is None or len(lq) == 0:
+                    return 1  # operator speaks all
+                if lp_set.intersection(lq):
+                    return 1
+            return 0
+
+        # Target: in each cluster's cars, achieve at least H * capacity(low-flight, lang-eligible) over horizon
         for b in balloons:
             bid = b["id"]
-            target = int(b["maxCapacity"])
-            car_ids = vehicle_groups[bid]
-
-            low_in_cars = sum(low[p] * pax[p, v] for v in car_ids for p in person_ids)
-
-            short = model.NewIntVar(0, target, f"short_{bid}")
-            model.Add(short >= target - low_in_cars)
-            objective_terms.append(+w_low_flights_lookahead * short)
-
-        # b) overweight penalty using *low-flight mass* in those cars
-        for bid, car_ids in vehicle_groups.items():
-            # If a balloon has max_weight, use it as a budget proxy for its road cluster
-            max_w = max_weight.get(bid, -1)
-            if max_w <= 0:
+            target = int(planning_horizon_legs * b["maxCapacity"])
+            if target <= 0:
                 continue
 
-            low_weight_in_cars = sum(
-                weight[p] * low[p] * pax[p, v] for v in car_ids for p in person_ids
+            car_ids = vehicle_groups.get(bid, [])
+            low_lang_in_cars = sum(
+                low[p] * lang_eligible(p, bid) * pax[p, v]
+                for v in car_ids
+                for p in person_ids
             )
 
-            over = model.NewIntVar(0, max_w, f"over_{bid}")
-            model.Add(over >= low_weight_in_cars - max_w)
-            objective_terms.append(w_overweight_lookahead * over)
+            short = model.NewIntVar(0, target, f"short_{bid}")
+            model.Add(short >= target - low_lang_in_cars)
+            objective_terms.append(w_low_flights_lookahead * short)
 
     # 3.8 random fairness tiebreaker
     for p in person_ids:

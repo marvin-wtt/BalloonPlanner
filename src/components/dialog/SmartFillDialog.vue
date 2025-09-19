@@ -3,7 +3,7 @@
     ref="dialogRef"
     @hide="onDialogHide"
   >
-    <q-card style="min-width: 300px">
+    <q-card style="min-width: 400px; max-width: 400px">
       <q-form
         @reset="onDialogCancel"
         @submit="onSubmit"
@@ -11,11 +11,28 @@
         <q-card-section class="text-h6">Smart Fill</q-card-section>
 
         <q-card-section class="q-pt-none q-gutter-y-md">
-          <q-toggle
-            v-if="firstLeg && !hasSuccessorLeg"
-            v-model="moreLegsPlanned"
-            label="More legs planned"
-          />
+          <q-list dense>
+            <q-item>
+              <q-item-section>
+                <q-item-label> Planning Horizon Depth </q-item-label>
+                <q-item-label caption>
+                  Amount of legs to plan ahead.
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item>
+              <q-item-section>
+                <q-slider
+                  v-model="options.planningHorizonDepth"
+                  markers
+                  marker-labels
+                  snap
+                  :min="0"
+                  :max="3"
+                />
+              </q-item-section>
+            </q-item>
+          </q-list>
 
           <q-expansion-item label="Advanced Options">
             <div class="column q-gutter-sm">
@@ -99,24 +116,10 @@
                 rounded
               />
               <q-input
-                v-if="options.leg != null"
+                v-if="(options.lowFlightsLookahead ?? 0) > 0"
                 v-model.number="options.lowFlightsLookahead"
                 label="Future Leg Fairness Weight"
                 hint="Higher values try to equalize participant flights in future legs"
-                type="number"
-                step="1"
-                :rules="[signedIntegerRule]"
-                hide-bottom-space
-                clearable
-                dense
-                outlined
-                rounded
-              />
-              <q-input
-                v-if="options.leg != null"
-                v-model.number="options.overweightLookahead"
-                label="Second Leg Overweight Penalty Weight"
-                hint="Higher values try to avoid overweight balloons in future legs"
                 type="number"
                 step="1"
                 :rules="[signedIntegerRule]"
@@ -206,7 +209,7 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref, toRaw } from 'vue';
+import { reactive, toRaw } from 'vue';
 import { useDialogPluginComponent } from 'quasar';
 import type { SolveFlightLegOptions } from 'app/src-common/api/solver.api';
 
@@ -215,13 +218,9 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
 
 defineEmits([...useDialogPluginComponent.emits]);
 
-const { firstLeg, hasSuccessorLeg } = defineProps<{
-  firstLeg: boolean;
-  hasSuccessorLeg: boolean;
-}>();
-
-const options = reactive<SolveFlightLegOptions>({});
-const moreLegsPlanned = ref<boolean>(hasSuccessorLeg);
+const options = reactive<SolveFlightLegOptions>({
+  planningHorizonDepth: 0,
+});
 
 const signedIntegerRule = (val?: number): boolean | string => {
   return !val || Number.isInteger(val) || 'Must be an integer';
@@ -230,7 +229,6 @@ const signedIntegerRule = (val?: number): boolean | string => {
 function onSubmit() {
   onDialogOK({
     ...toRaw(options),
-    planningHorizonDepth: moreLegsPlanned.value ? 1 : 0,
   });
 }
 </script>
