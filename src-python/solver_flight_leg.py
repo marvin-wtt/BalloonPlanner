@@ -320,7 +320,7 @@ def solve_flight_leg(
         for p, v in product(person_ids, vehicle_ids):
             # 1 / (1 + repeats): 1.0 if never seen, 0.5 after 1 repeat, 0.33 after 2, ...
             # Keeps a diminishing (never-negative) incentive for less-used vehicles.
-            nf = 1.0 / (1.0 + float(group_history[p][v]))
+            nf = 1.0 / (1.0 + float(group_history[p].get(v, 0)))
             # scale the novelty reward for passengers; subtract op to avoid rewarding operators
             objective_terms.append(-w_group_rotation * nf * (pax[p, v] - op[p, v]))
 
