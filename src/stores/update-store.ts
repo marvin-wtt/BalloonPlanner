@@ -17,7 +17,7 @@ export const useUpdaterStore = defineStore('updater', () => {
     .getVersion()
     .then((value) => (version.value = value))
     .catch((reason: unknown) => {
-      console.error(`Failed to check for latest version: ${String(reason)}`);
+      console.error('Failed to check for latest version: ', reason);
     });
 
   window.appAPI.onUpdateInfo((data) => {

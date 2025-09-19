@@ -74,7 +74,7 @@ def solve_flight_leg(
     # 0. Input validation
     # ------------------------------------------------------------------
     if w_overweight_lookahead < 0:
-        raise ValueError("w_overweight_second_leg must be non-negative")
+        raise ValueError("w_overweight_lookahead must be non-negative")
     if default_person_weight < 0:
         raise ValueError("default_person_weight must be non-negative")
     if time_limit_s <= 0:

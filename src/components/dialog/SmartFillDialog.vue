@@ -41,7 +41,7 @@
                 step="1"
                 :rules="[signedIntegerRule]"
                 hide-bottom-space
-                clearablex
+                clearable
                 dense
                 outlined
                 rounded
