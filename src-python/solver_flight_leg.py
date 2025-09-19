@@ -30,6 +30,8 @@ import random
 from itertools import product
 from collections import defaultdict, Counter
 from typing import List, Dict, Optional, TypedDict, Literal
+
+from ortools.math_opt.core.python import solver
 from ortools.sat.python import cp_model
 from solver_types import Balloon, Car, Vehicle, Person, VehicleAssignment
 
@@ -47,7 +49,7 @@ def solve_flight_leg(
     people: List[Person],
     vehicle_groups: Dict[str, List[str]],
     *,
-    group_history: Optional[Dict[str, List[str]]],
+    group_history: Optional[Dict[str, Dict[str, int]]],
     frozen: Optional[Dict[str, VehicleAssignment]],
     fixed_groups: Optional[Dict[str, str]],
     planning_horizon_legs: int,
@@ -315,21 +317,10 @@ def solve_flight_leg(
 
     # 3.6 fresh vehicle (passengers only)
     if fixed_groups is None and group_history:
-        # how often each person has been with each *group member* (balloon or its cars)
-        seen_counts: dict[str, Counter[str]] = defaultdict(Counter)
-
-        for pid, bids in group_history.items():
-            for bid in bids:
-                # count the balloon itself
-                seen_counts[pid][bid] += 1
-                # and the cars that belong to that balloon's group
-                for cid in vehicle_groups.get(bid, []):
-                    seen_counts[pid][cid] += 1
-
         for p, v in product(person_ids, vehicle_ids):
             # 1 / (1 + repeats): 1.0 if never seen, 0.5 after 1 repeat, 0.33 after 2, ...
             # Keeps a diminishing (never-negative) incentive for less-used vehicles.
-            nf = 1.0 / (1.0 + float(seen_counts[p][v]))
+            nf = 1.0 / (1.0 + float(group_history[p][v]))
             # scale the novelty reward for passengers; subtract op to avoid rewarding operators
             objective_terms.append(-w_group_rotation * nf * (pax[p, v] - op[p, v]))
 
@@ -407,8 +398,12 @@ def solve_flight_leg(
     if random_seed is not None:
         solver.parameters.random_seed = int(random_seed)
 
-    if solver.Solve(model) not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-        raise RuntimeError("No feasible assignment")
+    status = solver.Solve(model)
+    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+        if status == cp_model.INFEASIBLE:
+            raise RuntimeError("No feasible assignment")
+        else:
+            raise RuntimeError("Solver failed")
 
     # ------------------------------------------------------------------
     # 5. Manifest

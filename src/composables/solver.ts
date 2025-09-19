@@ -210,12 +210,12 @@ function countFlightsBeforeFlightLeg(
 function buildGroupHistory(
   project: Project,
   seriesId: string,
-): Record<ID, ID[]> {
+): Record<ID, Record<ID, number>> {
   return project.flights
     .filter((series) => series.legs.length > 0 && series.id !== seriesId)
-    .reduce<Record<ID, ID[]>>((acc, series) => {
+    .reduce<Record<ID, Record<ID, number>>>((acc, series) => {
       buildGroupPairs(series).forEach(([pid, gid]) => {
-        (acc[pid] ??= []).push(gid);
+        (acc[pid] ??= {})[gid] = (acc[pid][gid] ?? 0) + 1;
       });
 
       return acc;

@@ -47,7 +47,7 @@ export interface SolveFlightLegRequest {
       passengerIds: ID[];
     }
   >; // key: vehicleId
-  groupHistory?: Record<ID, ID[]>; // key: personId, value: balloonIds
+  groupHistory?: Record<ID, Record<ID, number>>; // key: personId, value: balloonIds -> count
   fixedGroups?: Record<ID, ID>;
 
   people: {
