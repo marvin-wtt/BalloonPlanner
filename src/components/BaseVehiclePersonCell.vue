@@ -208,6 +208,10 @@ const languageStatus = computed<StatusInfo | false>(() => {
     };
   }
 
+  if (person.role === 'counselor') {
+    return false;
+  }
+
   const hasCommonLangWithPassengers = assignment.passengerIds
     .filter((id) => id !== person.id)
     .flatMap((id) => personMap.value[id]?.languages)
