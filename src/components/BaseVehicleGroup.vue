@@ -172,23 +172,7 @@ function drop(element: Identifiable) {
     return;
   }
 
-  // Search for the current assignment before applying the changes
-  const previousCarId = flightSeries.vehicleGroups
-    .flatMap((g) => g.carIds)
-    .find((id) => id === element.id);
-
-  const previousAssignment = previousCarId
-    ? flightLeg.assignments[previousCarId]
-    : undefined;
-
   addCarToVehicleGroup(group.balloonId, element.id);
-
-  if (!previousAssignment) {
-    return;
-  }
-
-  // TODO
-  //flightLeg.assignments[element.id] = previousAssignment;
 }
 </script>
 
