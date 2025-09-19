@@ -28,17 +28,17 @@
       </div>
 
       <div
-        v-if="showInfo"
+        v-if="status"
         class="q-ml-xs"
       >
         <q-icon
           name="sym_o_error"
-          :color="infoColor"
+          :color="status.color"
           size="sm"
           dense
         >
           <q-tooltip>
-            {{ infoText }}
+            {{ status.text }}
           </q-tooltip>
         </q-icon>
       </div>
@@ -138,6 +138,11 @@ const {
   overfilled?: boolean;
 }>();
 
+interface StatusInfo {
+  color: string;
+  text: string;
+}
+
 const flightsLabel = computed<string>(() => {
   if (!person) {
     return '';
@@ -166,74 +171,87 @@ const coloredLabels = computed<boolean>(() => {
   );
 });
 
-const showInfo = computed<boolean>(() => {
-  return (
-    overfilled ||
-    hasInvalidOperator.value ||
-    hasMultiLegError.value ||
-    hasLanguageWarning.value
-  );
+const status = computed<StatusInfo | undefined>(() => {
+  return [
+    overfillStatus,
+    operatorInfo.value,
+    multiLegStatus.value,
+    languageStatus.value,
+  ].filter((info) => info !== false)[0];
 });
 
-const infoColor = computed<string>(() => {
-  if (overfilled || hasInvalidOperator.value || hasMultiLegError.value) {
-    return 'negative';
-  }
+const overfillStatus: StatusInfo | false = overfilled
+  ? {
+      color: 'negative',
+      text: 'Vehicle capacity exceeded',
+    }
+  : false;
 
-  if (hasLanguageWarning.value) {
-    return 'warning';
-  }
-
-  return 'info';
-});
-
-const infoText = computed<string>(() => {
-  if (overfilled) {
-    return 'Vehicle capacity exceeded';
-  }
-
-  if (hasInvalidOperator.value) {
-    return 'Person not allowed to operate this vehicle';
-  }
-
-  if (hasMultiLegError.value) {
-    return 'Person was not assigned to this group in previous flight';
-  }
-
-  if (hasLanguageWarning.value) {
-    return 'No common language with passenger';
-  }
-
-  return '';
-});
-
-const hasLanguageWarning = computed<boolean>(() => {
+const languageStatus = computed<StatusInfo | false>(() => {
   if (operator || !assignment.operatorId || !person || !person.languages) {
     return false;
   }
 
-  const languages = personMap.value[assignment.operatorId]?.languages;
-  if (languages == undefined) {
+  const opLangs = personMap.value[assignment.operatorId]?.languages;
+  if (opLangs == undefined) {
     return false;
   }
 
-  return !languages.some((language) => person.languages?.includes(language));
+  if (opLangs.some((language) => person.languages?.includes(language))) {
+    return false;
+  }
+
+  if (vehicle.type === 'balloon') {
+    return {
+      color: 'warning',
+      text: 'No common language with operator',
+    };
+  }
+
+  const hasCommonLangWithPassengers = assignment.passengerIds
+    .filter((id) => id !== person.id)
+    .flatMap((id) => personMap.value[id]?.languages)
+    .filter((lang) => lang !== undefined)
+    .some((lang) => person.languages?.includes(lang));
+
+  if (hasCommonLangWithPassengers) {
+    return false;
+  }
+
+  return {
+    color: 'warning',
+    text: 'No common language with operator or other passengers',
+  };
 });
 
-const hasMultiLegError = computed<boolean>(() => {
+const multiLegStatus = computed<StatusInfo | false>(() => {
   if (!person) {
     return false;
   }
 
-  return !wasInSameVehicleGroupInFirstLeg(person.id);
+  if (wasInSameVehicleGroupInFirstLeg(person.id)) {
+    return false;
+  }
+
+  return {
+    color: 'negative',
+    text: 'Person was not assigned to this group in previous flight',
+  };
 });
 
-const hasInvalidOperator = computed<boolean>(() => {
+const operatorInfo = computed<StatusInfo | false>(() => {
   if (!person || !operator) {
     return false;
   }
 
-  return !vehicle.allowedOperatorIds.includes(person.id);
+  if (vehicle.allowedOperatorIds.includes(person.id)) {
+    return false;
+  }
+
+  return {
+    color: 'negative',
+    text: 'Person not allowed to operate this vehicle',
+  };
 });
 
 function isDropAllowed(element: Identifiable): boolean {

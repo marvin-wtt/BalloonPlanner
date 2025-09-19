@@ -193,6 +193,14 @@
             direction="up"
           >
             <q-fab-action
+              label="Clear Passengers"
+              icon="delete"
+              color="warning"
+              :disable="!editable"
+              @click="clearLegPassengers"
+            />
+
+            <q-fab-action
               label="Export Image"
               icon="photo_camera"
               color="secondary"
@@ -253,8 +261,13 @@ const { flightSeries, flightLeg, numberOfFlights } = storeToRefs(flightStore);
 
 const { showNumberOfFlights, showPersonWeight, personDefaultWeight } =
   useProjectSettings();
-const { createPerson, editPerson, removePerson, addPerson } =
-  useFlightOperations();
+const {
+  createPerson,
+  editPerson,
+  removePerson,
+  addPerson,
+  clearLegPassengers,
+} = useFlightOperations();
 
 const menuTabs = ref('overview');
 const editable = ref<boolean>(true);

@@ -196,7 +196,7 @@ function addFlight() {
           throw new Error('Flight series has no legs');
         }
 
-        void changeSeries(legId);
+        void changeLeg(legId);
       }
 
       if (data.mode === 'leg' && flightSeries.value != null) {

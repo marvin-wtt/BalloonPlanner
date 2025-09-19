@@ -87,6 +87,17 @@ export function useFlightOperations() {
     leg.assignments[vehicleId] = { operatorId: null, passengerIds: [] };
   }
 
+  function clearLegPassengers() {
+    const leg = requireLeg();
+
+    leg.assignments = Object.fromEntries(
+      Object.entries(leg.assignments).map(([vid, assignment]) => [
+        vid,
+        { operatorId: assignment.operatorId, passengerIds: [] },
+      ]),
+    );
+  }
+
   function unassignPersonEverywhere(personId: ID) {
     const leg = flightLeg.value;
     if (!leg) {
@@ -273,6 +284,7 @@ export function useFlightOperations() {
     addVehiclePassenger,
     removeVehiclePassenger,
     clearVehicle,
+    clearLegPassengers,
 
     // people
     createPerson,

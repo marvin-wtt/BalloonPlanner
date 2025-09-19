@@ -249,6 +249,8 @@ export const useFlightStore = defineStore('flight', () => {
       return;
     }
 
+    deleteFlightLeg(flightId);
+
     createFlightSeries({
       carIds: series.carIds,
       balloonIds: series.balloonIds,
@@ -256,10 +258,6 @@ export const useFlightStore = defineStore('flight', () => {
       vehicleGroups: series.vehicleGroups,
       legs: [leg],
     });
-
-    deleteFlightLeg(flightId);
-
-    loadFlightLeg(leg.id);
   }
 
   function deleteFlightSeries(seriesId: string) {
