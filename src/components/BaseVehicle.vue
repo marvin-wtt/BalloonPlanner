@@ -48,6 +48,24 @@
                   <q-item-section>Clear</q-item-section>
                 </q-item>
                 <q-item
+                  v-if="!isCanceled"
+                  v-close-popup
+                  clickable
+                  :disable="isFirstLeg"
+                  @click="onFlightCancel()"
+                >
+                  <q-item-section class="text-warning">Cancel</q-item-section>
+                </q-item>
+                <q-item
+                  v-else
+                  v-close-popup
+                  clickable
+                  :disable="isFirstLeg"
+                  @click="omFlightReactivate()"
+                >
+                  <q-item-section class="text-info">Reactivate</q-item-section>
+                </q-item>
+                <q-item
                   v-close-popup
                   clickable
                   :disable="!allowVehicleGroupChange"
@@ -182,6 +200,8 @@ const {
   clearVehicle,
   editBalloon,
   editCar,
+  cancelFlight,
+  reactivateFlight,
 } = useFlightOperations();
 const quasar = useQuasar();
 const { remainingCapacity } = useFlightUtils();
@@ -277,11 +297,16 @@ const color = computed<string>(() => {
     : (carColor.value ?? '');
 });
 
+const isFirstLeg = computed<boolean>(() => {
+  return flightSeries.legs.findIndex((l) => l.id === flightLeg.id) === 0;
+});
+
 const allowVehicleGroupChange = computed<boolean>(() => {
-  return (
-    flightSeries.legs.findIndex((l) => l.id === flightLeg.id) === 0 ||
-    (disableVehicleGroupProtection.value ?? false)
-  );
+  return isFirstLeg.value || (disableVehicleGroupProtection.value ?? false);
+});
+
+const isCanceled = computed<boolean>(() => {
+  return flightLeg.canceledBalloonIds.includes(vehicleId);
 });
 
 const showFooter = computed<boolean>(() => {
@@ -291,6 +316,14 @@ const showFooter = computed<boolean>(() => {
 
   return vehicle.value.type === 'balloon' && (showVehicleWeight.value ?? false);
 });
+
+function onFlightCancel() {
+  cancelFlight(vehicleId);
+}
+
+function omFlightReactivate() {
+  reactivateFlight(vehicleId);
+}
 
 function onVehicleRemoved() {
   if (vehicle.value.type === 'balloon') {

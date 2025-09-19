@@ -11,6 +11,7 @@ import type {
   VehicleAssignmentMap,
 } from 'app/src-common/entities';
 import type { SolveFlightLegOptions } from 'app/src-common/api/solver.api';
+import { deepToRaw } from 'src/util/deep-to-raw';
 
 export function useSolver() {
   const projectStore = useProjectStore();
@@ -58,7 +59,7 @@ export function useSolver() {
     const peopleCount = flightSeries.value.personIds.length;
 
     const response = await window.solverAPI.solveVehicleGroups(
-      cl({
+      deepToRaw({
         balloons,
         cars,
         vehicleGroups,
@@ -137,7 +138,7 @@ export function useSolver() {
         : undefined;
 
     const response = await window.solverAPI.solveFlightLeg(
-      cl({
+      deepToRaw({
         balloons,
         cars,
         people,
@@ -167,10 +168,6 @@ export function useSolver() {
   };
 }
 
-function cl<T>(data: T): T {
-  return JSON.parse(JSON.stringify(data));
-}
-
 function countFlightsBeforeFlightLeg(
   project: Project,
   series: FlightSeries,
@@ -191,11 +188,12 @@ function countFlightsBeforeFlightLeg(
   pastLegs.push(...series.legs.slice(0, legIndex));
 
   const balloonIds = project.balloons.map((balloon) => balloon.id);
-  const balloonAssignments = pastLegs
-    .flatMap((leg) => Object.entries(leg.assignments))
-    .filter(([vehicleId]) => balloonIds.includes(vehicleId))
-    .map(([, assignments]) => assignments);
-
+  const balloonAssignments = pastLegs.flatMap((leg) =>
+    Object.entries(leg.assignments)
+      .filter(([id]) => balloonIds.includes(id))
+      .filter(([id]) => !leg.canceledBalloonIds.includes(id))
+      .map(([, assignments]) => assignments),
+  );
   return project.people.reduce<Record<string, number>>((acc, person) => {
     const flownLegs = balloonAssignments.filter((assignment) => {
       return (

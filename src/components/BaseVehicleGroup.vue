@@ -7,7 +7,11 @@
   >
     <div class="relative-position">
       <div class="vehicle-group__label">
-        <span v-if="showGroupLabel">
+        <span v-if="isCanceled">
+          <i>Canceled</i>
+        </span>
+
+        <span v-else-if="showGroupLabel">
           {{ label }}
         </span>
 
@@ -111,9 +115,14 @@ const emptyAssignment: VehicleAssignment = {
 };
 
 const styleClass = computed<string>(() => {
-  return groupStyle.value === 'dashed'
-    ? 'vehicle-group__dashed'
-    : 'vehicle-group__highlighted';
+  return [
+    isCanceled.value ? 'vehicle-group__canceled' : undefined,
+    groupStyle.value === 'dashed'
+      ? 'vehicle-group__dashed'
+      : 'vehicle-group__highlighted',
+  ]
+    .filter(Boolean)
+    .join(' ');
 });
 
 const warningText = computed<string | null>(() => {
@@ -151,6 +160,10 @@ const reservedCapacityWarning = computed<boolean>(() => {
   return balloon.value.maxCapacity > availableCapacity;
 });
 
+const isCanceled = computed<boolean>(() => {
+  return flightLeg.canceledBalloonIds.includes(group.balloonId);
+});
+
 function elementIsCar(element: Identifiable): element is Car {
   return flightSeries.carIds.includes(element.id);
 }
@@ -179,6 +192,10 @@ function drop(element: Identifiable) {
 <style lang="scss" scoped>
 .vehicle-group {
   border-radius: 15px;
+}
+
+.vehicle-group__canceled {
+  opacity: 0.5;
 }
 
 .vehicle-group > div {

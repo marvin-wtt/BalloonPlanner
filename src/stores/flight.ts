@@ -122,9 +122,10 @@ export const useFlightStore = defineStore('flight', () => {
       throw new Error('Flight series not found');
     }
 
-    const newLeg = {
+    const newLeg: FlightLeg = {
       id: crypto.randomUUID(),
       assignments: leg.assignments ?? {},
+      canceledBalloonIds: [],
     };
 
     series.legs.push(newLeg);
@@ -143,6 +144,7 @@ export const useFlightStore = defineStore('flight', () => {
     const leg = seriesData?.legs?.[0] ?? {
       id: crypto.randomUUID(),
       assignments: assignments ?? {},
+      canceledBalloonIds: [],
     };
 
     const newFlight = {
@@ -350,6 +352,7 @@ export const useFlightStore = defineStore('flight', () => {
 
         // check if this person is flying on any of the balloons
         const isFlying = balloonIds
+          .filter((id) => !l.canceledBalloonIds.includes(id))
           .map((id) => l.assignments[id])
           .filter((assignment) => assignment !== undefined)
           .some(

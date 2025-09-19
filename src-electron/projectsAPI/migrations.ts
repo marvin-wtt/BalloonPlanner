@@ -39,6 +39,18 @@ const migrations: Record<string, Migration> = {
       })),
     };
   },
+  '1.0.0-beta-13': (data) => {
+    return {
+      ...data,
+      flights: data.flights.map((flight) => ({
+        ...flight,
+        legs: flight.legs.map((leg) => ({
+          ...leg,
+          canceledBalloonIds: [],
+        })),
+      })),
+    };
+  },
 };
 
 export function migrateProject(data: AnyProject): Project {
@@ -62,8 +74,9 @@ export function migrateProject(data: AnyProject): Project {
   Object.keys(migrations)
     .sort(semver.compare)
     .filter((v) => semver.gt(v, version))
-    .forEach((version) => {
-      const migration = migrations[version];
+    .map((version) => migrations[version])
+    .filter((migration): migration is Migration => !!migration)
+    .forEach((migration) => {
       data = migration(data);
     });
 

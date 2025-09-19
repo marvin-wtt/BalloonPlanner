@@ -128,6 +128,12 @@ export function useFlightOperations() {
     if (idx === -1) {
       return;
     }
+
+    // Remove canceled flights from all legs
+    series.legs.forEach((leg) =>
+      removeFirst(leg.canceledBalloonIds, (id) => id === balloonId),
+    );
+
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const group = series.vehicleGroups[idx]!;
     // clear assignments for balloon and its cars
@@ -168,6 +174,18 @@ export function useFlightOperations() {
 
     removeAllAssignments(carId);
     removeFirst(group.carIds, (id) => id === carId);
+  }
+
+  function cancelFlight(balloonId: ID) {
+    const leg = requireLeg();
+
+    pushUnique(leg.canceledBalloonIds, balloonId);
+  }
+
+  function reactivateFlight(balloonId: ID) {
+    const leg = requireLeg();
+
+    removeFirst(leg.canceledBalloonIds, (id) => id === balloonId);
   }
 
   function setVehicleOperator(vehicleId: ID, personId: ID | null) {
@@ -278,6 +296,8 @@ export function useFlightOperations() {
     removeVehicleGroup,
     addCarToVehicleGroup,
     removeCarFromVehicleGroup,
+    cancelFlight,
+    reactivateFlight,
 
     // assignments
     setVehicleOperator,
