@@ -97,6 +97,7 @@ def _handle_solve_leg(payload: Dict[str, Any], args: argparse.Namespace):
         # solver params
         w_passenger_fairness=options.get("passengerFairness", 20),
         w_pilot_fairness=options.get("pilotFairness", 5),
+        w_tiebreak_fairness=options.get("tiebreakFairness", 1),
         w_group_rotation=options.get("groupRotation", 5),
         w_group_passenger_balance=options.get("groupPassengerBalance", 7),
         w_no_solo_participant=options.get("noSoloParticipant", 100),

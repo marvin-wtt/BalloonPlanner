@@ -47,6 +47,19 @@
                 rounded
               />
               <q-input
+                v-model.number="options.tiebreakFairness"
+                label="Tiebreak Fairness Weight"
+                hint="Higher values try to prioritize randomness in ties"
+                type="number"
+                step="1"
+                :rules="[signedIntegerRule]"
+                hide-bottom-space
+                clearablex
+                dense
+                outlined
+                rounded
+              />
+              <q-input
                 v-model.number="options.groupRotation"
                 label="Vehicle Rotation Weight"
                 hint="Higher values try to rotate people through different balloons"

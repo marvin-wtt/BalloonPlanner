@@ -66,6 +66,7 @@ export interface SolveFlightLegRequest {
 export interface SolveFlightLegOptions extends Record<string, unknown> {
   pilotFairness?: number;
   passengerFairness?: number;
+  tiebreakFairness?: number;
   groupRotation?: number;
   diverseNationalities?: number;
   noSoloParticipant?: number;

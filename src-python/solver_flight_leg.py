@@ -54,6 +54,7 @@ def solve_flight_leg(
     # soft weights
     w_pilot_fairness: int,
     w_passenger_fairness: int,
+    w_tiebreak_fairness: int,
     w_no_solo_participant: int,
     w_divers_nationalities: int,
     w_group_passenger_balance: int,
@@ -134,6 +135,10 @@ def solve_flight_leg(
     max_weight = {v: int(vehicles_by_id[v].get("maxWeight", -1)) for v in vehicle_ids}
 
     langs = {p: people_by_id[p].get("languages") for p in person_ids}
+
+    priorities = {
+        p: i for i, p in enumerate(sorted(person_ids, key=lambda p: flights_so_far[p]))
+    }
 
     # ------------------------------------------------------------------
     # 1. CP-SAT model
@@ -362,6 +367,14 @@ def solve_flight_leg(
             over = model.NewIntVar(0, max_w, f"over_{bid}")
             model.Add(over >= low_weight_in_cars - max_w)
             objective_terms.append(w_overweight_lookahead * over)
+
+    # 3.8 random fairness tiebreaker
+    for p in person_ids:
+        pr = priorities[p]  # 0 is best
+        for v in vehicle_ids:
+            if kind[v] == "balloon":
+                # positive term because we minimize: lower pr is better
+                objective_terms.append(w_tiebreak_fairness * pr * pax[p, v])
 
     model.Minimize(sum(objective_terms))
 
