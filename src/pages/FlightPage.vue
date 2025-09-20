@@ -354,9 +354,18 @@ function onSmartFill() {
 async function smartFill(options: SolveFlightLegOptions) {
   const notify = quasar.notify({
     type: 'ongoing',
-    message: 'Calculating optimal flight plan...',
+    message: 'Optimizing flight...',
   });
   editable.value = false;
+
+  let timeSpendSec = 0;
+  const intervalId = setInterval(() => {
+    timeSpendSec += 1;
+    notify({
+      caption: `${timeSpendSec.toString()} s`,
+    });
+  }, 1000);
+
   try {
     await solve({
       ...options,
@@ -379,6 +388,7 @@ async function smartFill(options: SolveFlightLegOptions) {
     });
   } finally {
     editable.value = true;
+    clearInterval(intervalId);
   }
 }
 
