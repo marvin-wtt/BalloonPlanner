@@ -11,33 +11,46 @@
       Drop a balloon here to start.
     </div>
 
-    <q-scroll-area
+    <div
       v-else
-      class="col-grow"
+      class="full-width column"
     >
+      <q-scroll-area class="col-grow">
+        <div
+          id="flight-content"
+          class="full-width q-gutter-md q-pa-sm q-mt-xs"
+          :class="groupAlignment === 'vertical' ? 'column' : 'row'"
+        >
+          <base-vehicle-group
+            v-for="(group, i) in flightSeries.vehicleGroups"
+            :key="`vg-${i}`"
+            :label="`Group ${String.fromCharCode(65 + i)}`"
+            :flight-series
+            :flight-leg
+            :group
+            :editable
+          />
+        </div>
+      </q-scroll-area>
+
       <div
-        id="flight-content"
-        class="full-width q-gutter-md q-pa-sm q-mt-xs"
-        :class="groupAlignment === 'vertical' ? 'column' : 'row'"
+        v-if="errorText"
+        class="bg-negative text-white col-shrink q-px-md"
       >
-        <base-vehicle-group
-          v-for="(group, i) in flight.vehicleGroups"
-          :key="`vg-${i}`"
-          :label="`Group ${String.fromCharCode(65 + i)}`"
-          :group
-          :editable
-        />
+        Error: {{ errorText }}
       </div>
-    </q-scroll-area>
+    </div>
   </drop-zone>
 </template>
 
 <script lang="ts" setup>
 import type {
   Balloon,
-  Flight,
+  FlightSeries,
   Person,
   Identifiable,
+  FlightLeg,
+  Project,
 } from 'app/src-common/entities';
 import DropZone from 'components/drag/DropZone.vue';
 import { computed } from 'vue';
@@ -46,6 +59,7 @@ import { useFlightOperations } from 'src/composables/flightOperations';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import { useProjectSettings } from 'src/composables/projectSettings';
+import { validateFlightLegAndSeries } from 'src/util/flight-validator';
 
 const flightStore = useFlightStore();
 const { availablePeople, availableCars, availableBalloons } =
@@ -53,25 +67,32 @@ const { availablePeople, availableCars, availableBalloons } =
 const { groupAlignment } = useProjectSettings();
 const { addVehicleGroup } = useFlightOperations();
 
-const { flight, editable = false } = defineProps<{
-  flight: Flight;
+const {
+  project,
+  flightSeries,
+  flightLeg,
+  editable = false,
+} = defineProps<{
+  project: Project;
+  flightSeries: FlightSeries;
+  flightLeg: FlightLeg;
   editable?: boolean;
 }>();
 
 const empty = computed<boolean>(() => {
-  return flight.vehicleGroups.length === 0;
+  return flightSeries.vehicleGroups.length === 0;
 });
 
 function elementIsBalloon(element: Identifiable): element is Balloon {
-  return flight.balloonIds.includes(element.id);
+  return flightSeries.balloonIds.includes(element.id);
 }
 
 function elementIsCar(element: Identifiable): element is Balloon {
-  return flight.carIds.includes(element.id);
+  return flightSeries.carIds.includes(element.id);
 }
 
 function elementIsPerson(element: Identifiable): element is Person {
-  return flight.personIds.includes(element.id);
+  return flightSeries.personIds.includes(element.id);
 }
 
 function isDropAllowed(element: Identifiable): boolean {
@@ -109,6 +130,10 @@ function onDrop(element: Identifiable) {
 
   addVehicleGroup(element.id);
 }
+
+const errorText = computed<string | null>(() => {
+  return validateFlightLegAndSeries(project, flightSeries, flightLeg);
+});
 </script>
 
 <style scoped>

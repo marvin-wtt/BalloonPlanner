@@ -1,8 +1,10 @@
 export type PersonRole = 'participant' | 'counselor';
 export type VehicleKind = 'car' | 'balloon';
 
+export type ID = string;
+
 export interface Identifiable {
-  id: string;
+  readonly id: ID;
 }
 
 export interface Person extends Identifiable {
@@ -17,7 +19,7 @@ export interface Person extends Identifiable {
 export interface VehicleBase extends Identifiable {
   type: VehicleKind;
   name: string;
-  allowedOperatorIds: string[];
+  allowedOperatorIds: ID[];
   maxCapacity: number;
 }
 
@@ -34,25 +36,35 @@ export interface Balloon extends VehicleBase {
 export type Vehicle = Car | Balloon;
 
 export interface VehicleAssignment {
-  id: string;
-  operatorId: string | null;
-  passengerIds: string[];
+  operatorId: ID | null;
+  passengerIds: ID[];
 }
 
 export interface VehicleGroup {
-  balloon: VehicleAssignment;
-  cars: VehicleAssignment[];
+  balloonId: ID;
+  carIds: ID[];
 }
 
-export interface Flight extends Identifiable {
+export type VehicleAssignmentMap = Record<ID, VehicleAssignment>;
+
+export interface FlightLeg extends Identifiable {
+  canceledBalloonIds: ID[];
+  assignments: VehicleAssignmentMap;
+}
+
+export interface FlightSeries extends Identifiable {
   date?: string;
+  personIds: ID[];
+  balloonIds: ID[];
+  carIds: ID[];
+
   vehicleGroups: VehicleGroup[];
-  personIds: string[];
-  balloonIds: string[];
-  carIds: string[];
+  legs: FlightLeg[];
 }
 
 export interface ProjectSettings {
+  disableAssignmentProtection?: boolean;
+  disableVehicleGroupProtection?: boolean;
   showVehicleIndex?: boolean;
   showVehicleLabel?: boolean;
   showGroupLabel?: boolean;
@@ -69,12 +81,13 @@ export interface ProjectSettings {
 export interface Project extends Identifiable {
   name: string;
   description?: string;
-  createdAt: string;
+  createdAt: string; // ISO timestamp
+  version: string;
 
   people: Person[];
   cars: Car[];
   balloons: Balloon[];
-  flights: Flight[];
+  flights: FlightSeries[];
   settings?: ProjectSettings;
 }
 
@@ -85,27 +98,4 @@ export interface ProjectMeta {
   description?: string;
   filePath: string;
   isInternal?: boolean;
-}
-
-export interface SmartFillPayload {
-  people: (Person & { flights: number })[];
-  cars: Car[];
-  balloons: Balloon[];
-  groups: VehicleGroup[];
-  history: Flight[];
-}
-
-export interface SmartFillOptions {
-  wPilotFairness?: number;
-  wPassengerFairness?: number;
-  wNationalityDiversity?: number;
-  wVehicleRotation?: number;
-  wSecondLegFairness?: number;
-  wSecondLegOverweight?: number;
-  wNoSoloParticipant?: number;
-  wClusterPassengerBalance?: number;
-  counselorFlightDiscount?: number;
-  timeLimit?: number;
-  defaultPersonWeight?: number;
-  leg?: 'first' | 'second' | undefined;
 }

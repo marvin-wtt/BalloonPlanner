@@ -119,7 +119,7 @@ import { computed, ref, toRaw } from 'vue';
 import type { Person, PersonRole } from 'app/src-common/entities';
 import { useDialogPluginComponent } from 'quasar';
 
-const { person, existingNames } = defineProps<{
+const { person = undefined, existingNames = [] } = defineProps<{
   person?: Person;
   existingNames?: string[];
 }>();
@@ -129,12 +129,12 @@ defineEmits([...useDialogPluginComponent.emits]);
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
-const name = ref<string>(person?.name ?? null);
-const nationality = ref<string>(person?.nationality ?? null);
+const name = ref<string | null>(person?.name ?? null);
+const nationality = ref<string | null>(person?.nationality ?? null);
 const role = ref<PersonRole>(person?.role ?? 'participant');
-const weight = ref<number>(person?.weight ?? undefined);
-const firstTime = ref<boolean>(person?.firstTime ?? undefined);
-const languages = ref<string[]>(person?.languages ?? undefined);
+const weight = ref<number | undefined>(person?.weight ?? undefined);
+const firstTime = ref<boolean | undefined>(person?.firstTime ?? undefined);
+const languages = ref<string[] | undefined>(person?.languages ?? undefined);
 
 const mode = computed<'create' | 'edit'>(() => {
   return person ? 'edit' : 'create';
@@ -196,7 +196,7 @@ function nameIsUnique(name: string): boolean {
     return true;
   }
 
-  return !existingNames?.some((existingName) => {
+  return !existingNames.some((existingName) => {
     return existingName.toLowerCase() === name;
   });
 }

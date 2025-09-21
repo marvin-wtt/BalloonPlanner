@@ -2,7 +2,7 @@
   <draggable-item
     :item="vehicle"
     :label="vehicle.name"
-    :disabled="!editable"
+    :disabled="!editable || !allowVehicleGroupChange"
     class="row"
     @remove="onVehicleRemoved"
   >
@@ -34,22 +34,41 @@
                 style="min-width: 100px"
               >
                 <q-item
-                  clickable
                   v-close-popup
+                  clickable
                   @click="onVehicleEdit()"
                 >
                   <q-item-section>Edit</q-item-section>
                 </q-item>
                 <q-item
-                  clickable
                   v-close-popup
+                  clickable
                   @click="onVehicleClear()"
                 >
                   <q-item-section>Clear</q-item-section>
                 </q-item>
                 <q-item
-                  clickable
+                  v-if="!isCanceled"
                   v-close-popup
+                  clickable
+                  :disable="isFirstLeg"
+                  @click="onFlightCancel()"
+                >
+                  <q-item-section class="text-warning">Cancel</q-item-section>
+                </q-item>
+                <q-item
+                  v-else
+                  v-close-popup
+                  clickable
+                  :disable="isFirstLeg"
+                  @click="omFlightReactivate()"
+                >
+                  <q-item-section class="text-info">Reactivate</q-item-section>
+                </q-item>
+                <q-item
+                  v-close-popup
+                  clickable
+                  :disable="!allowVehicleGroupChange"
                   @click="onVehicleRemoved()"
                 >
                   <q-item-section class="text-negative">
@@ -68,9 +87,15 @@
           <base-vehicle-person-cell
             class="vehicle-person"
             :class="showVehicleIndex ? 'vehicle-person__indexed' : ''"
-            :person="personMap[assignment.operatorId]"
-            :vehicle
+            :person="
+              assignment.operatorId
+                ? personMap[assignment.operatorId]
+                : undefined
+            "
+            :flight-leg
+            :flight-series
             :group
+            :vehicle
             :assignment
             operator
             :editable
@@ -98,9 +123,15 @@
           <base-vehicle-person-cell
             class="vehicle-person"
             :class="showVehicleIndex ? 'vehicle-person__indexed' : ''"
-            :person="personMap[assignment.passengerIds[c - 1]]"
-            :vehicle
+            :person="
+              assignment.passengerIds[c - 1]
+                ? personMap[assignment.passengerIds[c - 1]!]
+                : undefined
+            "
+            :flight-leg
+            :flight-series
             :group
+            :vehicle
             :assignment
             :editable
             :overfilled="c > capacity - 1"
@@ -146,6 +177,8 @@
 import BaseVehiclePersonCell from 'components/BaseVehiclePersonCell.vue';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import type {
+  FlightLeg,
+  FlightSeries,
   Vehicle,
   VehicleAssignment,
   VehicleGroup,
@@ -164,10 +197,11 @@ import { useProjectSettings } from 'src/composables/projectSettings';
 const {
   removeCarFromVehicleGroup,
   removeVehicleGroup,
-  clearBalloon,
-  clearCar,
+  clearVehicle,
   editBalloon,
   editCar,
+  cancelFlight,
+  reactivateFlight,
 } = useFlightOperations();
 const quasar = useQuasar();
 const { remainingCapacity } = useFlightUtils();
@@ -176,6 +210,7 @@ const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
 const { balloonMap, carMap, personMap } = storeToRefs(flightStore);
 const {
+  disableVehicleGroupProtection,
   showVehicleWeight,
   showVehicleIndex,
   showVehicleLabel,
@@ -185,10 +220,16 @@ const {
 } = useProjectSettings();
 
 const {
+  vehicleId,
   group,
+  flightSeries,
+  flightLeg,
   assignment,
   editable = false,
 } = defineProps<{
+  vehicleId: string;
+  flightSeries: FlightSeries;
+  flightLeg: FlightLeg;
   group: VehicleGroup;
   assignment: VehicleAssignment;
   editable?: boolean;
@@ -197,28 +238,34 @@ const {
 const hideEmptyCapacity = ref<boolean>(false);
 
 const vehicle = computed<Vehicle>(() => {
-  if (carMap.value[assignment.id]) {
-    return carMap.value[assignment.id];
+  if (vehicleId in carMap.value) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return carMap.value[vehicleId]!;
   }
 
-  return balloonMap.value[assignment.id];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return balloonMap.value[vehicleId]!;
 });
 
 const totalWeight = computed<number>(() => {
   const fallback = personDefaultWeight.value ?? 0;
 
+  const operatorWeight = assignment.operatorId
+    ? (personMap.value[assignment.operatorId]?.weight ?? fallback)
+    : fallback;
+
   return assignment.passengerIds
     .map((id) => personMap.value[id])
     .reduce<number>(
       (acc, person) => acc + (person?.weight ?? fallback),
-      personMap.value[assignment.operatorId]?.weight ?? fallback,
+      operatorWeight,
     );
 });
 
 const isOverweight = computed<boolean>(() => {
   return (
     vehicle.value.type === 'balloon' &&
-    vehicle.value.maxWeight !== null &&
+    vehicle.value.maxWeight !== undefined &&
     totalWeight.value > vehicle.value.maxWeight
   );
 });
@@ -227,7 +274,7 @@ const capacity = computed<number>(() => {
   let capacity: number = vehicle.value.maxCapacity;
 
   if (vehicle.value.type === 'car') {
-    capacity = remainingCapacity(group)[assignment.id] ?? 0;
+    capacity = remainingCapacity(group)[vehicleId] ?? 0;
   }
 
   if (capacity < 0) {
@@ -245,7 +292,21 @@ const rowCount = computed<number>(() => {
 });
 
 const color = computed<string>(() => {
-  return vehicle.value.type === 'balloon' ? balloonColor.value : carColor.value;
+  return vehicle.value.type === 'balloon'
+    ? (balloonColor.value ?? '')
+    : (carColor.value ?? '');
+});
+
+const isFirstLeg = computed<boolean>(() => {
+  return flightSeries.legs.findIndex((l) => l.id === flightLeg.id) === 0;
+});
+
+const allowVehicleGroupChange = computed<boolean>(() => {
+  return isFirstLeg.value || (disableVehicleGroupProtection.value ?? false);
+});
+
+const isCanceled = computed<boolean>(() => {
+  return flightLeg.canceledBalloonIds.includes(vehicleId);
 });
 
 const showFooter = computed<boolean>(() => {
@@ -253,26 +314,34 @@ const showFooter = computed<boolean>(() => {
     return true;
   }
 
-  return vehicle.value.type === 'balloon' && showVehicleWeight.value;
+  return vehicle.value.type === 'balloon' && (showVehicleWeight.value ?? false);
 });
+
+function onFlightCancel() {
+  cancelFlight(vehicleId);
+}
+
+function omFlightReactivate() {
+  reactivateFlight(vehicleId);
+}
 
 function onVehicleRemoved() {
   if (vehicle.value.type === 'balloon') {
-    removeVehicleGroup(assignment.id);
+    removeVehicleGroup(vehicleId);
   } else {
-    removeCarFromVehicleGroup(group.balloon.id, assignment.id);
+    removeCarFromVehicleGroup(group.balloonId, vehicleId);
   }
 }
 
 function onVehicleClear() {
-  if (vehicle.value.type === 'balloon') {
-    clearBalloon(assignment.id);
-  } else {
-    clearCar(group.balloon.id, assignment.id);
-  }
+  clearVehicle(vehicleId);
 }
 
 function onVehicleEdit() {
+  if (!project.value) {
+    return;
+  }
+
   if (vehicle.value.type === 'balloon') {
     quasar
       .dialog({
@@ -284,7 +353,7 @@ function onVehicleEdit() {
         },
       })
       .onOk((payload) => {
-        editBalloon(assignment.id, payload);
+        editBalloon(vehicleId, payload);
       });
   } else {
     quasar
@@ -297,7 +366,7 @@ function onVehicleEdit() {
         },
       })
       .onOk((payload) => {
-        editCar(assignment.id, payload);
+        editCar(vehicleId, payload);
       });
   }
 }
@@ -367,5 +436,3 @@ td.vehicle-person {
   border-bottom: 0.5px dotted;
 }
 </style>
-
-<script setup lang="ts"></script>

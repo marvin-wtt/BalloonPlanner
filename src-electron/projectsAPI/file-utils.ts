@@ -18,7 +18,7 @@ export async function readProjectFromPath(
   }
 
   try {
-    return fse.readJSON(fullFilePath, 'utf-8');
+    return await fse.readJSON(fullFilePath, 'utf-8');
   } catch (err) {
     throw new Error(
       `Failed to read file "${fullFilePath}": ${(err as Error).message}`,
@@ -40,19 +40,29 @@ export async function writeProjectToPath(
   const parentDir = path.dirname(fullFilePath);
   try {
     await fse.ensureDir(parentDir);
-  } catch (err) {
-    throw new Error(`Cannot create directory "${parentDir}": ${err.message}`);
+  } catch (err: unknown) {
+    throw new Error(
+      `Cannot create directory "${parentDir}": ${getErrorMessage(err)}`,
+    );
   }
 
   try {
     await fse.writeJSON(fullFilePath, project, 'utf-8');
-  } catch (err) {
+  } catch (err: unknown) {
     throw new Error(
-      `Failed to write project to "${fullFilePath}": ${err.message}`,
+      `Failed to write project to "${fullFilePath}": ${getErrorMessage(err)}`,
     );
   }
 
   return fullFilePath;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  } else {
+    return String(error);
+  }
 }
 
 export async function deleteProjectFromPath(fullFilePath: string) {

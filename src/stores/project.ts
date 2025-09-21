@@ -1,7 +1,8 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import type { Project, ProjectMeta } from 'app/src-common/entities';
-import { ref, toRaw, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { debounce, useQuasar } from 'quasar';
+import { deepToRaw } from 'src/util/deep-to-raw';
 
 export const useProjectStore = defineStore('project', () => {
   const quasar = useQuasar();
@@ -20,7 +21,7 @@ export const useProjectStore = defineStore('project', () => {
     project,
     (project, oldProject) => {
       // Skip initial load and updates
-      if (!oldProject || project.id !== oldProject.id) {
+      if (!oldProject || project?.id !== oldProject.id) {
         return;
       }
 
@@ -35,12 +36,35 @@ export const useProjectStore = defineStore('project', () => {
     projectIndex.value = await window.projectAPI.index();
   }
 
-  async function createProject(project: Project): Promise<void> {
+  async function createProject(
+    data: Omit<Project, 'id' | 'version' | 'createdAt' | 'flights'>,
+  ) {
     // Clone the project to remove all vue proxies
-    const copy = JSON.parse(JSON.stringify(project));
+    const project: Omit<Project, 'version'> = {
+      ...deepToRaw(data),
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      flights: [
+        {
+          id: crypto.randomUUID(),
+          date: new Date().toISOString(),
+          vehicleGroups: [],
+          carIds: data.cars.map(({ id }) => id),
+          balloonIds: data.balloons.map(({ id }) => id),
+          personIds: data.people.map(({ id }) => id),
+          legs: [
+            {
+              id: crypto.randomUUID(),
+              assignments: {},
+              canceledBalloonIds: [],
+            },
+          ],
+        },
+      ],
+    };
 
     try {
-      await window.projectAPI.store(copy);
+      await window.projectAPI.store(project);
 
       await loadIndex();
     } catch (error) {
@@ -52,6 +76,8 @@ export const useProjectStore = defineStore('project', () => {
       });
       throw error;
     }
+
+    return project;
   }
 
   async function deleteProject(projectId: string): Promise<void> {
@@ -87,10 +113,15 @@ export const useProjectStore = defineStore('project', () => {
   }
 
   async function saveProject() {
+    if (!project.value) {
+      throw new Error('Project is not loaded');
+    }
+
     isSaving.value = true;
     isDorty.value = false;
+
     try {
-      await window.projectAPI.update(toRaw(project.value));
+      await window.projectAPI.update(deepToRaw(project.value));
     } catch (e) {
       isDorty.value = true;
       console.error(e);

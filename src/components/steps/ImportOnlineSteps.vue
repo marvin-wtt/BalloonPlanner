@@ -180,8 +180,7 @@ const { name } = defineProps<{
 
 const emit = defineEmits<{
   (e: 'to', name: string): void;
-  (e: 'continue'): void;
-  (e: 'back'): void;
+  (e: 'continue' | 'back'): void;
 }>();
 
 const loading = ref<boolean>(false);
@@ -226,7 +225,7 @@ async function verifyUrl() {
       },
     });
     if (!response.ok) {
-      errorMessage.value = `Server not reachable. Status: ${response.status}`;
+      errorMessage.value = `Server not reachable. Status: ${response.status.toString()}`;
       return;
     }
 
@@ -240,7 +239,12 @@ async function verifyUrl() {
 }
 
 async function login() {
+  if (!url.value) {
+    return;
+  }
+
   errorMessage.value = null;
+
   try {
     const response = await fetch(url.value + 'auth/login/', {
       method: 'POST',
@@ -278,6 +282,10 @@ async function login() {
 }
 
 async function twoFactorLogin() {
+  if (!url.value) {
+    return;
+  }
+
   errorMessage.value = null;
 
   try {
@@ -347,6 +355,10 @@ function extractCamps(payload: Payload) {
 
 async function downloadPeople() {
   errorMessage.value = null;
+
+  if (!url.value || !campId.value || !accessToken.value) {
+    return;
+  }
 
   try {
     const response = await fetch(

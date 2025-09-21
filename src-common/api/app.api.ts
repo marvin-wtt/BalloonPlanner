@@ -1,40 +1,8 @@
 import type {
-  Project,
-  ProjectMeta,
-  SmartFillOptions,
-  SmartFillPayload,
-  VehicleGroup,
-} from 'app/src-common/entities';
-import type {
   UpdateInfo,
   ProgressInfo,
   UpdateDownloadedEvent,
 } from 'electron-updater';
-
-export interface ProjectsAPI {
-  index: () => Promise<ProjectMeta[]>;
-  show: (id: string) => Promise<Project>;
-  store: (project: Project) => Promise<void>;
-  update: (project: Project) => Promise<void>;
-  destroy: (id: string) => Promise<void>;
-  remove: (id: string) => Promise<void>;
-  onOpenRequest: (callback: (meta: Project) => void) => void;
-  openFile: () => void;
-}
-
-export interface SolverAPI {
-  solveFlight: (
-    data: SmartFillPayload,
-    options?: SmartFillOptions,
-  ) => Promise<VehicleGroup[]>;
-}
-
-export interface WindowAPI {
-  minimize: () => void;
-  toggleMaximize: () => void;
-  close: () => void;
-  openDevTools: () => void;
-}
 
 export type AppAPI = {
   getVersion: () => Promise<string>;

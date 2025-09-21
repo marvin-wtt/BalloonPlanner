@@ -10,12 +10,15 @@ const api: ProjectsAPI = {
     ipcRenderer.invoke('project:destroy', ...args),
   remove: (...args: unknown[]) => ipcRenderer.invoke('project:remove', ...args),
   onOpenRequest: (callback) => {
-    ipcRenderer.on('project:request-open', (_event, id) => callback(id));
+    ipcRenderer.on('project:request-open', (_event, id) => {
+      callback(id);
+    });
 
     ipcRenderer.send('project:ready');
   },
-  openFile: (...args: unknown[]) =>
-    ipcRenderer.send('project:open-file', ...args),
+  openFile: (...args: unknown[]) => {
+    ipcRenderer.send('project:open-file', ...args);
+  },
 };
 
 export default api;

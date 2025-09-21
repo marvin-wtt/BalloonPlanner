@@ -28,17 +28,17 @@
       </div>
 
       <div
-        v-if="showInfo"
+        v-if="status"
         class="q-ml-xs"
       >
         <q-icon
           name="sym_o_error"
-          :color="infoColor"
+          :color="status.color"
           size="sm"
           dense
         >
           <q-tooltip>
-            {{ infoText }}
+            {{ status.text }}
           </q-tooltip>
         </q-icon>
       </div>
@@ -53,15 +53,15 @@
         style="min-width: 100px"
       >
         <q-item
-          clickable
           v-close-popup
+          clickable
           @click="onEdit()"
         >
           <q-item-section>Edit</q-item-section>
         </q-item>
         <q-item
-          clickable
           v-close-popup
+          clickable
           @click="onDragEnd()"
         >
           <q-item-section class="text-negative">Remove</q-item-section>
@@ -84,8 +84,9 @@ import type {
   Vehicle,
   Identifiable,
   VehicleAssignment,
+  FlightLeg,
+  FlightSeries,
   VehicleGroup,
-  Flight,
 } from 'app/src-common/entities';
 import { computed } from 'vue';
 import DropZone from 'components/drag/DropZone.vue';
@@ -102,26 +103,27 @@ const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
-const { personMap, numberOfFlights, flight } = storeToRefs(flightStore);
-const { showPersonWeight, showNumberOfFlights, personDefaultWeight } =
-  useProjectSettings();
+const { personMap, numberOfFlights } = storeToRefs(flightStore);
+const {
+  showPersonWeight,
+  showNumberOfFlights,
+  personDefaultWeight,
+  disableAssignmentProtection,
+} = useProjectSettings();
 const {
   editPerson,
-  addCarPassenger,
-  addBalloonPassenger,
-  addCarOperator,
-  addBalloonOperator,
-  removeCarPassenger,
-  removeBalloonPassenger,
-  removeCarOperator,
-  removeBalloonOperator,
+  setVehicleOperator,
+  addVehiclePassenger,
+  removeVehiclePassenger,
 } = useFlightOperations();
 
 const {
-  person,
+  person = undefined,
   vehicle,
-  group,
   assignment,
+  flightSeries,
+  flightLeg,
+  group,
   editable = false,
   operator = false,
   overfilled = false,
@@ -129,120 +131,136 @@ const {
   person?: Person;
   vehicle: Vehicle;
   assignment: VehicleAssignment;
+  flightSeries: FlightSeries;
+  flightLeg: FlightLeg;
   group: VehicleGroup;
   operator?: boolean;
   editable?: boolean;
   overfilled?: boolean;
 }>();
 
+interface StatusInfo {
+  color: string;
+  text: string;
+}
+
 const flightsLabel = computed<string>(() => {
+  if (!person) {
+    return '';
+  }
+
   const flights = numberOfFlights.value[person.id] ?? 0;
   const suffix = flights === 0 && person.firstTime ? '*' : '';
 
-  return ` (${flights}${suffix})`;
+  return ` (${flights.toString()}${suffix})`;
 });
 
 const weightLabel = computed<string>(() => {
+  if (!person) {
+    return '';
+  }
+
   const weight = person.weight ?? personDefaultWeight.value ?? '?';
   const suffix = !person.weight && personDefaultWeight.value ? '*' : '';
 
-  return ` (${weight}${suffix} kg)`;
+  return ` (${weight.toString()}${suffix} kg)`;
 });
 
 const coloredLabels = computed<boolean>(() => {
-  return showPersonWeight.value && showNumberOfFlights.value;
-});
-
-const showInfo = computed<boolean>(() => {
   return (
-    overfilled ||
-    hasInvalidOperator.value ||
-    hasMultiLegError.value ||
-    hasLanguageWarning.value
+    (showPersonWeight.value ?? false) && (showNumberOfFlights.value ?? false)
   );
 });
 
-const infoColor = computed<string>(() => {
-  if (overfilled || hasInvalidOperator.value || hasMultiLegError.value) {
-    return 'negative';
-  }
-
-  if (hasLanguageWarning.value) {
-    return 'warning';
-  }
-
-  return 'info';
+const status = computed<StatusInfo | undefined>(() => {
+  return [
+    overfillStatus,
+    operatorInfo.value,
+    multiLegStatus.value,
+    languageStatus.value,
+  ].filter((info) => info !== false)[0];
 });
 
-const infoText = computed<string>(() => {
-  if (overfilled) {
-    return 'Vehicle capacity exceeded';
+const overfillStatus: StatusInfo | false = overfilled
+  ? {
+      color: 'negative',
+      text: 'Vehicle capacity exceeded',
+    }
+  : false;
+
+const languageStatus = computed<StatusInfo | false>(() => {
+  if (operator || !assignment.operatorId || !person || !person.languages) {
+    return false;
   }
 
-  if (hasInvalidOperator.value) {
-    return 'Person not allowed to operate this vehicle';
+  const opLangs = personMap.value[assignment.operatorId]?.languages;
+  if (opLangs == undefined) {
+    return false;
   }
 
-  if (hasMultiLegError.value) {
-    return 'Person was not assigned to this group in previous flight';
+  if (opLangs.some((language) => person.languages?.includes(language))) {
+    return false;
   }
 
-  if (hasLanguageWarning.value) {
-    return 'No common language with passenger';
+  if (vehicle.type === 'balloon') {
+    return {
+      color: 'warning',
+      text: 'No common language with operator',
+    };
   }
 
-  return '';
+  if (person.role === 'counselor') {
+    return false;
+  }
+
+  const hasCommonLangWithPassengers = assignment.passengerIds
+    .filter((id) => id !== person.id)
+    .flatMap((id) => personMap.value[id]?.languages)
+    .filter((lang) => lang !== undefined)
+    .some((lang) => person.languages?.includes(lang));
+
+  if (hasCommonLangWithPassengers) {
+    return false;
+  }
+
+  return {
+    color: 'warning',
+    text: 'No common language with operator or other passengers',
+  };
 });
 
-const hasLanguageWarning = computed<boolean>(() => {
-  if (operator || !assignment.operatorId || !person.languages) {
+const multiLegStatus = computed<StatusInfo | false>(() => {
+  if (!person) {
     return false;
   }
 
-  const languages = personMap.value[assignment.operatorId]?.languages;
-  if (languages == undefined) {
+  if (wasInSameVehicleGroupInFirstLeg(person.id)) {
     return false;
   }
 
-  return !languages.some((language) => person.languages.includes(language));
+  return {
+    color: 'negative',
+    text: 'Person was not assigned to this group in previous flight',
+  };
 });
 
-const hasMultiLegError = computed<boolean>(() => {
-  if (!flight.value?.isContinuationLeg) {
+const operatorInfo = computed<StatusInfo | false>(() => {
+  if (!person || !operator) {
     return false;
   }
 
-  const index = project.value.flights.indexOf(flight.value);
-  if (index <= 0) {
+  if (vehicle.allowedOperatorIds.includes(person.id)) {
     return false;
   }
 
-  const previousFlight: Flight = project.value.flights[index - 1];
-  const previousGroup = previousFlight.vehicleGroups.find(
-    (prevGroup) => group.balloon.id === prevGroup.balloon.id,
-  );
-
-  // There is an error with the group assignments
-  if (!previousGroup) {
-    return false;
-  }
-
-  return (
-    previousGroup.balloon.operatorId !== person.id &&
-    !previousGroup.balloon.passengerIds.includes(person.id) &&
-    !previousGroup.cars.some(
-      (car) =>
-        car.operatorId === person.id || car.passengerIds.includes(person.id),
-    )
-  );
+  return {
+    color: 'negative',
+    text: 'Person not allowed to operate this vehicle',
+  };
 });
 
-const hasInvalidOperator = computed<boolean>(() => {
-  if (!operator) {
-    return false;
-  }
-
-  return !vehicle.allowedOperatorIds.includes(person.id);
+const isFirstLeg = computed<boolean>(() => {
+  return flightSeries.legs.findIndex((l) => l.id === flightLeg.id) === 0;
 });
 
 function isDropAllowed(element: Identifiable): boolean {
@@ -250,7 +268,14 @@ function isDropAllowed(element: Identifiable): boolean {
     return false;
   }
 
-  if (!personMap.value[element.id]) {
+  if (!(element.id in personMap.value)) {
+    return false;
+  }
+
+  if (
+    !wasInSameVehicleGroupInFirstLeg(element.id) &&
+    !disableAssignmentProtection.value
+  ) {
     return false;
   }
 
@@ -266,10 +291,16 @@ function onDrop(element: Identifiable) {
 }
 
 function onDragEnd() {
+  if (!person) {
+    return;
+  }
   removePersonFromVehicle(person.id);
 }
 
 function onEdit() {
+  if (!project.value || !person) {
+    return;
+  }
   quasar
     .dialog({
       component: EditPersonDialog,
@@ -284,35 +315,45 @@ function onEdit() {
 }
 
 function addPersonToVehicle(personId: string) {
-  if (vehicle.type === 'balloon') {
-    if (operator) {
-      addBalloonOperator(assignment.id, personId);
-    } else {
-      addBalloonPassenger(assignment.id, personId);
-    }
+  if (operator) {
+    setVehicleOperator(vehicle.id, personId);
   } else {
-    if (operator) {
-      addCarOperator(group.balloon.id, assignment.id, personId);
-    } else {
-      addCarPassenger(group.balloon.id, assignment.id, personId);
-    }
+    addVehiclePassenger(vehicle.id, personId);
   }
 }
 
 function removePersonFromVehicle(personId: string) {
-  if (vehicle.type === 'balloon') {
-    if (operator) {
-      removeBalloonOperator(assignment.id);
-    } else {
-      removeBalloonPassenger(assignment.id, personId);
-    }
+  if (operator) {
+    setVehicleOperator(vehicle.id, null);
   } else {
-    if (operator) {
-      removeCarOperator(group.balloon.id, assignment.id);
-    } else {
-      removeCarPassenger(group.balloon.id, assignment.id, personId);
-    }
+    removeVehiclePassenger(vehicle.id, personId);
   }
+}
+
+function wasInSameVehicleGroupInFirstLeg(personId: string): boolean {
+  if (isFirstLeg.value) {
+    return true;
+  }
+
+  const firstLeg = flightSeries.legs[0];
+  if (!firstLeg) {
+    return false;
+  }
+
+  // Collect all vehicle IDs of this group
+  const groupVehicleIds = [group.balloonId, ...group.carIds];
+
+  // Check if person was in any of these vehicles in the first leg
+  return groupVehicleIds.some((vid) => {
+    const assignment = firstLeg.assignments[vid];
+    if (!assignment) {
+      return false;
+    }
+    return (
+      assignment.operatorId === personId ||
+      assignment.passengerIds.includes(personId)
+    );
+  });
 }
 </script>
 

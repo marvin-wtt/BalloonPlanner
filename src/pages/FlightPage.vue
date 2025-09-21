@@ -7,7 +7,7 @@
       />
     </template>
 
-    <template v-else-if="flight">
+    <template v-else-if="flightSeries">
       <!-- Menu -->
       <div
         v-if="editable"
@@ -95,8 +95,8 @@
         </q-tabs>
 
         <div
-          class="col-grow self-stretch column"
           v-if="menuTabs !== 'overview'"
+          class="col-grow self-stretch column"
         >
           <q-tab-panels
             v-model="menuTabs"
@@ -127,8 +127,8 @@
                   :items="availableCounselors"
                   @add="showAddPeople('counselor')"
                   @create="showCreatePerson"
-                  @edit="(person) => showEditPerson(person)"
-                  @delete="(person) => showDeletePerson(person)"
+                  @edit="(person: Person) => showEditPerson(person)"
+                  @delete="(person: Person) => showDeletePerson(person)"
                 >
                   <template #main="{ item }">
                     {{ item.name }}
@@ -152,8 +152,8 @@
                   :dense="availableParticipants.length > 10"
                   @add="showAddPeople('participant')"
                   @create="showCreatePerson"
-                  @edit="(person) => showEditPerson(person)"
-                  @delete="(person) => showDeletePerson(person)"
+                  @edit="(person: Person) => showEditPerson(person)"
+                  @delete="(person: Person) => showDeletePerson(person)"
                 >
                   <template #main="{ item }: { item: Person }">
                     {{ item.name }}
@@ -172,11 +172,13 @@
 
       <!-- Flight overview -->
       <div
-        v-if="showFlightView"
+        v-if="showFlightView && flightSeries && flightLeg"
         class="col-grow flex flight-view"
       >
         <base-flight
-          :flight
+          :project
+          :flight-series
+          :flight-leg
           :editable
           class="fit"
         />
@@ -191,6 +193,14 @@
             vertical-actions-align="right"
             direction="up"
           >
+            <q-fab-action
+              label="Clear Passengers"
+              icon="delete"
+              color="warning"
+              :disable="!editable"
+              @click="clearLegPassengers"
+            />
+
             <q-fab-action
               label="Export Image"
               icon="photo_camera"
@@ -225,12 +235,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import BaseFlight from 'components/BaseFlight.vue';
-import type {
-  Balloon,
-  Car,
-  Person,
-  SmartFillOptions,
-} from 'app/src-common/entities';
+import type { Balloon, Car, Person } from 'app/src-common/entities';
 import EditableList from 'components/EditableList.vue';
 import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import { useFlightStore } from 'stores/flight';
@@ -242,20 +247,28 @@ import SmartFillDialog from 'components/dialog/SmartFillDialog.vue';
 import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';
 import { toPng } from 'html-to-image';
 import { useProjectSettings } from 'src/composables/projectSettings';
+import { useSolver } from 'src/composables/solver';
+import type { SolveFlightLegOptions } from 'app/src-common/api/solver.api';
 
 const route = useRoute();
 const router = useRouter();
 const quasar = useQuasar();
 const projectStore = useProjectStore();
 const flightStore = useFlightStore();
+const { solve } = useSolver();
 
 const { project, isLoading } = storeToRefs(projectStore);
-const { flight, numberOfFlights } = storeToRefs(flightStore);
+const { flightSeries, flightLeg, numberOfFlights } = storeToRefs(flightStore);
 
 const { showNumberOfFlights, showPersonWeight, personDefaultWeight } =
   useProjectSettings();
-const { createPerson, editPerson, removePerson, addPerson } =
-  useFlightOperations();
+const {
+  createPerson,
+  editPerson,
+  removePerson,
+  addPerson,
+  clearLegPassengers,
+} = useFlightOperations();
 
 const menuTabs = ref('overview');
 const editable = ref<boolean>(true);
@@ -270,6 +283,10 @@ async function init() {
     projectId = projectId[0];
   }
 
+  if (projectId === undefined) {
+    return;
+  }
+
   if (!project.value || project.value.id !== projectId) {
     try {
       await projectStore.loadProject(projectId);
@@ -282,46 +299,77 @@ async function init() {
   }
 
   if (Array.isArray(flightId)) {
-    throw new Error('Received multiple flight ids');
+    flightId = flightId[0];
   }
 
   if (flightId) {
-    flightStore.loadFlight(flightId);
+    flightStore.loadFlightLeg(flightId);
     return;
   }
 
-  // If not flight specified, load the last flight
-  if (project.value && project.value.flights.length > 0) {
-    flightId = project.value.flights[project.value.flights.length - 1]?.id;
-
-    await router.replace({
-      name: 'flight',
-      params: {
-        projectId,
-        flightId,
-      },
-    });
+  // If not flight leg specified, load the last flight
+  if (!project.value) {
+    return;
   }
+
+  if (project.value.flights.length === 0) {
+    return;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const series = project.value.flights[project.value.flights.length - 1]!;
+  if (series.legs.length === 0) {
+    return;
+  }
+
+  const lastLeg = series.legs[series.legs.length - 1];
+  if (!lastLeg.id) {
+    return;
+  }
+
+  await router.replace({
+    name: 'flight',
+    params: {
+      projectId,
+      flightId: lastLeg.id,
+    },
+  });
 }
 
 function onSmartFill() {
+  if (!flightSeries.value || !flightLeg.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: SmartFillDialog,
+      componentProps: {
+        isFirstLeg: flightSeries.value.legs[0]?.id === flightLeg.value.id,
+      },
     })
-    .onOk((options: SmartFillOptions) => {
+    .onOk((options: SolveFlightLegOptions) => {
       void smartFill(options);
     });
 }
 
-async function smartFill(options: SmartFillOptions) {
+async function smartFill(options: SolveFlightLegOptions) {
   const notify = quasar.notify({
     type: 'ongoing',
-    message: 'Calculating optimal flight plan...',
+    message: 'Optimizing flight...',
   });
   editable.value = false;
+
+  let timeSpendSec = 0;
+  const intervalId = setInterval(() => {
+    timeSpendSec += 1;
+    notify({
+      caption: `${timeSpendSec.toString()} s`,
+    });
+  }, 1000);
+
   try {
-    await flightStore.smartFillFlight({
+    await solve({
       ...options,
       defaultPersonWeight: personDefaultWeight.value,
     });
@@ -333,6 +381,7 @@ async function smartFill(options: SmartFillOptions) {
       timeout: 1000,
     });
   } catch (error) {
+    console.warn(error);
     notify({
       type: 'warning',
       message: 'Failed to fill the flight',
@@ -341,14 +390,19 @@ async function smartFill(options: SmartFillOptions) {
     });
   } finally {
     editable.value = true;
+    clearInterval(intervalId);
   }
 }
 
 async function onExportImage() {
+  if (!project.value || !flightSeries.value) {
+    return;
+  }
+
   const container = document.createElement('div');
   container.classList.add('exporter-wrapper', 'flight-view');
   const src = document.getElementById('flight-content');
-  const clone = src.cloneNode(true) as HTMLElement;
+  const clone = src?.cloneNode(true) as HTMLElement;
   clone.classList.add('no-wrap', 'fit');
   Object.assign(container.style, {
     position: 'fixed',
@@ -367,7 +421,11 @@ async function onExportImage() {
 
   document.body.removeChild(container);
 
-  const fileName = `${project.value.name}-flight-${project.value.flights.indexOf(flight.value) + 1}.png`;
+  const flightNr =
+    project.value.flights.findIndex((s) => s.id === flightSeries.value?.id) + 1;
+  const legNr =
+    flightSeries.value.legs.findIndex((l) => l.id === flightLeg.value?.id) + 1;
+  const fileName = `${project.value.name}-flight-${flightNr.toString()}-leg-${legNr.toString()}.png`;
   const link = document.createElement('a');
   link.download = fileName;
   link.href = dataUrl;
@@ -375,6 +433,10 @@ async function onExportImage() {
 }
 
 function showAddPeople(role: Person['role']) {
+  if (!project.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: AddEntityToFlightDialog,
@@ -382,13 +444,17 @@ function showAddPeople(role: Person['role']) {
         itemName: role.charAt(0).toUpperCase() + role.slice(1),
         items: project.value.people
           .filter(({ role: personRole }) => personRole === role)
-          .filter(({ id }) => !flight.value?.personIds.includes(id)),
+          .filter(({ id }) => !flightSeries.value?.personIds.includes(id)),
       },
     })
     .onOk((ids) => ids.forEach(addPerson));
 }
 
 function showCreatePerson() {
+  if (!project.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: EditPersonDialog,
@@ -399,13 +465,13 @@ function showCreatePerson() {
     .onOk(createPerson);
 }
 
-function showEditPerson(person: Person) {
+function showEditPerson(person: Person): void {
   quasar
     .dialog({
       component: EditPersonDialog,
       componentProps: {
         person,
-        existingNames: project.value.people.map(({ name }) => name),
+        existingNames: project.value?.people.map(({ name }) => name) ?? [],
       },
     })
     .onOk((payload) => {
@@ -413,7 +479,7 @@ function showEditPerson(person: Person) {
     });
 }
 
-function showDeletePerson(person: Person) {
+function showDeletePerson(person: Person): void {
   quasar
     .dialog({
       title: 'Delete person',
@@ -491,14 +557,14 @@ function formatPersonMeta(person: Person): string {
     const weight = person.weight ?? personDefaultWeight.value ?? '?';
     const suffix = !person.weight && personDefaultWeight.value ? '*' : '';
 
-    parts.push(`${weight}${suffix} kg`);
+    parts.push(`${weight.toString()}${suffix} kg`);
   }
 
   if (showNumberOfFlights.value) {
     const flights = numberOfFlights.value[person.id] ?? 0;
     const suffix = flights === 0 && person.firstTime ? '*' : '';
 
-    parts.push(`${flights}${suffix}`);
+    parts.push(`${flights.toString()}${suffix}`);
   }
 
   return parts.join(' | ');

@@ -1,258 +1,327 @@
-import type { Balloon, Car, Person } from 'app/src-common/entities';
+import type {
+  Balloon,
+  Car,
+  ID,
+  Person,
+  VehicleAssignment,
+} from 'app/src-common/entities';
 import { useFlightStore } from 'stores/flight';
 import { useProjectStore } from 'stores/project';
+import { storeToRefs } from 'pinia';
 
 export function useFlightOperations() {
   const flightStore = useFlightStore();
   const projectStore = useProjectStore();
 
-  function addVehicleGroup(balloonId: string) {
-    flightStore.flight.vehicleGroups.push({
-      balloon: {
-        id: balloonId,
-        operatorId: null,
-        passengerIds: [],
-      },
-      cars: [],
-    });
+  const { flightSeries, flightLeg } = storeToRefs(flightStore);
+  const { project } = storeToRefs(projectStore);
+
+  function requireSeries() {
+    const s = flightSeries.value;
+    if (!s) {
+      throw new Error('No flight series selected');
+    }
+
+    return s;
   }
 
-  function removeVehicleGroup(balloonId: string) {
-    const groups = flightStore.flight.vehicleGroups;
+  function requireLeg() {
+    const l = flightLeg.value;
+    if (!l) {
+      throw new Error('No flight leg selected');
+    }
 
-    groups.splice(
-      groups.findIndex((g) => g.balloon.id === balloonId),
-      1,
+    return l;
+  }
+
+  function requireProject() {
+    const p = project.value;
+    if (!p) {
+      throw new Error('No project loaded');
+    }
+
+    return p;
+  }
+
+  function pushUnique<T>(arr: T[], item: T) {
+    if (!arr.includes(item)) {
+      arr.push(item);
+    }
+  }
+
+  function removeFirst<T>(arr: T[], pred: (x: T) => boolean): number {
+    const i = arr.findIndex(pred);
+
+    if (i >= 0) arr.splice(i, 1);
+    return i;
+  }
+
+  function ensureVehicleAssignment(vehicleId: ID): VehicleAssignment {
+    const leg = requireLeg();
+    const current = leg.assignments[vehicleId];
+    if (current) {
+      return current;
+    }
+
+    const assignment: VehicleAssignment = {
+      operatorId: null,
+      passengerIds: [],
+    };
+    leg.assignments[vehicleId] = assignment;
+
+    return assignment;
+  }
+
+  function removeAllAssignments(vehicleId: ID) {
+    const series = requireSeries();
+
+    for (const leg of series.legs) {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete leg.assignments[vehicleId];
+    }
+  }
+
+  function clearVehicle(vehicleId: ID) {
+    const leg = requireLeg();
+    // reset (keeps key stable if UI expects the entry to exist)
+    leg.assignments[vehicleId] = { operatorId: null, passengerIds: [] };
+  }
+
+  function clearLegPassengers() {
+    const leg = requireLeg();
+
+    leg.assignments = Object.fromEntries(
+      Object.entries(leg.assignments).map(([vid, assignment]) => [
+        vid,
+        { operatorId: assignment.operatorId, passengerIds: [] },
+      ]),
     );
   }
 
-  function addCarToVehicleGroup(balloonId: string, carId: string) {
-    flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .cars.push({
-        id: carId,
-        operatorId: null,
-        passengerIds: [],
-      });
+  function unassignPersonEverywhere(personId: ID) {
+    const leg = flightLeg.value;
+    if (!leg) {
+      return;
+    }
+    for (const a of Object.values(leg.assignments)) {
+      if (a.operatorId === personId) a.operatorId = null;
+      a.passengerIds = a.passengerIds.filter((p) => p !== personId);
+    }
   }
 
-  function removeCarFromVehicleGroup(balloonId: string, carId: string) {
-    const cars = flightStore.flight.vehicleGroups.find(
-      (group) => group.balloon.id === balloonId,
-    ).cars;
+  function removeCarFromAllGroups(carId: ID) {
+    const series = flightSeries.value;
+    if (!series) {
+      return;
+    }
+    for (const group of series.vehicleGroups) {
+      removeFirst(group.carIds, (id) => id === carId);
+    }
+    removeAllAssignments(carId);
+  }
 
-    cars.splice(
-      cars.findIndex((c) => c.id === carId),
-      1,
+  function removeVehicleGroupByBalloon(balloonId: ID) {
+    const series = requireSeries();
+    const idx = series.vehicleGroups.findIndex(
+      (g) => g.balloonId === balloonId,
     );
-  }
+    if (idx === -1) {
+      return;
+    }
 
-  function addBalloonOperator(balloonId: string, personId: string) {
-    flightStore.flight.vehicleGroups.find(
-      (group) => group.balloon.id === balloonId,
-    ).balloon.operatorId = personId;
-  }
-
-  function addCarOperator(balloonId: string, carId: string, personId: string) {
-    flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .cars.find((c) => c.id === carId).operatorId = personId;
-  }
-
-  function removeBalloonOperator(balloonId: string) {
-    flightStore.flight.vehicleGroups.find(
-      (group) => group.balloon.id === balloonId,
-    ).balloon.operatorId = null;
-  }
-
-  function removeCarOperator(balloonId: string, carId: string) {
-    flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .cars.find((c) => c.id === carId).operatorId = null;
-  }
-
-  function addBalloonPassenger(balloonId: string, personId: string) {
-    flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .balloon.passengerIds.push(personId);
-  }
-
-  function addCarPassenger(balloonId: string, carId: string, personId: string) {
-    flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .cars.find((c) => c.id === carId)
-      .passengerIds.push(personId);
-  }
-
-  function removeBalloonPassenger(balloonId: string, personId: string) {
-    const passengerIds = flightStore.flight.vehicleGroups.find(
-      (group) => group.balloon.id === balloonId,
-    ).balloon.passengerIds;
-
-    passengerIds.splice(
-      passengerIds.findIndex((p) => p === personId),
-      1,
+    // Remove canceled flights from all legs
+    series.legs.forEach((leg) =>
+      removeFirst(leg.canceledBalloonIds, (id) => id === balloonId),
     );
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const group = series.vehicleGroups[idx]!;
+    // clear assignments for balloon and its cars
+    [group.balloonId, ...group.carIds].forEach(removeAllAssignments);
+    series.vehicleGroups.splice(idx, 1);
   }
 
-  function removeCarPassenger(
-    balloonId: string,
-    carId: string,
-    personId: string,
-  ) {
-    const passengerIds = flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .cars.find((c) => c.id === carId).passengerIds;
-
-    passengerIds.splice(
-      passengerIds.findIndex((p) => p === personId),
-      1,
-    );
+  // ---------- vehicle groups ----------
+  function addVehicleGroup(balloonId: ID) {
+    const series = requireSeries();
+    // avoid duplicates
+    const exists = series.vehicleGroups.some((g) => g.balloonId === balloonId);
+    if (exists) {
+      return;
+    }
+    series.vehicleGroups.push({ balloonId, carIds: [] });
   }
 
-  function clearBalloon(balloonId: string) {
-    const balloon = flightStore.flight.vehicleGroups.find(
-      (group) => group.balloon.id === balloonId,
-    ).balloon;
-
-    balloon.operatorId = null;
-    balloon.passengerIds = [];
+  function removeVehicleGroup(balloonId: ID) {
+    removeVehicleGroupByBalloon(balloonId);
   }
 
-  function clearCar(balloonId: string, carId: string) {
-    const balloon = flightStore.flight.vehicleGroups
-      .find((group) => group.balloon.id === balloonId)
-      .cars.find((c) => c.id === carId);
+  function addCarToVehicleGroup(balloonId: ID, carId: ID) {
+    const series = requireSeries();
+    const group = series.vehicleGroups.find((g) => g.balloonId === balloonId);
+    if (!group) {
+      throw new Error(`No vehicle group found for balloon ${balloonId}`);
+    }
+    pushUnique(group.carIds, carId);
+  }
 
-    balloon.operatorId = null;
-    balloon.passengerIds = [];
+  function removeCarFromVehicleGroup(balloonId: ID, carId: ID) {
+    const series = requireSeries();
+    const group = series.vehicleGroups.find((g) => g.balloonId === balloonId);
+    if (!group) {
+      throw new Error(`No vehicle group found for balloon ${balloonId}`);
+    }
+
+    removeAllAssignments(carId);
+    removeFirst(group.carIds, (id) => id === carId);
+  }
+
+  function cancelFlight(balloonId: ID) {
+    const leg = requireLeg();
+
+    pushUnique(leg.canceledBalloonIds, balloonId);
+  }
+
+  function reactivateFlight(balloonId: ID) {
+    const leg = requireLeg();
+
+    removeFirst(leg.canceledBalloonIds, (id) => id === balloonId);
+  }
+
+  function setVehicleOperator(vehicleId: ID, personId: ID | null) {
+    const assignment = ensureVehicleAssignment(vehicleId);
+    assignment.operatorId = personId;
+  }
+
+  function addVehiclePassenger(vehicleId: ID, personId: ID) {
+    const assignment = ensureVehicleAssignment(vehicleId);
+    pushUnique(assignment.passengerIds, personId);
+  }
+
+  function removeVehiclePassenger(vehicleId: ID, personId: ID) {
+    const assignment = ensureVehicleAssignment(vehicleId);
+    removeFirst(assignment.passengerIds, (p) => p === personId);
   }
 
   function createPerson(person: Omit<Person, 'id'>) {
-    projectStore.project.people.push({
-      ...person,
-      id: crypto.randomUUID(),
-    });
+    const p = requireProject();
+    p.people.push({ ...person, id: crypto.randomUUID() });
   }
 
-  function editPerson(personId: string, person: Omit<Person, 'id'>) {
-    projectStore.project.people.splice(
-      projectStore.project.people.findIndex(({ id }) => id === personId),
-      1,
-      {
-        ...person,
-        id: personId,
-      },
-    );
+  function editPerson(personId: ID, person: Omit<Person, 'id'>) {
+    const p = requireProject();
+    const people = p.people;
+    const idx = people.findIndex(({ id }) => id === personId);
+    if (idx === -1) {
+      throw new Error(`Person ${personId} not found`);
+    }
+    people.splice(idx, 1, { ...person, id: personId });
   }
 
-  function removePerson(personId: string) {
-    const personIds = flightStore.flight.personIds;
+  function removePerson(personId: ID) {
+    const series = requireSeries();
+    // unlink from series
+    removeFirst(series.personIds, (id) => id === personId);
+    // also unassign from current leg if present
+    unassignPersonEverywhere(personId);
+  }
 
-    personIds.splice(
-      personIds.findIndex((b) => b === personId),
-      1,
-    );
+  function addPerson(personId: ID) {
+    const series = requireSeries();
+    pushUnique(series.personIds, personId);
   }
 
   function createBalloon(balloon: Omit<Balloon, 'id'>) {
+    const p = requireProject();
     const id = crypto.randomUUID();
-
-    projectStore.project.balloons.push({
-      ...balloon,
-      id,
-    });
-    flightStore.flight.balloonIds.push(id);
+    p.balloons.push({ ...balloon, id });
+    const series = requireSeries();
+    pushUnique(series.balloonIds, id);
   }
 
-  function editBalloon(balloonId: string, balloon: Omit<Balloon, 'id'>) {
-    projectStore.project.balloons.splice(
-      projectStore.project.balloons.findIndex(({ id }) => id === balloonId),
-      1,
-      {
-        ...balloon,
-        id: balloonId,
-      },
-    );
+  function editBalloon(balloonId: ID, balloon: Omit<Balloon, 'id'>) {
+    const p = requireProject();
+    const arr = p.balloons;
+    const idx = arr.findIndex(({ id }) => id === balloonId);
+    if (idx === -1) {
+      throw new Error(`Balloon ${balloonId} not found`);
+    }
+    arr.splice(idx, 1, { ...balloon, id: balloonId });
   }
 
-  function removeBalloon(balloonId: string) {
-    const balloonIds = flightStore.flight.balloonIds;
-
-    balloonIds.splice(
-      balloonIds.findIndex((b) => b === balloonId),
-      1,
-    );
+  function removeBalloon(balloonId: ID) {
+    const series = requireSeries();
+    removeVehicleGroupByBalloon(balloonId);
+    removeFirst(series.balloonIds, (b) => b === balloonId);
   }
 
+  function addBalloon(balloonId: ID) {
+    const series = requireSeries();
+    pushUnique(series.balloonIds, balloonId);
+  }
+
+  // ---------- cars ----------
   function createCar(car: Omit<Car, 'id'>) {
+    const p = requireProject();
     const id = crypto.randomUUID();
-
-    projectStore.project.cars.push({
-      ...car,
-      id,
-    });
-    flightStore.flight.carIds.push(id);
+    p.cars.push({ ...car, id });
+    const series = requireSeries();
+    pushUnique(series.carIds, id);
   }
 
-  function editCar(carId: string, car: Omit<Car, 'id'>) {
-    projectStore.project.cars.splice(
-      projectStore.project.cars.findIndex(({ id }) => id === carId),
-      1,
-      {
-        ...car,
-        id: carId,
-      },
-    );
+  function editCar(carId: ID, car: Omit<Car, 'id'>) {
+    const p = requireProject();
+    const arr = p.cars;
+    const idx = arr.findIndex(({ id }) => id === carId);
+    if (idx === -1) {
+      throw new Error(`Car ${carId} not found`);
+    }
+    arr.splice(idx, 1, { ...car, id: carId });
   }
 
-  function removeCar(carId: string) {
-    const carIds = flightStore.flight.carIds;
-
-    carIds.splice(
-      carIds.findIndex((b) => b === carId),
-      1,
-    );
+  function removeCar(carId: ID) {
+    const series = requireSeries();
+    removeCarFromAllGroups(carId);
+    removeFirst(series.carIds, (c) => c === carId);
   }
 
-  function addPerson(personId: string) {
-    flightStore.flight.personIds.push(personId);
-  }
-
-  function addBalloon(balloonId: string) {
-    flightStore.flight.balloonIds.push(balloonId);
-  }
-
-  function addCar(carId: string) {
-    flightStore.flight.carIds.push(carId);
+  function addCar(carId: ID) {
+    const series = requireSeries();
+    pushUnique(series.carIds, carId);
   }
 
   return {
+    // vehicle groups
     addVehicleGroup,
     removeVehicleGroup,
     addCarToVehicleGroup,
     removeCarFromVehicleGroup,
-    addBalloonOperator,
-    addCarOperator,
-    removeBalloonOperator,
-    removeCarOperator,
-    addBalloonPassenger,
-    addCarPassenger,
-    removeBalloonPassenger,
-    removeCarPassenger,
-    clearBalloon,
-    clearCar,
+    cancelFlight,
+    reactivateFlight,
+
+    // assignments
+    setVehicleOperator,
+    addVehiclePassenger,
+    removeVehiclePassenger,
+    clearVehicle,
+    clearLegPassengers,
+
+    // people
     createPerson,
     editPerson,
     removePerson,
+    addPerson,
+
+    // balloons
     createBalloon,
     editBalloon,
     removeBalloon,
+    addBalloon,
+
+    // cars
     createCar,
     editCar,
     removeCar,
-    addPerson,
-    addBalloon,
     addCar,
   };
 }

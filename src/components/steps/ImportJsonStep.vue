@@ -21,7 +21,7 @@
           outlined
           @change="errorMessage = undefined"
         >
-          <template v-slot:prepend>
+          <template #prepend>
             <q-icon name="attach_file" />
           </template>
         </q-file>
@@ -62,8 +62,7 @@ const { name } = defineProps<{
 
 const emit = defineEmits<{
   (e: 'to', name: string): void;
-  (e: 'continue'): void;
-  (e: 'back'): void;
+  (e: 'continue' | 'back'): void;
 }>();
 
 const loading = ref(false);
@@ -76,6 +75,12 @@ const error = computed<boolean>(() => errorMessage.value != null);
 async function processJson() {
   loading.value = true;
   errorMessage.value = undefined;
+
+  if (!file.value) {
+    errorMessage.value = 'No file selected';
+    loading.value = false;
+    return;
+  }
 
   try {
     modelValue.value = await loadJsonFile(file.value);

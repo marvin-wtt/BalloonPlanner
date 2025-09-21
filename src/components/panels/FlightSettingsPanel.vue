@@ -7,10 +7,52 @@
       <div class="text-h6">Settings</div>
       <div class="q-gutter-sm">
         <q-list separator>
+          <q-item-label header>Behaviour</q-item-label>
+          <q-item
+            v-ripple
+            tag="label"
+          >
+            <q-item-section
+              avatar
+              top
+            >
+              <q-checkbox
+                v-model="disableAssignmentProtection"
+                color="primary"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Disable assignment protection</q-item-label>
+              <q-item-label caption>
+                The protections prohibits changes across vehicle groups
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-item
+            v-ripple
+            tag="label"
+          >
+            <q-item-section
+              avatar
+              top
+            >
+              <q-checkbox
+                v-model="disableVehicleGroupProtection"
+                color="primary"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Disable vehicle group protection</q-item-label>
+              <q-item-label caption>
+                The protections permits changes to the vehicle groups only in
+                the first leg
+              </q-item-label>
+            </q-item-section>
+          </q-item>
           <q-item-label header>Information</q-item-label>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -26,8 +68,8 @@
             </q-item-section>
           </q-item>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -43,8 +85,8 @@
             </q-item-section>
           </q-item>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -60,8 +102,8 @@
             </q-item-section>
           </q-item>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -79,8 +121,8 @@
           <q-separator />
           <q-item-label header>Weight</q-item-label>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -96,8 +138,8 @@
             </q-item-section>
           </q-item>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -174,7 +216,7 @@
                 outlined
                 dense
               >
-                <template v-slot:append>
+                <template #append>
                   <q-icon
                     name="colorize"
                     class="cursor-pointer"
@@ -206,7 +248,7 @@
                 outlined
                 dense
               >
-                <template v-slot:append>
+                <template #append>
                   <q-icon
                     name="colorize"
                     class="cursor-pointer"
@@ -238,6 +280,8 @@ import { QItem, QList } from 'quasar';
 import { useProjectSettings } from 'src/composables/projectSettings';
 
 const {
+  disableAssignmentProtection,
+  disableVehicleGroupProtection,
   showVehicleIndex,
   showVehicleLabel,
   showGroupLabel,

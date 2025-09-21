@@ -5,8 +5,8 @@ function useFlightUtils() {
   const flightStore = useFlightStore();
 
   function remainingCapacity(group: VehicleGroup): Record<string, number> {
-    const balloon = flightStore.balloonMap[group.balloon.id];
-    const cars = group.cars.map(({ id }) => flightStore.carMap[id]);
+    const balloon = flightStore.balloonMap[group.balloonId];
+    const cars = group.carIds.map((id) => flightStore.carMap[id]);
 
     const resultMaxCapacity: Record<string, number> = {};
     let remainingCapacity = balloon.maxCapacity;

@@ -20,7 +20,10 @@ import {
   updateProjectMeta,
 } from 'app/src-electron/projectsAPI/index-store';
 import log from 'electron-log';
-import { migrateProject } from 'app/src-electron/projectsAPI/migrations';
+import {
+  getAppVersion,
+  migrateProject,
+} from 'app/src-electron/projectsAPI/migrations';
 
 export default () => {
   ipcMain.handle('project:index', projectApiHandler.index);
@@ -32,7 +35,7 @@ export default () => {
   ipcMain.on('project:open-file', projectApiHandler.openFile);
 
   ipcMain.on('project:ready', () => {
-    loadFromArgs(process.argv).catch((err) => {
+    loadFromArgs(process.argv).catch((err: unknown) => {
       log.error(
         `Failed to load project from process args: ${process.argv.join(' | ')}`,
         err,
@@ -41,13 +44,13 @@ export default () => {
   });
 
   app.on('open-file', (_event, fullFilePath) => {
-    loadExternalFile(fullFilePath).catch((err) => {
+    loadExternalFile(fullFilePath).catch((err: unknown) => {
       log.error(`Failed to load project from file: ${fullFilePath}`, err);
     });
   });
 
   app.on('second-instance', (_event, argv) => {
-    loadFromArgs(argv).catch((err) => {
+    loadFromArgs(argv).catch((err: unknown) => {
       log.error(`Failed to load project from args: ${argv.join(' | ')}`, err);
     });
   });
@@ -55,12 +58,15 @@ export default () => {
 
 async function loadFromArgs(argv: string[]) {
   for (let i = 1; i < argv.length; i++) {
-    if (argv[i].startsWith('-')) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const arg = argv[i]!;
+
+    if (arg.startsWith('-')) {
       continue;
     }
 
-    if (argv[i].endsWith('.bpp') || argv[i].endsWith('.json')) {
-      await loadExternalFile(argv[i]);
+    if (arg.endsWith('.bpp') || arg.endsWith('.json')) {
+      await loadExternalFile(arg);
       break;
     }
   }
@@ -122,6 +128,8 @@ async function store(project: Project) {
   const fileName = `project-${project.id}.bpp`;
   const fullPath = path.join(projectDir, fileName);
 
+  project.version = getAppVersion();
+
   addProjectMeta({
     ...project,
     filePath: fullPath,
@@ -172,6 +180,7 @@ async function openFile() {
     return;
   }
 
-  const fullFilePath = result.filePaths[0];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const fullFilePath = result.filePaths[0]!;
   await loadExternalFile(fullFilePath);
 }
