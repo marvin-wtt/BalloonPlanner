@@ -12,6 +12,7 @@ source .venv/bin/activate
 # Build the Python application
 pyinstaller \
       --onefile \
+      --collect-all ortools \
       --distpath ../dist/python \
       --workpath ../dist/python/pyinstaller \
       --specpath ../dist/python/pyinstaller \

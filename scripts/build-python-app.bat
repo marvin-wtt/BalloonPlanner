@@ -9,6 +9,7 @@ call .venv\Scripts\activate
 REM Build the Python application
 call pyinstaller ^
       --onefile ^
+      --collect-all ortools ^
       --distpath ../dist/python ^
       --workpath ../dist/python/pyinstaller ^
       --specpath ../dist/python/pyinstaller ^
