@@ -130,6 +130,11 @@ export function useSolver() {
       flightSeries.value.id,
     );
 
+    const peopleMeetHistory = buildPeopleMeetHistory(
+      project.value.flights,
+      flightSeries.value.id,
+    );
+
     const fixedGroups =
       flightSeries.value.legs.findIndex(
         (leg) => leg.id === flightLeg.value?.id,
@@ -145,6 +150,7 @@ export function useSolver() {
         vehicleGroups,
         preAssignments,
         groupHistory,
+        peopleMeetHistory,
         fixedGroups,
         options,
       }),
@@ -231,17 +237,21 @@ export function buildFixedGroups(series: FlightSeries): Record<ID, ID> {
   }, {});
 }
 
+function buildVehiclePairs(series: FlightSeries) {
+  return series.vehicleGroups.reduce<Record<ID, ID>>((acc, g) => {
+    acc[g.balloonId] = g.balloonId;
+    g.carIds.forEach((cid) => (acc[cid] = g.balloonId));
+    return acc;
+  }, {});
+}
+
 function buildGroupPairs(series: FlightSeries) {
   const leg = series.legs[0];
   if (!leg) {
     return [];
   }
 
-  const vehToGroup = series.vehicleGroups.reduce<Record<ID, ID>>((acc, g) => {
-    acc[g.balloonId] = g.balloonId;
-    g.carIds.forEach((cid) => (acc[cid] = g.balloonId));
-    return acc;
-  }, {});
+  const vehToGroup = buildVehiclePairs(series);
 
   // Collect [personId, groupId] pairs from this leg
   return Object.entries(leg.assignments).flatMap(([vehicleId, a]) => {
@@ -253,6 +263,55 @@ function buildGroupPairs(series: FlightSeries) {
       .filter((pid): pid is ID => !!pid)
       .map((pid) => [pid, groupId] as const);
   });
+}
+
+function buildPeopleMeetHistory(
+  series: FlightSeries[],
+  seriesId: ID,
+): Record<ID, Record<ID, number>> {
+  const bump = (counts: Record<ID, Record<ID, number>>, a: ID, b: ID) => {
+    if (a === b) return;
+    counts[a] ??= {};
+    counts[b] ??= {};
+    counts[a][b] = (counts[a][b] ?? 0) + 1;
+    counts[b][a] = (counts[b][a] ?? 0) + 1;
+  };
+
+  return series
+    .filter((s) => s.id !== seriesId)
+    .reduce<Record<ID, Record<ID, number>>>((counts, s) => {
+      const vehicleToGroup = buildVehiclePairs(s); // vehicleId -> groupId
+
+      const firstLeg = s.legs[0];
+      if (!firstLeg) {
+        return counts;
+      }
+
+      // groupId -> Set(personId) for the first leg
+      const peopleInGroup = Object.entries(firstLeg.assignments)
+        .flatMap(([vehicleId, a]) => {
+          const groupId = vehicleToGroup[vehicleId];
+          if (!groupId) return [];
+          const members = (a.operatorId ? [a.operatorId] : []).concat(
+            a.passengerIds,
+          );
+          return [{ groupId, members }];
+        })
+        .reduce<Record<ID, ID[]>>((acc, { groupId, members }) => {
+          acc[groupId] = (acc[groupId] ?? []).concat(members);
+          return acc;
+        }, {});
+
+      Object.values(peopleInGroup).forEach((arr) => {
+        arr.forEach((a, i) => {
+          arr.slice(i + 1).forEach((b) => {
+            bump(counts, a, b);
+          });
+        });
+      });
+
+      return counts;
+    }, {});
 }
 
 type PersonWithFlights = Person & { flightsSoFar: number };

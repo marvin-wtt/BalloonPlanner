@@ -49,6 +49,7 @@ def solve_flight_leg(
     vehicle_groups: Dict[str, List[str]],
     *,
     group_history: Optional[Dict[str, Dict[str, int]]],
+    people_meet_history: Optional[Dict[str, Dict[str, int]]],
     frozen: Optional[Dict[str, VehicleAssignment]],
     fixed_groups: Optional[Dict[str, str]],
     planning_horizon_legs: int,
@@ -58,6 +59,7 @@ def solve_flight_leg(
     w_tiebreak_fairness: int,
     w_no_solo_participant: int,
     w_divers_nationalities: int,
+    w_new_meetings: int,
     w_group_passenger_balance: int,
     w_group_rotation: int,
     w_low_flights_lookahead: int,
@@ -65,7 +67,7 @@ def solve_flight_leg(
     # misc
     default_person_weight: int,
     time_limit_s: int,
-    num_search_workers: int = 8,
+    num_search_workers: int = 15,
     random_seed: Optional[int] = None,
 ) -> Manifest:
     """Solve a *single* leg; call once per flight."""
@@ -293,7 +295,7 @@ def solve_flight_leg(
             model.Add(crew_cars - avg_ground == dev_pos - dev_neg)
             objective_terms.append(w_group_passenger_balance * (dev_pos + dev_neg))
 
-    # 3.5 diversity
+    # 3.5a diversity
     if len(nationalities) > 1:
         for v in vehicle_ids:
             cnt_nat = {}
@@ -314,6 +316,61 @@ def solve_flight_leg(
             model.Add(minority == total - maj)
 
             objective_terms.append(-w_divers_nationalities * minority)
+
+    # 3.5b avoid repeated meetings inside a vehicle group (existence penalty, fast) — only if groups are not fixed
+    if w_new_meetings != 0 and fixed_groups is None and people_meet_history is not None:
+        # Keep the model lean: consider at most K past contacts per person
+        max_contacts_per_person = 8  # tune 6–10
+
+        in_group = {}
+        # Only create missing keys to avoid duplicating constraints if another section already built them
+        for p in person_ids:
+            if not is_participant[p]:
+                continue
+            for bid in balloon_ids:
+                if (p, bid) in in_group:
+                    continue
+                group_vehicles = [bid] + vehicle_groups.get(bid, [])
+                ig = model.NewBoolVar(f"inGroup_{p}_{bid}")
+                # ig = OR_v pax[p, v] over the group's vehicles (MaxEquality works for Bool OR here)
+                model.AddMaxEquality(ig, [pax[p, v] for v in group_vehicles])
+                in_group[p, bid] = ig
+
+        # For each participant and group, add a tiny penalty if they share the group with ANY prior contact
+        for p in person_ids:
+            if not is_participant[p]:
+                continue
+
+            # Prior participant contacts of p (trimmed)
+            contacts = [
+                q
+                for q in people_meet_history.get(p, {}).keys()
+                if q != p and is_participant.get(q, False)
+            ]
+            if len(contacts) > max_contacts_per_person:
+                contacts = contacts[-max_contacts_per_person:]
+            if not contacts:
+                continue
+
+            for bid in balloon_ids:
+                # any_contact_in_b == OR_q in_group[q, bid] over q in contacts
+                any_contact_in_b = model.NewBoolVar(f"anyContactInGroup_{p}_{bid}")
+                # Build the OR via MaxEquality on existing in_group[q,bid]; all q are participants so keys exist
+                or_aux = model.NewIntVar(0, 1, f"orContacts_{p}_{bid}")
+                model.AddMaxEquality(
+                    or_aux,
+                    [in_group.get((q, bid), model.NewConstant(0)) for q in contacts],
+                )
+                model.Add(any_contact_in_b == or_aux)
+
+                # repeat_exists[p,bid] ⇔ in_group[p,bid] AND any_contact_in_b
+                repeat_exists = model.NewBoolVar(f"repeatExists_{p}_{bid}")
+                model.Add(repeat_exists <= in_group[p, bid])
+                model.Add(repeat_exists <= any_contact_in_b)
+                model.Add(repeat_exists >= in_group[p, bid] + any_contact_in_b - 1)
+
+                # Minimize: small penalty for any repeated meet in the same group
+                objective_terms.append(w_new_meetings * repeat_exists)
 
     # 3.6 fresh vehicle (passengers only)
     if fixed_groups is None and group_history:

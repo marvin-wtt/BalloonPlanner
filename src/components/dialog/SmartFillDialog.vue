@@ -159,6 +159,19 @@
                 rounded
               />
               <q-input
+                v-model.number="options.meetingNewPeople"
+                label="Meeting New People Weight"
+                hint="Higher values try to maximize new people met in vehicles"
+                type="number"
+                step="1"
+                :rules="[signedIntegerRule]"
+                hide-bottom-space
+                clearable
+                dense
+                outlined
+                rounded
+              />
+              <q-input
                 v-model.number="options.diverseNationalities"
                 label="Nationality Diversity Weight"
                 hint="Higher values try to equalize nationalities in vehicles"

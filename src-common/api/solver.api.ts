@@ -48,6 +48,7 @@ export interface SolveFlightLegRequest {
     }
   >; // key: vehicleId
   groupHistory?: Record<ID, Record<ID, number>>; // key: personId, value: balloonIds -> count
+  peopleMeetHistory?: Record<ID, Record<ID, number>>; // key: personId, value: balloonIds -> count
   fixedGroups?: Record<ID, ID>;
 
   people: {
@@ -66,6 +67,7 @@ export interface SolveFlightLegRequest {
 export interface SolveFlightLegOptions extends Record<string, unknown> {
   pilotFairness?: number;
   passengerFairness?: number;
+  meetingNewPeople?: number;
   tiebreakFairness?: number;
   groupRotation?: number;
   diverseNationalities?: number;
