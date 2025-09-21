@@ -50,16 +50,6 @@ export function validateFlightLegAndSeries(
     return `Balloon '${balloonNameMap[dupBalloon] ?? dupBalloon}' appears in more than one vehicle group.`;
   }
 
-  // missing balloons ids
-  if (groupBalloonIds.some((b) => !seriesBalloonSet.has(b))) {
-    const missingBalloon = groupBalloonIds.find(
-      (b) => !seriesBalloonSet.has(b),
-    );
-    if (missingBalloon) {
-      return `Balloon '${balloonNameMap[missingBalloon] ?? missingBalloon}' does not belong to this flight series.`;
-    }
-  }
-
   // 1b) Cars: each appears exactly once overall and membership + coverage
   const allGroupedCarIds = series.vehicleGroups.flatMap((g) => g.carIds);
 
@@ -82,14 +72,6 @@ export function validateFlightLegAndSeries(
   const dupCar = firstDuplicate(allGroupedCarIds);
   if (dupCar) {
     return `Car '${carNameMap[dupCar] ?? dupCar}' appears in more than one vehicle group.`;
-  }
-
-  // missing car ids
-  if (allGroupedCarIds.some((id) => !series.carIds.includes(id))) {
-    const missingCar = allGroupedCarIds.find((b) => !seriesCarSet.has(b));
-    if (missingCar) {
-      return `Car '${carNameMap[missingCar] ?? missingCar}' does not belong to this flight series.`;
-    }
   }
 
   // ==================================
