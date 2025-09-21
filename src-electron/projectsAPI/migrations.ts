@@ -8,7 +8,7 @@ type AnyProject = Record<string, any>;
 type Migration = (data: AnyProject) => AnyProject;
 
 const migrations: Record<string, Migration> = {
-  '1.0.0-beta-12': (data): Pick<Project, 'flights'> => {
+  '1.0.0-beta.12': (data): Pick<Project, 'flights'> => {
     // Create flight legs and separate groups and assignments
     return {
       ...data,
@@ -39,7 +39,7 @@ const migrations: Record<string, Migration> = {
       })),
     };
   },
-  '1.0.0-beta-13': (data) => {
+  '1.0.0-beta.13': (data) => {
     return {
       ...data,
       flights: data.flights.map((flight) => ({
@@ -68,7 +68,7 @@ export function migrateProject(data: AnyProject): Project {
   const appVersion = getAppVersion();
   const version: string = data.version ?? '0.0.0';
 
-  if (semver.gt(version, appVersion)) {
+  if (semver.gt(version, appVersion) && app.isPackaged) {
     throw new Error(
       `Project version ${version} is higher than app version ${appVersion}. Please update the app.`,
     );
