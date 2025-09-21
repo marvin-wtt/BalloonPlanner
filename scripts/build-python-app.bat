@@ -12,7 +12,7 @@ call pyinstaller ^
       --distpath ../dist/python ^
       --workpath ../dist/python/pyinstaller ^
       --specpath ../dist/python/pyinstaller ^
-      ./run_balloon_solver.py
+      ./solver_main.py
 
 REM Go to root directory
 cd /d %~dp0..\
