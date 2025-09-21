@@ -45,7 +45,7 @@ jobs:
             --workpath dist/python/pyinstaller \
             --specpath dist/python/pyinstaller \
             --paths src-python \
-            src-python/run_balloon_solver.py
+            src-python/solver_main.py
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
