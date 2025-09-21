@@ -123,6 +123,7 @@ const {
   assignment,
   flightSeries,
   flightLeg,
+  group,
   editable = false,
   operator = false,
   overfilled = false,
@@ -258,6 +259,10 @@ const operatorInfo = computed<StatusInfo | false>(() => {
   };
 });
 
+const isFirstLeg = computed<boolean>(() => {
+  return flightSeries.legs.findIndex((l) => l.id === flightLeg.id) === 0;
+});
+
 function isDropAllowed(element: Identifiable): boolean {
   if (!editable) {
     return false;
@@ -326,7 +331,7 @@ function removePersonFromVehicle(personId: string) {
 }
 
 function wasInSameVehicleGroupInFirstLeg(personId: string): boolean {
-  if (flightSeries.legs.findIndex((l) => l.id === flightLeg.id) === 0) {
+  if (isFirstLeg.value) {
     return true;
   }
 
@@ -335,16 +340,8 @@ function wasInSameVehicleGroupInFirstLeg(personId: string): boolean {
     return false;
   }
 
-  // Find the vehicle group containing the current vehicle
-  const currentGroup = flightSeries.vehicleGroups.find(
-    (g) => g.balloonId === vehicle.id || g.carIds.includes(vehicle.id),
-  );
-  if (!currentGroup) {
-    return false;
-  }
-
   // Collect all vehicle IDs of this group
-  const groupVehicleIds = [currentGroup.balloonId, ...currentGroup.carIds];
+  const groupVehicleIds = [group.balloonId, ...group.carIds];
 
   // Check if person was in any of these vehicles in the first leg
   return groupVehicleIds.some((vid) => {
