@@ -67,6 +67,7 @@ export interface ProjectSettings {
   disableVehicleGroupProtection?: boolean;
   showVehicleIndex?: boolean;
   showVehicleLabel?: boolean;
+  showVehicleIcon?: boolean;
   showGroupLabel?: boolean;
   showNumberOfFlights?: boolean;
   showPersonWeight?: boolean;

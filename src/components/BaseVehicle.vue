@@ -22,9 +22,25 @@
             :style="{ backgroundColor: color }"
             :rowspan="rowCount"
           >
-            <span>
-              {{ vehicle.name ?? '&#160;' }}
-            </span>
+            <div class="col no-wrap">
+              <q-icon
+                v-if="showVehicleIcon"
+                :name="
+                  vehicle.type === 'balloon'
+                    ? 'mdi-airballoon'
+                    : 'airport_shuttle'
+                "
+                size="xs"
+                class="rotate-270 q-mb-sm"
+              />
+
+              <div>
+                <span>
+                  {{ vehicle.name ?? '&#160;' }}
+                </span>
+              </div>
+            </div>
+
             <q-menu
               touch-position
               context-menu
@@ -214,6 +230,7 @@ const {
   showVehicleWeight,
   showVehicleIndex,
   showVehicleLabel,
+  showVehicleIcon,
   personDefaultWeight,
   balloonColor,
   carColor,

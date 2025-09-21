@@ -160,8 +160,8 @@ const weightLabel = computed<string>(() => {
     return '';
   }
 
-  const weight = person.weight ?? personDefaultWeight.value ?? '?';
-  const suffix = !person.weight && personDefaultWeight.value ? '*' : '';
+  const weight = person.weight ?? personDefaultWeight.value ?? '';
+  const suffix = !person.weight ? '?' : '';
 
   return ` (${weight.toString()}${suffix} kg)`;
 });

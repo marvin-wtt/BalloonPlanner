@@ -7,6 +7,7 @@ const DEFAULTS: Readonly<ProjectSettings> = {
   disableVehicleGroupProtection: false,
   showVehicleIndex: true,
   showVehicleLabel: true,
+  showVehicleIcon: false,
   showGroupLabel: true,
   showNumberOfFlights: true,
   showPersonWeight: false,
@@ -14,12 +15,30 @@ const DEFAULTS: Readonly<ProjectSettings> = {
   personDefaultWeight: 80,
   groupAlignment: 'horizontal',
   groupStyle: 'dashed',
-  balloonColor: '#999999',
+  balloonColor: '#1976d2',
   carColor: '#999999',
 };
 
+/**
+ * Remove entries whose value is strictly `undefined`.
+ * We keep false/0/''/null.
+ */
+function removeUndefined<T extends Record<string, unknown>>(
+  obj: T | null | undefined,
+): Partial<T> {
+  if (!obj || typeof obj !== 'object') return {};
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined),
+  ) as Partial<T>;
+}
+
+/**
+ * Merge defaults with sparse overrides.
+ * Any `undefined` in src is ignored → default applies.
+ */
 function merged(src?: Partial<ProjectSettings> | null): ProjectSettings {
-  return { ...DEFAULTS, ...(src ?? {}) };
+  const cleaned = removeUndefined(src);
+  return { ...DEFAULTS, ...cleaned };
 }
 
 export function useProjectSettings() {
@@ -31,34 +50,50 @@ export function useProjectSettings() {
 
   function ensureSettingsObject() {
     const p = projectStore.project;
+    if (!p) {
+      return;
+    }
+    if (!p.settings || typeof p.settings !== 'object') {
+      p.settings = {};
+    }
+  }
+
+  /**
+   * Patch multiple keys at once.
+   * - Keys with `undefined` are removed (reset to default) using object rest.
+   * - Other keys are set as explicit overrides.
+   */
+  function patch(patchObj: Partial<ProjectSettings>) {
+    const p = projectStore.project;
+    if (!p) {
+      return;
+    }
+    ensureSettingsObject();
+
+    const base = { ...(p.settings ?? {}) };
+
+    p.settings = Object.fromEntries(
+      Object.entries({ ...base, ...patchObj }).filter(
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        ([, v]) => v != undefined,
+      ),
+    );
+  }
+
+  function reset() {
+    const p = projectStore.project;
     if (!p) return;
-    if (!p.settings) p.settings = { ...settings.value };
+    // Clear all overrides so everything falls back to defaults.
+    p.settings = {};
   }
 
   function field<K extends keyof ProjectSettings>(key: K) {
     return computed<ProjectSettings[K]>({
       get: () => settings.value[key],
       set: (val) => {
-        const p = projectStore.project;
-        if (!p) return;
-        ensureSettingsObject();
-        // write a fresh object to keep reactivity clean
-        p.settings = { ...settings.value, [key]: val };
+        patch({ [key]: val });
       },
     });
-  }
-
-  function patch(patch: Partial<ProjectSettings>) {
-    const p = projectStore.project;
-    if (!p) return;
-    ensureSettingsObject();
-    p.settings = { ...settings.value, ...patch };
-  }
-
-  function reset() {
-    const p = projectStore.project;
-    if (!p) return;
-    p.settings = { ...DEFAULTS };
   }
 
   // expose v-model friendly refs
@@ -66,6 +101,7 @@ export function useProjectSettings() {
   const disableVehicleGroupProtection = field('disableVehicleGroupProtection');
   const showVehicleIndex = field('showVehicleIndex');
   const showVehicleLabel = field('showVehicleLabel');
+  const showVehicleIcon = field('showVehicleIcon');
   const showGroupLabel = field('showGroupLabel');
   const showNumberOfFlights = field('showNumberOfFlights');
   const showPersonWeight = field('showPersonWeight');
@@ -84,6 +120,7 @@ export function useProjectSettings() {
     disableVehicleGroupProtection,
     showVehicleIndex,
     showVehicleLabel,
+    showVehicleIcon,
     showGroupLabel,
     showNumberOfFlights,
     showPersonWeight,

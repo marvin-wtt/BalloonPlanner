@@ -24,7 +24,8 @@
             <q-item-section>
               <q-item-label>Disable assignment protection</q-item-label>
               <q-item-label caption>
-                The protections prohibits changes across vehicle groups
+                The protection prohibits changes across vehicle groups after the
+                first leg
               </q-item-label>
             </q-item-section>
           </q-item>
@@ -44,8 +45,8 @@
             <q-item-section>
               <q-item-label>Disable vehicle group protection</q-item-label>
               <q-item-label caption>
-                The protections permits changes to the vehicle groups only in
-                the first leg
+                The protection prohibits changes to the vehicle groups after the
+                first leg
               </q-item-label>
             </q-item-section>
           </q-item>
@@ -65,6 +66,24 @@
             </q-item-section>
             <q-item-section>
               <q-item-label>Show vehicle name</q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-item
+            v-if="showVehicleLabel"
+            v-ripple
+            tag="label"
+          >
+            <q-item-section
+              avatar
+              top
+            >
+              <q-checkbox
+                v-model="showVehicleIcon"
+                color="primary"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Show vehicle Icon</q-item-label>
             </q-item-section>
           </q-item>
           <q-item
@@ -156,7 +175,7 @@
           </q-item>
           <q-item>
             <q-item-section>
-              <q-item-label>Default Weight</q-item-label>
+              <q-item-label>Default Person Weight</q-item-label>
             </q-item-section>
             <q-item-section side>
               <q-input
@@ -212,6 +231,8 @@
                 label="Balloon Color"
                 :rules="['anyColor']"
                 hide-bottom-space
+                clearable
+                clear-icon="undo"
                 rounded
                 outlined
                 dense
@@ -244,6 +265,8 @@
                 label="Car Color"
                 :rules="['anyColor']"
                 hide-bottom-space
+                clearable
+                clear-icon="undo"
                 rounded
                 outlined
                 dense
@@ -284,6 +307,7 @@ const {
   disableVehicleGroupProtection,
   showVehicleIndex,
   showVehicleLabel,
+  showVehicleIcon,
   showGroupLabel,
   showNumberOfFlights,
   showPersonWeight,
