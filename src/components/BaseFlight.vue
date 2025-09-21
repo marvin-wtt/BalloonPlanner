@@ -50,6 +50,7 @@ import type {
   Person,
   Identifiable,
   FlightLeg,
+  Project,
 } from 'app/src-common/entities';
 import DropZone from 'components/drag/DropZone.vue';
 import { computed } from 'vue';
@@ -67,10 +68,12 @@ const { groupAlignment } = useProjectSettings();
 const { addVehicleGroup } = useFlightOperations();
 
 const {
+  project,
   flightSeries,
   flightLeg,
   editable = false,
 } = defineProps<{
+  project: Project;
   flightSeries: FlightSeries;
   flightLeg: FlightLeg;
   editable?: boolean;
@@ -129,7 +132,7 @@ function onDrop(element: Identifiable) {
 }
 
 const errorText = computed<string | null>(() => {
-  return validateFlightLegAndSeries(flightSeries, flightLeg);
+  return validateFlightLegAndSeries(project, flightSeries, flightLeg);
 });
 </script>
 

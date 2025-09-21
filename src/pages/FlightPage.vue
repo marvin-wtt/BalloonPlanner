@@ -176,6 +176,7 @@
         class="col-grow flex flight-view"
       >
         <base-flight
+          :project
           :flight-series
           :flight-leg
           :editable
