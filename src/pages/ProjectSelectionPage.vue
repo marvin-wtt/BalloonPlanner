@@ -32,22 +32,39 @@
           <q-separator />
 
           <q-card-actions
-            class="no-wrap"
+            class="no-wrap row justify-around"
             align="right"
           >
             <q-btn
+              v-if="meta.isInternal"
               icon="download"
               size="sm"
               flat
+              stack
               rounded
               @click.stop="downloadProject(meta)"
             >
               Export
             </q-btn>
             <q-btn
+              v-else
+              icon="folder"
+              size="sm"
+              flat
+              stack
+              rounded
+              disable
+            >
+              Show
+              <q-tooltip>
+                {{ meta.filePath }}
+              </q-tooltip>
+            </q-btn>
+            <q-btn
               icon="edit"
               size="sm"
               flat
+              stack
               rounded
               @click.stop="onEditProject(meta)"
             >
@@ -58,6 +75,7 @@
               size="sm"
               color="negative"
               flat
+              stack
               rounded
               dense
               @click.stop="deleteProject(meta)"
@@ -111,7 +129,7 @@ const router = useRouter();
 const quasar = useQuasar();
 
 const projectStore = useProjectStore();
-const { projectIndex } = storeToRefs(projectStore);
+const { project, projectIndex } = storeToRefs(projectStore);
 
 onBeforeMount(async () => {
   await projectStore.loadIndex();
@@ -199,9 +217,14 @@ async function editProject(
   data: Pick<ProjectMeta, 'name' | 'description'>,
 ) {
   await projectStore.loadProject(projectId);
+
+  if (!project.value) {
+    throw new Error('Project not found');
+  }
+
   // Apply update
-  projectStore.project.name = data.name;
-  projectStore.project.description = data.description;
+  project.value.name = data.name;
+  project.value.description = data.description;
   // Refresh index
   await projectStore.saveProject();
   await projectStore.loadIndex();
