@@ -322,15 +322,16 @@ async function init() {
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const leg = series.legs[series.legs.length - 1]!;
-  flightId = leg.id;
+  const lastLeg = series.legs[series.legs.length - 1];
+  if (!lastLeg.id) {
+    return;
+  }
 
   await router.replace({
     name: 'flight',
     params: {
       projectId,
-      flightId,
+      flightId: lastLeg.id,
     },
   });
 }

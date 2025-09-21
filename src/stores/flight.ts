@@ -292,7 +292,8 @@ export const useFlightStore = defineStore('flight', () => {
     }
 
     return flightSeries.value.vehicleGroups.reduce(
-      (balloons, group) => balloons.filter((id) => id.id !== group.balloonId),
+      (balloons, group) =>
+        balloons.filter((balloon) => balloon.id !== group.balloonId),
       Object.values(balloonMap.value),
     );
   });
