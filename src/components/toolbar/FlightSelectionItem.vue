@@ -32,6 +32,7 @@
                 <q-item
                   v-close-popup
                   clickable
+                  :disable="project.flights.length === 1"
                   @click="deleteSeries(series.id)"
                 >
                   <q-item-section class="text-negative">
@@ -88,6 +89,7 @@
                 </q-item>
                 <q-item
                   v-close-popup
+                  :disable="flightSeries?.legs.length === 1"
                   clickable
                   @click="deleteLeg(leg.id)"
                 >

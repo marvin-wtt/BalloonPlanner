@@ -98,7 +98,7 @@
                 hint="Value is subtracted from actual counselor flights"
                 type="number"
                 step="1"
-                :rules="[signedIntegerRule]"
+                :rules="[]"
                 hide-bottom-space
                 clearable
                 dense
@@ -243,7 +243,7 @@ const options = reactive<SolveFlightLegOptions>({
 });
 
 const signedIntegerRule = (val?: number): boolean | string => {
-  return !val || Number.isInteger(val) || 'Must be an integer';
+  return !val || Number.isInteger(val) || 'Value must be an integer';
 };
 
 function onSubmit() {

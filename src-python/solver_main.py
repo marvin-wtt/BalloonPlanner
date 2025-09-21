@@ -105,7 +105,7 @@ def _handle_solve_leg(payload: Dict[str, Any], args: argparse.Namespace):
         w_new_meetings=options.get("meetingNewPeople", 1),
         w_divers_nationalities=options.get("diverseNationalities", 3),
         w_low_flights_lookahead=options.get("lowFlightsLookahead", 30),
-        counselor_flight_discount=options.get("counselorFlightDiscount", 1),
+        counselor_flight_discount=options.get("counselorFlightDiscount", 0.9),
         time_limit_s=options.get("time_limit", 600),
         # TODO Reactivate
         # num_search_workers=args.get("workers"),

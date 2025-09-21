@@ -63,7 +63,7 @@ def solve_flight_leg(
     w_group_passenger_balance: int,
     w_group_rotation: int,
     w_low_flights_lookahead: int,
-    counselor_flight_discount: int,
+    counselor_flight_discount: float,
     # misc
     default_person_weight: int,
     time_limit_s: int,
