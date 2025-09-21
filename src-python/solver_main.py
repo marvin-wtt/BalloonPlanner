@@ -8,7 +8,7 @@ Failure: error JSON on stderr · exit-code 1 or 2
 """
 from __future__ import annotations
 
-import argparse
+from argparse import ArgumentParser, Namespace
 import json
 import sys
 from typing import List, Any, Dict
@@ -36,8 +36,8 @@ def _read_json_stdin() -> Dict[str, Any]:
         raise  # unreachable
 
 
-def _parse_args(argv: List[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Solve balloon-camp crew assignment")
+def _parse_args(argv: Any = None) -> Namespace | Any:
+    parser = ArgumentParser(description="Solve balloon-camp crew assignment")
 
     #
     parser.add_argument(
@@ -80,7 +80,7 @@ def _handle_build_groups(payload: Dict[str, Any]) -> Dict[str, Any]:
     )
 
 
-def _handle_solve_leg(payload: Dict[str, Any], args: argparse.Namespace):
+def _handle_solve_leg(payload: Dict[str, Any], args: Namespace | Any = None):
     options = payload.get("options", {})
 
     return solve_flight_leg(
@@ -107,9 +107,9 @@ def _handle_solve_leg(payload: Dict[str, Any], args: argparse.Namespace):
         w_low_flights_lookahead=options.get("lowFlightsLookahead", 30),
         counselor_flight_discount=options.get("counselorFlightDiscount", 0.9),
         time_limit_s=options.get("time_limit", 600),
-        # TODO Reactivate
-        # num_search_workers=args.get("workers"),
-        # random_seed=args.get("seed"),
+        # Configuration
+        num_search_workers=args.get("workers", 15),
+        random_seed=args.get("seed", None),
     )
 
 
@@ -120,7 +120,7 @@ def main(argv: List[str] | None = None) -> None:
     if args.mode == "solve_groups":
         out = _handle_build_groups(payload)
     elif args.mode == "solve_leg":
-        out = _handle_solve_leg(payload, args)
+        out = _handle_solve_leg(payload, vars(args))
     else:
         raise ValueError("Invalid mode", args.mode)
 
