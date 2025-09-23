@@ -35,6 +35,14 @@ from ortools.sat.python import cp_model
 from solver_types import Balloon, Car, Vehicle, Person, VehicleAssignment
 
 
+class BalloonV(Balloon):
+    kind: Literal["balloon"]
+
+
+class CarV(Car):
+    kind: Literal["car"]
+
+
 class Manifest(TypedDict):
     assignments: Dict[str, VehicleAssignment]
 
@@ -100,8 +108,8 @@ def solve_flight_leg(
     # ------------------------------------------------------------------
     # 0.b Fast look-ups
     # ------------------------------------------------------------------
-    vehicles: List[Vehicle] = [dict(**b, kind="balloon") for b in balloons] + [
-        dict(**c, kind="car") for c in cars
+    vehicles: List[Vehicle] = [BalloonV(**b, kind="balloon") for b in balloons] + [
+        CarV(**c, kind="car") for c in cars
     ]
 
     people_by_id: Dict[str, Person] = {p["id"]: p for p in people}
