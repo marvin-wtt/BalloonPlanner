@@ -189,19 +189,44 @@ const overfillStatus: StatusInfo | false = overfilled
   : false;
 
 const languageStatus = computed<StatusInfo | false>(() => {
-  if (operator || !assignment.operatorId || !person || !person.languages) {
+  if (!person || !person.languages) {
     return false;
   }
 
-  const opLangs = personMap.value[assignment.operatorId]?.languages;
-  if (opLangs == undefined) {
+  const hasCommonLang = (personId: string) => {
+    if (!personId) {
+      return false;
+    }
+
+    const otherLangs = personMap.value[personId]?.languages;
+    if (!otherLangs) {
+      return false;
+    }
+
+    return otherLangs.some((language) => person.languages?.includes(language));
+  };
+
+  if (operator) {
+    if (vehicle.type === 'balloon') {
+      return false;
+    }
+
+    const pilotId = flightLeg.assignments[group.balloonId]?.operatorId;
+    if (hasCommonLang(pilotId)) {
+      return false;
+    }
+
+    return {
+      color: 'warning',
+      text: 'No common language with pilot',
+    };
+  }
+
+  if (hasCommonLang(assignment.operatorId)) {
     return false;
   }
 
-  if (opLangs.some((language) => person.languages?.includes(language))) {
-    return false;
-  }
-
+  // For balloons, every person needs a common language with the operator
   if (vehicle.type === 'balloon') {
     return {
       color: 'warning',
@@ -213,6 +238,7 @@ const languageStatus = computed<StatusInfo | false>(() => {
     return false;
   }
 
+  // For cars, every person needs at least a common language with another passenger
   const hasCommonLangWithPassengers = assignment.passengerIds
     .filter((id) => id !== person.id)
     .flatMap((id) => personMap.value[id]?.languages)

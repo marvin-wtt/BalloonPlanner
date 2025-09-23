@@ -248,6 +248,31 @@ def solve_flight_leg(
                 # No other compatible operator exists → only valid if p is the operator
                 model.Add(op[p, v] >= pax[p, v])
 
+    # 2.9 operator language compatibility across cluster (balloon op vs each car op)
+    for bid in balloon_ids:
+        car_ids = vehicle_groups.get(bid, [])
+        cand_b = [p for p in allowed_op.get(bid, set())]
+
+        for cid in car_ids:
+            cand_c = [q for q in allowed_op.get(cid, set())]
+
+            if not cand_b or not cand_c:
+                continue  # if no operator candidates, feasibility is handled elsewhere
+
+            for p in cand_b:
+                lp = langs.get(p)
+                p_all = (lp is None) or (len(lp) == 0)
+                lp_set = set(lp or [])
+
+                for q in cand_c:
+                    lq = langs.get(q)
+                    q_all = (lq is None) or (len(lq) == 0)
+                    lq_set = set(lq or [])
+
+                    # check compatibility directly
+                    if not (p_all or q_all or lp_set.intersection(lq_set)):
+                        model.Add(op[p, bid] + op[q, cid] <= 1)
+
     # ------------------------------------------------------------------
     # 3. Objective
     # ------------------------------------------------------------------
