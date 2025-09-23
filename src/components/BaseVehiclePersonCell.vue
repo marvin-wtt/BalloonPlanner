@@ -195,12 +195,12 @@ const languageStatus = computed<StatusInfo | false>(() => {
 
   const hasCommonLang = (personId: string) => {
     if (!personId) {
-      return false;
+      return true;
     }
 
     const otherLangs = personMap.value[personId]?.languages;
     if (!otherLangs) {
-      return false;
+      return true;
     }
 
     return otherLangs.some((language) => person.languages?.includes(language));
