@@ -1,232 +1,87 @@
-# Balloon Camp Crew Optimiser
+# Balloon Organizer — Python Solver
 
-This repository provides a solver for planning **balloon camp crew assignments**
-using [OR-Tools CP-SAT](https://developers.google.com/optimization).
-It contains two main solvers:
+This folder implements the optimization core for Balloon Organizer using Google OR-Tools (CP-SAT). It exposes a
+streaming CLI that accepts a single JSON payload on stdin and returns a JSON result on stdout.
 
-1. **Vehicle Group Solver** – assigns cars to balloon clusters.
-2. **Flight Leg Solver** – assigns participants and counselors to balloons and cars for a single flight leg.
+- Entry point: `src-python/solver_main.py`
+- Modes:
+  - `solve_groups` — build feasible vehicle groups (balloon -> cars)
+  - `solve_leg` — produce the per-vehicle manifest (operator + passengers)
 
----
+## Features
 
-## ✨ Features
+- Feasible by construction: encodes critical operational rules as hard constraints.
+- Two-stage workflow:
+  1) Group cars with balloons.
+  2) Assign operators and passengers per leg within those groups.
+- Deterministic and tunable: seedable shuffles and CP-SAT parameterization (`--seed`, `--workers`, time limits).
+- Language-aware: operator compatibility and passenger–operator language checks on balloons; cross-vehicle operator
+  compatibility inside a cluster.
+- History-aware: optional group history and meet-history inform rotation and novelty rewards.
+- Pre-assignments supported: freeze operators and/or passengers per vehicle; keep previous groups when desired.
+- Lightweight I/O: one JSON in, one JSON out. Extra fields in the input are ignored.
 
-- **Hard constraints**
-  - Exactly one qualified operator per occupied vehicle.
-  - Every passenger (including operator) occupies a seat.
-  - Vehicle seat capacity and optional weight limits.
-  - Each person appears in ≤ 1 vehicle and operates ≤ 1 vehicle.
-  - Frozen assignments can be enforced.
-  - Second-leg “stay in cluster” restrictions.
-  - Language compatibility checks for balloons.
+## Hard constraints (feasibility)
 
-- **Soft objectives (tunable weights)**
-  - Pilot airtime fairness.
-  - Passenger airtime fairness.
-  - Mixed nationalities within vehicles.
-  - Vehicle rotation (discourage repeating the same vehicle).
-  - Avoid exactly one participant alone in a car.
-  - Passenger balance across ground clusters.
-  - Look-ahead terms for multi-leg planning (low-flight passengers).
-  - Random tie-break fairness.
+The solver refuses solutions that violate the following rules. Some are enforced in the group-building stage, others in
+the leg solver.
 
----
+### A) Vehicle group builder (`solve_groups`)
 
-## 📦 Installation
+- ≥ 1 trailer-equipped car in each balloon’s group.
+- Passenger seats across all cars must be sufficient for ground crew not flying in balloons.
+- Passenger-seat reserve for each balloon’s group ≥ balloon capacity.
+- Operator candidates must exist for every balloon and every car.
+- Frozen balloon–car pairs must be language-feasible (there exists a language-compatible balloon-op and car-op).
+- Objective (for groups): minimize unused passenger seats across all groups.
 
-Requires **Python 3.10+**.
+### B) Flight-leg manifest (`solve_leg`)
 
-```bash
-git clone <repo-url>
-cd solver
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+- Each person occupies exactly one seat overall; at most one operator role.
+- If someone operates a vehicle, they also occupy a seat in that vehicle.
+- Operator eligibility: only allowed operator IDs may operate a given vehicle.
+- Capacity respected on every vehicle (balloons and cars).
+- Weight limits respected where specified (e.g., balloon maxWeight).
+- Exactly one operator on each occupied vehicle; empty vehicles have zero operators.
+- Support frozen pre-assignments of operators and passengers.
+- Optional “fixed groups” constraint: keep people within their previous balloon group.
+- Balloon language constraint (passenger–operator): every balloon passenger must share a language with the balloon’s
+  operator (or either speaks all).
+- Cross-vehicle operator language: the balloon’s operator must be language-compatible with each car operator in the same
+  cluster.
 
-Dependencies (see [`requirements.txt`](requirements.txt)):
+## Objectives (what the solver optimizes)
 
-- `ortools==9.14.6206` – CP-SAT solver
-- `pytest==8.3.5` – testing framework
+Weights are controlled via `options` in the input payload (see `solver_main.py`). Higher positive weight increases the
+importance of a term; negative signs below indicate “maximize” style benefits.
 
----
+- Pilot fairness (w_pilot_fairness): prioritize lower-flight-count people for operator roles.
+- Passenger fairness (w_passenger_fairness): prioritize lower-flight-count participants for balloon seats; discount
+  counselors.
+- No solo participant in a car (w_no_solo_participant): penalize cars that would carry exactly one participant.
+- Group passenger balance (w_group_passenger_balance): keep ground-crew counts per cluster close to the average.
+- Diverse nationalities (w_diverse_nationalities): encourage within-vehicle diversity by rewarding minority presence.
+- Meeting new people (w_meetingNewPeople): discourage repeated meetings within the same cluster when groups are not
+  fixed.
+- Group rotation / novelty (w_group_rotation): reward passengers being placed in vehicles they have used less often.
+- Low-flights lookahead (w_low_flights_lookahead) with planning horizon: prioritize language-eligible, low-flight
+  passengers in cluster cars over multiple future legs.
+- Tiebreak fairness (w_tiebreak_fairness): small stabilizer to improve determinism between equivalent solutions.
 
-## 🚀 Usage
+## Minimal usage
 
-The entry point is [`solver_main.py`](solver_main.py).
-It reads a JSON object from **stdin** and writes the result to **stdout**.
+- Windows (PowerShell):
+  Get-Content payload.json | python src-python\solver_main.py --mode <
+  solve_groups|solve_leg> [--seed 42] [--workers 8] [--time-limit 20]
+- macOS/Linux:
+  cat payload.json | python3 src-python/solver_main.py --mode <
+  solve_groups|solve_leg> [--seed 42] [--workers 8] [--time-limit 20]
 
-### CLI
+For input shapes, see `src-python/solver_types.py` and the option names wired in `src-python/solver_main.py`.
 
-```bash
-# Solve vehicle groups
-cat input.json | python solver_main.py --mode solve_groups
+## Notes
 
-# Solve a flight leg
-cat input.json | python solver_main.py --mode solve_leg
-```
-
-- On **success**: writes a manifest JSON and exits with code `0`.
-- On **error**: writes an error JSON to stderr and exits with code `1` or `2`.
-
-### CLI Options
-
-| Flag        | Description                                       | Default |
-|-------------|---------------------------------------------------|---------|
-| `--mode`    | `solve_groups` or `solve_leg`                     | –       |
-| `--seed`    | Random seed for deterministic shuffles and solver | `42`    |
-| `--workers` | Number of CP-SAT threads                          | `8`     |
-
----
-
-## Input & Output
-
-### Vehicle Group Solver
-
-**Input:**
-
-```json
-{
-  "balloons": [
-    {
-      "id": "b1",
-      "maxCapacity": 3,
-      "allowedOperatorIds": [
-        "p1"
-      ],
-      "maxWeight": 500
-    }
-  ],
-  "cars": [
-    {
-      "id": "c1",
-      "maxCapacity": 4,
-      "allowedOperatorIds": [
-        "p2"
-      ],
-      "hasTrailerClutch": true
-    }
-  ],
-  "peopleCount": 12,
-  "vehicleGroups": {
-    "b1": [
-      "c1"
-    ]
-  }
-}
-```
-
-**Output:**
-
-```json
-{
-  "vehicleGroups": {
-    "b1": [
-      "c1"
-    ]
-  }
-}
-```
-
----
-
-### Flight Leg Solver
-
-**Input:**
-
-```json
-{
-  "balloons": [
-    {
-      "id": "b1",
-      "maxCapacity": 3,
-      "allowedOperatorIds": [
-        "p1"
-      ],
-      "maxWeight": 500
-    }
-  ],
-  "cars": [
-    {
-      "id": "c1",
-      "maxCapacity": 4,
-      "allowedOperatorIds": [
-        "p2"
-      ]
-    }
-  ],
-  "people": [
-    {
-      "id": "p1",
-      "role": "counselor",
-      "flightsSoFar": 1,
-      "languages": [
-        "de"
-      ],
-      "nationality": "de",
-      "weight": 75
-    },
-    {
-      "id": "p2",
-      "role": "participant",
-      "flightsSoFar": 0,
-      "languages": [
-        "fr"
-      ],
-      "nationality": "fr",
-      "weight": 65
-    }
-  ],
-  "vehicleGroups": {
-    "b1": [
-      "c1"
-    ]
-  },
-  "groupHistory": {
-    "p1": [
-      "b1"
-    ],
-    "p2": [
-      "b1"
-    ]
-  },
-  "preAssignments": {},
-  "fixedGroups": {},
-  "options": {
-    "planningHorizonDepth": 1,
-    "defaultPersonWeight": 80,
-    "passengerFairness": 20,
-    "pilotFairness": 5,
-    "tiebreakFairness": 1,
-    "groupRotation": 5,
-    "groupPassengerBalance": 7,
-    "noSoloParticipant": 100,
-    "diverseNationalities": 3,
-    "lowFlightsLookahead": 20,
-    "counselorFlightDiscount": 1
-  }
-}
-```
-
-**Output:**
-
-```json
-{
-  "assignments": {
-    "b1": {
-      "operatorId": "p1",
-      "passengerIds": [
-        "p2"
-      ]
-    },
-    "c1": {
-      "operatorId": null,
-      "passengerIds": []
-    }
-  }
-}
-```
-
-
-
-
+- Determinism: use `--seed` and fixed `--workers` for repeatable runs.
+- Performance: increase workers and/or time limits for tougher instances.
+- Validation: the solvers raise descriptive errors for common infeasibilities.
+- License: see repository root if present.
