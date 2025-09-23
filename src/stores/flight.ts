@@ -231,7 +231,13 @@ export const useFlightStore = defineStore('flight', () => {
     // Append legs
     seriesA.legs.push(...seriesB.legs);
 
+    const wasLoaded = flightSeries.value?.id === seriesIdB;
+
     deleteFlightSeries(seriesB.id);
+
+    if (wasLoaded) {
+      loadLastFlight();
+    }
   }
 
   function detachLeg(flightId: string) {
@@ -251,6 +257,8 @@ export const useFlightStore = defineStore('flight', () => {
       return;
     }
 
+    const wasLoaded = flightLeg.value?.id === flightId;
+
     deleteFlightLeg(flightId);
 
     createFlightSeries({
@@ -260,6 +268,10 @@ export const useFlightStore = defineStore('flight', () => {
       vehicleGroups: series.vehicleGroups,
       legs: [leg],
     });
+
+    if (wasLoaded) {
+      loadLastFlight();
+    }
   }
 
   function deleteFlightSeries(seriesId: string) {

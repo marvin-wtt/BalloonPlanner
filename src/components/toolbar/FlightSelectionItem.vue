@@ -28,7 +28,15 @@
             @click.prevent.stop
           >
             <q-menu>
-              <q-list>
+              <q-list style="min-width: 100px">
+                <q-item
+                  v-close-popup
+                  clickable
+                  :disable="project.flights[0]?.id === series.id"
+                  @click="mergeSeries(series.id)"
+                >
+                  <q-item-section class="text-warning"> Merge </q-item-section>
+                </q-item>
                 <q-item
                   v-close-popup
                   clickable
@@ -80,12 +88,12 @@
             <q-menu>
               <q-list style="min-width: 100px">
                 <q-item
-                  v-if="flightSeries?.legs.indexOf(leg) !== 0"
                   v-close-popup
+                  :disable="flightSeries?.legs[0]?.id === leg.id"
                   clickable
                   @click="detachLeg(leg.id)"
                 >
-                  <q-item-section>Detach</q-item-section>
+                  <q-item-section class="text-warning">Detach</q-item-section>
                 </q-item>
                 <q-item
                   v-close-popup
@@ -236,6 +244,22 @@ async function changeLeg(legId: string | undefined) {
 
 function detachLeg(legId: ID) {
   flightStore.detachLeg(legId);
+}
+
+function mergeSeries(seriesId: ID) {
+  const index = project.value?.flights.findIndex(
+    (value) => value.id === seriesId,
+  );
+  if (index === undefined || index <= 0) {
+    throw new Error('Invalid flight series index');
+  }
+
+  const prev = project.value?.flights[index - 1];
+  if (!prev) {
+    throw new Error('No previous flight series');
+  }
+
+  flightStore.mergeSeries(prev.id, seriesId);
 }
 
 function deleteSeries(flightId: ID) {
