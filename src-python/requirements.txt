@@ -1,3 +1,4 @@
 ortools==9.14.6206
 pytest==8.3.5
 pyinstaller==6.16.0
+black==25.9.0
