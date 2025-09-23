@@ -8,7 +8,7 @@ A single-slot (one flight) solver with:
   – seat-capacity and optional max-weight per vehicle
   – each person appears in ≤ 1 vehicle and operates ≤ 1 vehicle
   – optional *frozen* assignments (operator / passenger)
-  – leg-2 “stay in cluster” restriction based on previous flight
+  – leg-2 “stay in group” restriction based on previous flight
   – language compatibility for balloons:
       * None, missing, or [] in `languages` → speaks all languages
       * non-empty list → speaks only those languages (lowercased in transformer)
@@ -21,7 +21,7 @@ A single-slot (one flight) solver with:
   – reward mixed nationalities in each vehicle (w_divers_nationalities)
   – discourage “same vehicle again” (w_vehicle_rotation)
   – discourage exactly one participant alone in a car (w_no_solo_participant)
-  – cluster passenger balance terms for leg 1 and leg 2
+  – group passenger balance terms for leg 1 and leg 2
 
 All weights are user-tunable kwargs.
 """
@@ -103,7 +103,7 @@ def solve_flight_leg(
     random.shuffle(cars)
     random.shuffle(people)
 
-    reserve_cluster_seats(balloons, cars, vehicle_groups)
+    reserve_group_car_seats(balloons, cars, vehicle_groups)
 
     # ------------------------------------------------------------------
     # 0.b Fast look-ups
@@ -211,9 +211,9 @@ def solve_flight_leg(
                 model.Add(pax[pid, vid] == 1)
                 model.Add(op[pid, vid] == 0)
 
-    # 2.7 stay-in-cluster when this is NOT the first leg
+    # 2.7 stay-in-group when this is NOT the first leg
     if fixed_groups is not None:
-        # take cluster from previous leg (last entry)
+        # take group from previous leg (last entry)
         allowed = defaultdict(set)
 
         for pid, bid in fixed_groups.items():
@@ -256,7 +256,7 @@ def solve_flight_leg(
                 # No other compatible operator exists → only valid if p is the operator
                 model.Add(op[p, v] >= pax[p, v])
 
-    # 2.9 operator language compatibility across cluster (balloon op vs each car op)
+    # 2.9 operator language compatibility across groups (balloon op vs each car op)
     for bid in balloon_ids:
         car_ids = vehicle_groups.get(bid, [])
         cand_b = [p for p in allowed_op.get(bid, set())]
@@ -313,7 +313,7 @@ def solve_flight_leg(
         model.Add(part_sat != 1).OnlyEnforceIf(solo_part.Not())
         objective_terms.append(+w_no_solo_participant * solo_part)
 
-    # 3.4 cluster passenger deviation
+    # 3.4 group passenger deviation
     if fixed_groups is None:
         n_people = len(person_ids)
         seats_in_air = sum(capacity[bid] for bid in balloon_ids)
@@ -414,7 +414,7 @@ def solve_flight_leg(
             # scale the novelty reward for passengers; subtract op to avoid rewarding operators
             objective_terms.append(-w_group_rotation * nf * (pax[p, v] - op[p, v]))
 
-    # 3.7 language-aware lookahead: prioritise low-flight pax in cluster cars (no overweight lookahead)
+    # 3.7 language-aware lookahead: prioritise low-flight pax in group cars (no overweight lookahead)
     if planning_horizon_legs >= 1 and person_ids:
         # Seats available across the next H legs
         seats_per_leg = sum(capacity[bid] for bid in balloon_ids)
@@ -431,7 +431,7 @@ def solve_flight_leg(
 
         low = {p: int(flights_so_far[p] <= cutoff) for p in person_ids}
 
-        # Language eligibility for a cluster (balloon id = bid):
+        # Language eligibility for a group (balloon id = bid):
         # A passenger is eligible if they share ≥1 language with at least one *potential*
         # operator of that balloon (allowed_op[bid]), or if either side "speaks all"
         # (None/[] means "all" per 2.8).
@@ -451,7 +451,7 @@ def solve_flight_leg(
                     return 1
             return 0
 
-        # Target: in each cluster's cars, achieve at least H * capacity(low-flight, lang-eligible) over horizon
+        # Target: in each group's cars, achieve at least H * capacity(low-flight, lang-eligible) over horizon
         for bid in balloon_ids:
             target = int(planning_horizon_legs * capacity[bid])
             if target <= 0:
@@ -509,15 +509,15 @@ def solve_flight_leg(
     return {"assignments": manifest}
 
 
-def reserve_cluster_seats(
+def reserve_group_car_seats(
     balloons: List[Balloon],
     cars: List[Car],
     groups: Dict[str, list[str]],
 ):
     """
-    Reserve seats for each balloon's passengers inside *its own cluster cars*.
-    Mutates `cars[*]['capacity']` only (does NOT touch groups or the cluster).
-    Safe to call for any leg. Uses the order given by `cluster[balloon_id]`.
+    Reserve seats for each balloon's passengers inside *its own groups cars*.
+    Mutates `cars[*]['capacity']` only (does NOT touch groups or the group).
+    Safe to call for any leg. Uses the order given by `group[balloon_id]`.
     """
     car_by_id = {c["id"]: c for c in cars}
     for bal in balloons:
@@ -528,7 +528,7 @@ def reserve_cluster_seats(
                 break
             car = car_by_id.get(cid)
             if car is None:
-                raise ValueError(f"Car {cid} from cluster not found in current input.")
+                raise ValueError(f"Car {cid} from group not found in current input.")
             pax_cap_excl_driver = max(int(car["maxCapacity"]) - 1, 0)
             take = min(need, pax_cap_excl_driver)
             car["maxCapacity"] = int(car["maxCapacity"]) - take
