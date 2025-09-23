@@ -22,6 +22,7 @@ Vehicle = Union[BalloonV, CarV]
 
 class Balloon(TypedDict):
     id: str
+    name: str
     maxCapacity: int
     allowedOperatorIds: list[str]
     maxWeight: NotRequired[int]
@@ -29,6 +30,7 @@ class Balloon(TypedDict):
 
 class Car(TypedDict):
     id: str
+    name: str
     maxCapacity: int
     allowedOperatorIds: list[str]
     hasTrailerClutch: NotRequired[bool]

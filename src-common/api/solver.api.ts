@@ -11,11 +11,15 @@ export interface SolveVehicleGroupsRequest {
   vehicleGroups: Record<ID, ID[]>;
   balloons: {
     id: ID;
+    name: string;
     maxCapacity: number;
+    allowedOperatorIds: ID[];
   }[];
   cars: {
     id: ID;
+    name: string;
     maxCapacity: number;
+    allowedOperatorIds: ID[];
     hasTrailerClutch: boolean;
   }[];
   peopleCount: number;
@@ -28,6 +32,7 @@ export interface BuildGroupsResponse {
 export interface SolveFlightLegRequest {
   balloons: {
     id: ID;
+    name: string;
     maxCapacity: number;
     allowedOperatorIds: ID[];
     maxWeight?: number;
@@ -35,6 +40,7 @@ export interface SolveFlightLegRequest {
 
   cars: {
     id: ID;
+    name: string;
     maxCapacity: number;
     allowedOperatorIds: ID[];
   }[];

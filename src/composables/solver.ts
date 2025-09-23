@@ -56,14 +56,16 @@ export function useSolver() {
       ]),
     );
 
-    const peopleCount = flightSeries.value.personIds.length;
+    const people = flightSeries.value.personIds
+      .map((id) => personMap.value[id])
+      .filter(isDefined);
 
     const response = await window.solverAPI.solveVehicleGroups(
       deepToRaw({
         balloons,
         cars,
         vehicleGroups,
-        peopleCount,
+        people,
       }),
     );
 
