@@ -126,7 +126,7 @@
                   item-name="Counselor"
                   :items="availableCounselors"
                   @add="showAddPeople('counselor')"
-                  @create="showCreatePerson"
+                  @create="showCreatePerson('counselor')"
                   @edit="(person: Person) => showEditPerson(person)"
                   @delete="(person: Person) => showDeletePerson(person)"
                 >
@@ -151,7 +151,7 @@
                   :items="availableParticipants"
                   :dense="availableParticipants.length > 10"
                   @add="showAddPeople('participant')"
-                  @create="showCreatePerson"
+                  @create="showCreatePerson('participant')"
                   @edit="(person: Person) => showEditPerson(person)"
                   @delete="(person: Person) => showDeletePerson(person)"
                 >
@@ -450,7 +450,7 @@ function showAddPeople(role: Person['role']) {
     .onOk((ids) => ids.forEach(addPerson));
 }
 
-function showCreatePerson() {
+function showCreatePerson(role: Person['role']) {
   if (!project.value) {
     return;
   }
@@ -459,6 +459,7 @@ function showCreatePerson() {
     .dialog({
       component: EditPersonDialog,
       componentProps: {
+        role,
         existingNames: project.value.people.map(({ name }) => name),
       },
     })
