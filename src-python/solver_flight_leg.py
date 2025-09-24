@@ -89,6 +89,10 @@ def solve_flight_leg(
         raise ValueError("time_limit_s must be positive")
     if planning_horizon_legs < 0:
         raise ValueError("planning_horizon_legs must be non-negative")
+    if w_passenger_fairness * w_tiebreak_fairness < 0:
+        raise ValueError(
+            "w_passenger_fairness and w_tiebreak_fairness must have the same sign"
+        )
 
     # ------------------------------------------------------------------
     # 0.a Input preparation
