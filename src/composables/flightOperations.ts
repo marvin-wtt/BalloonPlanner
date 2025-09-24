@@ -203,15 +203,12 @@ export function useFlightOperations() {
     removeFirst(assignment.passengerIds, (p) => p === personId);
   }
 
-  function createPerson(data: Omit<Person, 'id'>) {
+  function createPerson(person: Omit<Person, 'id'>) {
     const p = requireProject();
-
-    const person = { ...data, id: crypto.randomUUID() };
-    p.people.push(person);
-
-    if (flightSeries.value) {
-      flightSeries.value.personIds.push(person.id);
-    }
+    const id = crypto.randomUUID();
+    p.people.push({ ...person, id });
+    const series = requireSeries();
+    pushUnique(series.personIds, id);
   }
 
   function editPerson(personId: ID, person: Omit<Person, 'id'>) {
