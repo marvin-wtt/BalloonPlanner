@@ -138,11 +138,13 @@ import { useQuasar } from 'quasar';
 import CreateFlightDialog, {
   type CreateFlightDialogData,
 } from 'components/dialog/CreateFlightDialog.vue';
+import { useErrorHelper } from 'src/composables/error';
 
 const quasar = useQuasar();
 const router = useRouter();
 const projectStore = useProjectStore();
 const flightStore = useFlightStore();
+const { withErrorNotification } = useErrorHelper();
 
 const { project } = storeToRefs(projectStore);
 const { flightSeries, flightLeg } = storeToRefs(flightStore);
@@ -243,7 +245,9 @@ async function changeLeg(legId: string | undefined) {
 }
 
 function detachLeg(legId: ID) {
-  flightStore.detachLeg(legId);
+  withErrorNotification(() => {
+    flightStore.detachLeg(legId);
+  });
 }
 
 function mergeSeries(seriesId: ID) {
@@ -259,15 +263,21 @@ function mergeSeries(seriesId: ID) {
     throw new Error('No previous flight series');
   }
 
-  flightStore.mergeSeries(prev.id, seriesId);
+  withErrorNotification(() => {
+    flightStore.mergeSeries(prev.id, seriesId);
+  });
 }
 
 function deleteSeries(flightId: ID) {
-  flightStore.deleteFlightSeries(flightId);
+  withErrorNotification(() => {
+    flightStore.deleteFlightSeries(flightId);
+  });
 }
 
 function deleteLeg(flightId: ID) {
-  flightStore.deleteFlightLeg(flightId);
+  withErrorNotification(() => {
+    flightStore.deleteFlightLeg(flightId);
+  });
 }
 </script>
 
