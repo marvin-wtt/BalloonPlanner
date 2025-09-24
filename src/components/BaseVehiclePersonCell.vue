@@ -193,7 +193,7 @@ const languageStatus = computed<StatusInfo | false>(() => {
     return false;
   }
 
-  const hasCommonLang = (personId: string) => {
+  const hasCommonLang = (personId: string | undefined | null) => {
     if (!personId) {
       return true;
     }
