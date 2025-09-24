@@ -219,6 +219,16 @@ export const useFlightStore = defineStore('flight', () => {
       throw new Error('Flight series not found');
     }
 
+    const compatible = seriesB.vehicleGroups.every((groupB) => {
+      return seriesA.vehicleGroups
+        .find(({ balloonId }) => balloonId === groupB.balloonId)
+        ?.carIds.every((carId) => groupB.carIds.includes(carId));
+    });
+
+    if (!compatible) {
+      throw new Error('Incompatible vehicle groups');
+    }
+
     // Merge available ids
     seriesA.carIds = [...new Set([...seriesA.carIds, ...seriesB.carIds])];
     seriesA.balloonIds = [
