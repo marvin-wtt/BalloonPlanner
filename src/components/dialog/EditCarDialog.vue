@@ -15,7 +15,7 @@
 
         <q-card-section class="q-pt-none q-gutter-y-md">
           <q-input
-            v-model="name"
+            v-model="newCar.name"
             label="Name"
             lazy-rules
             :rules="[
@@ -30,7 +30,7 @@
           />
 
           <q-input
-            v-model.number="maxCapacity"
+            v-model.number="newCar.maxCapacity"
             type="number"
             label="Maximum Capacity"
             hint="Including the pilot"
@@ -46,7 +46,7 @@
           />
 
           <q-select
-            v-model="allowedOperatorIds"
+            v-model="newCar.allowedOperatorIds"
             label="Allowed operators"
             use-input
             use-chips
@@ -61,7 +61,7 @@
           />
 
           <q-toggle
-            v-model="hasTrailerHitch"
+            v-model="newCar.hasTrailerClutch"
             label="Has trailer hitch"
           />
         </q-card-section>
@@ -90,7 +90,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, toRaw } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import type { Car, Person } from 'app/src-common/entities';
 import { type QSelectOption, useDialogPluginComponent } from 'quasar';
 
@@ -109,10 +109,12 @@ const {
 
 defineEmits([...useDialogPluginComponent.emits]);
 
-const name = ref<string | undefined>(car?.name);
-const maxCapacity = ref<number | undefined>(car?.maxCapacity);
-const hasTrailerHitch = ref<boolean>(car?.hasTrailerClutch ?? true);
-const allowedOperatorIds = ref<string[]>(car?.allowedOperatorIds ?? []);
+const newCar = reactive<Partial<Car>>({
+  name: car?.name ?? null,
+  maxCapacity: car?.maxCapacity ?? null,
+  hasTrailerClutch: car?.hasTrailerClutch ?? true,
+  allowedOperatorIds: car?.allowedOperatorIds ?? [],
+});
 
 const operatorOptions = computed<QSelectOption[]>(() => {
   return people
@@ -132,11 +134,8 @@ const mode = computed<'create' | 'edit'>(() => {
 
 function onSubmit() {
   const payload: Omit<Car, 'id'> = {
+    ...newCar,
     type: 'car',
-    name: toRaw(name.value).trim(),
-    maxCapacity: toRaw(maxCapacity.value),
-    allowedOperatorIds: toRaw(allowedOperatorIds.value),
-    hasTrailerClutch: toRaw(hasTrailerHitch.value),
   };
 
   onDialogOK(payload);
