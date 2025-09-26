@@ -22,7 +22,12 @@ export interface SolveVehicleGroupsRequest {
     allowedOperatorIds: ID[];
     hasTrailerClutch: boolean;
   }[];
-  peopleCount: number;
+  people: {
+    id: ID;
+    role: 'participant' | 'counselor';
+    languages?: string[];
+    nationality?: string;
+  }[];
 }
 
 export interface BuildGroupsResponse {
