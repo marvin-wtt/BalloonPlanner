@@ -101,7 +101,7 @@ export const useProjectStore = defineStore('project', () => {
       project.value = await window.projectAPI.show(projectId);
     } catch (e) {
       quasar.notify({
-        message: 'Failed to delete project',
+        message: 'Failed to load project',
         caption: e.message,
         color: 'negative',
         group: 'project-error',
