@@ -32,7 +32,7 @@
         class="q-ml-xs"
       >
         <q-icon
-          name="sym_o_error"
+          :name="status.icon"
           :color="status.color"
           size="sm"
           dense
@@ -142,6 +142,7 @@ const {
 interface StatusInfo {
   color: string;
   text: string;
+  icon: string;
 }
 
 const flightsLabel = computed<string>(() => {
@@ -183,6 +184,7 @@ const status = computed<StatusInfo | undefined>(() => {
 
 const overfillStatus: StatusInfo | false = overfilled
   ? {
+      icon: 'sym_o_error',
       color: 'negative',
       text: 'Vehicle capacity exceeded',
     }
@@ -206,6 +208,7 @@ const languageStatus = computed<StatusInfo | false>(() => {
     return otherLangs.some((language) => person.languages?.includes(language));
   };
 
+  // Car operators need a common language with the pilot
   if (operator) {
     if (vehicle.type === 'balloon') {
       return false;
@@ -217,6 +220,7 @@ const languageStatus = computed<StatusInfo | false>(() => {
     }
 
     return {
+      icon: 'sym_o_translate',
       color: 'warning',
       text: 'No common language with pilot',
     };
@@ -229,6 +233,7 @@ const languageStatus = computed<StatusInfo | false>(() => {
   // For balloons, every person needs a common language with the operator
   if (vehicle.type === 'balloon') {
     return {
+      icon: 'sym_o_translate',
       color: 'warning',
       text: 'No common language with operator',
     };
@@ -250,6 +255,7 @@ const languageStatus = computed<StatusInfo | false>(() => {
   }
 
   return {
+    icon: 'sym_o_translate',
     color: 'warning',
     text: 'No common language with operator or other passengers',
   };
@@ -265,8 +271,9 @@ const multiLegStatus = computed<StatusInfo | false>(() => {
   }
 
   return {
+    icon: 'sym_o_swap_horiz',
     color: 'negative',
-    text: 'Person was not assigned to this group in previous flight',
+    text: `${person.name} was assigned to different group in previous flight`,
   };
 });
 
@@ -280,8 +287,9 @@ const operatorInfo = computed<StatusInfo | false>(() => {
   }
 
   return {
+    icon: 'sym_o_do_not_disturb_on',
     color: 'negative',
-    text: 'Person not allowed to operate this vehicle',
+    text: `${person.name} not allowed to operate this vehicle`,
   };
 });
 
