@@ -232,7 +232,7 @@
                 :rules="['anyColor']"
                 hide-bottom-space
                 clearable
-                clear-icon="undo"
+                clear-icon="sym_o_undo"
                 rounded
                 outlined
                 dense
@@ -266,7 +266,7 @@
                 :rules="['anyColor']"
                 hide-bottom-space
                 clearable
-                clear-icon="undo"
+                clear-icon="sym_o_undo"
                 rounded
                 outlined
                 dense
