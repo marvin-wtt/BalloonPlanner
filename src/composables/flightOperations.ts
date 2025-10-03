@@ -52,7 +52,10 @@ export function useFlightOperations() {
   function removeFirst<T>(arr: T[], pred: (x: T) => boolean): number {
     const i = arr.findIndex(pred);
 
-    if (i >= 0) arr.splice(i, 1);
+    if (i >= 0) {
+      arr.splice(i, 1);
+    }
+
     return i;
   }
 
@@ -99,21 +102,21 @@ export function useFlightOperations() {
   }
 
   function unassignPersonEverywhere(personId: ID) {
-    const leg = flightLeg.value;
-    if (!leg) {
-      return;
-    }
-    for (const a of Object.values(leg.assignments)) {
-      if (a.operatorId === personId) a.operatorId = null;
-      a.passengerIds = a.passengerIds.filter((p) => p !== personId);
+    const series = requireSeries();
+
+    for (const leg of series.legs) {
+      for (const a of Object.values(leg.assignments)) {
+        if (a.operatorId === personId) {
+          a.operatorId = null;
+        }
+        a.passengerIds = a.passengerIds.filter((p) => p !== personId);
+      }
     }
   }
 
   function removeCarFromAllGroups(carId: ID) {
-    const series = flightSeries.value;
-    if (!series) {
-      return;
-    }
+    const series = requireSeries();
+
     for (const group of series.vehicleGroups) {
       removeFirst(group.carIds, (id) => id === carId);
     }
@@ -122,6 +125,7 @@ export function useFlightOperations() {
 
   function removeVehicleGroupByBalloon(balloonId: ID) {
     const series = requireSeries();
+
     const idx = series.vehicleGroups.findIndex(
       (g) => g.balloonId === balloonId,
     );
