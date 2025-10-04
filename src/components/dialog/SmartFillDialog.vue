@@ -38,166 +38,277 @@
           </q-list>
 
           <q-expansion-item label="Advanced Options">
-            <div class="column q-gutter-sm">
-              <q-item dense>
-                <q-item-section>
-                  <q-item-label>
-                    Usual weights are between 0 and 50</q-item-label
+            <q-list>
+              <q-expansion-item
+                label="Parameters"
+                group="options"
+                :header-inset-level="0.2"
+                :content-inset-level="0.4"
+              >
+                <q-list>
+                  <q-item>
+                    <q-item-section>
+                      <q-input
+                        v-model.number="options.weights.counselorFlightDiscount"
+                        label="Counselor Flight Disadvantage over Participants"
+                        hint="Value is subtracted from actual counselor flights"
+                        type="number"
+                        step="1"
+                        :rules="[]"
+                        hide-bottom-space
+                        clearable
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-expansion-item>
+              <q-expansion-item
+                label="Constrains"
+                group="options"
+                :header-inset-level="0.2"
+                :content-inset-level="0.4"
+              >
+                <q-list>
+                  <q-item
+                    v-ripple
+                    tag="label"
                   >
-                  <q-item-label caption>
-                    Zero disables an optimization
-                  </q-item-label>
-                  <q-item-label caption>
-                    Negative weights result in the reverse action
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
+                    <q-item-section>
+                      <q-item-label>
+                        Common language between pilot and passengers
+                      </q-item-label>
+                    </q-item-section>
+                    <q-item-section avatar>
+                      <q-toggle
+                        v-model="options.constrains.commonLanguageOperators"
+                        color="primary"
+                      />
+                    </q-item-section>
+                  </q-item>
+                  <q-item
+                    v-ripple
+                    tag="label"
+                  >
+                    <q-item-section>
+                      <q-item-label>
+                        Common language between operators
+                      </q-item-label>
+                      <q-item-label caption> For a group </q-item-label>
+                    </q-item-section>
+                    <q-item-section avatar>
+                      <q-toggle
+                        v-model="options.constrains.commonLanguageOperators"
+                        color="primary"
+                      />
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-expansion-item>
+              <q-expansion-item
+                label="Weights"
+                group="options"
+                :header-inset-level="0.2"
+                :content-inset-level="0.4"
+              >
+                <q-list>
+                  <q-item dense>
+                    <q-item-section>
+                      <q-item-label>
+                        Usual weights are between 0 and 50</q-item-label
+                      >
+                      <q-item-label caption>
+                        Zero disables an optimization
+                      </q-item-label>
+                      <q-item-label caption>
+                        Negative weights result in the reverse action
+                      </q-item-label>
+                    </q-item-section>
+                  </q-item>
+                  <q-item>
+                    <q-item-section>
+                      <q-input
+                        v-model.number="options.weights.passengerFairness"
+                        label="Passenger Fairness"
+                        hint="Higher values try to equalize participant flights"
+                        type="number"
+                        step="1"
+                        :rules="[signedIntegerRule]"
+                        hide-bottom-space
+                        clearable
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
 
-              <q-input
-                v-model.number="options.passengerFairness"
-                label="Passenger Fairness Weight"
-                hint="Higher values try to equalize participant flights"
-                type="number"
-                step="1"
-                :rules="[signedIntegerRule]"
-                hide-bottom-space
-                clearable
-                dense
-                outlined
-                rounded
-              />
-              <q-input
-                v-model.number="options.tiebreakFairness"
-                label="Tiebreak Fairness Weight"
-                hint="Higher values try to prioritize randomness in ties"
-                type="number"
-                step="1"
-                :rules="[signedIntegerRule]"
-                hide-bottom-space
-                clearablex
-                dense
-                outlined
-                rounded
-              />
-              <q-input
-                v-model.number="options.groupRotation"
-                label="Vehicle Rotation Weight"
-                hint="Higher values try to rotate people through different balloons"
-                type="number"
-                step="1"
-                :rules="[signedIntegerRule]"
-                hide-bottom-space
-                clearable
-                dense
-                outlined
-                rounded
-              />
-              <q-input
-                v-model.number="options.counselorFlightDiscount"
-                label="Counselor Flight Disadvantage over Participants"
-                hint="Value is subtracted from actual counselor flights"
-                type="number"
-                step="1"
-                :rules="[]"
-                hide-bottom-space
-                clearable
-                dense
-                outlined
-                rounded
-              />
-              <q-input
-                v-model.number="options.groupPassengerBalance"
-                label="Group Passenger Distribution Weight"
-                hint="Higher values try to equalize group member flights"
-                type="number"
-                step="1"
-                :rules="[signedIntegerRule]"
-                hide-bottom-space
-                clearable
-                dense
-                outlined
-                rounded
-              />
-              <q-input
-                v-if="(options.lowFlightsLookahead ?? 0) > 0"
-                v-model.number="options.lowFlightsLookahead"
-                label="Future Leg Fairness Weight"
-                hint="Higher values try to equalize participant flights in future legs"
-                type="number"
-                step="1"
-                :rules="[signedIntegerRule]"
-                hide-bottom-space
-                clearable
-                dense
-                outlined
-                rounded
-              />
-              <q-input
-                v-model.number="options.pilotFairness"
-                label="Pilot Fairness Weight"
-                hint="Higher values try to equalize pilot flights"
-                type="number"
-                step="1"
-                :rules="[signedIntegerRule]"
-                hide-bottom-space
-                clearable
-                dense
-                outlined
-                rounded
-              />
-              <q-input
-                v-model.number="options.noSoloParticipant"
-                label="No Solo Participants Weight"
-                hint="Higher values try to avoid solo participants in vehicles"
-                type="number"
-                step="1"
-                :rules="[signedIntegerRule]"
-                hide-bottom-space
-                clearable
-                dense
-                outlined
-                rounded
-              />
-              <q-input
-                v-model.number="options.meetingNewPeople"
-                label="Meeting New People Weight"
-                hint="Higher values try to maximize new people met in vehicles"
-                type="number"
-                step="1"
-                :rules="[signedIntegerRule]"
-                hide-bottom-space
-                clearable
-                dense
-                outlined
-                rounded
-              />
-              <q-input
-                v-model.number="options.diverseNationalities"
-                label="Nationality Diversity Weight"
-                hint="Higher values try to equalize nationalities in vehicles"
-                type="number"
-                step="1"
-                :rules="[signedIntegerRule]"
-                hide-bottom-space
-                clearable
-                dense
-                outlined
-                rounded
-              />
-              <q-input
-                v-model.number="options.timeLimit"
-                label="Time Limit (seconds)"
-                hint="Maximum time to spend on optimization"
-                type="number"
-                step="1"
-                :rules="[signedIntegerRule]"
-                hide-bottom-space
-                clearable
-                dense
-                outlined
-                rounded
-              />
-            </div>
+                  <q-item>
+                    <q-item-section>
+                      <q-input
+                        v-model.number="options.weights.tiebreakFairness"
+                        label="Tiebreak Fairness"
+                        hint="Higher values try to prioritize randomness in ties"
+                        type="number"
+                        step="1"
+                        :rules="[signedIntegerRule]"
+                        hide-bottom-space
+                        clearablex
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
+                  <q-item>
+                    <q-item-section>
+                      <q-input
+                        v-model.number="options.weights.groupRotation"
+                        label="Vehicle Rotation"
+                        hint="Higher values try to rotate people through different balloons"
+                        type="number"
+                        step="1"
+                        :rules="[signedIntegerRule]"
+                        hide-bottom-space
+                        clearable
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
+                  <q-item>
+                    <q-item-section>
+                      <q-input
+                        v-model.number="options.weights.groupPassengerBalance"
+                        label="Group Passenger Distribution"
+                        hint="Higher values try to equalize amount of group member"
+                        type="number"
+                        step="1"
+                        :rules="[signedIntegerRule]"
+                        hide-bottom-space
+                        clearable
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
+                  <q-item v-if="(options.weights.lowFlightsLookahead ?? 0) > 0">
+                    <q-item-section>
+                      <q-input
+                        v-model.number="options.weights.lowFlightsLookahead"
+                        label="Future Leg Fairness"
+                        hint="Higher values try to equalize participant flights in future legs"
+                        step="1"
+                        :rules="[signedIntegerRule]"
+                        hide-bottom-space
+                        clearable
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
+                  <q-item>
+                    <q-item-section>
+                      <q-input
+                        v-model.number="options.weights.pilotFairness"
+                        label="Pilot Fairness"
+                        hint="Higher values try to equalize pilot flights"
+                        type="number"
+                        step="1"
+                        :rules="[signedIntegerRule]"
+                        hide-bottom-space
+                        clearable
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
+                  <q-item>
+                    <q-item-section>
+                      <q-input
+                        v-model.number="options.weights.noSoloParticipant"
+                        label="No Solo Participants"
+                        hint="Higher values try to avoid solo participants in vehicles"
+                        type="number"
+                        step="1"
+                        :rules="[signedIntegerRule]"
+                        hide-bottom-space
+                        clearable
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
+                  <q-item>
+                    <q-item-section>
+                      <q-input
+                        v-model.number="options.weights.meetingNewPeople"
+                        label="Meeting New People"
+                        hint="Higher values try to maximize new people met in vehicles"
+                        type="number"
+                        step="1"
+                        :rules="[signedIntegerRule]"
+                        hide-bottom-space
+                        clearable
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
+                  <q-item>
+                    <q-item-section>
+                      <q-input
+                        v-model.number="options.weights.diverseNationalities"
+                        label="Nationality Diversity"
+                        hint="Higher values try to equalize nationalities in vehicles"
+                        type="number"
+                        step="1"
+                        :rules="[signedIntegerRule]"
+                        hide-bottom-space
+                        clearable
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-expansion-item>
+              <q-expansion-item
+                label="Configuration"
+                group="options"
+                :header-inset-level="0.2"
+                :content-inset-level="0.4"
+              >
+                <q-list>
+                  <q-item>
+                    <q-item-section>
+                      <q-input
+                        v-model.number="options.timeLimit"
+                        label="Time Limit (seconds)"
+                        hint="Maximum time to spend on optimization"
+                        type="number"
+                        step="1"
+                        :rules="[signedIntegerRule]"
+                        hide-bottom-space
+                        clearable
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-expansion-item>
+            </q-list>
           </q-expansion-item>
         </q-card-section>
 
@@ -238,8 +349,16 @@ const { isFirstLeg = true } = defineProps<{
   isFirstLeg?: boolean;
 }>();
 
-const options = reactive<SolveFlightLegOptions>({
+type Require<T, K extends keyof T> = T & {
+  [P in K]-?: NonNullable<T[P]>;
+};
+
+const options = reactive<
+  Require<SolveFlightLegOptions, 'weights' | 'constrains'>
+>({
   planningHorizonDepth: 0,
+  weights: {},
+  constrains: {},
 });
 
 const signedIntegerRule = (val?: number): boolean | string => {

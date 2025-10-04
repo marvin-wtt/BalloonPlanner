@@ -13,6 +13,8 @@ import log from 'electron-log';
 const platform = process.platform || os.platform();
 const currentDir = fileURLToPath(new URL('.', import.meta.url));
 
+log.initialize();
+
 const singleInstanceLock = app.requestSingleInstanceLock();
 let mainWindow: BrowserWindow | null = null;
 
@@ -45,7 +47,8 @@ async function createWindow() {
       preload: path.resolve(
         currentDir,
         path.join(
-          process.env.QUASAR_ELECTRON_PRELOAD_FOLDER,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          process.env.QUASAR_ELECTRON_PRELOAD_FOLDER!,
           // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
           'electron-preload' + process.env.QUASAR_ELECTRON_PRELOAD_EXTENSION,
         ),

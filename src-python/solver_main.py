@@ -82,6 +82,8 @@ def _handle_build_groups(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 def _handle_solve_leg(payload: Dict[str, Any], args: Namespace | Any = None):
     options = payload.get("options", {})
+    weights = options.get("weights", {})
+    constrains = options.get("constrains", {})
 
     return solve_flight_leg(
         balloons=payload.get("balloons", []),
@@ -93,21 +95,24 @@ def _handle_solve_leg(payload: Dict[str, Any], args: Namespace | Any = None):
         frozen=payload.get("preAssignments"),
         fixed_groups=payload.get("fixedGroups"),
         # problem params
+        counselor_flight_discount=options.get("counselorFlightDiscount", 0.9),
         planning_horizon_legs=options.get("planningHorizonDepth", 0),
         default_person_weight=options.get("defaultPersonWeight", 80),
-        # solver params
-        w_passenger_fairness=options.get("passengerFairness", 30),
-        w_pilot_fairness=options.get("pilotFairness", 5),
-        w_tiebreak_fairness=options.get("tiebreakFairness", 1),
-        w_group_rotation=options.get("groupRotation", 5),
-        w_group_passenger_balance=options.get("groupPassengerBalance", 7),
-        w_no_solo_participant=options.get("noSoloParticipant", 100),
-        w_new_meetings=options.get("meetingNewPeople", 1),
-        w_divers_nationalities=options.get("diverseNationalities", 3),
-        w_low_flights_lookahead=options.get("lowFlightsLookahead", 30),
-        counselor_flight_discount=options.get("counselorFlightDiscount", 0.9),
-        time_limit_s=options.get("time_limit", 600),
+        # solver constraints
+        c_common_language_operators=constrains.get("commonLanguageOperators", True),
+        c_common_language_passengers=constrains.get("commonLanguagePassengers", True),
+        # solver weights
+        w_passenger_fairness=weights.get("passengerFairness", 30),
+        w_pilot_fairness=weights.get("pilotFairness", 5),
+        w_tiebreak_fairness=weights.get("tiebreakFairness", 1),
+        w_group_rotation=weights.get("groupRotation", 5),
+        w_group_passenger_balance=weights.get("groupPassengerBalance", 7),
+        w_no_solo_participant=weights.get("noSoloParticipant", 100),
+        w_new_meetings=weights.get("meetingNewPeople", 1),
+        w_divers_nationalities=weights.get("diverseNationalities", 3),
+        w_low_flights_lookahead=weights.get("lowFlightsLookahead", 30),
         # Configuration
+        time_limit_s=options.get("timeLimit", 600),
         num_search_workers=args.get("workers", 15),
         random_seed=args.get("seed", None),
     )
@@ -117,12 +122,17 @@ def main(argv: List[str] | None = None) -> None:
     args = _parse_args(argv)
     payload = _read_json_stdin()
 
-    if args.mode == "solve_groups":
-        out = _handle_build_groups(payload)
-    elif args.mode == "solve_leg":
-        out = _handle_solve_leg(payload, vars(args))
-    else:
-        raise ValueError("Invalid mode", args.mode)
+    out = None
+    try:
+        if args.mode == "solve_groups":
+            out = _handle_build_groups(payload)
+        elif args.mode == "solve_leg":
+            out = _handle_solve_leg(payload, vars(args))
+    except Exception as e:
+        _emit_error(str(e))
+
+    if out is None:
+        _emit_error("No output from solver")
 
     json.dump(out, sys.stdout)
     sys.stdout.write("\n")

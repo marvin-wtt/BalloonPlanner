@@ -86,7 +86,7 @@ function spawnProcess(
       }
 
       if (code !== 0) {
-        reject(handleError(code, stderrData));
+        reject(handleError(code, stdoutData, stderrData));
         return;
       }
 
@@ -121,10 +121,14 @@ function spawnArgs(): [string, string[]] {
   return [binPath, []];
 }
 
-function handleError(code: number, stderrData: string): Error {
+function handleError(
+  code: number,
+  stdoutData: string,
+  stderrData: string,
+): Error {
   let errorData: unknown;
   try {
-    errorData = JSON.parse(stderrData);
+    errorData = JSON.parse(stdoutData);
   } catch {
     // ignore
   }
@@ -142,6 +146,7 @@ function handleError(code: number, stderrData: string): Error {
 
   log.error(
     `Solver exited with code ${code.toString()} but no structured error.`,
+    stdoutData,
     stderrData,
   );
   return new Error('An unexpected error occurred in the solver.');

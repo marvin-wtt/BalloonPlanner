@@ -61,6 +61,9 @@ def solve_flight_leg(
     frozen: Optional[Dict[str, VehicleAssignment]],
     fixed_groups: Optional[Dict[str, str]],
     planning_horizon_legs: int,
+    # Constrains
+    c_common_language_passengers: bool,
+    c_common_language_operators: bool,
     # soft weights
     w_pilot_fairness: int,
     w_passenger_fairness: int,
@@ -84,14 +87,14 @@ def solve_flight_leg(
     # 0. Input validation
     # ------------------------------------------------------------------
     if default_person_weight < 0:
-        raise ValueError("default_person_weight must be non-negative")
+        raise ValueError("Default person weight must be non-negative")
     if time_limit_s <= 0:
-        raise ValueError("time_limit_s must be positive")
+        raise ValueError("Time limit must be positive")
     if planning_horizon_legs < 0:
-        raise ValueError("planning_horizon_legs must be non-negative")
+        raise ValueError("Planning horizon must be non-negative")
     if w_passenger_fairness * w_tiebreak_fairness < 0:
         raise ValueError(
-            "w_passenger_fairness and w_tiebreak_fairness must have the same sign"
+            "Passenger fairness weight and tiebreak fairness must have the same sign"
         )
 
     # ------------------------------------------------------------------
@@ -230,60 +233,64 @@ def solve_flight_leg(
                     model.Add(pax[p, v] == 0)
 
     # 2.8 language compatibility (balloons only):
-    for v in vehicle_ids:
-        if kind[v] != "balloon":
-            continue
-
-        for p in person_ids:
-            lp = langs[p]
-            # Passenger speaks all languages -> always compatible
-            if lp is None or len(lp) == 0:
+    if c_common_language_passengers:
+        for v in vehicle_ids:
+            if kind[v] != "balloon":
                 continue
 
-            lp_set = set(lp)
-            compatible_ops = [
-                q
-                for q in person_ids
-                if q != p
-                and (
-                    langs[q] is None
-                    or len(langs[q]) == 0  # operator speaks all
-                    or lp_set.intersection(langs[q])  # or shares a language
-                )
-            ]
+            for p in person_ids:
+                lp = langs[p]
+                # Passenger speaks all languages -> always compatible
+                if lp is None or len(lp) == 0:
+                    continue
 
-            # Allow "self" to satisfy the language requirement when p is the operator.
-            # This makes the constraint:  (some compatible op) OR (p is the operator)
-            if compatible_ops:
-                model.Add(sum(op[q, v] for q in compatible_ops) + op[p, v] >= pax[p, v])
-            else:
-                # No other compatible operator exists → only valid if p is the operator
-                model.Add(op[p, v] >= pax[p, v])
+                lp_set = set(lp)
+                compatible_ops = [
+                    q
+                    for q in person_ids
+                    if q != p
+                    and (
+                        langs[q] is None
+                        or len(langs[q]) == 0  # operator speaks all
+                        or lp_set.intersection(langs[q])  # or shares a language
+                    )
+                ]
+
+                # Allow "self" to satisfy the language requirement when p is the operator.
+                # This makes the constraint:  (some compatible op) OR (p is the operator)
+                if compatible_ops:
+                    model.Add(
+                        sum(op[q, v] for q in compatible_ops) + op[p, v] >= pax[p, v]
+                    )
+                else:
+                    # No other compatible operator exists → only valid if p is the operator
+                    model.Add(op[p, v] >= pax[p, v])
 
     # 2.9 operator language compatibility across groups (balloon op vs each car op)
-    for bid in balloon_ids:
-        car_ids = vehicle_groups.get(bid, [])
-        cand_b = [p for p in allowed_op.get(bid, set())]
+    if c_common_language_operators:
+        for bid in balloon_ids:
+            car_ids = vehicle_groups.get(bid, [])
+            cand_b = [p for p in allowed_op.get(bid, set())]
 
-        for cid in car_ids:
-            cand_c = [q for q in allowed_op.get(cid, set())]
+            for cid in car_ids:
+                cand_c = [q for q in allowed_op.get(cid, set())]
 
-            if not cand_b or not cand_c:
-                continue  # if no operator candidates, feasibility is handled elsewhere
+                if not cand_b or not cand_c:
+                    continue  # if no operator candidates, feasibility is handled elsewhere
 
-            for p in cand_b:
-                lp = langs.get(p)
-                p_all = (lp is None) or (len(lp) == 0)
-                lp_set = set(lp or [])
+                for p in cand_b:
+                    lp = langs.get(p)
+                    p_all = (lp is None) or (len(lp) == 0)
+                    lp_set = set(lp or [])
 
-                for q in cand_c:
-                    lq = langs.get(q)
-                    q_all = (lq is None) or (len(lq) == 0)
-                    lq_set = set(lq or [])
+                    for q in cand_c:
+                        lq = langs.get(q)
+                        q_all = (lq is None) or (len(lq) == 0)
+                        lq_set = set(lq or [])
 
-                    # check compatibility directly
-                    if not (p_all or q_all or lp_set.intersection(lq_set)):
-                        model.Add(op[p, bid] + op[q, cid] <= 1)
+                        # check compatibility directly
+                        if not (p_all or q_all or lp_set.intersection(lq_set)):
+                            model.Add(op[p, bid] + op[q, cid] <= 1)
 
     # ------------------------------------------------------------------
     # 3. Objective

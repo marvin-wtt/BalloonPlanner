@@ -76,6 +76,16 @@ export interface SolveFlightLegRequest {
 }
 
 export interface SolveFlightLegOptions extends Record<string, unknown> {
+  weights?: SolveFlightLegWeights;
+  constrains?: SolveFlightLegConstrains;
+
+  planningHorizonDepth?: number;
+  counselorFlightDiscount?: number;
+  timeLimit?: number;
+}
+
+export interface SolveFlightLegWeights
+  extends Record<string, number | undefined> {
   pilotFairness?: number;
   passengerFairness?: number;
   meetingNewPeople?: number;
@@ -86,9 +96,12 @@ export interface SolveFlightLegOptions extends Record<string, unknown> {
   groupPassengerBalance?: number;
   lowFlightsLookahead?: number;
   defaultPersonWeight?: number;
-  planningHorizonDepth?: number;
-  counselorFlightDiscount?: number;
-  timeLimit?: number;
+}
+
+export interface SolveFlightLegConstrains
+  extends Record<string, boolean | undefined> {
+  commonLanguageOperators?: boolean;
+  commonLanguagePassengers?: boolean;
 }
 
 export interface SolveLegResponse {
