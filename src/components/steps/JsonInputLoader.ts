@@ -154,20 +154,20 @@ function speaksEnough(v: unknown): boolean {
   if (typeof v === 'number') return v >= 1;
 
   // string value (level)
-  if (typeof v === 'string') return isLevelAtLeastBasic(v);
+  if (typeof v === 'string') return isLevelAtLeastIntermediate(v);
 
   // object value with { level: string | number }
   if (isObject(v) && 'level' in v) {
     const lvl = v.level;
     if (typeof lvl === 'number') return lvl >= 1;
-    if (typeof lvl === 'string') return isLevelAtLeastBasic(lvl);
+    if (typeof lvl === 'string') return isLevelAtLeastIntermediate(lvl);
   }
 
   return false;
 }
 
 /** Heuristic check for textual levels that are >= basic. */
-function isLevelAtLeastBasic(level: string): boolean {
+function isLevelAtLeastIntermediate(level: string): boolean {
   const s = level.trim().toLowerCase();
 
   // explicit "none"/empty => false
@@ -175,21 +175,24 @@ function isLevelAtLeastBasic(level: string): boolean {
 
   // accept common terms at/above "basic"
   // allow prefixes (e.g., "basics", "basic+", "intermediate (b1)")
-  if (
-    s.startsWith('basic') ||
-    s.startsWith('elementary') ||
-    s.startsWith('a2') || // often mapped to elementary+
-    s.startsWith('intermediate') ||
-    s.startsWith('upper') ||
-    s.startsWith('b1') ||
-    s.startsWith('b2') ||
-    s.startsWith('advanced') ||
-    s.startsWith('c1') ||
-    s.startsWith('c2') ||
-    s.startsWith('fluent') ||
-    s.startsWith('native') ||
-    s.startsWith('conversational')
-  ) {
+  const levels = [
+    //'a1',
+    //'basic',
+    //'elementary',
+    //'a2',
+    'intermediate',
+    'upper',
+    'b1',
+    'b2',
+    'advanced',
+    'c1',
+    'c2',
+    'fluent',
+    'native',
+    'conversational',
+  ] as const;
+
+  if (levels.some((l) => s.startsWith(l))) {
     return true;
   }
 
