@@ -269,7 +269,7 @@ const totalWeight = computed<number>(() => {
 
   const operatorWeight = assignment.operatorId
     ? (personMap.value[assignment.operatorId]?.weight ?? fallback)
-    : fallback;
+    : 0;
 
   return assignment.passengerIds
     .map((id) => personMap.value[id])
@@ -282,7 +282,7 @@ const totalWeight = computed<number>(() => {
 const isOverweight = computed<boolean>(() => {
   return (
     vehicle.value.type === 'balloon' &&
-    vehicle.value.maxWeight !== undefined &&
+    vehicle.value.maxWeight != null &&
     totalWeight.value > vehicle.value.maxWeight
   );
 });
