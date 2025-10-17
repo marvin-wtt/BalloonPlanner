@@ -30,7 +30,7 @@ export interface Car extends VehicleBase {
 
 export interface Balloon extends VehicleBase {
   type: 'balloon';
-  maxWeight?: number;
+  maxWeight?: number | null;
 }
 
 export type Vehicle = Car | Balloon;

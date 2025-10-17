@@ -132,6 +132,7 @@ def solve_flight_leg(
     flights_so_far = {
         p: int(people_by_id[p].get("flightsSoFar", 0)) for p in person_ids
     }
+
     first_time = {p: bool(people_by_id[p].get("firstTime", False)) for p in person_ids}
     nationality = {
         p: (people_by_id[p].get("nationality") or "unknown") for p in person_ids
@@ -149,8 +150,14 @@ def solve_flight_leg(
     allowed_op = {
         v: set(vehicles_by_id[v].get("allowedOperatorIds", [])) for v in vehicle_ids
     }
-    max_weight = {v: int(vehicles_by_id[v].get("maxWeight", -1)) for v in vehicle_ids}
-
+    max_weight = {
+        v: (
+            int(vehicles_by_id[v]["maxWeight"])
+            if vehicles_by_id[v].get("maxWeight") is not None
+            else -1
+        )
+        for v in vehicle_ids
+    }
     langs = {p: people_by_id[p].get("languages") for p in person_ids}
 
     priorities = {
