@@ -306,33 +306,36 @@ def solve_flight_leg(
     max_flights = max(flights_so_far.values()) + 1 if flights_so_far else 1
 
     # 3.1 pilot fairness
-    for p, v in product(person_ids, vehicle_ids):
-        if p in allowed_op[v]:
-            bonus = max_flights - flights_so_far[p]
-            objective_terms.append(-w_pilot_fairness * bonus * op[p, v])
+    if w_pilot_fairness != 0:
+        for p, v in product(person_ids, vehicle_ids):
+            if p in allowed_op[v]:
+                bonus = max_flights - flights_so_far[p]
+                objective_terms.append(-w_pilot_fairness * bonus * op[p, v])
 
     # 3.2 low-flight pax in balloons (participants > counselors)
-    for p, v in product(person_ids, vehicle_ids):
-        if kind[v] == "balloon":
-            bonus = max_flights - flights_so_far[p]
-            if flights_so_far[p] == 0 and first_time[p]:
-                bonus += 1
-            if not is_participant[p]:
-                bonus = max(bonus - counselor_flight_discount, 0)
-            objective_terms.append(-w_passenger_fairness * bonus * pax[p, v])
+    if w_passenger_fairness != 0:
+        for p, v in product(person_ids, vehicle_ids):
+            if kind[v] == "balloon":
+                bonus = max_flights - flights_so_far[p]
+                if flights_so_far[p] == 0 and first_time[p]:
+                    bonus += 1
+                if not is_participant[p]:
+                    bonus = max(bonus - counselor_flight_discount, 0)
+                objective_terms.append(-w_passenger_fairness * bonus * pax[p, v])
 
     # 3.3 no participants alone in a car
-    for v in vehicle_ids:
-        if kind[v] != "car":
-            continue
-        part_sat = sum(int(is_participant[p]) * pax[p, v] for p in person_ids)
-        solo_part = model.NewBoolVar(f"solo_part_{v}")
-        model.Add(part_sat == 1).OnlyEnforceIf(solo_part)
-        model.Add(part_sat != 1).OnlyEnforceIf(solo_part.Not())
-        objective_terms.append(+w_no_solo_participant * solo_part)
+    if w_no_solo_participant != 0:
+        for v in vehicle_ids:
+            if kind[v] != "car":
+                continue
+            part_sat = sum(int(is_participant[p]) * pax[p, v] for p in person_ids)
+            solo_part = model.NewBoolVar(f"solo_part_{v}")
+            model.Add(part_sat == 1).OnlyEnforceIf(solo_part)
+            model.Add(part_sat != 1).OnlyEnforceIf(solo_part.Not())
+            objective_terms.append(+w_no_solo_participant * solo_part)
 
     # 3.4 group passenger deviation
-    if fixed_groups is None:
+    if w_group_passenger_balance != 0 and fixed_groups is None:
         n_people = len(person_ids)
         seats_in_air = sum(capacity[bid] for bid in balloon_ids)
         # integer target; fair rounding happens via deviation vars
@@ -347,7 +350,7 @@ def solve_flight_leg(
             objective_terms.append(w_group_passenger_balance * (dev_pos + dev_neg))
 
     # 3.5a diversity
-    if len(nationalities) > 1:
+    if w_divers_nationalities != 0 and len(nationalities) > 1:
         for v in vehicle_ids:
             cnt_nat = {}
             for nat in nationalities:
@@ -424,7 +427,8 @@ def solve_flight_leg(
                 objective_terms.append(w_new_meetings * repeat_exists)
 
     # 3.6 fresh vehicle (passengers only)
-    if fixed_groups is None and group_history:
+    # FIXME This breaks when a vehicle is removed
+    if w_group_rotation != 0 and fixed_groups is None and group_history:
         for p, v in product(person_ids, vehicle_ids):
             # 1 / (1 + repeats): 1.0 if never seen, 0.5 after 1 repeat, 0.33 after 2, ...
             # Keeps a diminishing (never-negative) incentive for less-used vehicles.
@@ -433,7 +437,7 @@ def solve_flight_leg(
             objective_terms.append(-w_group_rotation * nf * (pax[p, v] - op[p, v]))
 
     # 3.7 language-aware lookahead: prioritise low-flight pax in group cars (no overweight lookahead)
-    if planning_horizon_legs >= 1 and person_ids:
+    if w_low_flights_lookahead != 0 and planning_horizon_legs >= 1 and person_ids:
         # Seats available across the next H legs
         seats_per_leg = sum(capacity[bid] for bid in balloon_ids)
         future_seats = planning_horizon_legs * seats_per_leg
@@ -487,12 +491,13 @@ def solve_flight_leg(
             objective_terms.append(w_low_flights_lookahead * short)
 
     # 3.8 random fairness tiebreaker
-    for p in person_ids:
-        pr = priorities[p]  # 0 is best
-        for v in vehicle_ids:
-            if kind[v] == "balloon":
-                # positive term because we minimize: lower pr is better
-                objective_terms.append(w_tiebreak_fairness * pr * pax[p, v])
+    if w_tiebreak_fairness != 0:
+        for p in person_ids:
+            pr = priorities[p]  # 0 is best
+            for v in vehicle_ids:
+                if kind[v] == "balloon":
+                    # positive term because we minimize: lower pr is better
+                    objective_terms.append(w_tiebreak_fairness * pr * pax[p, v])
 
     model.Minimize(sum(objective_terms))
 
