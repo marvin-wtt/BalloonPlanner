@@ -266,7 +266,7 @@ const multiLegStatus = computed<StatusInfo | false>(() => {
     return false;
   }
 
-  if (wasInSameVehicleGroupInFirstLeg(person.id)) {
+  if (wasInSameVehicleGroupInPreviousLeg(person.id)) {
     return false;
   }
 
@@ -307,7 +307,7 @@ function isDropAllowed(element: Identifiable): boolean {
   }
 
   if (
-    !wasInSameVehicleGroupInFirstLeg(element.id) &&
+    !wasInSameVehicleGroupInPreviousLeg(element.id) &&
     !disableAssignmentProtection.value
   ) {
     return false;
@@ -364,13 +364,14 @@ function removePersonFromVehicle(personId: string) {
   }
 }
 
-function wasInSameVehicleGroupInFirstLeg(personId: string): boolean {
+function wasInSameVehicleGroupInPreviousLeg(personId: string): boolean {
   if (isFirstLeg.value) {
     return true;
   }
 
-  const firstLeg = flightSeries.legs[0];
-  if (!firstLeg) {
+  const idx = flightSeries.legs.findIndex((l) => l.id === flightLeg.id);
+  const previousLeg = flightSeries.legs[idx - 1];
+  if (!previousLeg) {
     return false;
   }
 
@@ -379,7 +380,7 @@ function wasInSameVehicleGroupInFirstLeg(personId: string): boolean {
 
   // Check if person was in any of these vehicles in the first leg
   return groupVehicleIds.some((vid) => {
-    const assignment = firstLeg.assignments[vid];
+    const assignment = previousLeg.assignments[vid];
     if (!assignment) {
       return false;
     }
