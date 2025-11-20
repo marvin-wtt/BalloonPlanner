@@ -63,24 +63,28 @@
                 >
                   <q-item-section>Clear</q-item-section>
                 </q-item>
-                <q-item
-                  v-if="!isCanceled"
-                  v-close-popup
-                  clickable
-                  :disable="isFirstLeg"
-                  @click="onFlightCancel()"
-                >
-                  <q-item-section class="text-warning">Cancel</q-item-section>
-                </q-item>
-                <q-item
-                  v-else
-                  v-close-popup
-                  clickable
-                  :disable="isFirstLeg"
-                  @click="omFlightReactivate()"
-                >
-                  <q-item-section class="text-info">Reactivate</q-item-section>
-                </q-item>
+                <template v-if="vehicle.type === 'balloon'">
+                  <q-item
+                    v-if="!isCanceled"
+                    v-close-popup
+                    clickable
+                    :disable="isFirstLeg"
+                    @click="onFlightCancel()"
+                  >
+                    <q-item-section class="text-warning">Cancel</q-item-section>
+                  </q-item>
+                  <q-item
+                    v-else
+                    v-close-popup
+                    clickable
+                    :disable="isFirstLeg"
+                    @click="omFlightReactivate()"
+                  >
+                    <q-item-section class="text-info">
+                      Reactivate
+                    </q-item-section>
+                  </q-item>
+                </template>
                 <q-item
                   v-close-popup
                   clickable
