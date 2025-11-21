@@ -59,7 +59,7 @@ function onDrop(event: DragEvent) {
   highlighted.value = false;
 
   const element = DragHelper.element;
-  if (!isAccepted() || !DragHelper.verifyDrop(event)) {
+  if (element == null || !isAccepted() || !DragHelper.verifyDrop(event)) {
     return;
   }
 
@@ -70,6 +70,6 @@ function onDrop(event: DragEvent) {
 
 <style scoped>
 .highlighted {
-  background-color: rgba(49, 204, 236, 0.7) !important;
+  background-color: rgba(25, 118, 210, 0.22) !important;
 }
 </style>
