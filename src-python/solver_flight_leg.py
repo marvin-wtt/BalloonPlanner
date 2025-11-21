@@ -159,6 +159,12 @@ def solve_flight_leg(
         for v in vehicle_ids
     }
     langs = {p: people_by_id[p].get("languages") for p in person_ids}
+    frozen_people = {
+        p
+        for a in (frozen or {}).values()
+        for p in ([a["operatorId"]] + a["passengerIds"])
+        if p
+    }
 
     priorities = {
         p: i
@@ -231,6 +237,9 @@ def solve_flight_leg(
         allowed = defaultdict(set)
 
         for pid, bid in fixed_groups.items():
+            if pid in frozen_people:
+                continue  # pre-assignments override stickiness
+
             allowed[pid].add(bid)
             allowed[pid].update(vehicle_groups.get(bid, []))
 
