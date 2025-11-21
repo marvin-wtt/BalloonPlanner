@@ -19,6 +19,13 @@ def solve_vehicle_groups(
     Adds a necessary feasibility filter: a car can only join a balloon's group
     if there exists at least one language-compatible pair
     (balloon operator candidate, car operator candidate).
+
+    Special case:
+      - Balloons with maxCapacity == 0 are treated as "no-balloon" placeholder
+        groups. They:
+          * do NOT require a trailer-equipped car
+          * do NOT enforce balloon-vs-car language compatibility
+          * are omitted from the result if they have no cars assigned
     """
     frozen = frozen or {}
 
@@ -35,6 +42,9 @@ def solve_vehicle_groups(
     trailer = {c["id"]: bool(c.get("hasTrailerClutch", False)) for c in cars}
     bal_need = {b["id"]: int(b["maxCapacity"]) for b in balloons}
 
+    # Distinguish "real" balloons from placeholder "no-balloon" groups
+    real_balloon_ids = [bid for bid in balloon_ids if bal_need[bid] > 0]
+
     # ---- operator candidate lookup ----
     allowed_op_balloon = {
         b["id"]: set(b.get("allowedOperatorIds", [])) for b in balloons
@@ -47,7 +57,16 @@ def solve_vehicle_groups(
     # Precompute language compatibility for every (balloon op cand, car op cand)
     # and lift it to a car-vs-balloon compatibility matrix:
     compat_cb: Dict[tuple[str, str], bool] = {}
+
     for bid in balloon_ids:
+        # For placeholder groups (no balloon), we do NOT enforce language
+        # compatibility between a balloon operator and car operator.
+        if bal_need[bid] == 0:
+            for cid in car_ids:
+                compat_cb[(cid, bid)] = True
+            continue
+
+        # Real balloon: apply original language-compatibility logic
         b_ops = allowed_op_balloon.get(bid, set())
         for cid in car_ids:
             c_ops = allowed_op_car.get(cid, set())
@@ -73,7 +92,8 @@ def solve_vehicle_groups(
             compat_cb[(cid, bid)] = ok
 
     # ---- sanity checks ------------------------------------------------
-    if sum(1 for c in car_ids if trailer[c]) < len(balloons):
+    # only "real" balloons require trailer-equipped cars
+    if sum(1 for c in car_ids if trailer[c]) < len(real_balloon_ids):
         raise ValueError("not enough trailer-equipped cars for balloons")
 
     # across all groups, *car* seats must cover everyone not seated in balloons
@@ -88,12 +108,12 @@ def solve_vehicle_groups(
             if cid not in car_ids:
                 raise ValueError(f"car {car_names[cid]} not found")
 
-    # Helpful pre-errors: no operator candidates
+    # Helpful pre-errors: no operator candidates for real balloons only
     for bid in balloon_ids:
-        if len(allowed_op_balloon.get(bid)) == 0:
+        if len(allowed_op_balloon.get(bid)) == 0 and bal_need[bid] > 0:
             raise ValueError(f"Balloon {balloon_names[bid]} has no eligible operators")
     for cid in car_ids:
-        if len(allowed_op_car.get(cid)) == 0:
+        if len(allowed_op_car.get(cid)) == 0 and cap[cid] > 0:
             raise ValueError(f"Car {car_names[cid]} has no eligible operators")
 
     # Helpful pre-errors: frozen pair contradicts language feasibility
@@ -118,11 +138,12 @@ def solve_vehicle_groups(
     for c in car_ids:
         model.Add(sum(x[c, b] for b in balloon_ids) <= 1)
 
-    # ≥ 1 trailer car in each group
-    for b in balloon_ids:
+    # ≥ 1 trailer car in each *real balloon* group
+    for b in real_balloon_ids:
         model.Add(sum((1 if trailer[c] else 0) * x[c, b] for c in car_ids) >= 1)
 
     # passenger seats per balloon ≥ balloon.capacity (reserve for balloon pax)
+    # For placeholder groups with capacity 0 this is just ">= 0" (no-op).
     for b in balloon_ids:
         model.Add(sum(pax_cap[c] * x[c, b] for c in car_ids) >= bal_need[b])
 
@@ -151,9 +172,16 @@ def solve_vehicle_groups(
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         raise RuntimeError("No feasible vehicle groups arrangement found")
 
-    # Build vehicle groups
+    # ---- build result -------------------------------------------------
     vehicle_groups: Dict[str, List[str]] = {}
+
     for b in balloon_ids:
-        vehicle_groups[b] = [c for c in car_ids if solver.Value(x[c, b]) == 1]
+        cars_for_b = [c for c in car_ids if solver.Value(x[c, b]) == 1]
+
+        # Skip placeholder balloons with capacity 0 if they have no cars
+        if bal_need[b] == 0 and not cars_for_b:
+            continue
+
+        vehicle_groups[b] = cars_for_b
 
     return {"vehicleGroups": vehicle_groups}

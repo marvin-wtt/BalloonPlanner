@@ -37,7 +37,7 @@
         :class="groupAlignment === 'vertical' ? 'row' : 'column'"
       >
         <!-- Balloon -->
-        <div>
+        <div v-if="balloon.id !== NULL_ID">
           <base-vehicle
             :key="group.balloonId"
             :vehicle-id="group.balloonId"
@@ -89,6 +89,7 @@ import { useFlightStore } from 'stores/flight';
 import BaseVehicle from 'components/BaseVehicle.vue';
 import { useFlightOperations } from 'src/composables/flightOperations';
 import { useProjectSettings } from 'src/composables/projectSettings';
+import { NULL_ID } from 'app/src-common/constants';
 
 const { groupAlignment, groupStyle, showGroupLabel } = useProjectSettings();
 const flightStore = useFlightStore();
@@ -148,7 +149,10 @@ const balloon = computed<Balloon>(() => {
 });
 
 const trailerHitchWarning = computed<boolean>(() => {
-  return !cars.value.some((car) => car.hasTrailerClutch);
+  return (
+    group.balloonId !== NULL_ID &&
+    !cars.value.some((car) => car.hasTrailerClutch)
+  );
 });
 
 const reservedCapacityWarning = computed<boolean>(() => {

@@ -60,12 +60,13 @@ import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import { useProjectSettings } from 'src/composables/projectSettings';
 import { validateFlightLegAndSeries } from 'src/util/flight-validator';
+import { NULL_ID } from 'app/src-common/constants';
 
 const flightStore = useFlightStore();
 const { availablePeople, availableCars, availableBalloons } =
   storeToRefs(flightStore);
 const { groupAlignment } = useProjectSettings();
-const { addVehicleGroup } = useFlightOperations();
+const { addVehicleGroup, addCarToVehicleGroup } = useFlightOperations();
 
 const {
   project,
@@ -105,7 +106,11 @@ function isDropAllowed(element: Identifiable): boolean {
   }
 
   if (elementIsCar(element)) {
-    return !availableCars.value.some((car) => car.id === element.id);
+    return (
+      !availableCars.value.some((car) => car.id === element.id) ||
+      // Only allow one group without a balloon
+      !flightSeries.vehicleGroups.some((group) => group.balloonId === NULL_ID)
+    );
   }
 
   if (elementIsBalloon(element)) {
@@ -120,6 +125,13 @@ function flightContainsBalloon(balloon: Balloon): boolean {
 }
 
 function onDrop(element: Identifiable) {
+  // If the dropped element is a car, add it as a group without a balloon.
+  if (elementIsCar(element)) {
+    addVehicleGroup(NULL_ID);
+    addCarToVehicleGroup(NULL_ID, element.id);
+    return;
+  }
+
   if (!elementIsBalloon(element)) {
     return;
   }

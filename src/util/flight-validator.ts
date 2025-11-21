@@ -1,4 +1,5 @@
 import type { FlightLeg, FlightSeries, Project } from 'app/src-common/entities';
+import { NULL_ID } from 'app/src-common/constants';
 
 // Uses exactly your given types
 export function validateFlightLegAndSeries(
@@ -39,7 +40,7 @@ export function validateFlightLegAndSeries(
 
   // membership
   for (const b of groupBalloonIds) {
-    if (!seriesBalloonSet.has(b)) {
+    if (!seriesBalloonSet.has(b) && b !== NULL_ID) {
       return `Vehicle group references unknown balloon '${balloonNameMap[b] ?? b}' (not in series).`;
     }
   }
@@ -84,7 +85,7 @@ export function validateFlightLegAndSeries(
 
   // 2a) Assigned vehicles must exist in series
   for (const vehicleId of Object.keys(leg.assignments)) {
-    if (!allVehicleIds.has(vehicleId)) {
+    if (!allVehicleIds.has(vehicleId) && vehicleId !== NULL_ID) {
       return `Assignment references unknown vehicle '${balloonNameMap[vehicleId] ?? carNameMap[vehicleId] ?? vehicleId}' (not in series).`;
     }
   }

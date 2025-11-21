@@ -10,6 +10,7 @@ import type {
   VehicleAssignmentMap,
 } from 'app/src-common/entities';
 import { useProjectStore } from 'stores/project';
+import { NULL_ID } from 'app/src-common/constants';
 
 export const useFlightStore = defineStore('flight', () => {
   const projectStore = useProjectStore();
@@ -42,6 +43,17 @@ export const useFlightStore = defineStore('flight', () => {
       return {};
     }
 
+    const initialMap = {
+      [NULL_ID]: {
+        id: NULL_ID,
+        type: 'balloon',
+        name: 'Placeholder',
+        maxCapacity: 0,
+        allowedOperatorIds: [],
+        maxWeight: null,
+      },
+    };
+
     return project.value.balloons
       .filter(({ id }) => flightSeries.value?.balloonIds.includes(id))
       .reduce(
@@ -49,7 +61,7 @@ export const useFlightStore = defineStore('flight', () => {
           ...balloons,
           [balloon.id]: balloon,
         }),
-        {},
+        initialMap,
       );
   });
 
@@ -309,40 +321,52 @@ export const useFlightStore = defineStore('flight', () => {
   }
 
   const availableBalloons = computed<Balloon[]>(() => {
-    if (!flightSeries.value) {
+    if (!project.value || !flightSeries.value) {
       return [];
     }
 
-    return flightSeries.value.vehicleGroups.reduce(
-      (balloons, group) =>
-        balloons.filter((balloon) => balloon.id !== group.balloonId),
-      Object.values(balloonMap.value),
+    const allowedIds = new Set(flightSeries.value.balloonIds);
+    const assignedIds = new Set(
+      flightSeries.value.vehicleGroups.map((group) => group.balloonId),
+    );
+
+    return project.value.balloons.filter(
+      (balloon) => allowedIds.has(balloon.id) && !assignedIds.has(balloon.id),
     );
   });
 
   const availableCars = computed<Car[]>(() => {
-    if (!flightSeries.value) {
+    if (!project.value || !flightSeries.value) {
       return [];
     }
 
-    return flightSeries.value.vehicleGroups.reduce(
-      (cars, group) =>
-        cars.filter((car) => !group.carIds.some((id) => id === car.id)),
-      Object.values(carMap.value),
+    const allowedIds = new Set(flightSeries.value.carIds);
+    const assignedIds = new Set(
+      flightSeries.value.vehicleGroups.flatMap((group) => group.carIds),
+    );
+
+    return project.value.cars.filter(
+      (car) => allowedIds.has(car.id) && !assignedIds.has(car.id),
     );
   });
 
   const availablePeople = computed<Person[]>(() => {
-    if (!flightLeg.value) {
+    if (!project.value || !flightSeries.value || !flightLeg.value) {
       return [];
     }
 
-    const assigned = Object.values(flightLeg.value.assignments).flatMap(
-      (assignment) => [assignment.operatorId, ...assignment.passengerIds],
+    const allowedIds = new Set(flightSeries.value.personIds);
+    const assignedIds = new Set(
+      Object.values(flightLeg.value.assignments)
+        .flatMap((assignment) => [
+          assignment.operatorId,
+          ...assignment.passengerIds,
+        ])
+        .filter((id): id is string => id !== null),
     );
 
-    return Object.values(personMap.value).filter(
-      (person) => !assigned.includes(person.id),
+    return project.value.people.filter(
+      (person) => allowedIds.has(person.id) && !assignedIds.has(person.id),
     );
   });
 

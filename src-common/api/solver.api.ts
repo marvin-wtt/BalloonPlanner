@@ -40,7 +40,7 @@ export interface SolveFlightLegRequest {
     name: string;
     maxCapacity: number;
     allowedOperatorIds: ID[];
-    maxWeight?: number;
+    maxWeight?: number | null;
   }[];
 
   cars: {

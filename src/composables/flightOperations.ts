@@ -8,6 +8,7 @@ import type {
 import { useFlightStore } from 'stores/flight';
 import { useProjectStore } from 'stores/project';
 import { storeToRefs } from 'pinia';
+import { NULL_ID } from 'app/src-common/constants';
 
 export function useFlightOperations() {
   const flightStore = useFlightStore();
@@ -178,6 +179,10 @@ export function useFlightOperations() {
 
     removeAllAssignments(carId);
     removeFirst(group.carIds, (id) => id === carId);
+
+    if (balloonId === NULL_ID && group.carIds.length === 0) {
+      removeVehicleGroup(balloonId);
+    }
   }
 
   function cancelFlight(balloonId: ID) {

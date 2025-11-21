@@ -1,6 +1,5 @@
 import { useFlightStore } from 'stores/flight';
 import { storeToRefs } from 'pinia';
-import { isDefined } from 'src/util/is-defined';
 import { useProjectStore } from 'stores/project';
 import type {
   FlightLeg,
@@ -41,13 +40,8 @@ export function useSolver() {
       throw new Error('No project, flight series or flight leg selected');
     }
 
-    const balloons = flightSeries.value.balloonIds
-      .map((id) => balloonMap.value[id])
-      .filter(isDefined);
-
-    const cars = flightSeries.value.carIds
-      .map((id) => carMap.value[id])
-      .filter(isDefined);
+    const balloons = Object.values(balloonMap.value);
+    const cars = Object.values(carMap.value);
 
     const vehicleGroups = Object.fromEntries(
       flightSeries.value.vehicleGroups.map((group) => [
@@ -56,9 +50,7 @@ export function useSolver() {
       ]),
     );
 
-    const people = flightSeries.value.personIds
-      .map((id) => personMap.value[id])
-      .filter(isDefined);
+    const people = Object.values(personMap.value);
 
     const response = await window.solverAPI.solveVehicleGroups(
       deepToRaw({
@@ -96,13 +88,8 @@ export function useSolver() {
       throw new Error('No project, flight series or flight leg selected');
     }
 
-    const balloons = flightSeries.value.balloonIds
-      .map((id) => balloonMap.value[id])
-      .filter(isDefined);
-
-    const cars = flightSeries.value.carIds
-      .map((id) => carMap.value[id])
-      .filter(isDefined);
+    const balloons = Object.values(balloonMap.value);
+    const cars = Object.values(carMap.value);
 
     const numberOfFlights = countFlightsBeforeFlightLeg(
       project.value,
@@ -110,13 +97,10 @@ export function useSolver() {
       flightLeg.value,
     );
 
-    const people = flightSeries.value.personIds
-      .map((id) => personMap.value[id])
-      .filter(isDefined)
-      .map((person) => ({
-        ...person,
-        flightsSoFar: numberOfFlights[person.id] ?? 0,
-      }));
+    const people = Object.values(personMap.value).map((person) => ({
+      ...person,
+      flightsSoFar: numberOfFlights[person.id] ?? 0,
+    }));
 
     const vehicleGroups = flightSeries.value.vehicleGroups.reduce<
       Record<string, string[]>
