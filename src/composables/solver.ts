@@ -25,10 +25,10 @@ export function useSolver() {
       throw new Error('No project, flight series or flight leg selected');
     }
 
-    if (
-      flightSeries.value.legs.findIndex((l) => l.id === flightLeg.value?.id) <=
-      0
-    ) {
+    const legIndex = flightSeries.value.legs.findIndex(
+      (leg) => leg.id === flightLeg.value?.id,
+    );
+    if (legIndex === 0) {
       await solveVehicleGroups();
     }
 
@@ -121,12 +121,7 @@ export function useSolver() {
       flightSeries.value.id,
     );
 
-    const fixedGroups =
-      flightSeries.value.legs.findIndex(
-        (leg) => leg.id === flightLeg.value?.id,
-      ) > 0
-        ? buildFixedGroups(flightSeries.value)
-        : undefined;
+    const fixedGroups = buildFixedGroups(flightSeries.value, flightLeg.value);
 
     const response = await window.solverAPI.solveFlightLeg(
       deepToRaw({
@@ -158,6 +153,20 @@ export function useSolver() {
     solveVehicleGroups,
     solveFlightLeg,
   };
+}
+
+function getPreviousFlightLeg(
+  flightSeries: FlightSeries,
+  flightLeg: FlightLeg,
+): FlightLeg | undefined {
+  const legIndex = flightSeries.legs.findIndex(
+    (leg) => leg.id === flightLeg.id,
+  );
+  if (legIndex < 0) {
+    return undefined;
+  }
+
+  return flightSeries.legs[legIndex - 1];
 }
 
 function countFlightsBeforeFlightLeg(
@@ -214,13 +223,35 @@ function buildGroupHistory(
     }, {});
 }
 
-export function buildFixedGroups(series: FlightSeries): Record<ID, ID> {
-  return buildGroupPairs(series).reduce<Record<ID, ID>>((map, [pid, gid]) => {
-    if (!(pid in map)) {
-      map[pid] = gid;
-    }
-    return map;
-  }, {});
+export function buildFixedGroups(
+  series: FlightSeries,
+  leg: FlightLeg,
+): Record<ID, ID> {
+  const prevLeg = getPreviousFlightLeg(series, leg);
+  if (!prevLeg) {
+    return {};
+  }
+
+  const groupMap = buildVehiclePairs(series);
+
+  return Object.entries(prevLeg.assignments).reduce<Record<ID, ID>>(
+    (fixed, [vehicleId, assignment]) => {
+      const groupId = groupMap[vehicleId];
+      if (!groupId) {
+        return fixed;
+      }
+
+      if (assignment.operatorId) {
+        fixed[assignment.operatorId] = groupId;
+      }
+      for (const pid of assignment.passengerIds) {
+        fixed[pid] = groupId;
+      }
+
+      return fixed;
+    },
+    {},
+  );
 }
 
 function buildVehiclePairs(series: FlightSeries) {
