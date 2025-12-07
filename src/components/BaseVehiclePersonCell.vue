@@ -44,6 +44,11 @@
       </div>
     </div>
 
+    <person-info-menu
+      :flight-series
+      :person
+    />
+
     <q-menu
       touch-position
       context-menu
@@ -98,6 +103,7 @@ import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import { useQuasar } from 'quasar';
 import { useProjectStore } from 'stores/project';
 import { useProjectSettings } from 'src/composables/projectSettings';
+import PersonInfoMenu from 'components/PersonInfoMenu.vue';
 
 const quasar = useQuasar();
 const projectStore = useProjectStore();
