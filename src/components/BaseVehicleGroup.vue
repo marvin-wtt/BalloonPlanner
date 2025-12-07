@@ -3,7 +3,7 @@
     :accepted="isDropAccepted"
     class="vehicle-group"
     :class="styleClass"
-    @dropped="drop"
+    @dropped="onDrop"
   >
     <div class="relative-position">
       <div class="vehicle-group__label">
@@ -184,7 +184,7 @@ function isDropAccepted(element: Identifiable): boolean {
   return !group.carIds.some((id) => id === element.id);
 }
 
-function drop(element: Identifiable) {
+function onDrop(element: Identifiable) {
   if (!elementIsCar(element)) {
     return;
   }
