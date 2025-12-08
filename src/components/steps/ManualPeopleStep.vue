@@ -13,7 +13,7 @@
       row-key="id"
       flat
     >
-      <template v-slot:top-right>
+      <template #top-right>
         <q-btn
           label="Add person"
           color="primary"
@@ -22,7 +22,7 @@
         />
       </template>
 
-      <template v-slot:body-cell-action="props">
+      <template #body-cell-action="props">
         <td>
           <q-btn
             icon="more_vert"
@@ -34,15 +34,15 @@
             <q-menu style="min-width: 100px">
               <q-list>
                 <q-item
-                  clickable
                   v-close-popup
+                  clickable
                   @click="onEditPerson(props.row)"
                 >
                   <q-item-section>Edit</q-item-section>
                 </q-item>
                 <q-item
-                  clickable
                   v-close-popup
+                  clickable
                   @click="onDeletePerson(props.row)"
                 >
                   <q-item-section>Delete</q-item-section>
@@ -54,19 +54,12 @@
       </template>
     </q-table>
 
-    <q-stepper-navigation class="row q-gutter-sm">
+    <q-stepper-navigation>
       <q-btn
         label="Continue"
         color="primary"
         rounded
         @click="emit('continue')"
-      />
-      <q-btn
-        label="Back"
-        color="primary"
-        rounded
-        outline
-        @click="emit('back')"
       />
     </q-stepper-navigation>
   </q-step>
@@ -87,7 +80,6 @@ const { name } = defineProps<{
 
 const emit = defineEmits<{
   (e: 'continue'): void;
-  (e: 'back'): void;
   (e: 'to', destination: string): void;
 }>();
 
@@ -118,12 +110,21 @@ const columns: QTableColumn[] = [
     format: (val: string) => nationMap[val] ?? val,
   },
   {
+    name: 'languages',
+    label: 'Languages',
+    field: 'languages',
+    align: 'left',
+    sortable: false,
+    format: (val: string[]) => val.join(', '),
+  },
+  {
     name: 'role',
     label: 'Role',
     field: 'role',
     align: 'left',
     sortable: true,
-    format: (val: string) => val.charAt(0).toUpperCase() + String(val).slice(1),
+    format: (val: string | undefined) =>
+      val ? val.charAt(0).toUpperCase() + val.slice(1) : '',
   },
   {
     name: 'weight',
@@ -138,7 +139,7 @@ const columns: QTableColumn[] = [
     label: 'First Time',
     field: 'firstTime',
     align: 'center',
-    format: (val: boolean) =>
+    format: (val: boolean | undefined) =>
       val === true ? '\u2713' : val === false ? 'X' : '',
   },
   {

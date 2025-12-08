@@ -1,12 +1,12 @@
 <template>
   <component
     :is="tag"
+    class="drop-zone"
+    :class="{ highlighted: highlighted }"
     @dragenter.stop="onDragEnter($event)"
     @dragover.stop="onDragOver($event)"
     @dragleave.stop="onDragLeave($event)"
     @drop.stop="onDrop($event)"
-    class="drop-zone"
-    :class="{ highlighted: highlighted }"
   >
     <slot />
   </component>
@@ -15,7 +15,7 @@
 <script lang="ts" setup>
 import { DragHelper } from 'src/util/DragHelper';
 import { ref } from 'vue';
-import type { Identifiable } from 'src/lib/utils/Identifiable';
+import type { Identifiable } from 'app/src-common/entities';
 
 const { tag = 'div', accepted = () => true } = defineProps<{
   accepted?: (element: Identifiable) => boolean;
@@ -59,7 +59,7 @@ function onDrop(event: DragEvent) {
   highlighted.value = false;
 
   const element = DragHelper.element;
-  if (!isAccepted() || !DragHelper.verifyDrop(event)) {
+  if (element == null || !isAccepted() || !DragHelper.verifyDrop(event)) {
     return;
   }
 
@@ -70,6 +70,6 @@ function onDrop(event: DragEvent) {
 
 <style scoped>
 .highlighted {
-  background-color: rgba(49, 204, 236, 0.7) !important;
+  background-color: rgba(25, 118, 210, 0.22) !important;
 }
 </style>

@@ -9,8 +9,11 @@ import { fileURLToPath } from 'node:url';
 import log from 'electron-log';
 
 // needed in case process is undefined under Linux
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 const platform = process.platform || os.platform();
 const currentDir = fileURLToPath(new URL('.', import.meta.url));
+
+log.initialize();
 
 const singleInstanceLock = app.requestSingleInstanceLock();
 let mainWindow: BrowserWindow | null = null;
@@ -22,8 +25,8 @@ if (!singleInstanceLock) {
   app.quit();
 } else {
   app.on('second-instance', () => {
+    log.info('Application is already running, restoring window.');
     mainWindow?.restore();
-    mainWindow?.center();
     mainWindow?.focus();
   });
 }
@@ -44,7 +47,9 @@ async function createWindow() {
       preload: path.resolve(
         currentDir,
         path.join(
-          process.env.QUASAR_ELECTRON_PRELOAD_FOLDER,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          process.env.QUASAR_ELECTRON_PRELOAD_FOLDER!,
+          // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
           'electron-preload' + process.env.QUASAR_ELECTRON_PRELOAD_EXTENSION,
         ),
       ),
@@ -66,6 +71,20 @@ async function createWindow() {
       mainWindow?.webContents.closeDevTools();
     });
   }
+
+  // Disable CORS
+  const URL = mainWindow.webContents.getURL();
+  mainWindow.webContents.session.webRequest.onHeadersReceived(
+    (details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'access-control-allow-origin': ['*'],
+          'content-security-policy': `Content-Security-Policy: default-src 'self'; img-src 'self' ${URL}`,
+        },
+      });
+    },
+  );
 }
 
 app
@@ -75,8 +94,8 @@ app
   .then(initProjectApiHandler)
   .then(initSolverApiHandler)
   .then(createWindow)
-  .catch((reason) => {
-    console.error(`Failed to start application: ${reason}`);
+  .catch((reason: unknown) => {
+    console.error(`Failed to start application: ${String(reason)}`);
   });
 
 app.on('window-all-closed', () => {
@@ -87,8 +106,8 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow().catch((reason) => {
-      console.error(`Failed to create window: ${reason}`);
+    createWindow().catch((reason: unknown) => {
+      console.error(`Failed to create window: ${String(reason)}`);
     });
   }
 });

@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+"""
+CLI / stream wrapper for the balloon camp solver.
+
+Input  : one JSON object on stdin (see README).
+Success: manifest JSON on stdout · exit-code 0
+Failure: error JSON on stderr · exit-code 1 or 2
+"""
+from __future__ import annotations
+
+from argparse import ArgumentParser, Namespace
+import json
+import sys
+from typing import List, Any, Dict
+
+from solver_flight_leg import solve_flight_leg
+from solver_vehicle_group import solve_vehicle_groups
+
+
+def _emit_error(msg: str, *, exit_code: int = 1) -> None:
+    try:
+        json.dump({"message": msg}, sys.stdout)
+        sys.stdout.write("\n")
+    finally:
+        sys.exit(exit_code)
+
+
+def _read_json_stdin() -> Dict[str, Any]:
+    try:
+        raw = sys.stdin.read()
+        if not raw.strip():
+            _emit_error("Empty stdin; expected a JSON object.", exit_code=2)
+        return json.loads(raw)
+    except json.JSONDecodeError as e:
+        _emit_error(f"Invalid JSON: {e}", exit_code=2)
+        raise  # unreachable
+
+
+def _parse_args(argv: Any = None) -> Namespace | Any:
+    parser = ArgumentParser(description="Solve balloon-camp crew assignment")
+
+    #
+    parser.add_argument(
+        "--mode",
+        type=str,
+        choices=["solve_groups", "solve_leg"],
+        default=None,
+        help="Operation mode for the solver",
+    )
+
+    # general / reproducibility ------------------------------------------------
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for deterministic shuffles and solver (default: 42).",
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=8,
+        help="CP-SAT worker threads for the main solver (default: 8).",
+    )
+    parser.add_argument(
+        "--time-limit",
+        type=int,
+        default=20,
+        help="Maximum solver runtime in seconds for the main solver (default: 20).",
+    )
+
+    return parser.parse_args(argv)
+
+
+def _handle_build_groups(payload: Dict[str, Any]) -> Dict[str, Any]:
+    return solve_vehicle_groups(
+        balloons=payload.get("balloons", []),
+        cars=payload.get("cars", []),
+        people=payload.get("people", []),
+        frozen=payload.get("vehicleGroups", {}),
+    )
+
+
+def _handle_solve_leg(payload: Dict[str, Any], args: Namespace | Any = None):
+    options = payload.get("options", {})
+    weights = options.get("weights", {})
+    constrains = options.get("constrains", {})
+
+    return solve_flight_leg(
+        balloons=payload.get("balloons", []),
+        cars=payload.get("cars", []),
+        people=payload.get("people", []),
+        vehicle_groups=payload.get("vehicleGroups"),
+        group_history=payload.get("groupHistory"),
+        people_meet_history=payload.get("peopleMeetHistory"),
+        frozen=payload.get("preAssignments"),
+        fixed_groups=payload.get("fixedGroups"),
+        # problem params
+        counselor_flight_discount=options.get("counselorFlightDiscount", 0.9),
+        planning_horizon_legs=options.get("planningHorizonDepth", 0),
+        default_person_weight=options.get("defaultPersonWeight", 80),
+        # solver constraints
+        c_common_language_operators=constrains.get("commonLanguageOperators", True),
+        c_common_language_passengers=constrains.get("commonLanguagePassengers", True),
+        # solver weights
+        w_passenger_fairness=weights.get("passengerFairness", 30),
+        w_pilot_fairness=weights.get("pilotFairness", 5),
+        w_tiebreak_fairness=weights.get("tiebreakFairness", 1),
+        w_group_rotation=weights.get("groupRotation", 5),
+        w_group_passenger_balance=weights.get("groupPassengerBalance", 7),
+        w_no_solo_participant=weights.get("noSoloParticipant", 100),
+        w_new_meetings=weights.get("meetingNewPeople", 1),
+        w_divers_nationalities=weights.get("diverseNationalities", 3),
+        w_low_flights_lookahead=weights.get("lowFlightsLookahead", 30),
+        # Configuration
+        time_limit_s=options.get("timeLimit", 600),
+        num_search_workers=args.get("workers", 15),
+        random_seed=args.get("seed", None),
+    )
+
+
+def main(argv: List[str] | None = None) -> None:
+    args = _parse_args(argv)
+    payload = _read_json_stdin()
+
+    out = None
+    try:
+        if args.mode == "solve_groups":
+            out = _handle_build_groups(payload)
+        elif args.mode == "solve_leg":
+            out = _handle_solve_leg(payload, vars(args))
+    except Exception as e:
+        _emit_error(str(e))
+
+    if out is None:
+        _emit_error("No output from solver")
+
+    json.dump(out, sys.stdout)
+    sys.stdout.write("\n")
+    sys.exit(0)
+
+
+if __name__ == "__main__":  # pragma: no cover
+    main()

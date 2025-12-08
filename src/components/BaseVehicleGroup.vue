@@ -6,38 +6,47 @@
     @dropped="drop"
   >
     <div class="relative-position">
-      <div
-        v-if="label && showGroupLabel"
-        class="vehicle-group__label"
-      >
-        {{ label }}
+      <div class="vehicle-group__label">
+        <span v-if="isCanceled">
+          <i>Canceled</i>
+        </span>
+
+        <span v-else-if="showGroupLabel">
+          {{ label }}
+        </span>
+
+        <q-badge
+          v-if="warningText"
+          color="warning"
+          class="q-ml-sm"
+          rounded
+        >
+          <q-icon
+            name="priority_high"
+            color="white"
+            size="1em"
+          />
+          <q-tooltip>
+            {{ warningText }}
+          </q-tooltip>
+        </q-badge>
       </div>
 
       <div
         class="q-gutter-md q-pa-md q-pb-lg"
         :class="groupAlignment === 'vertical' ? 'row' : 'column'"
       >
-        <q-badge
-          v-if="showWarning"
-          color="warning"
-          floating
-          rounded
-        >
-          <q-icon
-            name="warning"
-            color="white"
-            size="1rem"
-          />
-          <q-tooltip>
-            {{ warningText }}
-          </q-tooltip>
-        </q-badge>
         <!-- Balloon -->
-        <div>
+        <div v-if="balloon.id !== NULL_ID">
           <base-vehicle
-            :key="group.balloon.id"
+            :key="group.balloonId"
+            :vehicle-id="group.balloonId"
             type="balloon"
-            :assignment="group.balloon"
+            :assignment="
+              flightLeg?.assignments[group.balloonId] ?? emptyAssignment
+            "
+            :flight-series
+            :flight-leg
             :group
             :editable
           />
@@ -45,12 +54,15 @@
 
         <!-- Cars -->
         <div
-          v-for="car in group.cars"
-          :key="car.id"
+          v-for="id in group.carIds"
+          :key="id"
         >
           <base-vehicle
             type="car"
-            :assignment="car"
+            :vehicle-id="id"
+            :assignment="flightLeg?.assignments[id] ?? emptyAssignment"
+            :flight-series
+            :flight-leg
             :group
             :editable
           />
@@ -64,62 +76,83 @@
 import DropZone from 'components/drag/DropZone.vue';
 import type {
   Car,
-  VehicleGroup,
   Identifiable,
   Balloon,
+  VehicleAssignment,
+  FlightSeries,
+  FlightLeg,
+  VehicleGroup,
 } from 'app/src-common/entities';
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import BaseVehicle from 'components/BaseVehicle.vue';
-import { useFlightOperations } from 'src/composables/flight-operations';
-import { useSettingsStore } from 'stores/settings';
+import { useFlightOperations } from 'src/composables/flightOperations';
+import { useProjectSettings } from 'src/composables/projectSettings';
+import { NULL_ID } from 'app/src-common/constants';
 
-const settingsStore = useSettingsStore();
-const { groupAlignment, groupStyle, showGroupLabel } =
-  storeToRefs(settingsStore);
+const { groupAlignment, groupStyle, showGroupLabel } = useProjectSettings();
 const flightStore = useFlightStore();
-const { flight, carMap, balloonMap } = storeToRefs(flightStore);
+const { carMap, balloonMap } = storeToRefs(flightStore);
 const { addCarToVehicleGroup } = useFlightOperations();
 
 const {
+  flightSeries,
+  flightLeg,
   group,
-  label,
+  label = '',
   editable = false,
 } = defineProps<{
   group: VehicleGroup;
+  flightSeries: FlightSeries;
+  flightLeg: FlightLeg;
   label?: string;
   editable?: boolean;
 }>();
 
+const emptyAssignment: VehicleAssignment = {
+  operatorId: null,
+  passengerIds: [],
+};
+
 const styleClass = computed<string>(() => {
-  return groupStyle.value === 'dashed'
-    ? 'vehicle-group__dashed'
-    : 'vehicle-group__highlighted';
+  return [
+    isCanceled.value ? 'vehicle-group__canceled' : undefined,
+    groupStyle.value === 'dashed'
+      ? 'vehicle-group__dashed'
+      : 'vehicle-group__highlighted',
+  ]
+    .filter(Boolean)
+    .join(' ');
 });
 
-const showWarning = computed<boolean>(() => {
-  return trailerHitchWarning.value || reservedCapacityWarning.value;
-});
+const warningText = computed<string | null>(() => {
+  if (trailerHitchWarning.value) {
+    return 'The group is missing a trailer clutch';
+  }
 
-const warningText = computed<string>(() => {
-  return trailerHitchWarning.value
-    ? 'The group is missing a trailer clutch'
-    : reservedCapacityWarning.value
-      ? 'The group does not have enough car capacity'
-      : 'Unknown error';
+  if (reservedCapacityWarning.value) {
+    return 'The group does not have enough car capacity';
+  }
+
+  return null;
 });
 
 const cars = computed<Car[]>(() => {
-  return group.cars.map(({ id }) => carMap.value[id]);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return group.carIds.map((id) => carMap.value[id]!);
 });
 
 const balloon = computed<Balloon>(() => {
-  return balloonMap.value[group.balloon.id];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return balloonMap.value[group.balloonId]!;
 });
 
 const trailerHitchWarning = computed<boolean>(() => {
-  return !cars.value.some((car) => car.hasTrailerClutch);
+  return (
+    group.balloonId !== NULL_ID &&
+    !cars.value.some((car) => car.hasTrailerClutch)
+  );
 });
 
 const reservedCapacityWarning = computed<boolean>(() => {
@@ -131,8 +164,12 @@ const reservedCapacityWarning = computed<boolean>(() => {
   return balloon.value.maxCapacity > availableCapacity;
 });
 
+const isCanceled = computed<boolean>(() => {
+  return flightLeg.canceledBalloonIds.includes(group.balloonId);
+});
+
 function elementIsCar(element: Identifiable): element is Car {
-  return flight.value.carIds.includes(element.id);
+  return flightSeries.carIds.includes(element.id);
 }
 
 function isDropAccepted(element: Identifiable): boolean {
@@ -144,7 +181,7 @@ function isDropAccepted(element: Identifiable): boolean {
     return false;
   }
 
-  return !group.cars.some((car) => car.id === element.id);
+  return !group.carIds.some((id) => id === element.id);
 }
 
 function drop(element: Identifiable) {
@@ -152,13 +189,17 @@ function drop(element: Identifiable) {
     return;
   }
 
-  addCarToVehicleGroup(group.balloon.id, element.id);
+  addCarToVehicleGroup(group.balloonId, element.id);
 }
 </script>
 
 <style lang="scss" scoped>
 .vehicle-group {
   border-radius: 15px;
+}
+
+.vehicle-group__canceled {
+  opacity: 0.5;
 }
 
 .vehicle-group > div {

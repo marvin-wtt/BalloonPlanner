@@ -29,7 +29,7 @@ import type { Balloon } from 'app/src-common/entities';
 import EditableList from 'components/EditableList.vue';
 import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
 import { useQuasar } from 'quasar';
-import { useFlightOperations } from 'src/composables/flight-operations';
+import { useFlightOperations } from 'src/composables/flightOperations';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';
@@ -39,7 +39,7 @@ const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
-const { flight, balloonMap } = storeToRefs(flightStore);
+const { flightSeries, balloonMap } = storeToRefs(flightStore);
 const { createBalloon, editBalloon, removeBalloon, addBalloon } =
   useFlightOperations();
 
@@ -55,7 +55,7 @@ function showAddBalloons() {
       componentProps: {
         itemName: 'Balloon',
         items: project.value.balloons.filter(
-          ({ id }) => !flight.value?.balloonIds.includes(id),
+          ({ id }) => !flightSeries.value?.balloonIds.includes(id),
         ),
       },
     })

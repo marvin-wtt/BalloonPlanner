@@ -15,7 +15,7 @@
 
         <q-card-section class="q-pt-none q-gutter-y-md">
           <q-input
-            v-model="name"
+            v-model="newBalloon.name"
             label="Name"
             lazy-rules
             :rules="[
@@ -30,7 +30,7 @@
           />
 
           <q-input
-            v-model.number="maxCapacity"
+            v-model.number="newBalloon.maxCapacity"
             type="number"
             label="Maximum Capacity"
             hint="Including the pilot"
@@ -44,7 +44,7 @@
           />
 
           <q-input
-            v-model.number="maxWeight"
+            v-model.number="newBalloon.maxWeight"
             type="number"
             label="Maximum Weight"
             hint="Optional"
@@ -60,7 +60,7 @@
           />
 
           <q-select
-            v-model="allowedOperatorIds"
+            v-model="newBalloon.allowedOperatorIds"
             label="Allowed operators"
             use-input
             use-chips
@@ -69,9 +69,9 @@
             :options="filterOptions"
             emit-value
             map-options
-            @filter="filterFn"
             outlined
             rounded
+            @filter="filterFn"
           />
         </q-card-section>
 
@@ -99,14 +99,18 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, toRaw } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import type { Person, Balloon } from 'app/src-common/entities';
 import { useDialogPluginComponent, type QSelectOption } from 'quasar';
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
-const { people, balloon, existingNames } = defineProps<{
+const {
+  people,
+  balloon = undefined,
+  existingNames = [],
+} = defineProps<{
   balloon?: Balloon;
   existingNames?: string[];
   people: Person[];
@@ -114,10 +118,12 @@ const { people, balloon, existingNames } = defineProps<{
 
 defineEmits([...useDialogPluginComponent.emits]);
 
-const name = ref<string | undefined>(balloon?.name);
-const maxCapacity = ref<number | undefined>(balloon?.maxCapacity);
-const maxWeight = ref<number | undefined>(balloon?.maxWeight);
-const allowedOperatorIds = ref<string[]>(balloon?.allowedOperatorIds ?? []);
+const newBalloon = reactive<Partial<Balloon>>({
+  name: balloon?.name ?? null,
+  maxCapacity: balloon?.maxCapacity ?? null,
+  maxWeight: balloon?.maxWeight ?? null,
+  allowedOperatorIds: balloon?.allowedOperatorIds ?? [],
+});
 
 const operatorOptions = computed<QSelectOption[]>(() => {
   return people
@@ -137,11 +143,8 @@ const mode = computed<'create' | 'edit'>(() => {
 
 function onSubmit() {
   const payload: Omit<Balloon, 'id'> = {
+    ...newBalloon,
     type: 'balloon',
-    name: toRaw(name.value).trim(),
-    maxCapacity: toRaw(maxCapacity.value),
-    maxWeight: toRaw(maxWeight.value) ?? undefined,
-    allowedOperatorIds: toRaw(allowedOperatorIds.value),
   };
 
   onDialogOK(payload);
@@ -162,7 +165,7 @@ function nameIsUnique(name: string): boolean {
     return true;
   }
 
-  return !existingNames?.some((existingName) => {
+  return !existingNames.some((existingName) => {
     return existingName.toLowerCase() === name;
   });
 }

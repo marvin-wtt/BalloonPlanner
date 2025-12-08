@@ -23,6 +23,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'create',
+        name: 'create-project',
         component: () => import('pages/ProjectCreationPage.vue'),
       },
       {

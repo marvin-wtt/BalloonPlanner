@@ -6,9 +6,8 @@
     <slot />
     <q-menu
       v-model="menuOpen"
-      anchor="bottom middle"
-      self="top middle"
-      class="q-ma-sm"
+      anchor="bottom end"
+      self="top right"
       style="min-width: 200px"
     >
       <div class="column no-wrap q-pa-md q-gutter-y-sm">

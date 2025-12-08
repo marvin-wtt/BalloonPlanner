@@ -26,7 +26,7 @@ export default () => {
 
   ipcMain.handle('app:getVersion', () => app.getVersion());
 
-  startAutoUpdater().catch((reason) => {
+  startAutoUpdater().catch((reason: unknown) => {
     log.error('Failed to start auto updater:', reason);
   });
 };

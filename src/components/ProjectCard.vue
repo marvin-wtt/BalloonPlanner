@@ -1,7 +1,7 @@
 <template>
   <q-card
-    class="cursor-pointer q-hoverable project-card"
     v-ripple
+    class="cursor-pointer q-hoverable project-card"
   >
     <span class="q-focus-helper" />
 

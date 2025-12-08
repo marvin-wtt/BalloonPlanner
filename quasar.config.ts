@@ -11,7 +11,7 @@ export default defineConfig(() => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: [],
+    boot: ['logger'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
     css: ['app.scss'],
@@ -28,6 +28,7 @@ export default defineConfig(() => {
 
       'roboto-font', // optional, you are not bound to it
       'material-icons', // optional, you are not bound to it
+      'material-symbols-outlined',
     ],
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
@@ -187,6 +188,17 @@ export default defineConfig(() => {
             from: 'dist/python',
             to: 'python-bin',
             filter: ['*.exe'],
+          },
+        ],
+
+        fileAssociations: [
+          {
+            ext: ['bpp'],
+            name: 'Balloon Planner Project',
+            description: 'Balloon Planner Project File',
+            role: 'Editor',
+            icon: 'icons/icon.png',
+            mimeType: 'application/json',
           },
         ],
       },

@@ -2,7 +2,19 @@
   <q-layout view="hHh LpR lFf">
     <q-header elevated>
       <q-bar class="q-electron-drag">
-        <q-icon name="mdi-airballoon" />
+        <q-icon
+          v-if="route.name === 'projects'"
+          name="mdi-airballoon"
+        />
+
+        <q-btn
+          v-else
+          icon="arrow_back"
+          dense
+          round
+          flat
+          @click="router.back()"
+        />
 
         <div class="row q-gutter-x-xs no-wrap">
           <q-separator
@@ -21,7 +33,7 @@
             />
 
             <q-btn
-              v-if="project"
+              v-if="project && !inIndexPage"
               :icon="syncIcon"
               :disable="!isDorty"
               :loading="isSaving"
@@ -94,16 +106,58 @@
 
 <script lang="ts" setup>
 import { minimize, toggleMaximize, closeApp } from 'src/composables/windowAPI';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useProjectStore } from 'stores/project';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import FlightSelectionItem from 'components/toolbar/FlightSelectionItem.vue';
 import UpdateBtn from 'components/UpdateBtn.vue';
+import { useQuasar } from 'quasar';
+import type { Project } from 'app/src-common/entities';
 
+const quasar = useQuasar();
 const route = useRoute();
+const router = useRouter();
 const projectStore = useProjectStore();
 const { project, isDorty, isSaving } = storeToRefs(projectStore);
+
+window.projectAPI.onOpenRequest((newProject) => {
+  // Directly switch to the new project if it's already loaded or not project is loaded
+  if (
+    !project.value ||
+    project.value.id === newProject.id ||
+    route.name === 'projects'
+  ) {
+    void openProject(newProject);
+    return;
+  }
+
+  quasar
+    .dialog({
+      title: 'Switch Projects',
+      message: `Do you want to switch to project "${newProject.name}"?`,
+      ok: {
+        label: 'Open Project',
+        color: 'primary',
+        rounded: true,
+      },
+      cancel: {
+        label: 'Cancel',
+        color: 'primary',
+        rounded: true,
+        outline: true,
+      },
+    })
+    .onOk(() => {
+      openProject(newProject).catch((error: unknown) => {
+        quasar.notify({
+          type: 'negative',
+          message: `Failed to open project "${newProject.name}"`,
+          caption: String(error?.message),
+        });
+      });
+    });
+});
 
 const syncIcon = computed<string>(() => {
   if (isDorty.value || isSaving.value) {
@@ -131,4 +185,24 @@ const label = computed<string>(() => {
 async function onSaveProject() {
   await projectStore.saveProject();
 }
+
+async function openProject(newProject: Project) {
+  project.value = newProject;
+
+  quasar.notify({
+    type: 'info',
+    message: `Opening project "${newProject.name}"...`,
+  });
+
+  await router.push({
+    name: 'flights',
+    params: { projectId: newProject.id },
+  });
+}
 </script>
+
+<style>
+body {
+  overflow: hidden;
+}
+</style>

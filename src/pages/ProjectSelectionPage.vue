@@ -3,42 +3,70 @@
     <div class="q-pa-md">
       <div class="q-gutter-sm row">
         <project-card
-          v-for="project in projectIndex"
-          :project="project"
-          :key="project.id"
-          class="project-card"
-          @click="openProject(project)"
+          v-for="meta in projectIndex"
+          :key="meta.id"
+          class="project-card position-relative"
+          @click="openProject(meta)"
         >
+          <q-btn
+            v-if="!meta.isInternal"
+            icon="close"
+            class="absolute q‐ma‐xs z-top"
+            style="top: 3px; right: 3px"
+            size="sm"
+            dense
+            flat
+            round
+            @click.stop="removeProject(meta)"
+          />
+
           <q-card-section class="col-grow">
             <div class="text-h6">
-              {{ project.name }}
+              {{ meta.name }}
             </div>
             <div class="text-subtitle2">
-              {{ project.description ?? '&#160;' }}
+              {{ meta.description ?? '&#160;' }}
             </div>
           </q-card-section>
 
           <q-separator />
 
           <q-card-actions
-            class="no-wrap"
+            class="no-wrap row justify-around"
             align="right"
           >
             <q-btn
+              v-if="meta.isInternal"
               icon="download"
               size="sm"
               flat
+              stack
               rounded
-              @click.stop="downloadProject(project)"
+              @click.stop="downloadProject(meta)"
             >
               Export
+            </q-btn>
+            <q-btn
+              v-else
+              icon="folder"
+              size="sm"
+              flat
+              stack
+              rounded
+              disable
+            >
+              Show
+              <q-tooltip>
+                {{ meta.filePath }}
+              </q-tooltip>
             </q-btn>
             <q-btn
               icon="edit"
               size="sm"
               flat
+              stack
               rounded
-              @click.stop="onEditProject(project)"
+              @click.stop="onEditProject(meta)"
             >
               Edit
             </q-btn>
@@ -47,9 +75,10 @@
               size="sm"
               color="negative"
               flat
+              stack
               rounded
               dense
-              @click.stop="deleteProject(project)"
+              @click.stop="deleteProject(meta)"
             >
               Delete
             </q-btn>
@@ -57,23 +86,15 @@
         </project-card>
 
         <project-card>
-          <q-file
-            v-model="file"
-            ref="uploaderRef"
-            accept="application/json"
-            style="display: none"
-            @update:model-value="onFilesAdded"
-          />
-
           <q-btn
-            class="add-btn"
             icon="folder_open"
+            class="add-btn"
             size="md"
             stack
             flat
             @click="loadProject()"
           >
-            Import Project
+            Open Project
           </q-btn>
         </project-card>
 
@@ -98,45 +119,21 @@
 import ProjectCard from 'components/ProjectCard.vue';
 import type { ProjectMeta } from 'app/src-common/entities';
 import { useRouter } from 'vue-router';
-import { QFile, useQuasar } from 'quasar';
+import { useQuasar } from 'quasar';
 import { useProjectStore } from 'stores/project';
 import { storeToRefs } from 'pinia';
-import { onBeforeMount, ref } from 'vue';
-import { readJsonFile } from 'src/util/json-file-reader';
-import { isProject } from 'src/util/validate-project';
+import { onBeforeMount } from 'vue';
 import ProjectEditDialog from 'components/dialog/ProjectEditDialog.vue';
 
 const router = useRouter();
 const quasar = useQuasar();
 
 const projectStore = useProjectStore();
-const { projectIndex } = storeToRefs(projectStore);
-
-const file = ref<File>();
-const uploaderRef = ref<QFile>(null);
+const { project, projectIndex } = storeToRefs(projectStore);
 
 onBeforeMount(async () => {
   await projectStore.loadIndex();
 });
-
-function loadProject() {
-  uploaderRef.value.pickFiles();
-}
-
-async function onFilesAdded() {
-  const data = await readJsonFile(file.value);
-
-  if (!isProject(data)) {
-    quasar.notify({
-      message: 'Invalid project file',
-      caption: 'The file does not contain a valid project.',
-      type: 'negative',
-    });
-    return;
-  }
-
-  await projectStore.createProject(data);
-}
 
 async function downloadProject(project: ProjectMeta) {
   await projectStore.loadProject(project.id);
@@ -146,12 +143,15 @@ async function downloadProject(project: ProjectMeta) {
   });
   const element = document.createElement('a');
   element.href = URL.createObjectURL(file);
-  element.download = `${project.name}.json`;
+  element.download = `${project.name}.bpp`;
   element.click();
 }
 
 async function openProject(project: ProjectMeta) {
-  await router.push(`/projects/${project.id}/flights`);
+  await router.push({
+    name: 'flights',
+    params: { projectId: project.id },
+  });
 }
 
 function deleteProject(project: ProjectMeta) {
@@ -176,6 +176,29 @@ function deleteProject(project: ProjectMeta) {
     });
 }
 
+function removeProject(project: ProjectMeta) {
+  quasar
+    .dialog({
+      title: `Remove project ${project.name}?`,
+      message:
+        'Are you sure you want to remove this project from the list? ' +
+        'This action does not delete the project, it only removes it from ' +
+        'the index.',
+      ok: {
+        label: 'Remove',
+        rounded: true,
+      },
+      cancel: {
+        label: 'Cancel',
+        rounded: true,
+        outline: true,
+      },
+    })
+    .onOk(() => {
+      void projectStore.removeProject(project.id);
+    });
+}
+
 function onEditProject(project: ProjectMeta) {
   quasar
     .dialog({
@@ -184,23 +207,37 @@ function onEditProject(project: ProjectMeta) {
         project,
       },
     })
-    .onOk((payload: Omit<ProjectMeta, 'id'>) => {
+    .onOk((payload: Pick<ProjectMeta, 'name' | 'description'>) => {
       void editProject(project.id, payload);
     });
 }
 
-async function editProject(projectId: string, data: Omit<ProjectMeta, 'id'>) {
+async function editProject(
+  projectId: string,
+  data: Pick<ProjectMeta, 'name' | 'description'>,
+) {
   await projectStore.loadProject(projectId);
+
+  if (!project.value) {
+    throw new Error('Project not found');
+  }
+
   // Apply update
-  projectStore.project.name = data.name;
-  projectStore.project.description = data.description;
+  project.value.name = data.name;
+  project.value.description = data.description;
   // Refresh index
   await projectStore.saveProject();
   await projectStore.loadIndex();
 }
 
 async function createProject() {
-  await router.push('/projects/create');
+  await router.push({
+    name: 'create-project',
+  });
+}
+
+function loadProject() {
+  window.projectAPI.openFile();
 }
 </script>
 

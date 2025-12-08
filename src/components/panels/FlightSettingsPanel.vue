@@ -7,10 +7,53 @@
       <div class="text-h6">Settings</div>
       <div class="q-gutter-sm">
         <q-list separator>
-          <q-item-label header>General</q-item-label>
+          <q-item-label header>Behaviour</q-item-label>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
+          >
+            <q-item-section
+              avatar
+              top
+            >
+              <q-checkbox
+                v-model="disableAssignmentProtection"
+                color="primary"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Disable assignment protection</q-item-label>
+              <q-item-label caption>
+                The protection prohibits changes across vehicle groups after the
+                first leg
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-item
+            v-ripple
+            tag="label"
+          >
+            <q-item-section
+              avatar
+              top
+            >
+              <q-checkbox
+                v-model="disableVehicleGroupProtection"
+                color="primary"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Disable vehicle group protection</q-item-label>
+              <q-item-label caption>
+                The protection prohibits changes to the vehicle groups after the
+                first leg
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-item-label header>Information</q-item-label>
+          <q-item
+            v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -26,8 +69,26 @@
             </q-item-section>
           </q-item>
           <q-item
-            tag="label"
+            v-if="showVehicleLabel"
             v-ripple
+            tag="label"
+          >
+            <q-item-section
+              avatar
+              top
+            >
+              <q-checkbox
+                v-model="showVehicleIcon"
+                color="primary"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Show vehicle Icon</q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-item
+            v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -43,8 +104,8 @@
             </q-item-section>
           </q-item>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -60,8 +121,8 @@
             </q-item-section>
           </q-item>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -79,8 +140,8 @@
           <q-separator />
           <q-item-label header>Weight</q-item-label>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -96,8 +157,8 @@
             </q-item-section>
           </q-item>
           <q-item
-            tag="label"
             v-ripple
+            tag="label"
           >
             <q-item-section
               avatar
@@ -114,7 +175,7 @@
           </q-item>
           <q-item>
             <q-item-section>
-              <q-item-label>Default Weight</q-item-label>
+              <q-item-label>Default Person Weight</q-item-label>
             </q-item-section>
             <q-item-section side>
               <q-input
@@ -163,6 +224,74 @@
               />
             </q-item-section>
           </q-item>
+          <q-item>
+            <q-item-section>
+              <q-input
+                v-model="balloonColor"
+                label="Balloon Color"
+                :rules="['anyColor']"
+                hide-bottom-space
+                clearable
+                clear-icon="sym_o_undo"
+                rounded
+                outlined
+                dense
+              >
+                <template #append>
+                  <q-icon
+                    name="colorize"
+                    class="cursor-pointer"
+                  >
+                    <q-popup-proxy
+                      cover
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
+                      <q-color
+                        v-model="balloonColor"
+                        no-header
+                        default-view="palette"
+                      />
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </q-item-section>
+          </q-item>
+          <q-item>
+            <q-item-section>
+              <q-input
+                v-model="carColor"
+                label="Car Color"
+                :rules="['anyColor']"
+                hide-bottom-space
+                clearable
+                clear-icon="sym_o_undo"
+                rounded
+                outlined
+                dense
+              >
+                <template #append>
+                  <q-icon
+                    name="colorize"
+                    class="cursor-pointer"
+                  >
+                    <q-popup-proxy
+                      cover
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
+                      <q-color
+                        v-model="carColor"
+                        no-header
+                        default-view="palette"
+                      />
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </q-item-section>
+          </q-item>
         </q-list>
       </div>
     </q-scroll-area>
@@ -171,13 +300,14 @@
 
 <script lang="ts" setup>
 import { QItem, QList } from 'quasar';
-import { storeToRefs } from 'pinia';
-import { useSettingsStore } from 'stores/settings';
+import { useProjectSettings } from 'src/composables/projectSettings';
 
-const settingsStore = useSettingsStore();
 const {
+  disableAssignmentProtection,
+  disableVehicleGroupProtection,
   showVehicleIndex,
   showVehicleLabel,
+  showVehicleIcon,
   showGroupLabel,
   showNumberOfFlights,
   showPersonWeight,
@@ -185,7 +315,9 @@ const {
   personDefaultWeight,
   groupAlignment,
   groupStyle,
-} = storeToRefs(settingsStore);
+  balloonColor,
+  carColor,
+} = useProjectSettings();
 
 const { name } = defineProps<{
   name: string;

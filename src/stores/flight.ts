@@ -3,50 +3,75 @@ import { computed, ref } from 'vue';
 import type {
   Balloon,
   Car,
-  Flight,
+  FlightSeries,
   Person,
-  SmartFillPayload,
-  SmartFillOptions,
+  FlightLeg,
+  ID,
+  VehicleAssignmentMap,
 } from 'app/src-common/entities';
 import { useProjectStore } from 'stores/project';
+import { NULL_ID } from 'app/src-common/constants';
 
 export const useFlightStore = defineStore('flight', () => {
   const projectStore = useProjectStore();
   const { project } = storeToRefs(projectStore);
 
-  const flightId = ref<string>();
+  const flightLegId = ref<string>();
 
-  const flight = computed<Flight | undefined>(() => {
-    if (!project.value || !flightId.value) {
+  const flightSeries = computed<FlightSeries | undefined>(() => {
+    if (!project.value || !flightLegId.value) {
       return undefined;
     }
 
-    return project.value.flights.find(({ id }) => id === flightId.value);
+    return project.value.flights.find((series) =>
+      series.legs.some((leg) => leg.id === flightLegId.value),
+    );
+  });
+
+  const flightLeg = computed<FlightLeg | undefined>(() => {
+    if (!project.value || !flightLegId.value) {
+      return undefined;
+    }
+
+    return project.value.flights
+      .flatMap((flight) => flight.legs)
+      .find((leg) => leg.id === flightLegId.value);
   });
 
   const balloonMap = computed<Record<string, Balloon>>(() => {
-    if (!flight.value) {
+    if (!project.value || !flightSeries.value) {
       return {};
     }
 
+    const initialMap = {
+      [NULL_ID]: {
+        id: NULL_ID,
+        type: 'balloon',
+        name: 'Placeholder',
+        maxCapacity: 0,
+        allowedOperatorIds: [],
+        maxWeight: null,
+      },
+    };
+
     return project.value.balloons
-      .filter(({ id }) => flight.value.balloonIds.includes(id))
+      .filter(({ id }) => flightSeries.value?.balloonIds.includes(id))
       .reduce(
         (balloons, balloon) => ({
           ...balloons,
           [balloon.id]: balloon,
         }),
-        {},
+        initialMap,
       );
   });
 
   const carMap = computed<Record<string, Car>>(() => {
-    if (!flight.value) {
+    if (!project.value || !flightSeries.value) {
       return {};
     }
 
     return project.value.cars
-      .filter(({ id }) => flight.value.carIds.includes(id))
+      .filter(({ id }) => flightSeries.value?.carIds.includes(id))
       .reduce(
         (cars, car) => ({
           ...cars,
@@ -57,12 +82,12 @@ export const useFlightStore = defineStore('flight', () => {
   });
 
   const personMap = computed<Record<string, Person>>(() => {
-    if (!flight.value) {
+    if (!project.value || !flightSeries.value) {
       return {};
     }
 
     return project.value.people
-      .filter(({ id }) => flight.value.personIds.includes(id))
+      .filter(({ id }) => flightSeries.value?.personIds.includes(id))
       .reduce(
         (persons, person) => ({
           ...persons,
@@ -72,17 +97,78 @@ export const useFlightStore = defineStore('flight', () => {
       );
   });
 
-  function loadFlight(id: string) {
-    flightId.value = id;
+  function loadFlightLeg(id: ID) {
+    flightLegId.value = id;
   }
 
-  function createFlight(): Flight {
+  function loadLastFlight() {
+    if (!project.value) {
+      throw new Error('Project not loaded');
+    }
+
+    const allFlightLegs = project.value.flights.flatMap((f) => f.legs);
+    if (allFlightLegs.length === 0) {
+      flightLegId.value = undefined;
+      return;
+    }
+
+    const lastFlightLeg = allFlightLegs[allFlightLegs.length - 1];
+    if (!lastFlightLeg) {
+      flightLegId.value = undefined;
+      return;
+    }
+
+    flightLegId.value = lastFlightLeg.id;
+  }
+
+  function createFlightLeg(
+    seriesId: string,
+    leg: Partial<FlightLeg>,
+  ): FlightLeg {
+    if (!project.value) {
+      throw new Error('Project not loaded');
+    }
+
+    const series = project.value.flights.find((f) => f.id === seriesId);
+    if (!series) {
+      throw new Error('Flight series not found');
+    }
+
+    const newLeg: FlightLeg = {
+      id: crypto.randomUUID(),
+      assignments: leg.assignments ?? {},
+      canceledBalloonIds: [],
+    };
+
+    series.legs.push(newLeg);
+
+    return newLeg;
+  }
+
+  function createFlightSeries(
+    seriesData?: Partial<Omit<FlightSeries, 'id'>>,
+    assignments?: VehicleAssignmentMap,
+  ): FlightSeries {
+    if (!project.value) {
+      throw new Error('Project not loaded');
+    }
+
+    const leg = seriesData?.legs?.[0] ?? {
+      id: crypto.randomUUID(),
+      assignments: assignments ?? {},
+      canceledBalloonIds: [],
+    };
+
     const newFlight = {
       id: crypto.randomUUID(),
-      vehicleGroups: [],
-      carIds: project.value.cars.map(({ id }) => id),
-      balloonIds: project.value.balloons.map(({ id }) => id),
-      personIds: project.value.people.map(({ id }) => id),
+      date: seriesData?.date ?? new Date().toISOString(),
+      vehicleGroups: seriesData?.vehicleGroups ?? [],
+      legs: [leg],
+      carIds: seriesData?.carIds ?? project.value.cars.map(({ id }) => id),
+      balloonIds:
+        seriesData?.balloonIds ?? project.value.balloons.map(({ id }) => id),
+      personIds:
+        seriesData?.personIds ?? project.value.people.map(({ id }) => id),
     };
 
     project.value.flights.push(newFlight);
@@ -90,132 +176,249 @@ export const useFlightStore = defineStore('flight', () => {
     return newFlight;
   }
 
-  function deleteFlight(id: string) {
-    const index = project.value.flights.findIndex((f) => f.id === id);
-    if (index >= 0) {
-      project.value.flights.splice(index, 1);
+  function deleteFlightLeg(flightId: string) {
+    if (!project.value) {
+      throw new Error('Project not loaded');
+    }
+    if (!flightSeries.value) {
+      throw new Error('Flight leg not loaded');
     }
 
-    if (flight.value?.id === id) {
-      flightId.value = undefined;
+    const series = project.value.flights.find((f) =>
+      f.legs.some((leg) => leg.id === flightId),
+    );
+    if (!series) {
+      throw new Error('Flight series not found');
+    }
+
+    const legIndex = flightSeries.value.legs.findIndex(
+      (leg) => leg.id === flightId,
+    );
+    if (legIndex < 0) {
+      // This should never happen since the series was found
+      throw new Error('Flight leg not found: ' + flightId);
+    }
+
+    series.legs.splice(legIndex, 1);
+
+    if (series.legs.length === 0) {
+      deleteFlightSeries(series.id);
+      loadLastFlight();
+      return;
+    }
+
+    // Reset store if the current flight is loaded
+    if (flightLegId.value === flightId) {
+      const leg = series.legs[series.legs.length - 1];
+      if (!leg) {
+        // This should never happen since we checked the length above
+        flightLegId.value = undefined;
+        return;
+      }
+      flightLegId.value = leg.id;
+    }
+  }
+
+  function mergeSeries(seriesIdA: string, seriesIdB: string) {
+    if (!project.value) {
+      throw new Error('Project not loaded');
+    }
+
+    const seriesA = project.value.flights.find((f) => f.id === seriesIdA);
+    const seriesB = project.value.flights.find((f) => f.id === seriesIdB);
+
+    if (!seriesA || !seriesB) {
+      throw new Error('Flight series not found');
+    }
+
+    const compatible = seriesB.vehicleGroups.every((groupB) => {
+      return seriesA.vehicleGroups
+        .find(({ balloonId }) => balloonId === groupB.balloonId)
+        ?.carIds.every((carId) => groupB.carIds.includes(carId));
+    });
+
+    if (!compatible) {
+      throw new Error('Incompatible vehicle groups');
+    }
+
+    // Merge available ids
+    seriesA.carIds = [...new Set([...seriesA.carIds, ...seriesB.carIds])];
+    seriesA.balloonIds = [
+      ...new Set([...seriesA.balloonIds, ...seriesB.balloonIds]),
+    ];
+    seriesA.personIds = [
+      ...new Set([...seriesA.personIds, ...seriesB.personIds]),
+    ];
+
+    // Append legs
+    seriesA.legs.push(...seriesB.legs);
+
+    const wasLoaded = flightSeries.value?.id === seriesIdB;
+
+    deleteFlightSeries(seriesB.id);
+
+    if (wasLoaded) {
+      loadLastFlight();
+    }
+  }
+
+  function detachLeg(flightId: string) {
+    if (!project.value) {
+      throw new Error('Project not loaded');
+    }
+
+    const series = project.value.flights.find((f) =>
+      f.legs.some((leg) => leg.id === flightId),
+    );
+    if (!series) {
+      return;
+    }
+
+    const leg = series.legs.find((leg) => leg.id === flightId);
+    if (!leg) {
+      return;
+    }
+
+    const wasLoaded = flightLeg.value?.id === flightId;
+
+    deleteFlightLeg(flightId);
+
+    createFlightSeries({
+      carIds: series.carIds,
+      balloonIds: series.balloonIds,
+      personIds: series.personIds,
+      vehicleGroups: series.vehicleGroups,
+      legs: [leg],
+    });
+
+    if (wasLoaded) {
+      loadLastFlight();
+    }
+  }
+
+  function deleteFlightSeries(seriesId: string) {
+    if (!project.value) {
+      throw new Error('Project not loaded');
+    }
+
+    const seriesIndex = project.value.flights.findIndex(
+      (f) => f.id === seriesId,
+    );
+    if (seriesIndex < 0) {
+      return;
+    }
+
+    // Reset store if the current flight is loaded
+    if (flightSeries.value?.id === seriesId) {
+      flightLegId.value = undefined;
+    }
+
+    project.value.flights.splice(seriesIndex, 1);
+
+    if (flightLegId.value === undefined) {
+      loadLastFlight();
     }
   }
 
   const availableBalloons = computed<Balloon[]>(() => {
-    if (!flight.value) {
+    if (!project.value || !flightSeries.value) {
       return [];
     }
 
-    return flight.value.vehicleGroups.reduce(
-      (balloons, group) =>
-        balloons.filter((balloon) => balloon.id !== group.balloon.id),
-      Object.values(balloonMap.value),
+    const allowedIds = new Set(flightSeries.value.balloonIds);
+    const assignedIds = new Set(
+      flightSeries.value.vehicleGroups.map((group) => group.balloonId),
+    );
+
+    return project.value.balloons.filter(
+      (balloon) => allowedIds.has(balloon.id) && !assignedIds.has(balloon.id),
     );
   });
 
   const availableCars = computed<Car[]>(() => {
-    if (!flight.value) {
+    if (!project.value || !flightSeries.value) {
       return [];
     }
 
-    return flight.value.vehicleGroups.reduce(
-      (cars, group) =>
-        cars.filter(
-          (car) => !group.cars.some((groupCar) => groupCar.id === car.id),
-        ),
-      Object.values(carMap.value),
+    const allowedIds = new Set(flightSeries.value.carIds);
+    const assignedIds = new Set(
+      flightSeries.value.vehicleGroups.flatMap((group) => group.carIds),
+    );
+
+    return project.value.cars.filter(
+      (car) => allowedIds.has(car.id) && !assignedIds.has(car.id),
     );
   });
 
   const availablePeople = computed<Person[]>(() => {
-    if (!flight.value) {
+    if (!project.value || !flightSeries.value || !flightLeg.value) {
       return [];
     }
 
-    return flight.value.vehicleGroups.reduce(
-      (people, group) =>
-        people.filter(
-          (person) =>
-            ![
-              group.balloon.operatorId,
-              ...group.cars.map((car) => car.operatorId),
-              ...group.balloon.passengerIds,
-              ...group.cars.flatMap((car) => car.passengerIds),
-            ].includes(person.id),
-        ),
-      Object.values(personMap.value),
+    const allowedIds = new Set(flightSeries.value.personIds);
+    const assignedIds = new Set(
+      Object.values(flightLeg.value.assignments)
+        .flatMap((assignment) => [
+          assignment.operatorId,
+          ...assignment.passengerIds,
+        ])
+        .filter((id): id is string => id !== null),
+    );
+
+    return project.value.people.filter(
+      (person) => allowedIds.has(person.id) && !assignedIds.has(person.id),
     );
   });
 
-  const history = computed<Flight[]>(() => {
-    const allFlights = project.value?.flights ?? [];
-    const currentFlightId = flight.value?.id;
-    if (!currentFlightId) {
+  const history = computed<FlightLeg[]>(() => {
+    if (!flightLegId.value) {
       return [];
     }
 
-    const endIndex = allFlights.findIndex((f) => f.id === currentFlightId);
+    const allFlightLegs = project.value?.flights.flatMap((f) => f.legs) ?? [];
+    const endIndex = allFlightLegs.findIndex((f) => f.id === flightLegId.value);
     if (endIndex === -1) {
       return [];
     }
 
-    return allFlights.slice(0, endIndex);
+    return allFlightLegs.slice(0, endIndex);
   });
 
   const numberOfFlights = computed<Record<string, number>>(() => {
+    if (!project.value) {
+      throw new Error('Project not loaded');
+    }
+
     const counts: Record<string, number> = {};
-    for (const f of history.value) {
-      const balloons = f.vehicleGroups.map((g) => g.balloon);
+
+    const balloonIds = project.value.balloons.map((balloon) => balloon.id);
+
+    for (const l of history.value) {
       for (const person of project.value.people) {
         const pid = person.id;
-        if (!(pid in counts)) {
-          counts[pid] = 0;
-        }
 
         // check if this person is flying on any of the balloons
-        const isFlying = balloons.some(
-          (balloon) =>
-            balloon.operatorId === pid ||
-            balloon.passengerIds.some((pIds) => pIds === pid),
-        );
+        const isFlying = balloonIds
+          .filter((id) => !l.canceledBalloonIds.includes(id))
+          .map((id) => l.assignments[id])
+          .filter((assignment) => assignment !== undefined)
+          .some(
+            (assignment) =>
+              assignment.operatorId === pid ||
+              assignment.passengerIds.some((pIds) => pIds === pid),
+          );
 
-        counts[pid] += isFlying ? 1 : 0;
+        counts[pid] = (counts[pid] ?? 0) + (isFlying ? 1 : 0);
       }
     }
 
     return counts;
   });
 
-  async function smartFillFlight(options: SmartFillOptions) {
-    const data: SmartFillPayload = {
-      cars: flight.value.carIds.map((id) => carMap.value[id]),
-      balloons: flight.value.balloonIds.map((id) => balloonMap.value[id]),
-      people: flight.value.personIds
-        .map((id) => personMap.value[id])
-        .map((person) => {
-          const flights = numberOfFlights.value[person.id] ?? 0;
-
-          return {
-            ...person,
-            flights: person.firstTime && flights === 0 ? -1 : flights,
-            weight:
-              person.weight ?? project.value.settings?.personDefaultWeight,
-          };
-        }),
-      groups: flight.value?.vehicleGroups ?? [],
-      history: history.value,
-    };
-
-    const payload = JSON.parse(JSON.stringify(data));
-
-    // Remove all vue proxies
-    project.value.flights.find((f) => f.id === flightId.value).vehicleGroups =
-      await window.solverAPI.solveFlight(payload, options);
-  }
-
   return {
     // Computed
-    flight,
+    flightSeries,
+    flightLeg,
     balloonMap,
     carMap,
     personMap,
@@ -224,10 +427,13 @@ export const useFlightStore = defineStore('flight', () => {
     availableCars,
     numberOfFlights,
     // Methods
-    loadFlight,
-    createFlight,
-    deleteFlight,
-    smartFillFlight,
+    loadFlightLeg,
+    createFlightLeg,
+    createFlightSeries,
+    detachLeg,
+    mergeSeries,
+    deleteFlightSeries,
+    deleteFlightLeg,
   };
 });
 

@@ -1,8 +1,10 @@
 export type PersonRole = 'participant' | 'counselor';
 export type VehicleKind = 'car' | 'balloon';
 
+export type ID = string;
+
 export interface Identifiable {
-  id: string;
+  readonly id: ID;
 }
 
 export interface Person extends Identifiable {
@@ -11,12 +13,13 @@ export interface Person extends Identifiable {
   nationality: string;
   weight?: number;
   firstTime?: boolean;
+  languages?: string[];
 }
 
 export interface VehicleBase extends Identifiable {
   type: VehicleKind;
   name: string;
-  allowedOperatorIds: string[];
+  allowedOperatorIds: ID[];
   maxCapacity: number;
 }
 
@@ -27,33 +30,44 @@ export interface Car extends VehicleBase {
 
 export interface Balloon extends VehicleBase {
   type: 'balloon';
-  maxWeight?: number;
+  maxWeight?: number | null;
 }
 
 export type Vehicle = Car | Balloon;
 
 export interface VehicleAssignment {
-  id: string;
-  operatorId: string | null;
-  passengerIds: string[];
+  operatorId: ID | null;
+  passengerIds: ID[];
 }
 
 export interface VehicleGroup {
-  balloon: VehicleAssignment;
-  cars: VehicleAssignment[];
+  balloonId: ID;
+  carIds: ID[];
 }
 
-export interface Flight extends Identifiable {
+export type VehicleAssignmentMap = Record<ID, VehicleAssignment>;
+
+export interface FlightLeg extends Identifiable {
+  canceledBalloonIds: ID[];
+  assignments: VehicleAssignmentMap;
+}
+
+export interface FlightSeries extends Identifiable {
   date?: string;
+  personIds: ID[];
+  balloonIds: ID[];
+  carIds: ID[];
+
   vehicleGroups: VehicleGroup[];
-  personIds: string[];
-  balloonIds: string[];
-  carIds: string[];
+  legs: FlightLeg[];
 }
 
 export interface ProjectSettings {
+  disableAssignmentProtection?: boolean;
+  disableVehicleGroupProtection?: boolean;
   showVehicleIndex?: boolean;
   showVehicleLabel?: boolean;
+  showVehicleIcon?: boolean;
   showGroupLabel?: boolean;
   showNumberOfFlights?: boolean;
   showPersonWeight?: boolean;
@@ -61,40 +75,28 @@ export interface ProjectSettings {
   personDefaultWeight?: number;
   groupAlignment?: 'horizontal' | 'vertical';
   groupStyle?: 'dashed' | 'highlighted';
+  balloonColor?: string;
+  carColor?: string;
 }
 
 export interface Project extends Identifiable {
   name: string;
   description?: string;
-  createdAt: string;
+  createdAt: string; // ISO timestamp
+  version: string;
 
   people: Person[];
   cars: Car[];
   balloons: Balloon[];
-  flights: Flight[];
+  flights: FlightSeries[];
   settings?: ProjectSettings;
 }
 
 export interface ProjectMeta {
   id: string;
   name: string;
-  description: string;
-}
-
-export interface SmartFillPayload {
-  people: (Person & { flights: number })[];
-  cars: Car[];
-  balloons: Balloon[];
-  groups: VehicleGroup[];
-  history: Flight[];
-}
-
-export interface SmartFillOptions {
-  wPilotFairness?: number;
-  wPassengerFairness?: number;
-  wNationalityDiversity?: number;
-  wVehicleRotation?: number;
-  wSecondLegFairness?: number;
-  timeLimit?: number;
-  leg?: 'first' | 'second' | undefined;
+  createdAt: string;
+  description?: string;
+  filePath: string;
+  isInternal?: boolean;
 }

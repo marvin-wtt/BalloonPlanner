@@ -9,13 +9,13 @@
         @submit="onSubmit"
       >
         <q-card-section class="text-h6">
-          <template v-if="mode === 'create'"> Create Person</template>
-          <template v-else> Edit Person</template>
+          <template v-if="mode === 'create'">Create Person</template>
+          <template v-else>Edit Person</template>
         </q-card-section>
 
         <q-card-section class="q-pt-none q-gutter-y-md">
           <q-input
-            v-model="name"
+            v-model="newPerson.name"
             label="Name"
             lazy-rules
             :rules="[
@@ -30,7 +30,7 @@
           />
 
           <q-select
-            v-model="nationality"
+            v-model="newPerson.nationality"
             label="Nationality"
             :options="nationalityOptions"
             emit-value
@@ -43,14 +43,28 @@
             rounded
           />
 
+          <q-select
+            v-model="newPerson.languages"
+            label="Languages"
+            :options="languagesOptions"
+            hint="Optional"
+            multiple
+            emit-value
+            map-options
+            use-chips
+            hide-bottom-space
+            outlined
+            rounded
+          />
+
           <q-toggle
-            v-model="firstTime"
+            v-model="newPerson.firstTime"
             label="Is first time"
             toggle-indeterminate
           />
 
           <q-input
-            v-model.number="weight"
+            v-model.number="newPerson.weight"
             type="number"
             label="Weight"
             hint="Optional"
@@ -66,9 +80,10 @@
           />
 
           <q-select
-            v-model="role"
+            v-model="newPerson.role"
             label="Role"
             :options="roleOptions"
+            :disable="!!role"
             emit-value
             map-options
             :rules="[(val?: string | null) => !!val || 'Role is required.']"
@@ -102,12 +117,17 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, toRaw } from 'vue';
+import { computed, reactive } from 'vue';
 import type { Person, PersonRole } from 'app/src-common/entities';
 import { useDialogPluginComponent } from 'quasar';
 
-const { person, existingNames } = defineProps<{
+const {
+  person = undefined,
+  role = undefined,
+  existingNames = [],
+} = defineProps<{
   person?: Person;
+  role?: PersonRole;
   existingNames?: string[];
 }>();
 
@@ -116,11 +136,14 @@ defineEmits([...useDialogPluginComponent.emits]);
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
-const name = ref<string>(person?.name ?? null);
-const nationality = ref<string>(person?.nationality ?? null);
-const role = ref<PersonRole>(person?.role ?? 'participant');
-const weight = ref<number>(person?.weight ?? undefined);
-const firstTime = ref<boolean>(person?.firstTime ?? undefined);
+const newPerson = reactive<Partial<Person>>({
+  name: person?.name ?? null,
+  nationality: person?.nationality ?? null,
+  role: person?.role ?? role ?? 'participant',
+  weight: person?.weight ?? undefined,
+  firstTime: person?.firstTime ?? undefined,
+  languages: person?.languages ?? undefined,
+});
 
 const mode = computed<'create' | 'edit'>(() => {
   return person ? 'edit' : 'create';
@@ -137,6 +160,21 @@ const nationalityOptions = [
   },
 ];
 
+const languagesOptions = [
+  {
+    label: 'German',
+    value: 'de',
+  },
+  {
+    label: 'French',
+    value: 'fr',
+  },
+  {
+    label: 'English',
+    value: 'en',
+  },
+];
+
 const roleOptions = [
   {
     label: 'Counselor',
@@ -149,15 +187,7 @@ const roleOptions = [
 ];
 
 function onSubmit() {
-  const payload: Omit<Person, 'id'> = {
-    name: toRaw(name.value).trim(),
-    nationality: toRaw(nationality.value),
-    role: toRaw(role.value),
-    weight: toRaw(weight.value) ?? undefined,
-    firstTime: toRaw(firstTime.value) ?? undefined,
-  };
-
-  onDialogOK(payload);
+  onDialogOK(newPerson);
 }
 
 function nameIsUnique(name: string): boolean {
@@ -166,7 +196,7 @@ function nameIsUnique(name: string): boolean {
     return true;
   }
 
-  return !existingNames?.some((existingName) => {
+  return !existingNames.some((existingName) => {
     return existingName.toLowerCase() === name;
   });
 }

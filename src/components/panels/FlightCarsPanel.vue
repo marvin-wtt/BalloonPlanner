@@ -28,7 +28,7 @@
 import { useQuasar } from 'quasar';
 import { useFlightStore } from 'stores/flight';
 import { storeToRefs } from 'pinia';
-import { useFlightOperations } from 'src/composables/flight-operations';
+import { useFlightOperations } from 'src/composables/flightOperations';
 import type { Car } from 'app/src-common/entities';
 import EditableList from 'components/EditableList.vue';
 import EditCarDialog from 'components/dialog/EditCarDialog.vue';
@@ -39,7 +39,7 @@ const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
-const { carMap, flight } = storeToRefs(flightStore);
+const { carMap, flightSeries } = storeToRefs(flightStore);
 const { createCar, editCar, removeCar, addCar } = useFlightOperations();
 
 const { name } = defineProps<{
@@ -54,7 +54,7 @@ function showAddCars() {
       componentProps: {
         itemName: 'Balloon',
         items: project.value.cars.filter(
-          ({ id }) => !flight.value?.carIds.includes(id),
+          ({ id }) => !flightSeries.value?.carIds.includes(id),
         ),
       },
     })
