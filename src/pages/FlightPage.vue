@@ -172,7 +172,7 @@
 
       <!-- Flight overview -->
       <div
-        v-if="showFlightView && flightSeries && flightLeg"
+        v-if="showFlightView && project && flightSeries && flightLeg"
         class="col-grow flex flight-view"
       >
         <base-flight
@@ -249,6 +249,7 @@ import { toPng } from 'html-to-image';
 import { useProjectSettings } from 'src/composables/projectSettings';
 import { useSolver } from 'src/composables/solver';
 import type { SolveFlightLegOptions } from 'app/src-common/api/solver.api';
+import { enableDragDropTouch } from 'src/util/drag-drop-touch/drag-drop-touch';
 
 const route = useRoute();
 const router = useRouter();
@@ -269,6 +270,8 @@ const {
   addPerson,
   clearLegPassengers,
 } = useFlightOperations();
+
+enableDragDropTouch();
 
 const menuTabs = ref('overview');
 const editable = ref<boolean>(true);
@@ -323,7 +326,7 @@ async function init() {
   }
 
   const lastLeg = series.legs[series.legs.length - 1];
-  if (!lastLeg.id) {
+  if (!lastLeg?.id) {
     return;
   }
 
