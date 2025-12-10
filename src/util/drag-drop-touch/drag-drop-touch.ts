@@ -1,13 +1,11 @@
-'use strict';
-
-// This is a modified version of dragdroptouch.
-// Accessed at 09.12.2025 | Licensed MIT
-// https://github.com/drag-drop-touch-js/dragdroptouch/blob/master/ts/drag-drop-touch.ts
+// NOTE: This file is a modified version of the original dragdroptouch GitHub repository.
+// Source: https://github.com/drag-drop-touch-js/dragdroptouch (MIT license).
 
 import {
   copyStyle,
   newForwardableEvent,
   pointFrom,
+  setDataTransfer,
 } from './drag-drop-touch-util';
 import { DragDTO } from './drag-dto';
 
@@ -105,10 +103,10 @@ class DragDropTouch {
   ) {
     this.configuration = { ...DefaultConfiguration, ...(options || {}) };
     this._dragRoot = dragRoot;
-    this._dropRoot = dropRoot;
-    while (!this._dropRoot.elementFromPoint && this._dropRoot.parentNode) {
-      this._dropRoot = this._dropRoot.parentNode as any;
-    }
+    this._dropRoot =
+      dropRoot instanceof Document || dropRoot instanceof ShadowRoot
+        ? dropRoot
+        : (dropRoot.getRootNode() as Document | ShadowRoot);
     this._dragSource = null;
     this._lastTouch = null;
     this._lastTarget = null;
@@ -155,55 +153,56 @@ class DragDropTouch {
   }
 
   _touchstart(e: TouchEvent) {
-    if (this._shouldHandle(e)) {
-      this._reset();
-      const src = this._closestDraggable(e.target as HTMLElement);
-      if (src) {
-        // give caller a chance to handle the hover/move events
-        if (
-          e.target &&
-          !this._dispatchEvent(e, `mousemove`, e.target) &&
-          !this._dispatchEvent(e, `mousedown`, e.target)
-        ) {
-          // get ready to start dragging
-          this._dragSource = src;
-          this._ptDown = pointFrom(e);
-          this._lastTouch = e;
+    if (!this._shouldHandle(e)) {
+      return;
+    }
+    this._reset();
+    const src = this._closestDraggable(e.target as HTMLElement);
 
-          // show context menu if the user hasn't started dragging after a while
-          setTimeout(() => {
-            if (this._dragSource === src && this._img === null) {
-              if (this._dispatchEvent(e, `contextmenu`, src)) {
-                this._reset();
-              }
-            }
-          }, this.configuration.contextMenuDelayMS);
+    if (!src) {
+      return;
+    }
 
-          if (this.configuration.isPressHoldMode) {
-            this._pressHoldIntervalId = setTimeout(() => {
-              this._isDragEnabled = true;
-              this._touchmove(e);
-            }, this.configuration.pressHoldDelayMS);
-          }
+    // give caller a chance to handle the hover/move events
 
-          // We need this in case we're dealing with simulated touch events,
-          // in which case the touch start + touch end won't have automagically
-          // been turned into click events by the browser.
-          else if (!e.isTrusted) {
-            if (e.target !== this._lastTarget) {
-              this._lastTarget = e.target;
-            }
-          }
+    if (
+      !e.target ||
+      this._dispatchEvent(e, `mousemove`, e.target) ||
+      this._dispatchEvent(e, `mousedown`, e.target)
+    ) {
+      return;
+    }
+
+    this._dragSource = src;
+    this._ptDown = pointFrom(e);
+    this._lastTouch = e;
+
+    // show context menu if the user hasn't started dragging after a while
+    setTimeout(() => {
+      if (this._dragSource === src && this._img === null) {
+        if (this._dispatchEvent(e, `contextmenu`, src)) {
+          this._reset();
         }
+      }
+    }, this.configuration.contextMenuDelayMS);
+
+    if (this.configuration.isPressHoldMode) {
+      this._pressHoldIntervalId = setTimeout(() => {
+        this._isDragEnabled = true;
+        this._touchmove(e);
+      }, this.configuration.pressHoldDelayMS);
+    }
+
+    // We need this in case we're dealing with simulated touch events,
+    // in which case the touch start + touch end won't have automagically
+    // been turned into click events by the browser.
+    else if (!e.isTrusted) {
+      if (e.target !== this._lastTarget) {
+        this._lastTarget = e.target;
       }
     }
   }
 
-  /**
-   * ...docs go here...
-   * @param e
-   * @returns
-   */
   _touchmove(e: TouchEvent) {
     if (this._shouldCancelPressHoldMove(e)) {
       this._reset();
@@ -213,7 +212,9 @@ class DragDropTouch {
     if (this._shouldHandleMove(e) || this._shouldHandlePressHoldMove(e)) {
       // see if target wants to handle move
       const target = this._getTarget(e);
-      if (!target) return;
+      if (!target) {
+        return;
+      }
 
       if (this._dispatchEvent(e, `mousemove`, target)) {
         this._lastTouch = e;
@@ -235,45 +236,45 @@ class DragDropTouch {
       }
 
       // continue dragging
-      if (this._img && this._dragSource) {
-        this._lastTouch = e;
-        e.preventDefault();
+      if (!this._img || !this._dragSource) {
+        return;
+      }
 
-        this._dispatchEvent(e, `drag`, this._dragSource);
-        if (target !== this._lastTarget) {
-          if (this._lastTarget)
-            this._dispatchEvent(this._lastTouch, `dragleave`, this._lastTarget);
-          this._dispatchEvent(e, `dragenter`, target);
-          this._lastTarget = target;
+      this._lastTouch = e;
+      e.preventDefault();
+
+      this._dispatchEvent(e, `drag`, this._dragSource);
+      if (target !== this._lastTarget) {
+        if (this._lastTarget) {
+          this._dispatchEvent(this._lastTouch, `dragleave`, this._lastTarget);
         }
-        this._moveImage(e);
-        this._isDropZone = this._dispatchEvent(e, `dragover`, target);
+        this._dispatchEvent(e, `dragenter`, target);
+        this._lastTarget = target;
+      }
+      this._moveImage(e);
+      this._isDropZone = this._dispatchEvent(e, `dragover`, target);
 
-        // Allow scrolling if the screen edges were marked as "hot regions".
-        if (this.configuration.allowDragScroll) {
-          const delta = this._getHotRegionDelta(e);
+      // Allow scrolling if the screen edges were marked as "hot regions".
+      if (this.configuration.allowDragScroll) {
+        const delta = this._getHotRegionDelta(e);
 
-          if (delta.x === 0 && delta.y === 0) return;
+        if (delta.x === 0 && delta.y === 0) return;
 
-          // Find the nearest scrollable container
-          const scrollableParent = this._findScrollableParent(target);
-          if (scrollableParent) {
-            scrollableParent.scrollBy(delta.x, delta.y);
-          } else {
-            globalThis.scrollBy(delta.x, delta.y);
-          }
+        // Find the nearest scrollable container
+        const scrollableParent = this._findScrollableParent(target);
+        if (scrollableParent) {
+          scrollableParent.scrollBy(delta.x, delta.y);
+        } else {
+          globalThis.scrollBy(delta.x, delta.y);
         }
       }
     }
   }
 
-  /**
-   * Find the nearest scrollable parent element
-   * @param element
-   * @returns
-   */
   _findScrollableParent(element: Element | null): Element | null {
-    if (!element) return null;
+    if (!element) {
+      return null;
+    }
 
     let current = element.parentElement;
 
@@ -298,75 +299,56 @@ class DragDropTouch {
 
       // Special handling for Quasar q-scroll-area
       if (current.classList.contains('q-scrollarea__container')) {
+        console.log('Special handling required for Quasar q-scroll-area');
         return current;
       }
 
       current = current.parentElement;
     }
 
-    console.log('No scrollable parent found.');
-
     return null;
   }
 
-  /**
-   * ...docs go here...
-   * @param e
-   * @returns
-   */
   _touchend(e: TouchEvent) {
     if (!(this._lastTouch && e.target && this._lastTarget)) {
       this._reset();
       return;
     }
 
-    if (this._shouldHandle(e)) {
-      if (this._dispatchEvent(this._lastTouch, `mouseup`, e.target)) {
-        e.preventDefault();
-        return;
-      }
+    if (!this._shouldHandle(e)) {
+      return;
+    }
 
-      // user clicked the element but didn't drag, so clear the source and simulate a click
-      if (!this._img) {
-        this._dragSource = null;
-        this._dispatchEvent(this._lastTouch, `click`, e.target);
-      }
+    if (this._dispatchEvent(this._lastTouch, `mouseup`, e.target)) {
+      e.preventDefault();
+      return;
+    }
 
-      // finish dragging
-      this._destroyImage();
-      if (this._dragSource) {
-        if (e.type.indexOf(`cancel`) < 0 && this._isDropZone) {
-          this._dispatchEvent(this._lastTouch, `drop`, this._lastTarget);
-        }
-        this._dispatchEvent(this._lastTouch, `dragend`, this._dragSource);
-        this._reset();
+    // user clicked the element but didn't drag, so clear the source and simulate a click
+    if (!this._img) {
+      this._dragSource = null;
+      this._dispatchEvent(this._lastTouch, `click`, e.target);
+    }
+
+    // finish dragging
+    this._destroyImage();
+    if (this._dragSource) {
+      if (e.type.indexOf(`cancel`) < 0 && this._isDropZone) {
+        this._dispatchEvent(this._lastTouch, `drop`, this._lastTarget);
       }
+      this._dispatchEvent(this._lastTouch, `dragend`, this._dragSource);
+      this._reset();
     }
   }
 
-  /**
-   * ...docs go here...
-   * @param e
-   * @returns
-   */
   _shouldHandle(e: TouchEvent) {
     return !e.defaultPrevented && e.touches.length < 2;
   }
 
-  /**
-   * ...docs go here...
-   * @param e
-   * @returns
-   */
   _shouldHandleMove(e: TouchEvent) {
     return !this.configuration.isPressHoldMode && this._shouldHandle(e);
   }
 
-  /**
-   * ...docs go here...
-   * @param e
-   * @returns
-   */
   _shouldHandlePressHoldMove(e: TouchEvent) {
     return (
       this.configuration.isPressHoldMode &&
@@ -375,11 +357,6 @@ class DragDropTouch {
     );
   }
 
-  /**
-   * ...docs go here...
-   * @param e
-   * @returns
-   */
   _shouldCancelPressHoldMove(e: TouchEvent) {
     return (
       this.configuration.isPressHoldMode &&
@@ -388,11 +365,6 @@ class DragDropTouch {
     );
   }
 
-  /**
-   * ...docs go here...
-   * @param e
-   * @returns
-   */
   _shouldStartDragging(e: TouchEvent) {
     const delta = this._getDelta(e);
     if (this.configuration.isPressHoldMode) {
@@ -401,9 +373,6 @@ class DragDropTouch {
     return delta > this.configuration.dragThresholdPixels;
   }
 
-  /**
-   * ...docs go here...
-   */
   _reset() {
     this._destroyImage();
     this._dragSource = null;
@@ -416,11 +385,6 @@ class DragDropTouch {
     clearTimeout(this._pressHoldIntervalId);
   }
 
-  /**
-   * ...docs go here...
-   * @param e
-   * @returns
-   */
   _getDelta(e: TouchEvent) {
     // if there is no active touch we don't need to calculate anything.
     if (!this._ptDown) return 0;
@@ -480,9 +444,6 @@ class DragDropTouch {
     document.body.appendChild(this._img);
   }
 
-  /**
-   * ...docs go here...
-   */
   _destroyImage() {
     if (this._img && this._img.parentElement) {
       this._img.parentElement.removeChild(this._img);
@@ -493,15 +454,17 @@ class DragDropTouch {
 
   _moveImage(e: TouchEvent) {
     requestAnimationFrame(() => {
-      if (this._img) {
-        const pt = pointFrom(e, false);
-        const s = this._img.style;
-        s.position = `^fixed`;
-        s.pointerEvents = `none`;
-        s.zIndex = `999999`;
-        s.left = `${round(pt.x - this._imgOffset.x).toString()}px`;
-        s.top = `${round(pt.y - this._imgOffset.y).toString()}px`;
+      if (!this._img) {
+        return;
       }
+
+      const pt = pointFrom(e, false);
+      const s = this._img.style;
+      s.position = `^fixed`;
+      s.pointerEvents = `none`;
+      s.zIndex = `999999`;
+      s.left = `${round(pt.x - this._imgOffset.x).toString()}px`;
+      s.top = `${round(pt.y - this._imgOffset.y).toString()}px`;
     });
   }
 
@@ -513,8 +476,7 @@ class DragDropTouch {
     const evt = newForwardableEvent(type, srcEvent, target as HTMLElement);
 
     // DragEvents need a data transfer object
-    // @ts-expect-error
-    (evt as DragEvent).dataTransfer = this._dataTransfer;
+    setDataTransfer(evt, this._dataTransfer);
     target.dispatchEvent(evt as unknown as Event);
     return evt.defaultPrevented;
   }

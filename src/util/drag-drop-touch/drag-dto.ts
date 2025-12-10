@@ -1,3 +1,6 @@
+// NOTE: This file is a modified version of the original dragdroptouch GitHub repository.
+// Source: https://github.com/drag-drop-touch-js/dragdroptouch (MIT license).
+
 type DDT = {
   setDragImage: (img: HTMLElement, offsetX: number, offsetY: number) => void;
 };
@@ -6,87 +9,72 @@ type DDT = {
  * Object used to hold the data that is being dragged during drag and drop operations.
  *
  * It may hold one or more data items of different types. For more information about
- * drag and drop operations and data transfer objects, see
- * <a href="https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer">HTML Drag and Drop API</a>.
+ * drag and drop operations and data transfer objects, see:
+ * https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer
  *
- * This object is created automatically by the @see:DragDropTouch and is
- * accessible through the @see:dataTransfer property of all drag events.
+ * This object is created automatically by DragDropTouch and is
+ * accessible through the dataTransfer property of all drag events.
  */
 export class DragDTO {
-  protected _dropEffect: any;
-  private _effectAllowed: any;
-  private _data: any;
-  private _dragDropTouch: any;
+  protected _dropEffect: DataTransfer['dropEffect'];
+  private _effectAllowed: DataTransfer['effectAllowed'];
+  private _data: Record<string, string>;
+  private _dragDropTouch: DDT;
 
   constructor(dragDropTouch: DDT) {
-    this._dropEffect = "move";
-    this._effectAllowed = "all";
+    this._dropEffect = 'move';
+    this._effectAllowed = 'all';
     this._data = {};
     this._dragDropTouch = dragDropTouch;
   }
 
-  get dropEffect() {
+  get dropEffect(): DataTransfer['dropEffect'] {
     return this._dropEffect;
   }
 
-  set dropEffect(value) {
+  set dropEffect(value: DataTransfer['dropEffect']) {
     this._dropEffect = value;
   }
 
-  get effectAllowed() {
+  get effectAllowed(): DataTransfer['effectAllowed'] {
     return this._effectAllowed;
   }
 
-  set effectAllowed(value) {
+  set effectAllowed(value: DataTransfer['effectAllowed']) {
     this._effectAllowed = value;
   }
 
-  get types() {
+  get types(): string[] {
     return Object.keys(this._data);
   }
 
-  /**
-   * ...docs go here...
-   * @param type
-   */
-  clearData(type: string) {
-    if (type !== null) {
-      delete this._data[type.toLowerCase()];
-    } else {
+  clearData(type?: string | null): void {
+    if (type == null) {
       this._data = {};
+      return;
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete this._data[type.toLowerCase()];
   }
 
-  /**
-   * ...docs go here...
-   * @param type
-   * @returns
-   */
-  getData(type: string) {
-    let lcType = type.toLowerCase(),
-      data = this._data[lcType];
-    if (lcType === "text" && data == null) {
-      data = this._data["text/plain"]; // getData("text") also gets ("text/plain")
+  getData(type: string): string | undefined {
+    const lowerType = type.toLowerCase();
+    let data = this._data[lowerType];
+
+    if (lowerType === 'text' && data == null) {
+      // getData("text") also returns the data stored under "text/plain"
+      data = this._data['text/plain'];
     }
-    return data; // @see https://github.com/Bernardo-Castilho/dragdroptouch/pull/61/files
+
+    return data;
   }
 
-  /**
-   * ...docs go here...
-   * @param type
-   * @param value
-   */
-  setData(type: string, value: any) {
+  setData(type: string, value: string): void {
     this._data[type.toLowerCase()] = value;
   }
 
-  /**
-   * ...docs go here...
-   * @param img
-   * @param offsetX
-   * @param offsetY
-   */
-  setDragImage(img: Element, offsetX: number, offsetY: number) {
+  setDragImage(img: HTMLElement, offsetX: number, offsetY: number): void {
     this._dragDropTouch.setDragImage(img, offsetX, offsetY);
   }
 }
