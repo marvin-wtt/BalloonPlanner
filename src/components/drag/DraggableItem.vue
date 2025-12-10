@@ -1,7 +1,7 @@
 <template>
   <component
     :is="tag"
-    :class="{ dragged: dragged }"
+    :class="{ dragged }"
     :draggable="disabled ? 'false' : 'true'"
     @dragstart.stop="onDragStart($event)"
     @dragend.stop="onDragEnd($event)"
@@ -28,7 +28,7 @@ const {
 }>();
 
 const emit = defineEmits<{
-  (e: 'cancel' | 'move' | 'remove', element: Identifiable): void;
+  (e: 'start' | 'complete' | 'cancel'): void;
 }>();
 
 const dragged = ref(false);
@@ -43,23 +43,27 @@ function onDragStart(event: DragEvent) {
   dragContent.className = 'drag-content';
   document.body.appendChild(dragContent);
 
-  event.dataTransfer.setDragImage(dragContent, 0, 0);
+  event.dataTransfer?.setDragImage(dragContent, 0, 0);
 
-  emit('move', item);
+  emit('start');
 }
 
 function onDragEnd(event: DragEvent) {
-  if (DragHelper.verifyEnd(event)) {
-    emit('remove', item);
-    event.preventDefault();
-  } else {
-    emit('cancel', item);
-  }
+  event.preventDefault();
 
-  document.body.removeChild(document.querySelector('.drag-content'));
+  if (DragHelper.verifyEnd(event) && DragHelper.accepted) {
+    emit('complete');
+  } else {
+    emit('cancel');
+  }
 
   dragged.value = false;
   DragHelper.endDrop();
+
+  const node = document.querySelector('.drag-content');
+  if (node) {
+    document.body.removeChild(node);
+  }
 }
 
 function eventContentLabel(event: DragEvent): string {

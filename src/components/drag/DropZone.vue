@@ -2,9 +2,12 @@
   <component
     :is="tag"
     class="drop-zone"
-    :class="{ highlighted: highlighted }"
-    @dragenter.stop="onDragEnter($event)"
-    @dragover.stop="onDragOver($event)"
+    :class="{
+      'highlighted--accepted': highlightState === 'accepted',
+      'highlighted--rejected': highlightState === 'rejected',
+    }"
+    @dragenter.stop="applyHighlight($event)"
+    @dragover.stop="applyHighlight($event)"
     @dragleave.stop="onDragLeave($event)"
     @drop.stop="onDrop($event)"
   >
@@ -26,50 +29,56 @@ const emit = defineEmits<{
   (e: 'dropped', item: Identifiable): void;
 }>();
 
-const highlighted = ref(false);
+const highlightState = ref<'accepted' | 'rejected' | null>(null);
 
 function isAccepted(): boolean {
   return DragHelper.element !== null && accepted(DragHelper.element);
 }
 
-function onDragEnter(event: DragEvent) {
-  if (!isAccepted()) {
-    return;
+function setDropEffect(event: DragEvent, value: DataTransfer['dropEffect']) {
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = value;
   }
-
-  event.preventDefault();
-  highlighted.value = true;
 }
 
-function onDragOver(event: DragEvent) {
-  if (!isAccepted()) {
-    return;
-  }
-
+function applyHighlight(event: DragEvent) {
   event.preventDefault();
-  highlighted.value = true;
+
+  DragHelper.accepted = isAccepted();
+  highlightState.value = DragHelper.accepted ? 'accepted' : 'rejected';
+
+  setDropEffect(event, DragHelper.accepted ? 'move' : 'none');
 }
 
 function onDragLeave(event: DragEvent) {
-  highlighted.value = false;
   event.preventDefault();
+
+  DragHelper.accepted = false;
+  highlightState.value = null;
 }
 
 function onDrop(event: DragEvent) {
-  highlighted.value = false;
+  event.preventDefault();
 
-  const element = DragHelper.element;
-  if (element == null || !isAccepted() || !DragHelper.verifyDrop(event)) {
-    return;
+  DragHelper.accepted = isAccepted();
+  if (
+    DragHelper.element != null &&
+    DragHelper.accepted &&
+    DragHelper.verifyDrop(event)
+  ) {
+    emit('dropped', DragHelper.element);
   }
 
-  // Typecasting is safe as type safety is previously ensured
-  emit('dropped', element);
+  highlightState.value = null;
 }
 </script>
 
 <style scoped>
-.highlighted {
+.highlighted--accepted {
   background-color: rgba(25, 118, 210, 0.22) !important;
+}
+
+.highlighted--rejected {
+  background-color: rgba(211, 47, 47, 0.18) !important;
 }
 </style>

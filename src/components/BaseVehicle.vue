@@ -4,7 +4,7 @@
     :label="vehicle.name"
     :disabled="!editable || !allowVehicleGroupChange"
     class="row"
-    @remove="onVehicleRemoved"
+    @complete="onVehicleRemoved"
   >
     <table
       class="vehicle-table shadow-2 relative-position"

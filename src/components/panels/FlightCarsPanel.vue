@@ -4,7 +4,7 @@
     class="column bg-grey-2 q-pa-none"
   >
     <q-scroll-area class="col-grow self-stretch q-pa-md">
-      <editable-list
+      <flight-panel-list
         title="Cars"
         item-name="Car"
         :items="cars"
@@ -19,7 +19,7 @@
         <template #side="{ item }: { item: Car }">
           {{ item.maxCapacity - 1 + ' + 1' }}
         </template>
-      </editable-list>
+      </flight-panel-list>
     </q-scroll-area>
   </q-tab-panel>
 </template>
@@ -30,7 +30,7 @@ import { useFlightStore } from 'stores/flight';
 import { storeToRefs } from 'pinia';
 import { useFlightOperations } from 'src/composables/flightOperations';
 import type { Car } from 'app/src-common/entities';
-import EditableList from 'components/EditableList.vue';
+import FlightPanelList from 'components/panels/FlightPanelList.vue';
 import EditCarDialog from 'components/dialog/EditCarDialog.vue';
 import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';
 import { useProjectStore } from 'stores/project';
@@ -48,6 +48,10 @@ const { name } = defineProps<{
 }>();
 
 function showAddCars() {
+  if (!project.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: AddEntityToFlightDialog,
@@ -62,6 +66,10 @@ function showAddCars() {
 }
 
 function showCreateCar() {
+  if (!project.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: EditCarDialog,
@@ -74,6 +82,10 @@ function showCreateCar() {
 }
 
 function showEditCar(id: string) {
+  if (!project.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: EditCarDialog,

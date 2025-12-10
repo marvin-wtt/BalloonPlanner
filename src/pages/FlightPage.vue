@@ -11,6 +11,7 @@
       <!-- Menu -->
       <div
         v-if="editable"
+        v-show="!panelItemDragging"
         class="self-stretch row no-wrap"
         :class="menuClasses"
       >
@@ -116,54 +117,17 @@
               :cars="availableCars"
             />
 
-            <q-tab-panel
+            <flight-people-panel
               name="supervisors"
-              class="column bg-grey-2 q-pa-none"
-            >
-              <q-scroll-area class="col-grow self-stretch q-pa-md">
-                <editable-list
-                  title="Counselors"
-                  item-name="Counselor"
-                  :items="availableCounselors"
-                  @add="showAddPeople('counselor')"
-                  @create="showCreatePerson('counselor')"
-                  @edit="(person: Person) => showEditPerson(person)"
-                  @delete="(person: Person) => showDeletePerson(person)"
-                >
-                  <template #main="{ item }">
-                    {{ item.name }}
-                  </template>
-                  <template #side="{ item }">
-                    {{ formatPersonMeta(item) }}
-                  </template>
-                </editable-list>
-              </q-scroll-area>
-            </q-tab-panel>
+              role="counselor"
+              :people="availableParticipants"
+            />
 
-            <q-tab-panel
+            <flight-people-panel
               name="participants"
-              class="column bg-grey-2 q-pa-none"
-            >
-              <q-scroll-area class="col-grow self-stretch q-pa-md">
-                <editable-list
-                  title="Participants"
-                  item-name="Participant"
-                  :items="availableParticipants"
-                  :dense="availableParticipants.length > 10"
-                  @add="showAddPeople('participant')"
-                  @create="showCreatePerson('participant')"
-                  @edit="(person: Person) => showEditPerson(person)"
-                  @delete="(person: Person) => showDeletePerson(person)"
-                >
-                  <template #main="{ item }: { item: Person }">
-                    {{ item.name }}
-                  </template>
-                  <template #side="{ item }: { item: Person }">
-                    {{ formatPersonMeta(item) }}
-                  </template>
-                </editable-list>
-              </q-scroll-area>
-            </q-tab-panel>
+              role="participant"
+              :people="availableParticipants"
+            />
 
             <flight-settings-panel name="settings" />
           </q-tab-panels>
@@ -172,7 +136,7 @@
 
       <!-- Flight overview -->
       <div
-        v-if="showFlightView && flightSeries && flightLeg"
+        v-if="project && flightSeries && flightLeg"
         class="col-grow flex flight-view"
       >
         <base-flight
@@ -184,6 +148,7 @@
         />
 
         <q-page-sticky
+          v-if="showFab"
           position="bottom-right"
           :offset="[18, 18]"
         >
@@ -229,26 +194,25 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, provide, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
 import BaseFlight from 'components/BaseFlight.vue';
 import type { Balloon, Car, Person } from 'app/src-common/entities';
-import EditableList from 'components/EditableList.vue';
-import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
 import { useFlightStore } from 'stores/flight';
 import { useFlightOperations } from 'src/composables/flightOperations';
 import FlightSettingsPanel from 'components/panels/FlightSettingsPanel.vue';
 import FlightBalloonsPanel from 'components/panels/FlightBalloonsPanel.vue';
 import FlightCarsPanel from 'components/panels/FlightCarsPanel.vue';
 import SmartFillDialog from 'components/dialog/SmartFillDialog.vue';
-import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';
 import { toPng } from 'html-to-image';
 import { useProjectSettings } from 'src/composables/projectSettings';
 import { useSolver } from 'src/composables/solver';
 import type { SolveFlightLegOptions } from 'app/src-common/api/solver.api';
+import { enableDragDropTouch } from 'src/util/drag-drop-touch/drag-drop-touch';
+import FlightPeoplePanel from 'components/panels/FlightPeoplePanel.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -258,25 +222,33 @@ const flightStore = useFlightStore();
 const { solve } = useSolver();
 
 const { project, isLoading } = storeToRefs(projectStore);
-const { flightSeries, flightLeg, numberOfFlights } = storeToRefs(flightStore);
+const { flightSeries, flightLeg } = storeToRefs(flightStore);
 
-const { showNumberOfFlights, showPersonWeight, personDefaultWeight } =
-  useProjectSettings();
-const {
-  createPerson,
-  editPerson,
-  removePerson,
-  addPerson,
-  clearLegPassengers,
-} = useFlightOperations();
+const { personDefaultWeight } = useProjectSettings();
+const { clearLegPassengers } = useFlightOperations();
+
+enableDragDropTouch();
 
 const menuTabs = ref('overview');
 const editable = ref<boolean>(true);
+const panelItemDragging = ref<boolean>(false);
 
-onMounted(init);
-watch(() => route.params, init);
+provide('flight-panel-list-dragging', (dragging: boolean) => {
+  if (!dragging) {
+    panelItemDragging.value = false;
+    return;
+  }
 
-async function init() {
+  // Small delay is required to avoid interrupting the drag
+  setTimeout(() => {
+    panelItemDragging.value = true;
+  }, 10);
+});
+
+onMounted(onRouteUpdate);
+watch(() => route.params, onRouteUpdate);
+
+async function onRouteUpdate() {
   let { projectId, flightId } = route.params;
 
   if (Array.isArray(projectId)) {
@@ -323,7 +295,7 @@ async function init() {
   }
 
   const lastLeg = series.legs[series.legs.length - 1];
-  if (!lastLeg.id) {
+  if (!lastLeg?.id) {
     return;
   }
 
@@ -432,76 +404,6 @@ async function onExportImage() {
   link.click();
 }
 
-function showAddPeople(role: Person['role']) {
-  if (!project.value) {
-    return;
-  }
-
-  quasar
-    .dialog({
-      component: AddEntityToFlightDialog,
-      componentProps: {
-        itemName: role.charAt(0).toUpperCase() + role.slice(1),
-        items: project.value.people
-          .filter(({ role: personRole }) => personRole === role)
-          .filter(({ id }) => !flightSeries.value?.personIds.includes(id)),
-      },
-    })
-    .onOk((ids) => ids.forEach(addPerson));
-}
-
-function showCreatePerson(role: Person['role']) {
-  if (!project.value) {
-    return;
-  }
-
-  quasar
-    .dialog({
-      component: EditPersonDialog,
-      componentProps: {
-        role,
-        existingNames: project.value.people.map(({ name }) => name),
-      },
-    })
-    .onOk(createPerson);
-}
-
-function showEditPerson(person: Person): void {
-  quasar
-    .dialog({
-      component: EditPersonDialog,
-      componentProps: {
-        person,
-        existingNames: project.value?.people.map(({ name }) => name) ?? [],
-      },
-    })
-    .onOk((payload) => {
-      editPerson(person.id, payload);
-    });
-}
-
-function showDeletePerson(person: Person): void {
-  quasar
-    .dialog({
-      title: 'Delete person',
-      message: `Are you sure you want to delete ${person.name} from this flight? The person will remain in the project for other flights.`,
-      ok: {
-        label: 'Delete',
-        color: 'negative',
-        rounded: true,
-      },
-      cancel: {
-        label: 'Cancel',
-        outline: true,
-        rounded: true,
-      },
-      persistent: true,
-    })
-    .onOk(() => {
-      removePerson(person.id);
-    });
-}
-
 const showBalloonsMenuBadge = computed<boolean>(() => {
   return availableBalloons.value.length > 0;
 });
@@ -541,7 +443,7 @@ const availableCounselors = computed<Person[]>(() => {
     .toSorted((a, b) => a.name.localeCompare(b.name));
 });
 
-const showFlightView = computed<boolean>(() => {
+const showFab = computed<boolean>(() => {
   return !quasar.screen.xs || menuTabs.value === 'overview';
 });
 
@@ -550,26 +452,6 @@ const menuClasses = computed<string>(() => {
     ? 'col-xl-3 col-lg-3 col-md-4 col-sm-6 col-xs-12'
     : '';
 });
-
-function formatPersonMeta(person: Person): string {
-  const parts: string[] = [];
-
-  if (showPersonWeight.value) {
-    const weight = person.weight ?? personDefaultWeight.value ?? '?';
-    const suffix = !person.weight && personDefaultWeight.value ? '*' : '';
-
-    parts.push(`${weight.toString()}${suffix} kg`);
-  }
-
-  if (showNumberOfFlights.value) {
-    const flights = numberOfFlights.value[person.id] ?? 0;
-    const suffix = flights === 0 && person.firstTime ? '*' : '';
-
-    parts.push(`${flights.toString()}${suffix}`);
-  }
-
-  return parts.join(' | ');
-}
 </script>
 
 <style lang="scss">
