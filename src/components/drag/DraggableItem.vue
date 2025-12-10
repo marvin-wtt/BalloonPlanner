@@ -49,7 +49,7 @@ function onDragStart(event: DragEvent) {
 }
 
 function onDragEnd(event: DragEvent) {
-  //event.preventDefault();
+  event.preventDefault();
 
   if (DragHelper.verifyEnd(event) && DragHelper.accepted) {
     emit('complete');

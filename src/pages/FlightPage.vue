@@ -136,7 +136,7 @@
 
       <!-- Flight overview -->
       <div
-        v-if="showFlightView && project && flightSeries && flightLeg"
+        v-if="project && flightSeries && flightLeg"
         class="col-grow flex flight-view"
       >
         <base-flight
@@ -148,6 +148,7 @@
         />
 
         <q-page-sticky
+          v-if="showFab"
           position="bottom-right"
           :offset="[18, 18]"
         >
@@ -233,7 +234,15 @@ const editable = ref<boolean>(true);
 const panelItemDragging = ref<boolean>(false);
 
 provide('flight-panel-list-dragging', (dragging: boolean) => {
-  panelItemDragging.value = dragging;
+  if (!dragging) {
+    panelItemDragging.value = false;
+    return;
+  }
+
+  // Small delay is required to avoid interrupting the drag
+  setTimeout(() => {
+    panelItemDragging.value = true;
+  }, 10);
 });
 
 onMounted(onRouteUpdate);
@@ -434,7 +443,7 @@ const availableCounselors = computed<Person[]>(() => {
     .toSorted((a, b) => a.name.localeCompare(b.name));
 });
 
-const showFlightView = computed<boolean>(() => {
+const showFab = computed<boolean>(() => {
   return !quasar.screen.xs || menuTabs.value === 'overview';
 });
 
