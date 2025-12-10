@@ -48,6 +48,10 @@ const { name } = defineProps<{
 }>();
 
 function showAddCars() {
+  if (!project.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: AddEntityToFlightDialog,
@@ -62,6 +66,10 @@ function showAddCars() {
 }
 
 function showCreateCar() {
+  if (!project.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: EditCarDialog,
@@ -74,6 +82,10 @@ function showCreateCar() {
 }
 
 function showEditCar(id: string) {
+  if (!project.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: EditCarDialog,

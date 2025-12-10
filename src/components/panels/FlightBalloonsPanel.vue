@@ -49,6 +49,10 @@ const { name } = defineProps<{
 }>();
 
 function showAddBalloons() {
+  if (!project.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: AddEntityToFlightDialog,
@@ -63,6 +67,10 @@ function showAddBalloons() {
 }
 
 function showCreateBalloon() {
+  if (!project.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: EditBalloonDialog,
@@ -75,6 +83,10 @@ function showCreateBalloon() {
 }
 
 function showEditBalloon(id: string) {
+  if (!project.value) {
+    return;
+  }
+
   quasar
     .dialog({
       component: EditBalloonDialog,
