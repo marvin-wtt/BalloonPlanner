@@ -4,7 +4,7 @@
     class="column bg-grey-2 q-pa-none"
   >
     <q-scroll-area class="col-grow self-stretch q-pa-md">
-      <editable-list
+      <flight-panel-list
         :title
         :item-name
         :items="people"
@@ -20,14 +20,14 @@
         <template #side="{ item }">
           {{ formatPersonMeta(item) }}
         </template>
-      </editable-list>
+      </flight-panel-list>
     </q-scroll-area>
   </q-tab-panel>
 </template>
 
 <script lang="ts" setup>
 import type { Person } from 'app/src-common/entities';
-import EditableList from 'components/EditableList.vue';
+import FlightPanelList from 'components/panels/FlightPanelList.vue';
 import { useProjectStore } from 'stores/project';
 import { storeToRefs } from 'pinia';
 import { useQuasar } from 'quasar';
@@ -42,8 +42,7 @@ const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
-const { flightSeries, numberOfFlights, availablePeople } =
-  storeToRefs(flightStore);
+const { flightSeries, numberOfFlights } = storeToRefs(flightStore);
 
 const { createPerson, editPerson, removePerson, addPerson } =
   useFlightOperations();

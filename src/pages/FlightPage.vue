@@ -11,6 +11,7 @@
       <!-- Menu -->
       <div
         v-if="editable"
+        v-show="!panelItemDragging"
         class="self-stretch row no-wrap"
         :class="menuClasses"
       >
@@ -192,7 +193,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, provide, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
@@ -229,11 +230,16 @@ enableDragDropTouch();
 
 const menuTabs = ref('overview');
 const editable = ref<boolean>(true);
+const panelItemDragging = ref<boolean>(false);
 
-onMounted(init);
-watch(() => route.params, init);
+provide('flight-panel-list-dragging', (dragging: boolean) => {
+  panelItemDragging.value = dragging;
+});
 
-async function init() {
+onMounted(onRouteUpdate);
+watch(() => route.params, onRouteUpdate);
+
+async function onRouteUpdate() {
   let { projectId, flightId } = route.params;
 
   if (Array.isArray(projectId)) {

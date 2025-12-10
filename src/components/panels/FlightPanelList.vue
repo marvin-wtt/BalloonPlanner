@@ -35,6 +35,9 @@
           :key="element.id"
           :tag="QItem"
           :item="element"
+          @start="updateDragging(true)"
+          @complete="updateDragging(false)"
+          @cancel="updateDragging(false)"
         >
           <q-item-section>
             <slot
@@ -129,7 +132,7 @@
 import type { Identifiable } from 'app/src-common/entities';
 import DraggableItem from 'components/drag/DraggableItem.vue';
 import { QItem } from 'quasar';
-import { ref } from 'vue';
+import { inject, ref } from 'vue';
 
 const {
   title,
@@ -147,6 +150,11 @@ const emit = defineEmits<{
   (e: 'create' | 'add'): void;
   (e: 'edit' | 'delete', item: T): void;
 }>();
+
+const updateDragging = inject<(v: boolean) => void>(
+  'flight-panel-list-dragging',
+  () => undefined,
+);
 
 const editable = ref(false);
 const settingsIcon = ref('settings');

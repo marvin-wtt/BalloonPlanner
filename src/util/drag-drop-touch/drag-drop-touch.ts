@@ -66,7 +66,7 @@ const DefaultConfiguration: DragDropTouchConfiguration = {
   dragImageOpacity: 0.5,
   dragScrollPercentage: 10,
   dragScrollSpeed: 10,
-  dragThresholdPixels: 5,
+  dragThresholdPixels: 10,
   forceListen: false,
   isPressHoldMode: false,
   pressHoldDelayMS: 400,
@@ -294,12 +294,6 @@ class DragDropTouch {
         (current.scrollHeight > current.clientHeight ||
           current.scrollWidth > current.clientWidth)
       ) {
-        return current;
-      }
-
-      // Special handling for Quasar q-scroll-area
-      if (current.classList.contains('q-scrollarea__container')) {
-        console.log('Special handling required for Quasar q-scroll-area');
         return current;
       }
 

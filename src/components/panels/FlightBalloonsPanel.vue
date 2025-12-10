@@ -4,7 +4,7 @@
     class="column bg-grey-2 q-pa-none"
   >
     <q-scroll-area class="col-grow self-stretch q-pa-md">
-      <editable-list
+      <flight-panel-list
         title="Balloons"
         item-name="Balloon"
         :items="balloons"
@@ -19,14 +19,14 @@
         <template #side="{ item }: { item: Balloon }">
           {{ item.maxCapacity - 1 + ' + 1' }}
         </template>
-      </editable-list>
+      </flight-panel-list>
     </q-scroll-area>
   </q-tab-panel>
 </template>
 
 <script lang="ts" setup>
 import type { Balloon } from 'app/src-common/entities';
-import EditableList from 'components/EditableList.vue';
+import FlightPanelList from 'components/panels/FlightPanelList.vue';
 import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
 import { useQuasar } from 'quasar';
 import { useFlightOperations } from 'src/composables/flightOperations';

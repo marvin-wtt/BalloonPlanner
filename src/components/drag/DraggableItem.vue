@@ -28,8 +28,7 @@ const {
 }>();
 
 const emit = defineEmits<{
-  (e: 'start'): void;
-  (e: 'cancel' | 'move' | 'complete', element: Identifiable): void;
+  (e: 'start' | 'complete' | 'cancel'): void;
 }>();
 
 const dragged = ref(false);
@@ -46,16 +45,16 @@ function onDragStart(event: DragEvent) {
 
   event.dataTransfer?.setDragImage(dragContent, 0, 0);
 
-  emit('move', item);
+  emit('start');
 }
 
 function onDragEnd(event: DragEvent) {
-  event.preventDefault();
+  //event.preventDefault();
 
   if (DragHelper.verifyEnd(event) && DragHelper.accepted) {
-    emit('complete', item);
+    emit('complete');
   } else {
-    emit('cancel', item);
+    emit('cancel');
   }
 
   dragged.value = false;
