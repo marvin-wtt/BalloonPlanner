@@ -6,7 +6,7 @@
     :label="person.name"
     :disabled="!editable"
     :class="overfilled ? 'text-negative' : ''"
-    @remove="onDragEnd()"
+    @complete="onDragEnd()"
   >
     <div class="row no-wrap items-center">
       <div class="col-grow">

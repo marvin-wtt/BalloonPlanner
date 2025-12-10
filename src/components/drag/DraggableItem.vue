@@ -28,7 +28,8 @@ const {
 }>();
 
 const emit = defineEmits<{
-  (e: 'cancel' | 'move' | 'remove', element: Identifiable): void;
+  (e: 'start'): void;
+  (e: 'cancel' | 'move' | 'complete', element: Identifiable): void;
 }>();
 
 const dragged = ref(false);
@@ -49,20 +50,21 @@ function onDragStart(event: DragEvent) {
 }
 
 function onDragEnd(event: DragEvent) {
+  event.preventDefault();
+
   if (DragHelper.verifyEnd(event) && DragHelper.accepted) {
-    emit('remove', item);
-    event.preventDefault();
+    emit('complete', item);
   } else {
     emit('cancel', item);
   }
+
+  dragged.value = false;
+  DragHelper.endDrop();
 
   const node = document.querySelector('.drag-content');
   if (node) {
     document.body.removeChild(node);
   }
-
-  dragged.value = false;
-  DragHelper.endDrop();
 }
 
 function eventContentLabel(event: DragEvent): string {
