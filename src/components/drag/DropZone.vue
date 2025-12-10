@@ -33,7 +33,8 @@ function isAccepted(): boolean {
 }
 
 function onDragEnter(event: DragEvent) {
-  if (!isAccepted()) {
+  DragHelper.accepted = isAccepted();
+  if (!DragHelper.accepted) {
     return;
   }
 
@@ -42,7 +43,8 @@ function onDragEnter(event: DragEvent) {
 }
 
 function onDragOver(event: DragEvent) {
-  if (!isAccepted()) {
+  DragHelper.accepted = isAccepted();
+  if (!DragHelper.accepted) {
     return;
   }
 
@@ -51,13 +53,13 @@ function onDragOver(event: DragEvent) {
 }
 
 function onDragLeave(event: DragEvent) {
+  DragHelper.accepted = false;
   highlighted.value = false;
   event.preventDefault();
 }
 
 function onDrop(event: DragEvent) {
   highlighted.value = false;
-
   const element = DragHelper.element;
   if (element == null || !isAccepted() || !DragHelper.verifyDrop(event)) {
     return;

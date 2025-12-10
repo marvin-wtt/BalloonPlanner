@@ -3,9 +3,11 @@ import type { Identifiable } from 'app/src-common/entities';
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class DragHelper {
   private static _element: Identifiable | null;
+  public static accepted = false;
 
   static startDrag(event: DragEvent, element: Identifiable) {
-    DragHelper._element = element;
+    this._element = element;
+    this.accepted = false;
 
     if (event.dataTransfer === null) {
       return;
@@ -16,6 +18,7 @@ export class DragHelper {
   }
 
   static endDrop() {
+    this.accepted = false;
     this._element = null;
   }
 
