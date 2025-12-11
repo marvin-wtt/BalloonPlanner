@@ -11,7 +11,7 @@
       <!-- Menu -->
       <div
         v-if="editable"
-        v-show="!panelItemDragging"
+        v-show="!panelItemDragging || quasar.screen.gt.xs"
         class="self-stretch row no-wrap"
         :class="menuClasses"
       >
@@ -120,7 +120,7 @@
             <flight-people-panel
               name="supervisors"
               role="counselor"
-              :people="availableParticipants"
+              :people="availableCounselors"
             />
 
             <flight-people-panel
@@ -234,14 +234,9 @@ const editable = ref<boolean>(true);
 const panelItemDragging = ref<boolean>(false);
 
 provide('flight-panel-list-dragging', (dragging: boolean) => {
-  if (!dragging) {
-    panelItemDragging.value = false;
-    return;
-  }
-
   // Small delay is required to avoid interrupting the drag
   setTimeout(() => {
-    panelItemDragging.value = true;
+    panelItemDragging.value = dragging;
   }, 10);
 });
 
