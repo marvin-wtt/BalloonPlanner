@@ -323,7 +323,10 @@ const isFirstLeg = computed<boolean>(() => {
 });
 
 const allowVehicleGroupChange = computed<boolean>(() => {
-  return isFirstLeg.value || (disableVehicleGroupProtection.value ?? false);
+  return (
+    flightSeries.legs.length === 1 ||
+    (disableVehicleGroupProtection.value ?? false)
+  );
 });
 
 const isCanceled = computed<boolean>(() => {
