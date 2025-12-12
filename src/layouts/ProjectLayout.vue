@@ -4,7 +4,7 @@
       <q-bar class="q-electron-drag">
         <q-icon
           v-if="route.name === 'projects'"
-          name="mdi-airballoon"
+          name="flight"
         />
 
         <q-btn

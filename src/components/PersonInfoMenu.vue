@@ -110,9 +110,7 @@
                   >
                     <q-icon
                       :name="
-                        v.kind === 'balloon'
-                          ? 'mdi-airballoon'
-                          : 'directions_car'
+                        v.kind === 'balloon' ? 'flight' : 'airport_shuttle'
                       "
                       size="16px"
                       class="q-mr-xs"

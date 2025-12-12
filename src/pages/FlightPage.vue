@@ -34,7 +34,7 @@
           <q-tab
             label="Balloons"
             name="balloons"
-            icon="mdi-airballoon"
+            icon="flight"
           >
             <q-badge
               v-if="showBalloonsMenuBadge"

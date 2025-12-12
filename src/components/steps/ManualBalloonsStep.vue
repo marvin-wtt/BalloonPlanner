@@ -2,7 +2,7 @@
   <q-step
     :name
     title="Manually add balloons"
-    icon="mdi-airballoon"
+    icon="flight"
     :done="modelValue.length > 0"
   >
     <q-table

@@ -26,9 +26,7 @@
               <q-icon
                 v-if="showVehicleIcon"
                 :name="
-                  vehicle.type === 'balloon'
-                    ? 'mdi-airballoon'
-                    : 'airport_shuttle'
+                  vehicle.type === 'balloon' ? 'flight' : 'airport_shuttle'
                 "
                 size="xs"
                 class="rotate-270 q-mb-sm"
