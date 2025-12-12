@@ -150,10 +150,13 @@ window.projectAPI.onOpenRequest((newProject) => {
     })
     .onOk(() => {
       openProject(newProject).catch((error: unknown) => {
+        const caption: string =
+          error instanceof Error ? error.message : String(error);
+
         quasar.notify({
           type: 'negative',
           message: `Failed to open project "${newProject.name}"`,
-          caption: String(error?.message),
+          caption,
         });
       });
     });
@@ -175,7 +178,7 @@ const inIndexPage = computed<boolean>(() => {
 });
 
 const label = computed<string>(() => {
-  if (inIndexPage.value) {
+  if (inIndexPage.value || !project.value) {
     return 'Projects';
   }
 

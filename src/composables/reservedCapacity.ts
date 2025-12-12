@@ -6,7 +6,13 @@ function useFlightUtils() {
 
   function remainingCapacity(group: VehicleGroup): Record<string, number> {
     const balloon = flightStore.balloonMap[group.balloonId];
-    const cars = group.carIds.map((id) => flightStore.carMap[id]);
+    if (!balloon) {
+      throw new Error('Balloon not found');
+    }
+
+    const cars = group.carIds
+      .map((id) => flightStore.carMap[id])
+      .filter((car) => car !== undefined);
 
     const resultMaxCapacity: Record<string, number> = {};
     let remainingCapacity = balloon.maxCapacity;

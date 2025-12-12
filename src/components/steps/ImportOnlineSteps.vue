@@ -3,7 +3,7 @@
     :name
     title="Server URL"
     icon="cloud"
-    :done="url?.length > 0"
+    :done="!!url && url.length > 0"
   >
     <div
       class="column q-gutter-md"
@@ -47,7 +47,7 @@
     name="login"
     title="Login"
     icon="login"
-    :done="email?.length > 0 && password?.length > 0"
+    :done="!!email && email.length > 0 && !!password && password.length > 0"
   >
     <div
       class="column q-gutter-md"
@@ -184,7 +184,7 @@ const emit = defineEmits<{
 }>();
 
 const loading = ref<boolean>(false);
-const errorMessage = ref<string | null>(null);
+const errorMessage = ref<string | undefined>();
 
 const url = ref<string>();
 const email = ref<string>();
@@ -196,7 +196,7 @@ const partialToken = ref<string>();
 const accessToken = ref<string>();
 const campOptions = ref<QSelectOption[]>();
 
-const error = computed<boolean>(() => errorMessage.value != null);
+const error = computed<boolean>(() => errorMessage.value != undefined);
 
 async function verifyUrl() {
   if (!url.value || url.value.trim().length === 0) {
@@ -213,11 +213,10 @@ async function verifyUrl() {
   url.value += 'api/v1/';
 
   // Ping server
-  errorMessage.value = null;
-  try {
-    loading.value = true;
-    errorMessage.value = null;
+  loading.value = true;
+  errorMessage.value = undefined;
 
+  try {
     const response = await fetch(url.value + 'health/', {
       method: 'GET',
       headers: {
@@ -243,7 +242,7 @@ async function login() {
     return;
   }
 
-  errorMessage.value = null;
+  errorMessage.value = undefined;
 
   try {
     const response = await fetch(url.value + 'auth/login/', {
@@ -286,7 +285,7 @@ async function twoFactorLogin() {
     return;
   }
 
-  errorMessage.value = null;
+  errorMessage.value = undefined;
 
   try {
     const response = await fetch(url.value + 'auth/verify-otp/', {
@@ -336,15 +335,15 @@ interface Payload {
 function extractCamps(payload: Payload) {
   accessToken.value = payload.tokens.access.token;
 
-  const shortLocale = payload.profile.locale.split('-')[0];
+  const shortLocale = payload.profile.locale.split('-')[0] ?? '';
 
   campOptions.value = payload.profile.camps.map((camp) => {
     const label =
       typeof camp.name === 'string'
         ? camp.name
         : shortLocale in camp.name
-          ? camp.name[shortLocale]
-          : Object.values(camp.name)[0];
+          ? (camp.name[shortLocale] ?? '')
+          : (Object.values(camp.name)[0] ?? '');
 
     return {
       label,
@@ -354,7 +353,7 @@ function extractCamps(payload: Payload) {
 }
 
 async function downloadPeople() {
-  errorMessage.value = null;
+  errorMessage.value = undefined;
 
   if (!url.value || !campId.value || !accessToken.value) {
     return;

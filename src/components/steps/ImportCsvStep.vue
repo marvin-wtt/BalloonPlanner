@@ -76,10 +76,15 @@ async function processCsv() {
   loading.value = true;
   errorMessage.value = undefined;
 
+  const fileData = file.value;
+  if (!fileData) {
+    throw new Error('No file selected.');
+  }
+
   try {
     const result = await new Promise<Papa.ParseResult<unknown>>(
       (complete, error) => {
-        Papa.parse(file.value, {
+        Papa.parse(fileData, {
           header: true,
           skipEmptyLines: true,
           complete,

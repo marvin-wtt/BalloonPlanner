@@ -21,8 +21,7 @@
             :rules="[
               (val?: string | null) =>
                 (!!val && val.length > 0) || 'Name is required.',
-              (val?: string | null) =>
-                nameIsUnique(val) || 'Name must be unique.',
+              (val: string) => nameIsUnique(val) || 'Name must be unique.',
             ]"
             hide-bottom-space
             rounded
@@ -38,8 +37,8 @@
             :rules="[
               (val?: number | null) =>
                 (!!val && val > 0) || 'Maximum Capacity is required.',
-              (val?: string | null) =>
-                !existingNames?.includes(val) || 'Name must be unique.',
+              (val: string) =>
+                !existingNames.includes(val) || 'Name must be unique.',
             ]"
             rounded
             outlined
@@ -93,6 +92,7 @@
 import { computed, reactive, ref } from 'vue';
 import type { Car, Person } from 'app/src-common/entities';
 import { type QSelectOption, useDialogPluginComponent } from 'quasar';
+import { required } from 'src/util/required';
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
@@ -110,8 +110,8 @@ const {
 defineEmits([...useDialogPluginComponent.emits]);
 
 const newCar = reactive<Partial<Car>>({
-  name: car?.name ?? null,
-  maxCapacity: car?.maxCapacity ?? null,
+  name: car?.name ?? undefined,
+  maxCapacity: car?.maxCapacity ?? undefined,
   hasTrailerClutch: car?.hasTrailerClutch ?? true,
   allowedOperatorIds: car?.allowedOperatorIds ?? [],
 });
@@ -135,6 +135,10 @@ const mode = computed<'create' | 'edit'>(() => {
 function onSubmit() {
   const payload: Omit<Car, 'id'> = {
     ...newCar,
+    name: required(newCar.name),
+    maxCapacity: required(newCar.maxCapacity),
+    allowedOperatorIds: required(newCar.allowedOperatorIds),
+    hasTrailerClutch: required(newCar.hasTrailerClutch),
     type: 'car',
   };
 

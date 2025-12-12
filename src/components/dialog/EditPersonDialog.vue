@@ -21,8 +21,7 @@
             :rules="[
               (val?: string | null) =>
                 (!!val && val.length > 0) || 'Name is required.',
-              (val?: string | null) =>
-                nameIsUnique(val) || 'Name must be unique.',
+              (val: string) => nameIsUnique(val) || 'Name must be unique.',
             ]"
             hide-bottom-space
             outlined
@@ -137,8 +136,8 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
 const newPerson = reactive<Partial<Person>>({
-  name: person?.name ?? null,
-  nationality: person?.nationality ?? null,
+  name: person?.name ?? undefined,
+  nationality: person?.nationality ?? undefined,
   role: person?.role ?? role ?? 'participant',
   weight: person?.weight ?? undefined,
   firstTime: person?.firstTime ?? undefined,

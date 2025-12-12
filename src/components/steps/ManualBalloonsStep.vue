@@ -80,7 +80,9 @@ import { computed } from 'vue';
 
 const quasar = useQuasar();
 
-const modelValue = defineModel<Balloon[]>();
+const modelValue = defineModel<Balloon[]>({
+  required: true,
+});
 
 const { name, people } = defineProps<{
   name: string;
@@ -136,7 +138,7 @@ const columns: QTableColumn[] = [
     field: 'allowedOperatorIds',
     align: 'left',
     format: (val: string[]) =>
-      val.map((id) => personMap.value[id].name).join(', '),
+      val.map((id) => personMap.value[id]?.name).join(', '),
   },
   {
     name: 'action',

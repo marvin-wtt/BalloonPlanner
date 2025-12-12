@@ -57,7 +57,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, toRaw } from 'vue';
+import { Ref, ref, toRaw } from 'vue';
 import type { ProjectMeta } from 'app/src-common/entities';
 import { useDialogPluginComponent } from 'quasar';
 
@@ -70,13 +70,18 @@ const { project = undefined } = defineProps<{
 
 defineEmits([...useDialogPluginComponent.emits]);
 
-const name = ref<string>(project.name);
-const description = ref<string | undefined>(project.description);
+const name = ref<string | undefined>(project?.name);
+const description = ref<string | undefined>(project?.description);
 
 function onSubmit() {
+  const nameValue = toRaw(name.value)?.trim();
+  if (!nameValue || nameValue.length === 0) {
+    throw new Error('Name is required.');
+  }
+
   const payload: Pick<ProjectMeta, 'name' | 'description'> = {
-    name: toRaw(name.value).trim(),
-    description: toRaw(description.value).trim(),
+    name: nameValue,
+    description: toRaw(description.value)?.trim(),
   };
 
   onDialogOK(payload);

@@ -72,7 +72,9 @@ import { type QTableColumn, useQuasar } from 'quasar';
 
 const quasar = useQuasar();
 
-const modelValue = defineModel<Person[]>();
+const modelValue = defineModel<Person[]>({
+  required: true,
+});
 
 const { name } = defineProps<{
   name: string;

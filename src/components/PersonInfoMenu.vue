@@ -200,12 +200,12 @@ function resolveVehicle(vehicleId: ID): {
   kind: VehicleKind | 'unknown';
   name: string;
 } {
-  const balloon = project.value.balloons.find((b) => b.id === vehicleId);
+  const balloon = project.value?.balloons.find((b) => b.id === vehicleId);
   if (balloon) {
     return { kind: 'balloon', name: balloon.name };
   }
 
-  const car = project.value.cars.find((c) => c.id === vehicleId);
+  const car = project.value?.cars.find((c) => c.id === vehicleId);
   if (car) {
     return { kind: 'car', name: car.name };
   }
@@ -296,7 +296,7 @@ const hasHistory = computed(() => flightHistory.value.length > 0);
 
 <style scoped>
 .person-info-menu {
-  min-width: 220px;
+  min-width: 180px;
   max-width: 260px;
 }
 

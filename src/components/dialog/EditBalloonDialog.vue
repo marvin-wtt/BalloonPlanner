@@ -21,8 +21,7 @@
             :rules="[
               (val?: string | null) =>
                 (!!val && val.length > 0) || 'Name is required.',
-              (val?: string | null) =>
-                nameIsUnique(val) || 'Name must be unique.',
+              (val: string) => nameIsUnique(val) || 'Name must be unique.',
             ]"
             hide-bottom-space
             rounded
@@ -102,6 +101,7 @@
 import { computed, reactive, ref } from 'vue';
 import type { Person, Balloon } from 'app/src-common/entities';
 import { useDialogPluginComponent, type QSelectOption } from 'quasar';
+import { required } from 'src/util/required';
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
@@ -119,8 +119,8 @@ const {
 defineEmits([...useDialogPluginComponent.emits]);
 
 const newBalloon = reactive<Partial<Balloon>>({
-  name: balloon?.name ?? null,
-  maxCapacity: balloon?.maxCapacity ?? null,
+  name: balloon?.name ?? undefined,
+  maxCapacity: balloon?.maxCapacity ?? undefined,
   maxWeight: balloon?.maxWeight ?? null,
   allowedOperatorIds: balloon?.allowedOperatorIds ?? [],
 });
@@ -144,6 +144,9 @@ const mode = computed<'create' | 'edit'>(() => {
 function onSubmit() {
   const payload: Omit<Balloon, 'id'> = {
     ...newBalloon,
+    name: required(newBalloon.name),
+    allowedOperatorIds: required(newBalloon.allowedOperatorIds),
+    maxCapacity: required(newBalloon.maxCapacity),
     type: 'balloon',
   };
 
