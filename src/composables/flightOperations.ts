@@ -177,7 +177,14 @@ export function useFlightOperations() {
       throw new Error(`No vehicle group found for balloon ${balloonId}`);
     }
 
-    removeAllAssignments(carId);
+    // Allow moving a car with passengers only if there is only one group
+    const isMoved = series.vehicleGroups.some(
+      (g) => g.balloonId !== balloonId && g.carIds.some((id) => id === carId),
+    );
+    if (series.legs.length > 1 || !isMoved) {
+      removeAllAssignments(carId);
+    }
+
     removeFirst(group.carIds, (id) => id === carId);
 
     if (balloonId === NULL_ID && group.carIds.length === 0) {
