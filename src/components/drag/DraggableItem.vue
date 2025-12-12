@@ -13,7 +13,7 @@
 <script lang="ts" setup>
 import { DragHelper } from 'src/util/DragHelper';
 import type { Identifiable } from 'app/src-common/entities';
-import { ref } from 'vue';
+import { onBeforeUnmount, ref } from 'vue';
 
 const {
   item,
@@ -32,6 +32,14 @@ const emit = defineEmits<{
 }>();
 
 const dragged = ref(false);
+
+onBeforeUnmount(() => {
+  if (!dragged.value) {
+    return;
+  }
+
+  emit(DragHelper.accepted ? 'complete' : 'cancel');
+});
 
 function onDragStart(event: DragEvent) {
   event.stopPropagation();
