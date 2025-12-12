@@ -23,19 +23,20 @@
             :rowspan="rowCount"
           >
             <div class="col no-wrap">
-              <q-icon
-                v-if="showVehicleIcon"
-                :name="
-                  vehicle.type === 'balloon' ? 'flight' : 'airport_shuttle'
-                "
-                size="xs"
-                class="rotate-270 q-mb-sm"
-              />
-
-              <div>
+              <div class="q-pt-sm">
                 <span>
                   {{ vehicle.name ?? '&#160;' }}
                 </span>
+              </div>
+
+              <div v-if="showVehicleIcon">
+                <q-icon
+                  :name="
+                    vehicle.type === 'balloon' ? 'flight' : 'airport_shuttle'
+                  "
+                  size="xs"
+                  class="rotate-270 q-mb-sm"
+                />
               </div>
             </div>
 
