@@ -57,7 +57,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Ref, ref, toRaw } from 'vue';
+import { ref, toRaw } from 'vue';
 import type { ProjectMeta } from 'app/src-common/entities';
 import { useDialogPluginComponent } from 'quasar';
 
