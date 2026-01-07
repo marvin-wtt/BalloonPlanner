@@ -190,14 +190,12 @@ const coloredLabels = computed<boolean>(() => {
 });
 
 const status = computed<StatusInfo | undefined>(() => {
-  return (
-    [
-      overfillStatus,
-      operatorInfo.value,
-      multiLegStatus.value,
-      languageStatus.value,
-    ].find((info): info is StatusInfo => info !== false) ?? undefined
-  );
+  return [
+    overfillStatus,
+    operatorInfo.value,
+    multiLegStatus.value,
+    languageStatus.value,
+  ].find((info): info is StatusInfo => info !== false);
 });
 
 const overfillStatus: StatusInfo | false = overfilled
