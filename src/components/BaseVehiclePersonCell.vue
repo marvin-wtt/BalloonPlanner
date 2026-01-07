@@ -29,7 +29,7 @@
 
       <div
         v-if="status"
-        class="q-ml-xs"
+        class="q-ml-xs no-wrap row items-center"
       >
         <q-icon
           :name="status.icon"
@@ -41,6 +41,14 @@
             {{ status.text }}
           </q-tooltip>
         </q-icon>
+
+        <span
+          v-if="status.suffix"
+          class="status-suffix"
+          :class="`text-${status.color}`"
+        >
+          {{ status.suffix }}
+        </span>
       </div>
     </div>
 
@@ -104,6 +112,7 @@ import { useQuasar } from 'quasar';
 import { useProjectStore } from 'stores/project';
 import { useProjectSettings } from 'src/composables/projectSettings';
 import PersonInfoMenu from 'components/PersonInfoMenu.vue';
+import { vehicleGroupLabel } from 'src/util/group';
 
 const quasar = useQuasar();
 const projectStore = useProjectStore();
@@ -149,6 +158,7 @@ interface StatusInfo {
   color: string;
   text: string;
   icon: string;
+  suffix?: string | undefined;
 }
 
 const flightsLabel = computed<string>(() => {
@@ -185,7 +195,7 @@ const status = computed<StatusInfo | undefined>(() => {
     operatorInfo.value,
     multiLegStatus.value,
     languageStatus.value,
-  ].filter((info) => info !== false)[0];
+  ].find((info): info is StatusInfo => info !== false);
 });
 
 const overfillStatus: StatusInfo | false = overfilled
@@ -280,6 +290,7 @@ const multiLegStatus = computed<StatusInfo | false>(() => {
     icon: 'sym_o_swap_horiz',
     color: 'negative',
     text: `${person.name} was assigned to different group in previous flight`,
+    suffix: findPreviousGroupLabel(person.id),
   };
 });
 
@@ -334,6 +345,7 @@ function onDragEnd() {
   if (!person) {
     return;
   }
+
   removePersonFromVehicle(person.id);
 }
 
@@ -341,6 +353,7 @@ function onEdit() {
   if (!project.value || !person) {
     return;
   }
+
   quasar
     .dialog({
       component: EditPersonDialog,
@@ -381,21 +394,63 @@ function wasInSameVehicleGroupInPreviousLeg(personId: string): boolean {
     return false;
   }
 
-  // Collect all vehicle IDs of this group
   const groupVehicleIds = [group.balloonId, ...group.carIds];
 
-  // Check if person was in any of these vehicles in the first leg
   return groupVehicleIds.some((vid) => {
     const assignment = previousLeg.assignments[vid];
     if (!assignment) {
       return false;
     }
+
     return (
       assignment.operatorId === personId ||
       assignment.passengerIds.includes(personId)
     );
   });
 }
+
+function findPreviousGroupLabel(personId: string): string | undefined {
+  if (isFirstLeg.value) {
+    return undefined;
+  }
+
+  const idx = flightSeries.legs.findIndex((l) => l.id === flightLeg.id);
+  const previousLeg = flightSeries.legs[idx - 1];
+  if (!previousLeg) {
+    return undefined;
+  }
+
+  const previousGroupIndex = flightSeries.vehicleGroups
+    .map((group) => [group.balloonId, ...group.carIds])
+    .findIndex((vehicleIds) => {
+      return vehicleIds.some((vehicleId) => {
+        const assignment = previousLeg.assignments[vehicleId];
+        if (!assignment) {
+          return false;
+        }
+
+        return (
+          assignment.operatorId === personId ||
+          assignment.passengerIds.includes(personId)
+        );
+      });
+    });
+
+  if (previousGroupIndex === -1) {
+    return undefined;
+  }
+
+  return vehicleGroupLabel(previousGroupIndex);
+}
 </script>
 
-<style scoped></style>
+<style scoped>
+/* Compact “badge-like” suffix aligned to the icon */
+.status-suffix {
+  margin-left: 2px;
+  font-size: 0.8em;
+  line-height: 1;
+  font-weight: 600;
+  vertical-align: middle;
+}
+</style>

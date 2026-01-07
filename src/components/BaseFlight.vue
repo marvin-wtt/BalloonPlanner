@@ -24,7 +24,7 @@
           <base-vehicle-group
             v-for="(group, i) in flightSeries.vehicleGroups"
             :key="`vg-${i}`"
-            :label="`Group ${String.fromCharCode(65 + i)}`"
+            :label="`Group ${vehicleGroupLabel(i)}`"
             :flight-series
             :flight-leg
             :group
@@ -61,6 +61,7 @@ import { useFlightStore } from 'stores/flight';
 import { useProjectSettings } from 'src/composables/projectSettings';
 import { validateFlightLegAndSeries } from 'src/util/flight-validator';
 import { NULL_ID } from 'app/src-common/constants';
+import { vehicleGroupLabel } from 'src/util/group';
 
 const flightStore = useFlightStore();
 const { availablePeople, availableCars, availableBalloons } =
