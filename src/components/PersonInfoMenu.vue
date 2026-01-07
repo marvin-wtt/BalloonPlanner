@@ -163,6 +163,7 @@ import type {
 } from 'app/src-common/entities';
 import { storeToRefs } from 'pinia';
 import { useProjectStore } from 'stores/project';
+import { vehicleGroupLabel } from 'src/util/group';
 
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
@@ -245,7 +246,7 @@ function buildHistoryForSeriesList(
             group.balloonId === vehicleId || group.carIds.includes(vehicleId),
         );
         const groupLetter =
-          groupIndex >= 0 ? String.fromCharCode(65 + groupIndex) : undefined;
+          groupIndex >= 0 ? vehicleGroupLabel(groupIndex) : undefined;
 
         const existing = vehicleMapForSeries.get(vehicleId);
 
