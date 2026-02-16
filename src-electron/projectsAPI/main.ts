@@ -5,7 +5,7 @@ import {
   type IpcMainEvent,
   dialog,
 } from 'electron';
-import type { Project } from 'app/src-common/entities';
+import type { Project, ProjectMeta } from 'app/src-common/entities';
 import {
   deleteProjectFromPath,
   readProjectFromPath,
@@ -75,13 +75,41 @@ async function loadFromArgs(argv: string[]) {
 async function loadExternalFile(fullFilePath: string) {
   log.info(`Loading project from external file: ${fullFilePath}`);
 
-  const project = await readProjectFromPath(fullFilePath);
+  let project = await readProjectFromPath(fullFilePath);
 
-  const conflict = getProjectIndex().find(
-    (meta) => meta.id === project.id || meta.filePath === fullFilePath,
+  const projectIndex = getProjectIndex();
+
+  const conflict = projectIndex.some(
+    (meta) => meta.id === project.id && meta.filePath !== fullFilePath,
   );
 
-  const meta = {
+  if (conflict) {
+    const result = await dialog.showMessageBox({
+      type: 'warning',
+      title: 'Project already exists',
+      message: 'A project with the same ID already exists.',
+      detail:
+        'Would you like to generate a new ID for this file or overwrite the existing entry?',
+      buttons: ['Generate New ID', 'Overwrite Existing', 'Cancel'],
+      cancelId: 2,
+      defaultId: 0,
+    });
+
+    if (result.response === 2) {
+      return;
+    }
+
+    if (result.response === 0) {
+      project = {
+        ...project,
+        id: crypto.randomUUID(),
+      };
+
+      await writeProjectToPath(project, fullFilePath);
+    }
+  }
+
+  const meta: ProjectMeta = {
     id: project.id,
     name: project.name,
     description: project.description,
@@ -89,22 +117,18 @@ async function loadExternalFile(fullFilePath: string) {
     filePath: fullFilePath,
   };
 
-  if (conflict) {
-    log.info(
-      `Project with id ${project.id} or file path ${fullFilePath} already exists. Updating index.`,
-    );
+  const isExisting = projectIndex.some((m) => m.id === project.id);
+  if (isExisting) {
     updateProjectMeta(meta);
   } else {
     addProjectMeta(meta);
   }
 
-  BrowserWindow.getAllWindows().forEach((win) => {
-    if (win.isDestroyed()) {
-      return;
-    }
-
-    win.webContents.send('project:request-open', project);
-  });
+  BrowserWindow.getAllWindows()
+    .filter((win) => !win.isDestroyed())
+    .forEach((win) => {
+      win.webContents.send('project:request-open', project);
+    });
 }
 
 const handleEvent = (next: (...args: unknown[]) => unknown) => {
