@@ -121,8 +121,8 @@ import type { Person, PersonRole } from 'app/src-common/entities';
 import { useDialogPluginComponent } from 'quasar';
 
 const {
-  person = undefined,
-  role = undefined,
+  person,
+  role,
   existingNames = [],
 } = defineProps<{
   person?: Person;

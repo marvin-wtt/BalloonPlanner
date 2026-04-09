@@ -345,7 +345,7 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
 
 defineEmits([...useDialogPluginComponent.emits]);
 
-const { isFirstLeg = true } = defineProps<{
+const { isFirstLeg } = defineProps<{
   isFirstLeg?: boolean;
 }>();
 

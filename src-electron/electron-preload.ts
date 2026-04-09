@@ -34,7 +34,7 @@ ipcRenderer.invoke = async (channel: string, ...args: unknown[]) => {
     const prefix = `Error invoking remote method '${channel}': Error:`;
 
     if (err instanceof Error && err.message.startsWith(prefix)) {
-      throw new Error(err.message.slice(prefix.length));
+      throw new Error(err.message.slice(prefix.length), { cause: err });
     }
 
     throw err;

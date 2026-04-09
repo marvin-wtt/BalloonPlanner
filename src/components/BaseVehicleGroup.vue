@@ -101,7 +101,7 @@ const {
   flightLeg,
   group,
   label = '',
-  editable = false,
+  editable,
 } = defineProps<{
   group: VehicleGroup;
   flightSeries: FlightSeries;

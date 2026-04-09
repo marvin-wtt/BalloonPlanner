@@ -73,7 +73,7 @@ const {
   project,
   flightSeries,
   flightLeg,
-  editable = false,
+  editable,
 } = defineProps<{
   project: Project;
   flightSeries: FlightSeries;

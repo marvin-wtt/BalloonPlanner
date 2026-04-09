@@ -245,7 +245,7 @@ const {
   flightSeries,
   flightLeg,
   assignment,
-  editable = false,
+  editable,
 } = defineProps<{
   vehicleId: string;
   flightSeries: FlightSeries;

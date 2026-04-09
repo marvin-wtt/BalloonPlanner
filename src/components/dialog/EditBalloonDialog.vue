@@ -108,7 +108,7 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
 
 const {
   people,
-  balloon = undefined,
+  balloon,
   existingNames = [],
 } = defineProps<{
   balloon?: Balloon;

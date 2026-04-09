@@ -22,6 +22,7 @@ export async function readProjectFromPath(
   } catch (err) {
     throw new Error(
       `Failed to read file "${fullFilePath}": ${(err as Error).message}`,
+      { cause: err },
     );
   }
 }
@@ -43,6 +44,7 @@ export async function writeProjectToPath(
   } catch (err: unknown) {
     throw new Error(
       `Cannot create directory "${parentDir}": ${getErrorMessage(err)}`,
+      { cause: err },
     );
   }
 
@@ -51,6 +53,7 @@ export async function writeProjectToPath(
   } catch (err: unknown) {
     throw new Error(
       `Failed to write project to "${fullFilePath}": ${getErrorMessage(err)}`,
+      { cause: err },
     );
   }
 

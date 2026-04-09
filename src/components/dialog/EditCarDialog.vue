@@ -98,7 +98,7 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
 const {
-  car = undefined,
+  car,
   people,
   existingNames = [],
 } = defineProps<{

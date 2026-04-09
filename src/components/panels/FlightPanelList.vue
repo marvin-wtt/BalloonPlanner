@@ -138,7 +138,7 @@ const {
   title,
   items,
   itemName = 'item',
-  dense = false,
+  dense,
 } = defineProps<{
   title: string;
   items: T[];

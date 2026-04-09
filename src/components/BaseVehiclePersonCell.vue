@@ -133,15 +133,15 @@ const {
 } = useFlightOperations();
 
 const {
-  person = undefined,
+  person,
   vehicle,
   assignment,
   flightSeries,
   flightLeg,
   group,
-  editable = false,
-  operator = false,
-  overfilled = false,
+  editable,
+  operator,
+  overfilled,
 } = defineProps<{
   person?: Person;
   vehicle: Vehicle;
