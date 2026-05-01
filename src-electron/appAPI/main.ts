@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import log from 'electron-log';
 import electronUpdater, {
   type AppUpdater,
-  type CancellationToken,
+  CancellationToken,
 } from 'electron-updater';
 import type { AppUpdate } from 'app/src-common/api/app.api';
 
@@ -14,6 +14,7 @@ export default () => {
     if (cancellationToken) {
       return;
     }
+    cancellationToken = new CancellationToken();
     void autoUpdater.downloadUpdate(cancellationToken);
   });
   ipcMain.on('app:cancelUpdate', () => {
