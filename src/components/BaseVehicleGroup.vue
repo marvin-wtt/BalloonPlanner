@@ -7,12 +7,14 @@
   >
     <div class="relative-position">
       <div class="vehicle-group__label">
-        <span v-if="isCanceled">
-          <i>Canceled</i>
+        <span v-if="showGroupLabel">
+          {{ label }}
         </span>
 
-        <span v-else-if="showGroupLabel">
-          {{ label }}
+        <span v-if="isCanceled">
+          <a v-if="showGroupLabel"> &middot; </a>
+
+          <i>Canceled</i>
         </span>
 
         <q-badge
