@@ -3,8 +3,9 @@
     :is="tag"
     class="drop-zone"
     :class="{
-      'highlighted--accepted': highlightState === 'accepted',
-      'highlighted--rejected': highlightState === 'rejected',
+      'highlighted--accept': highlightState === 'accept',
+      'highlighted--warn': highlightState === 'warn',
+      'highlighted--reject': highlightState === 'reject',
     }"
     @dragenter.stop="applyHighlight($event)"
     @dragover.stop="applyHighlight($event)"
@@ -20,8 +21,10 @@ import { DragHelper } from 'src/util/DragHelper';
 import { ref } from 'vue';
 import type { Identifiable } from 'app/src-common/entities';
 
-const { tag = 'div', accepted = () => true } = defineProps<{
-  accepted?: (element: Identifiable) => boolean;
+type DropState = 'accept' | 'warn' | 'reject';
+
+const { tag = 'div', classify = () => 'accept' } = defineProps<{
+  classify?: (element: Identifiable) => DropState;
   tag?: string | object;
 }>();
 
@@ -29,11 +32,7 @@ const emit = defineEmits<{
   (e: 'dropped', item: Identifiable): void;
 }>();
 
-const highlightState = ref<'accepted' | 'rejected' | null>(null);
-
-function isAccepted(): boolean {
-  return DragHelper.element !== null && accepted(DragHelper.element);
-}
+const highlightState = ref<DropState | null>(null);
 
 function setDropEffect(event: DragEvent, value: DataTransfer['dropEffect']) {
   if (event.dataTransfer) {
@@ -44,8 +43,9 @@ function setDropEffect(event: DragEvent, value: DataTransfer['dropEffect']) {
 function applyHighlight(event: DragEvent) {
   event.preventDefault();
 
-  DragHelper.accepted = isAccepted();
-  highlightState.value = DragHelper.accepted ? 'accepted' : 'rejected';
+  const state = DragHelper.element !== null ? classify(DragHelper.element) : null;
+  highlightState.value = state;
+  DragHelper.accepted = state !== null && state !== 'reject';
 
   setDropEffect(event, DragHelper.accepted ? 'move' : 'none');
 }
@@ -60,7 +60,10 @@ function onDragLeave(event: DragEvent) {
 function onDrop(event: DragEvent) {
   event.preventDefault();
 
-  DragHelper.accepted = isAccepted();
+  const state =
+    DragHelper.element !== null ? classify(DragHelper.element) : null;
+  DragHelper.accepted = state !== null && state !== 'reject';
+
   if (
     DragHelper.element != null &&
     DragHelper.accepted &&
@@ -74,11 +77,15 @@ function onDrop(event: DragEvent) {
 </script>
 
 <style scoped>
-.highlighted--accepted {
+.highlighted--accept {
   background-color: rgba(25, 118, 210, 0.22) !important;
 }
 
-.highlighted--rejected {
+.highlighted--warn {
+  background-color: rgba(237, 108, 2, 0.18) !important;
+}
+
+.highlighted--reject {
   background-color: rgba(211, 47, 47, 0.18) !important;
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <drop-zone
     class="full-width row justify-center items-center"
-    :accepted="isDropAllowed"
+    :classify="classifyDrop"
     @dropped="onDrop"
   >
     <div
@@ -87,12 +87,7 @@ const { availablePeople, availableCars, availableBalloons } =
 const { groupAlignment } = useProjectSettings();
 const { addVehicleGroup, addCarToVehicleGroup } = useFlightOperations();
 
-const {
-  project,
-  flightSeries,
-  flightLeg,
-  editable,
-} = defineProps<{
+const { project, flightSeries, flightLeg, editable } = defineProps<{
   project: Project;
   flightSeries: FlightSeries;
   flightLeg: FlightLeg;
@@ -115,28 +110,33 @@ function elementIsPerson(element: Identifiable): element is Person {
   return flightSeries.personIds.includes(element.id);
 }
 
-function isDropAllowed(element: Identifiable): boolean {
+function classifyDrop(element: Identifiable): 'accept' | 'warn' | 'reject' {
   if (!editable) {
-    return false;
+    return 'reject';
   }
 
   if (elementIsPerson(element)) {
-    return !availablePeople.value.some((person) => person.id === element.id);
+    const isAllowed = !availablePeople.value.some(
+      (person) => person.id === element.id,
+    );
+
+    return isAllowed ? 'accept' : 'reject';
   }
 
   if (elementIsCar(element)) {
-    return (
+    const isAllowed =
       !availableCars.value.some((car) => car.id === element.id) ||
       // Only allow one group without a balloon
-      !flightSeries.vehicleGroups.some((group) => group.balloonId === NULL_ID)
-    );
+      !flightSeries.vehicleGroups.some((group) => group.balloonId === NULL_ID);
+
+    return isAllowed ? 'accept' : 'reject';
   }
 
   if (elementIsBalloon(element)) {
-    return !flightContainsBalloon(element);
+    return flightContainsBalloon(element) ? 'reject' : 'accept';
   }
 
-  return false;
+  return 'reject';
 }
 
 function flightContainsBalloon(balloon: Balloon): boolean {

@@ -100,7 +100,7 @@
   <drop-zone
     v-else
     :tag="operator ? 'th' : 'td'"
-    :accepted="isDropAllowed"
+    :classify="classifyDrop"
     @dropped="onDrop"
   />
 </template>
@@ -347,27 +347,28 @@ const isFirstLeg = computed<boolean>(() => {
   return flightSeries.legs.findIndex((l) => l.id === flightLeg.id) === 0;
 });
 
-function isDropAllowed(element: Identifiable): boolean {
-  if (!editable) {
-    return false;
+function classifyDrop(
+  element: Identifiable,
+): 'accept' | 'warn' | 'reject' {
+  if (!editable || !(element.id in personMap.value)) {
+    return 'reject';
   }
 
-  if (!(element.id in personMap.value)) {
-    return false;
-  }
+  const sameGroup = wasInSameVehicleGroupInPreviousLeg(element.id);
 
-  if (
-    !wasInSameVehicleGroupInPreviousLeg(element.id) &&
-    !disableAssignmentProtection.value
-  ) {
-    return false;
+  if (!sameGroup && !disableAssignmentProtection.value) {
+    return 'reject';
   }
 
   if (operator) {
-    return vehicle.allowedOperatorIds.includes(element.id);
+    if (!vehicle.allowedOperatorIds.includes(element.id)) {
+      return 'reject';
+    }
+  } else if (assignment.passengerIds.includes(element.id)) {
+    return 'reject';
   }
 
-  return !assignment.passengerIds.includes(element.id);
+  return sameGroup ? 'accept' : 'warn';
 }
 
 function onDrop(element: Identifiable) {

@@ -1,6 +1,6 @@
 <template>
   <drop-zone
-    :accepted="isDropAccepted"
+    :classify="classifyDrop"
     class="vehicle-group"
     :class="styleClass"
     @dropped="drop"
@@ -181,16 +181,16 @@ function elementIsCar(element: Identifiable): element is Car {
   return flightSeries.carIds.includes(element.id);
 }
 
-function isDropAccepted(element: Identifiable): boolean {
+function classifyDrop(element: Identifiable): 'accept' | 'warn' | 'reject' {
   if (!editable) {
-    return false;
+    return 'reject';
   }
 
   if (!elementIsCar(element)) {
-    return false;
+    return 'reject';
   }
 
-  return !group.carIds.some((id) => id === element.id);
+  return group.carIds.some((id) => id === element.id) ? 'reject' : 'accept';
 }
 
 function drop(element: Identifiable) {
