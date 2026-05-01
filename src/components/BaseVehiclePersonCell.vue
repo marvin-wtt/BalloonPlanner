@@ -347,9 +347,7 @@ const isFirstLeg = computed<boolean>(() => {
   return flightSeries.legs.findIndex((l) => l.id === flightLeg.id) === 0;
 });
 
-function classifyDrop(
-  element: Identifiable,
-): 'accept' | 'warn' | 'reject' {
+function classifyDrop(element: Identifiable): 'accept' | 'warn' | 'reject' {
   if (!editable || !(element.id in personMap.value)) {
     return 'reject';
   }

@@ -382,17 +382,24 @@ async function onExportImage() {
   }
 
   const container = document.createElement('div');
-  container.classList.add('exporter-wrapper', 'flight-view');
+  container.classList.add('flight-view');
   const src = document.getElementById('flight-content');
   const clone = src?.cloneNode(true) as HTMLElement;
-  clone.classList.add('no-wrap', 'fit');
+  clone.classList.add('no-wrap');
+  clone.classList.remove('fit');
   Object.assign(container.style, {
     position: 'fixed',
-    top: 0,
-    left: 0,
-    zIndex: -1,
-    width: 'auto',
-    height: 'auto',
+    top: '0',
+    left: '0',
+    zIndex: '-1',
+    width: 'max-content',
+    height: 'max-content',
+    overflow: 'visible',
+  });
+  Object.assign(clone.style, {
+    width: 'max-content',
+    height: 'max-content',
+    overflow: 'visible',
   });
   container.appendChild(clone);
   document.body.appendChild(container);
