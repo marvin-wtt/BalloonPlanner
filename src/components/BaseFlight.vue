@@ -33,12 +33,27 @@
         </div>
       </q-scroll-area>
 
-      <div
-        v-if="errorText"
-        class="bg-negative text-white col-shrink q-px-md"
+      <q-banner
+        v-if="validationError"
+        dense
+        class="col-shrink bg-negative text-white"
       >
-        Error: {{ errorText }}
-      </div>
+        <template #avatar>
+          <q-icon name="warning" />
+        </template>
+
+        {{ validationError.message }}
+
+        <template #action>
+          <q-btn
+            v-if="validationError.fix && editable"
+            flat
+            dense
+            label="Fix"
+            @click="fixError"
+          />
+        </template>
+      </q-banner>
     </div>
   </drop-zone>
 </template>
@@ -59,7 +74,10 @@ import { useFlightOperations } from 'src/composables/flightOperations';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from 'stores/flight';
 import { useProjectSettings } from 'src/composables/projectSettings';
-import { validateFlightLegAndSeries } from 'src/util/flight-validator';
+import {
+  validateFlightLegAndSeries,
+  type FlightValidationResult,
+} from 'src/util/flight-validator';
 import { NULL_ID } from 'app/src-common/constants';
 import { vehicleGroupLabel } from 'src/util/group';
 
@@ -144,9 +162,13 @@ function onDrop(element: Identifiable) {
   addVehicleGroup(element.id);
 }
 
-const errorText = computed<string | null>(() => {
+const validationError = computed<FlightValidationResult | null>(() => {
   return validateFlightLegAndSeries(project, flightSeries, flightLeg);
 });
+
+function fixError() {
+  validationError.value?.fix?.();
+}
 </script>
 
 <style scoped>

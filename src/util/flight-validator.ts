@@ -1,147 +1,241 @@
 import type { FlightLeg, FlightSeries, Project } from 'app/src-common/entities';
 import { NULL_ID } from 'app/src-common/constants';
 
-// Uses exactly your given types
+export interface FlightValidationResult {
+  message: string;
+  fix: (() => void) | null;
+}
+
+function firstDuplicate(arr: string[]): string | null {
+  const seen = new Set<string>();
+  for (const x of arr) {
+    if (seen.has(x)) return x;
+    seen.add(x);
+  }
+  return null;
+}
+
+function nameMap(arr: { id: string; name: string }[]): Record<string, string> {
+  return Object.fromEntries(arr.map(({ id, name }) => [id, name]));
+}
+
 export function validateFlightLegAndSeries(
   project: Project,
   series: FlightSeries,
   leg: FlightLeg,
-): string | null {
-  // --- quick helpers ---
-  const toSet = <T extends string | number>(arr: T[]) => new Set(arr);
-  const firstDuplicate = (arr: string[]) => {
-    const seen = new Set<string>();
-    for (const x of arr) {
-      if (seen.has(x)) return x;
-      seen.add(x);
+): FlightValidationResult | null {
+  const balloonNames = nameMap(project.balloons);
+  const carNames = nameMap(project.cars);
+  const personNames = nameMap(project.people);
+
+  const seriesBalloons = new Set(series.balloonIds);
+  const seriesCars = new Set(series.carIds);
+  const seriesPeople = new Set(series.personIds);
+
+  const err = (
+    message: string,
+    fix: (() => void) | null = null,
+  ): FlightValidationResult => ({ message, fix });
+
+  function validateGroups(): FlightValidationResult | null {
+    const groupBalloonIds = series.vehicleGroups.map((g) => g.balloonId);
+
+    for (const balloonId of groupBalloonIds) {
+      if (!seriesBalloons.has(balloonId) && balloonId !== NULL_ID) {
+        return err(
+          `Vehicle group references balloon '${balloonNames[balloonId] ?? balloonId}' that is not in this series.`,
+          () => {
+            const idx = series.vehicleGroups.findIndex(
+              (g) => g.balloonId === balloonId,
+            );
+            if (idx >= 0) {
+              series.vehicleGroups.splice(idx, 1);
+            }
+          },
+        );
+      }
     }
+
+    const dupBalloon = firstDuplicate(groupBalloonIds);
+    if (dupBalloon) {
+      return err(
+        `Balloon '${balloonNames[dupBalloon] ?? dupBalloon}' appears in more than one vehicle group.`,
+        () => {
+          const firstIdx = series.vehicleGroups.findIndex(
+            (g) => g.balloonId === dupBalloon,
+          );
+          for (let i = series.vehicleGroups.length - 1; i > firstIdx; i--) {
+            if (series.vehicleGroups[i]?.balloonId === dupBalloon) {
+              series.vehicleGroups.splice(i, 1);
+            }
+          }
+        },
+      );
+    }
+
+    for (const group of series.vehicleGroups) {
+      const dupCar = firstDuplicate(group.carIds);
+      if (dupCar) {
+        return err(
+          `Car '${carNames[dupCar] ?? dupCar}' appears multiple times in the group for balloon '${balloonNames[group.balloonId] ?? group.balloonId}'.`,
+          () => {
+            group.carIds = [...new Set(group.carIds)];
+          },
+        );
+      }
+    }
+
+    const allGroupedCarIds = series.vehicleGroups.flatMap((g) => g.carIds);
+
+    for (const carId of allGroupedCarIds) {
+      if (!seriesCars.has(carId)) {
+        return err(
+          `Car '${carNames[carId] ?? carId}' in a vehicle group is not part of this series.`,
+          () => {
+            for (const group of series.vehicleGroups) {
+              const idx = group.carIds.indexOf(carId);
+              if (idx >= 0) {
+                group.carIds.splice(idx, 1);
+              }
+            }
+          },
+        );
+      }
+    }
+
+    const dupCar = firstDuplicate(allGroupedCarIds);
+    if (dupCar) {
+      return err(
+        `Car '${carNames[dupCar] ?? dupCar}' appears in more than one vehicle group.`,
+        () => {
+          let kept = false;
+          for (const group of series.vehicleGroups) {
+            if (!kept && group.carIds.includes(dupCar)) {
+              kept = true;
+            } else {
+              const idx = group.carIds.indexOf(dupCar);
+              if (idx >= 0) {
+                group.carIds.splice(idx, 1);
+              }
+            }
+          }
+        },
+      );
+    }
+
     return null;
-  };
-
-  const mapNames = (arr: { id: string; name: string }[]) =>
-    arr.reduce<Record<string, string>>((acc, x) => {
-      acc[x.id] = x.name;
-      return acc;
-    }, {});
-  const carNameMap = mapNames(project.cars);
-  const balloonNameMap = mapNames(project.balloons);
-  const personNameMap = mapNames(project.people);
-
-  const seriesBalloonSet = toSet(series.balloonIds);
-  const seriesCarSet = toSet(series.carIds);
-  const seriesPersonSet = toSet(series.personIds);
-
-  // =========================
-  // 1) Validate vehicle groups
-  // =========================
-
-  // 1a) Balloons: coverage == exactly once, and membership
-  const groupBalloonIds = series.vehicleGroups.map((g) => g.balloonId);
-
-  // membership
-  for (const b of groupBalloonIds) {
-    if (!seriesBalloonSet.has(b) && b !== NULL_ID) {
-      return `Vehicle group references unknown balloon '${balloonNameMap[b] ?? b}' (not in series).`;
-    }
   }
 
-  // duplicates among group balloonIds?
-  const dupBalloon = firstDuplicate(groupBalloonIds);
-  if (dupBalloon) {
-    return `Balloon '${balloonNameMap[dupBalloon] ?? dupBalloon}' appears in more than one vehicle group.`;
-  }
+  function validateAssignments(): FlightValidationResult | null {
+    const allSeriesVehicles = new Set([...series.balloonIds, ...series.carIds]);
+    const usedVehicles = new Set(
+      series.vehicleGroups.flatMap((g) => [g.balloonId, ...g.carIds]),
+    );
 
-  // 1b) Cars: each appears exactly once overall and membership + coverage
-  const allGroupedCarIds = series.vehicleGroups.flatMap((g) => g.carIds);
-
-  // per-group duplicates
-  for (const g of series.vehicleGroups) {
-    const dupInGroup = firstDuplicate(g.carIds);
-    if (dupInGroup) {
-      return `Car '${carNameMap[dupInGroup] ?? dupInGroup}' appears multiple times within the group of balloon '${balloonNameMap[g.balloonId] ?? g.balloonId}'.`;
-    }
-  }
-
-  // membership
-  for (const c of allGroupedCarIds) {
-    if (!seriesCarSet.has(c)) {
-      return `Car '${carNameMap[c] ?? c}' in vehicle groups is not part of the series.`;
-    }
-  }
-
-  // cross-group duplicates
-  const dupCar = firstDuplicate(allGroupedCarIds);
-  if (dupCar) {
-    return `Car '${carNameMap[dupCar] ?? dupCar}' appears in more than one vehicle group.`;
-  }
-
-  // ==================================
-  // 2) Validate assignments for the leg
-  // ==================================
-  const allVehicleIds = new Set<string>([
-    ...series.balloonIds,
-    ...series.carIds,
-  ]);
-
-  // 2a) Assigned vehicles must exist in series
-  for (const vehicleId of Object.keys(leg.assignments)) {
-    if (!allVehicleIds.has(vehicleId) && vehicleId !== NULL_ID) {
-      return `Assignment references unknown vehicle '${balloonNameMap[vehicleId] ?? carNameMap[vehicleId] ?? vehicleId}' (not in series).`;
-    }
-  }
-
-  // 2b) Each person at most once (operator + passengers) and must be in series
-  const seenPeople = new Set<string>();
-
-  const usedVehicles = series.vehicleGroups.flatMap((g) => [
-    g.balloonId,
-    ...g.carIds,
-  ]);
-
-  for (const [vehicleId, assignment] of Object.entries(leg.assignments)) {
-    const { operatorId, passengerIds } = assignment;
-    const vehicleName =
-      balloonNameMap[vehicleId] ?? carNameMap[vehicleId] ?? vehicleId;
-
-    // Assignment to unused vehicle
-    if (!usedVehicles.includes(vehicleId)) {
-      if (assignment.operatorId !== null) {
-        return `Person ${personNameMap[assignment.operatorId] ?? assignment.operatorId} is assigned to vehicle ${vehicleName} that is not part of the series.`;
-      }
-
-      if (assignment.passengerIds.length > 0) {
-        return `Persons ${assignment.passengerIds.map((pid) => personNameMap[pid] ?? pid).join(', ')} are assigned to vehicle ${vehicleName} that is not part of the series.`;
+    for (const vehicleId of Object.keys(leg.assignments)) {
+      if (!allSeriesVehicles.has(vehicleId) && vehicleId !== NULL_ID) {
+        const vehicleName =
+          balloonNames[vehicleId] ?? carNames[vehicleId] ?? vehicleId;
+        return err(
+          `Assignment references vehicle '${vehicleName}' that is not part of this series.`,
+          () => {
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            delete leg.assignments[vehicleId];
+          },
+        );
       }
     }
 
-    // operator membership + uniqueness
-    if (operatorId !== null) {
-      if (!seriesPersonSet.has(operatorId)) {
-        return `Operator '${personNameMap[operatorId] ?? operatorId}' in vehicle '${vehicleName}' is not part of the series.`;
+    const seenPeople = new Set<string>();
+
+    for (const [vehicleId, assignment] of Object.entries(leg.assignments)) {
+      const vehicleName =
+        balloonNames[vehicleId] ?? carNames[vehicleId] ?? vehicleId;
+      const { operatorId, passengerIds } = assignment;
+
+      if (!usedVehicles.has(vehicleId)) {
+        if (operatorId !== null) {
+          return err(
+            `'${personNames[operatorId] ?? operatorId}' is assigned to vehicle '${vehicleName}' which is not in any group.`,
+            () => {
+              // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+              delete leg.assignments[vehicleId];
+            },
+          );
+        }
+        if (passengerIds.length > 0) {
+          const names = passengerIds
+            .map((pid) => personNames[pid] ?? pid)
+            .join(', ');
+          return err(
+            `${names} ${passengerIds.length === 1 ? 'is' : 'are'} assigned to vehicle '${vehicleName}' which is not in any group.`,
+            () => {
+              // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+              delete leg.assignments[vehicleId];
+            },
+          );
+        }
       }
-      if (seenPeople.has(operatorId)) {
-        return `Person '${personNameMap[operatorId] ?? operatorId}' is assigned more than once (as operator or passenger).`;
+
+      if (operatorId !== null) {
+        if (!seriesPeople.has(operatorId)) {
+          return err(
+            `Operator '${personNames[operatorId] ?? operatorId}' of '${vehicleName}' is not part of this series.`,
+            () => {
+              assignment.operatorId = null;
+            },
+          );
+        }
+        if (seenPeople.has(operatorId)) {
+          return err(
+            `'${personNames[operatorId] ?? operatorId}' is assigned to more than one vehicle.`,
+            () => {
+              assignment.operatorId = null;
+            },
+          );
+        }
+        seenPeople.add(operatorId);
       }
-      seenPeople.add(operatorId);
+
+      const dupPassenger = firstDuplicate(passengerIds);
+      if (dupPassenger) {
+        return err(
+          `Passenger '${personNames[dupPassenger] ?? dupPassenger}' appears multiple times in vehicle '${vehicleName}'.`,
+          () => {
+            assignment.passengerIds = [...new Set(assignment.passengerIds)];
+          },
+        );
+      }
+
+      for (const pid of passengerIds) {
+        if (!seriesPeople.has(pid)) {
+          return err(
+            `Passenger '${personNames[pid] ?? pid}' in '${vehicleName}' is not part of this series.`,
+            () => {
+              const idx = assignment.passengerIds.indexOf(pid);
+              if (idx >= 0) {
+                assignment.passengerIds.splice(idx, 1);
+              }
+            },
+          );
+        }
+        if (seenPeople.has(pid)) {
+          return err(
+            `'${personNames[pid] ?? pid}' is assigned to more than one vehicle.`,
+            () => {
+              const idx = assignment.passengerIds.indexOf(pid);
+              if (idx >= 0) {
+                assignment.passengerIds.splice(idx, 1);
+              }
+            },
+          );
+        }
+        seenPeople.add(pid);
+      }
     }
 
-    // passenger list may not contain duplicates
-    const dupPassengerInVehicle = firstDuplicate(passengerIds);
-    if (dupPassengerInVehicle) {
-      return `Passenger '${personNameMap[dupPassengerInVehicle] ?? dupPassengerInVehicle}' appears multiple times in vehicle '${balloonNameMap[vehicleId] ?? carNameMap[vehicleId] ?? vehicleId}'.`;
-    }
-
-    // passenger membership + global uniqueness
-    for (const pid of passengerIds) {
-      if (!seriesPersonSet.has(pid)) {
-        return `Passenger '${personNameMap[pid] ?? pid}' in vehicle '${vehicleName}' is not part of the series.`;
-      }
-      if (seenPeople.has(pid)) {
-        return `Person '${personNameMap[pid] ?? pid}' is assigned more than once (as operator or passenger).`;
-      }
-      seenPeople.add(pid);
-    }
+    return null;
   }
 
-  return null;
+  return validateGroups() ?? validateAssignments();
 }
