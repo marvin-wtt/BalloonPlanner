@@ -75,7 +75,8 @@ async function loadFromArgs(argv: string[]) {
 async function loadExternalFile(fullFilePath: string) {
   log.info(`Loading project from external file: ${fullFilePath}`);
 
-  let project = await readProjectFromPath(fullFilePath);
+  const raw = await readProjectFromPath(fullFilePath);
+  let project = migrateProject(raw);
 
   const projectIndex = getProjectIndex();
 
