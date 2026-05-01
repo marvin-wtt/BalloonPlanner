@@ -15,22 +15,22 @@ function useFlightUtils() {
       .filter((car) => car !== undefined);
 
     const resultMaxCapacity: Record<string, number> = {};
-    let remainingCapacity = balloon.maxCapacity;
+    let seatsToBlock = balloon.maxCapacity;
     for (const car of cars) {
       // Reserve sone place for the driver
       const availableCapacity = car.maxCapacity - 1;
 
       // Reserve capacity for all vehicles
-      if (remainingCapacity <= availableCapacity) {
+      if (seatsToBlock <= availableCapacity) {
         // Case A: Vehicle has more available capacity than we need
         //         Reserve all remaining
-        resultMaxCapacity[car.id] = car.maxCapacity - remainingCapacity;
-        remainingCapacity = 0;
+        resultMaxCapacity[car.id] = car.maxCapacity - seatsToBlock;
+        seatsToBlock = 0;
       } else {
         // Case B: Vehicle has less capacity than the vehicle has to offer
         //         Reserve all available capacities
         resultMaxCapacity[car.id] = 1;
-        remainingCapacity -= availableCapacity;
+        seatsToBlock -= availableCapacity;
       }
     }
 

@@ -11,7 +11,7 @@ export const useProjectStore = defineStore('project', () => {
   const project = ref<Project | undefined | null>();
   const isLoading = ref<boolean>(false);
   const isSaving = ref<boolean>(false);
-  const isDorty = ref<boolean>(false);
+  const isDirty = ref<boolean>(false);
 
   const debouncedSave = debounce(async () => {
     await saveProject();
@@ -25,7 +25,7 @@ export const useProjectStore = defineStore('project', () => {
         return;
       }
 
-      isDorty.value = true;
+      isDirty.value = true;
 
       debouncedSave();
     },
@@ -118,12 +118,12 @@ export const useProjectStore = defineStore('project', () => {
     }
 
     isSaving.value = true;
-    isDorty.value = false;
+    isDirty.value = false;
 
     try {
       await window.projectAPI.update(deepToRaw(project.value));
     } catch (e) {
-      isDorty.value = true;
+      isDirty.value = true;
       console.error(e);
       quasar.notify({
         message: 'Failed to save project',
@@ -156,7 +156,7 @@ export const useProjectStore = defineStore('project', () => {
     project,
     isLoading,
     isSaving,
-    isDorty,
+    isDirty,
     createProject,
     deleteProject,
     loadIndex,

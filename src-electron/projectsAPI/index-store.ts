@@ -36,11 +36,13 @@ export function addProjectMeta(meta: RawProjectMeta) {
 export function updateProjectMeta(meta: RawProjectMeta) {
   const metas = getProjectIndex();
 
-  metas.splice(
-    metas.findIndex((m) => m.id === meta.id),
-    1,
-    buildMeta(meta),
-  );
+  const idx = metas.findIndex((m) => m.id === meta.id);
+
+  if (idx === -1) {
+    throw new Error(`Project with id ${meta.id} not found`);
+  }
+
+  metas.splice(idx, 1, buildMeta(meta));
 
   indexStore.set('metas', metas);
 }

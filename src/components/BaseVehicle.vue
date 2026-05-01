@@ -77,7 +77,7 @@
                     v-close-popup
                     clickable
                     :disable="isFirstLeg"
-                    @click="omFlightReactivate()"
+                    @click="onFlightReactivate()"
                   >
                     <q-item-section class="text-info">
                       Reactivate
@@ -239,21 +239,15 @@ const {
   carColor,
 } = useProjectSettings();
 
-const {
-  vehicleId,
-  group,
-  flightSeries,
-  flightLeg,
-  assignment,
-  editable,
-} = defineProps<{
-  vehicleId: string;
-  flightSeries: FlightSeries;
-  flightLeg: FlightLeg;
-  group: VehicleGroup;
-  assignment: VehicleAssignment;
-  editable?: boolean;
-}>();
+const { vehicleId, group, flightSeries, flightLeg, assignment, editable } =
+  defineProps<{
+    vehicleId: string;
+    flightSeries: FlightSeries;
+    flightLeg: FlightLeg;
+    group: VehicleGroup;
+    assignment: VehicleAssignment;
+    editable?: boolean;
+  }>();
 
 const hideEmptyCapacity = ref<boolean>(false);
 
@@ -344,7 +338,7 @@ function onFlightCancel() {
   cancelFlight(vehicleId);
 }
 
-function omFlightReactivate() {
+function onFlightReactivate() {
   reactivateFlight(vehicleId);
 }
 

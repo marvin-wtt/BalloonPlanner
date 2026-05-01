@@ -35,7 +35,7 @@
             <q-btn
               v-if="project && !inIndexPage"
               :icon="syncIcon"
-              :disable="!isDorty"
+              :disable="!isDirty"
               :loading="isSaving"
               size="sm"
               dense
@@ -119,7 +119,7 @@ const quasar = useQuasar();
 const route = useRoute();
 const router = useRouter();
 const projectStore = useProjectStore();
-const { project, isDorty, isSaving } = storeToRefs(projectStore);
+const { project, isDirty, isSaving } = storeToRefs(projectStore);
 
 window.projectAPI.onOpenRequest((newProject) => {
   // Directly switch to the new project if it's already loaded or not project is loaded
@@ -163,7 +163,7 @@ window.projectAPI.onOpenRequest((newProject) => {
 });
 
 const syncIcon = computed<string>(() => {
-  if (isDorty.value || isSaving.value) {
+  if (isDirty.value || isSaving.value) {
     return 'autorenew';
   }
 
