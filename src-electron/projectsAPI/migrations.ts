@@ -51,7 +51,7 @@ const migrations: Record<string, Migration> = {
       })),
     };
   },
-  '1.0.5': (data) => {
+  '1.5.1': (data) => {
     return {
       ...data,
       flights: data.flights.map((flight) => ({
