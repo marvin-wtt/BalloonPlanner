@@ -93,13 +93,31 @@ export function validateFlightLegAndSeries(
   // 2b) Each person at most once (operator + passengers) and must be in series
   const seenPeople = new Set<string>();
 
+  const usedVehicles = series.vehicleGroups.flatMap((g) => [
+    g.balloonId,
+    ...g.carIds,
+  ]);
+
   for (const [vehicleId, assignment] of Object.entries(leg.assignments)) {
     const { operatorId, passengerIds } = assignment;
+    const vehicleName =
+      balloonNameMap[vehicleId] ?? carNameMap[vehicleId] ?? vehicleId;
+
+    // Assignment to unused vehicle
+    if (!usedVehicles.includes(vehicleId)) {
+      if (assignment.operatorId !== null) {
+        return `Person ${personNameMap[assignment.operatorId] ?? assignment.operatorId} is assigned to vehicle ${vehicleName} that is not part of the series.`;
+      }
+
+      if (assignment.passengerIds.length > 0) {
+        return `Persons ${assignment.passengerIds.map((pid) => personNameMap[pid] ?? pid).join(', ')} are assigned to vehicle ${vehicleName} that is not part of the series.`;
+      }
+    }
 
     // operator membership + uniqueness
     if (operatorId !== null) {
       if (!seriesPersonSet.has(operatorId)) {
-        return `Operator '${personNameMap[operatorId] ?? operatorId}' in vehicle '${balloonNameMap[vehicleId] ?? carNameMap[vehicleId] ?? vehicleId}' is not part of the series.`;
+        return `Operator '${personNameMap[operatorId] ?? operatorId}' in vehicle '${vehicleName}' is not part of the series.`;
       }
       if (seenPeople.has(operatorId)) {
         return `Person '${personNameMap[operatorId] ?? operatorId}' is assigned more than once (as operator or passenger).`;
@@ -116,7 +134,7 @@ export function validateFlightLegAndSeries(
     // passenger membership + global uniqueness
     for (const pid of passengerIds) {
       if (!seriesPersonSet.has(pid)) {
-        return `Passenger '${personNameMap[pid] ?? pid}' in vehicle '${balloonNameMap[vehicleId] ?? carNameMap[vehicleId] ?? vehicleId}' is not part of the series.`;
+        return `Passenger '${personNameMap[pid] ?? pid}' in vehicle '${vehicleName}' is not part of the series.`;
       }
       if (seenPeople.has(pid)) {
         return `Person '${personNameMap[pid] ?? pid}' is assigned more than once (as operator or passenger).`;
@@ -124,9 +142,6 @@ export function validateFlightLegAndSeries(
       seenPeople.add(pid);
     }
   }
-
-  // If you want to ensure every series person is either unassigned or assigned once,
-  // the checks above already enforce "at most once". We do not enforce "at least once".
 
   return null;
 }
