@@ -17,12 +17,12 @@ import { onBeforeUnmount, ref } from 'vue';
 
 const {
   item,
-  label,
+  label = null,
   tag = 'div',
   disabled,
 } = defineProps<{
   item: Identifiable;
-  label?: string;
+  label?: string | null;
   tag?: string | object;
   disabled?: boolean;
 }>();

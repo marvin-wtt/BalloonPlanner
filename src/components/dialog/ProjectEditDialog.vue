@@ -64,8 +64,8 @@ import { useDialogPluginComponent } from 'quasar';
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
-const { project } = defineProps<{
-  project?: ProjectMeta;
+const { project = null } = defineProps<{
+  project?: ProjectMeta | null;
 }>();
 
 defineEmits([...useDialogPluginComponent.emits]);

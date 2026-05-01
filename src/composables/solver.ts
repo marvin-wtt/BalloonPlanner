@@ -8,9 +8,20 @@ import type {
   Person,
   Project,
   VehicleAssignmentMap,
+  VehicleGroup,
 } from 'app/src-common/entities';
 import type { SolveFlightLegOptions } from 'app/src-common/api/solver.api';
 import { deepToRaw } from 'src/util/deep-to-raw';
+import { computed, ref } from 'vue';
+
+interface SolveSnapshot {
+  legId: string;
+  assignments: VehicleAssignmentMap;
+  vehicleGroups: VehicleGroup[];
+}
+
+// Module-level so the snapshot survives across component re-renders.
+const snapshot = ref<SolveSnapshot | null>(null);
 
 export function useSolver() {
   const projectStore = useProjectStore();
@@ -20,10 +31,35 @@ export function useSolver() {
   const { flightLeg, flightSeries, carMap, balloonMap, personMap } =
     storeToRefs(flightStore);
 
+  const canUndo = computed<boolean>(() => {
+    return (
+      snapshot.value !== null && snapshot.value.legId === flightLeg.value?.id
+    );
+  });
+
+  function undoSolve() {
+    const s = snapshot.value;
+    if (!s || !canUndo.value || !flightLeg.value || !flightSeries.value) {
+      return;
+    }
+
+    flightLeg.value.assignments = s.assignments;
+    flightSeries.value.vehicleGroups = s.vehicleGroups;
+    snapshot.value = null;
+  }
+
   async function solve(options?: SolveFlightLegOptions) {
     if (!project.value || !flightSeries.value || !flightLeg.value) {
       throw new Error('No project, flight series or flight leg selected');
     }
+
+    snapshot.value = {
+      legId: flightLeg.value.id,
+      assignments: structuredClone(deepToRaw(flightLeg.value.assignments)),
+      vehicleGroups: structuredClone(
+        deepToRaw(flightSeries.value.vehicleGroups),
+      ),
+    };
 
     const legIndex = flightSeries.value.legs.findIndex(
       (leg) => leg.id === flightLeg.value?.id,
@@ -155,6 +191,8 @@ export function useSolver() {
     solve,
     solveVehicleGroups,
     solveFlightLeg,
+    canUndo,
+    undoSolve,
   };
 }
 

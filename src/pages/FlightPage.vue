@@ -180,6 +180,14 @@
               :disable="!editable"
               @click="onSmartFill"
             />
+
+            <q-fab-action
+              v-if="canUndo"
+              label="Undo Smart Fill"
+              icon="undo"
+              color="warning"
+              @click="undoSolve"
+            />
           </q-fab>
         </q-page-sticky>
       </div>
@@ -219,7 +227,7 @@ const router = useRouter();
 const quasar = useQuasar();
 const projectStore = useProjectStore();
 const flightStore = useFlightStore();
-const { solve } = useSolver();
+const { solve, canUndo, undoSolve } = useSolver();
 
 const { project, isLoading } = storeToRefs(projectStore);
 const { flightSeries, flightLeg } = storeToRefs(flightStore);
@@ -345,7 +353,14 @@ async function smartFill(options: SolveFlightLegOptions) {
       type: 'positive',
       color: 'secondary',
       message: 'Successfully filled flight!',
-      timeout: 1000,
+      timeout: 8000,
+      actions: [
+        {
+          label: 'Undo',
+          color: 'white',
+          handler: undoSolve,
+        },
+      ],
     });
   } catch (error) {
     console.warn(error);

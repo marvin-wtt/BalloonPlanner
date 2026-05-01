@@ -121,12 +121,12 @@ import type { Person, PersonRole } from 'app/src-common/entities';
 import { useDialogPluginComponent } from 'quasar';
 
 const {
-  person,
-  role,
+  person = null,
+  role = null,
   existingNames = [],
 } = defineProps<{
-  person?: Person;
-  role?: PersonRole;
+  person?: Person | null;
+  role?: PersonRole | null;
   existingNames?: string[];
 }>();
 
