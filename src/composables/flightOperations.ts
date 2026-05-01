@@ -134,10 +134,11 @@ export function useFlightOperations() {
       return;
     }
 
-    // Remove canceled flights from all legs
-    series.legs.forEach((leg) =>
-      removeFirst(leg.canceledBalloonIds, (id) => id === balloonId),
-    );
+    // Remove canceled / reduced-capacity flags from all legs
+    series.legs.forEach((leg) => {
+      removeFirst(leg.canceledBalloonIds, (id) => id === balloonId);
+      removeFirst(leg.reducedCapacityBalloonIds, (id) => id === balloonId);
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const group = series.vehicleGroups[idx]!;
@@ -202,6 +203,18 @@ export function useFlightOperations() {
     const leg = requireLeg();
 
     removeFirst(leg.canceledBalloonIds, (id) => id === balloonId);
+  }
+
+  function reduceCapacity(balloonId: ID) {
+    const leg = requireLeg();
+
+    pushUnique(leg.reducedCapacityBalloonIds, balloonId);
+  }
+
+  function restoreCapacity(balloonId: ID) {
+    const leg = requireLeg();
+
+    removeFirst(leg.reducedCapacityBalloonIds, (id) => id === balloonId);
   }
 
   function setVehicleOperator(vehicleId: ID, personId: ID | null) {
@@ -317,6 +330,8 @@ export function useFlightOperations() {
     removeCarFromVehicleGroup,
     cancelFlight,
     reactivateFlight,
+    reduceCapacity,
+    restoreCapacity,
 
     // assignments
     setVehicleOperator,

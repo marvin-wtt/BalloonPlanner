@@ -138,6 +138,7 @@ export const useFlightStore = defineStore('flight', () => {
       id: crypto.randomUUID(),
       assignments: leg.assignments ?? {},
       canceledBalloonIds: [],
+      reducedCapacityBalloonIds: [],
     };
 
     series.legs.push(newLeg);
@@ -157,6 +158,7 @@ export const useFlightStore = defineStore('flight', () => {
       id: crypto.randomUUID(),
       assignments: assignments ?? {},
       canceledBalloonIds: [],
+      reducedCapacityBalloonIds: [],
     };
 
     const newFlight = {

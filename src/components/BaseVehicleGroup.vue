@@ -161,7 +161,14 @@ const reservedCapacityWarning = computed<boolean>(() => {
     0,
   );
 
-  return balloon.value.maxCapacity > availableCapacity;
+  const isReduced = flightLeg.reducedCapacityBalloonIds.includes(
+    group.balloonId,
+  );
+  const effectiveCapacity = isReduced
+    ? balloon.value.maxCapacity - 1
+    : balloon.value.maxCapacity;
+
+  return effectiveCapacity > availableCapacity;
 });
 
 const isCanceled = computed<boolean>(() => {

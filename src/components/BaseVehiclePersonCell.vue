@@ -5,7 +5,7 @@
     :item="person"
     :label="person.name"
     :disabled="!editable"
-    :class="overfilled ? 'text-negative' : ''"
+    :class="{ 'text-negative': overfilled, 'blocked-slot': blocked }"
     @complete="onDragEnd()"
   >
     <div class="row no-wrap items-center">
@@ -83,6 +83,20 @@
     </q-menu>
   </draggable-item>
 
+  <component
+    :is="operator ? 'th' : 'td'"
+    v-else-if="blocked"
+    class="blocked-slot"
+  >
+    <q-icon
+      name="sym_o_do_not_disturb_on"
+      size="xs"
+      class="text-grey-5"
+    >
+      <q-tooltip>Place blocked for this leg</q-tooltip>
+    </q-icon>
+  </component>
+
   <drop-zone
     v-else
     :tag="operator ? 'th' : 'td'"
@@ -133,7 +147,7 @@ const {
 } = useFlightOperations();
 
 const {
-  person,
+  person = null,
   vehicle,
   assignment,
   flightSeries,
@@ -142,8 +156,9 @@ const {
   editable,
   operator,
   overfilled,
+  blocked,
 } = defineProps<{
-  person?: Person;
+  person?: Person | null;
   vehicle: Vehicle;
   assignment: VehicleAssignment;
   flightSeries: FlightSeries;
@@ -152,6 +167,7 @@ const {
   operator?: boolean;
   editable?: boolean;
   overfilled?: boolean;
+  blocked?: boolean;
 }>();
 
 interface StatusInfo {
@@ -191,20 +207,37 @@ const coloredLabels = computed<boolean>(() => {
 
 const status = computed<StatusInfo | undefined>(() => {
   return [
-    overfillStatus,
+    overfillStatus.value,
     operatorInfo.value,
+    blockedStatus.value,
     multiLegStatus.value,
     languageStatus.value,
   ].find((info): info is StatusInfo => info !== false);
 });
 
-const overfillStatus: StatusInfo | false = overfilled
-  ? {
-      icon: 'sym_o_error',
-      color: 'negative',
-      text: 'Vehicle capacity exceeded',
-    }
-  : false;
+const overfillStatus = computed<StatusInfo | false>(() => {
+  if (!overfilled) {
+    return false;
+  }
+
+  return {
+    icon: 'sym_o_error',
+    color: 'negative',
+    text: 'Vehicle capacity exceeded',
+  };
+});
+
+const blockedStatus = computed<StatusInfo | false>(() => {
+  if (!blocked) {
+    return false;
+  }
+
+  return {
+    icon: 'sym_o_do_not_disturb_on',
+    color: 'warning',
+    text: 'Place blocked for this leg',
+  };
+});
 
 const languageStatus = computed<StatusInfo | false>(() => {
   if (!person || !person.languages) {
@@ -445,6 +478,17 @@ function findPreviousGroupLabel(personId: string): string | undefined {
 </script>
 
 <style scoped>
+.blocked-slot {
+  text-align: center;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(0, 0, 0, 0.06) 4px,
+    rgba(0, 0, 0, 0.06) 8px
+  );
+}
+
 /* Compact “badge-like” suffix aligned to the icon */
 .status-suffix {
   margin-left: 2px;

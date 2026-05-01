@@ -64,6 +64,22 @@
                 </q-item>
                 <template v-if="vehicle.type === 'balloon'">
                   <q-item
+                    v-if="!isCapacityReduced"
+                    v-close-popup
+                    clickable
+                    @click="onReduceCapacity()"
+                  >
+                    <q-item-section>Reduce capacity</q-item-section>
+                  </q-item>
+                  <q-item
+                    v-else
+                    v-close-popup
+                    clickable
+                    @click="onRestoreCapacity()"
+                  >
+                    <q-item-section>Restore capacity</q-item-section>
+                  </q-item>
+                  <q-item
                     v-if="!isCanceled"
                     v-close-popup
                     clickable
@@ -154,6 +170,7 @@
             :assignment
             :editable
             :overfilled="c > capacity - 1"
+            :blocked="blockedRow === c"
           />
         </tr>
 
@@ -221,6 +238,8 @@ const {
   editCar,
   cancelFlight,
   reactivateFlight,
+  reduceCapacity,
+  restoreCapacity,
 } = useFlightOperations();
 const quasar = useQuasar();
 const { remainingCapacity } = useFlightUtils();
@@ -326,6 +345,19 @@ const isCanceled = computed<boolean>(() => {
   return flightLeg.canceledBalloonIds.includes(vehicleId);
 });
 
+const isCapacityReduced = computed<boolean>(() => {
+  return flightLeg.reducedCapacityBalloonIds.includes(vehicleId);
+});
+
+// Row index (1-based, matching the v-for "c") of the blocked slot in a balloon.
+// null when not applicable.
+const blockedRow = computed<number | null>(() => {
+  if (vehicle.value.type !== 'balloon' || !isCapacityReduced.value) {
+    return null;
+  }
+  return vehicle.value.maxCapacity - 1;
+});
+
 const showFooter = computed<boolean>(() => {
   if (isOverweight.value) {
     return true;
@@ -340,6 +372,14 @@ function onFlightCancel() {
 
 function onFlightReactivate() {
   reactivateFlight(vehicleId);
+}
+
+function onReduceCapacity() {
+  reduceCapacity(vehicleId);
+}
+
+function onRestoreCapacity() {
+  restoreCapacity(vehicleId);
 }
 
 function onVehicleRemoved() {

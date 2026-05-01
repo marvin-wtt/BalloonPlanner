@@ -49,6 +49,7 @@ export type VehicleAssignmentMap = Record<ID, VehicleAssignment>;
 
 export interface FlightLeg extends Identifiable {
   canceledBalloonIds: ID[];
+  reducedCapacityBalloonIds: ID[];
   assignments: VehicleAssignmentMap;
 }
 

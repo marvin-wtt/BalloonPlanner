@@ -88,7 +88,10 @@ export function useSolver() {
       throw new Error('No project, flight series or flight leg selected');
     }
 
-    const balloons = Object.values(balloonMap.value);
+    const reducedIds = new Set(flightLeg.value.reducedCapacityBalloonIds);
+    const balloons = Object.values(balloonMap.value).map((b) =>
+      reducedIds.has(b.id) ? { ...b, maxCapacity: b.maxCapacity - 1 } : b,
+    );
     const cars = Object.values(carMap.value);
 
     const numberOfFlights = countFlightsBeforeFlightLeg(

@@ -51,6 +51,18 @@ const migrations: Record<string, Migration> = {
       })),
     };
   },
+  '1.0.5': (data) => {
+    return {
+      ...data,
+      flights: data.flights.map((flight) => ({
+        ...flight,
+        legs: flight.legs.map((leg) => ({
+          ...leg,
+          reducedCapacityBalloonIds: [],
+        })),
+      })),
+    };
+  },
 };
 
 export function getAppVersion() {

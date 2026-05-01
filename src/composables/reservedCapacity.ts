@@ -10,12 +10,17 @@ function useFlightUtils() {
       throw new Error('Balloon not found');
     }
 
+    const isReduced =
+      flightStore.flightLeg?.reducedCapacityBalloonIds.includes(
+        group.balloonId,
+      ) ?? false;
+
     const cars = group.carIds
       .map((id) => flightStore.carMap[id])
       .filter((car) => car !== undefined);
 
     const resultMaxCapacity: Record<string, number> = {};
-    let seatsToBlock = balloon.maxCapacity;
+    let seatsToBlock = isReduced ? balloon.maxCapacity - 1 : balloon.maxCapacity;
     for (const car of cars) {
       // Reserve sone place for the driver
       const availableCapacity = car.maxCapacity - 1;
