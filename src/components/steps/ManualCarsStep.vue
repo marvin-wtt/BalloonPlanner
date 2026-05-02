@@ -133,9 +133,9 @@ const columns: QTableColumn[] = [
       val.map((id) => personMap.value[id]?.name).join(', '),
   },
   {
-    name: 'trailerHitch',
-    label: 'Trailer Hitch',
-    field: 'hasTrailerHitch',
+    name: 'trailerClutch',
+    label: 'Trailer Clutch',
+    field: 'hasTrailerClutch',
     align: 'center',
     format: (val: boolean) => (val ? '\u2713' : 'X'),
   },

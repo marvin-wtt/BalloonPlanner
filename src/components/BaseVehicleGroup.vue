@@ -129,7 +129,7 @@ const styleClass = computed<string>(() => {
 });
 
 const warningText = computed<string | null>(() => {
-  if (trailerHitchWarning.value) {
+  if (trailerClutchWarning.value) {
     return 'The group is missing a trailer clutch';
   }
 
@@ -150,7 +150,7 @@ const balloon = computed<Balloon>(() => {
   return balloonMap.value[group.balloonId]!;
 });
 
-const trailerHitchWarning = computed<boolean>(() => {
+const trailerClutchWarning = computed<boolean>(() => {
   return (
     group.balloonId !== NULL_ID &&
     !cars.value.some((car) => car.hasTrailerClutch)
