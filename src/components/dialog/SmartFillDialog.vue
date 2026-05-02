@@ -83,7 +83,7 @@
                     </q-item-section>
                     <q-item-section avatar>
                       <q-toggle
-                        v-model="options.constrains.commonLanguageOperators"
+                        v-model="options.constrains.commonLanguagePassengers"
                         color="primary"
                       />
                     </q-item-section>
@@ -357,8 +357,23 @@ const options = reactive<
   Require<SolveFlightLegOptions, 'weights' | 'constrains'>
 >({
   planningHorizonDepth: 0,
-  weights: {},
-  constrains: {},
+  timeLimit: 600,
+  weights: {
+    counselorFlightDiscount: 0.9,
+    passengerFairness: 30,
+    tiebreakFairness: 1,
+    groupRotation: 5,
+    groupPassengerBalance: 7,
+    pilotFairness: 5,
+    noSoloParticipant: 100,
+    meetingNewPeople: 1,
+    diverseNationalities: 3,
+    lowFlightsLookahead: 30,
+  },
+  constrains: {
+    commonLanguagePassengers: true,
+    commonLanguageOperators: true,
+  },
 });
 
 const signedIntegerRule = (val?: number): boolean | string => {
