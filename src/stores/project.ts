@@ -57,6 +57,7 @@ export const useProjectStore = defineStore('project', () => {
               id: crypto.randomUUID(),
               assignments: {},
               canceledBalloonIds: [],
+              reducedCapacityBalloonIds: [],
             },
           ],
         },
