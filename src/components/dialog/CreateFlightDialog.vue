@@ -183,11 +183,18 @@ function onSubmit() {
     submit({
       mode: 'series',
       vehicleGroups: referenceFlight.value
-        ? referenceFlight.value.vehicleGroups
+        ? cloneVehicleGroups(referenceFlight.value.vehicleGroups)
         : undefined,
       assignments: createAssignments(),
     });
   }
+}
+
+function cloneVehicleGroups(groups: VehicleGroup[]): VehicleGroup[] {
+  return groups.map((g) => ({
+    balloonId: g.balloonId,
+    carIds: [...g.carIds],
+  }));
 }
 
 function createAssignments(): VehicleAssignmentMap {
@@ -245,7 +252,7 @@ function getLatestLeg(): FlightLeg | undefined {
     return flightSeries.value.legs[flightSeries.value.legs.length - 1];
   }
 
-  const series = flights[flights.length - 1];
+  const series = referenceFlight.value;
   if (!series) {
     return undefined;
   }
