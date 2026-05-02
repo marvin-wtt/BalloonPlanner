@@ -131,14 +131,12 @@
                     <span
                       v-if="v.group"
                       class="group-label q-ml-xs"
+                      :class="{
+                        'text-primary': v.kind === 'balloon',
+                        'text-bold': v.kind === 'balloon',
+                      }"
                     >
                       [{{ v.group }}]
-                    </span>
-                    <span
-                      v-if="v.isOperator"
-                      class="text-grey-6 q-ml-xs operator-label"
-                    >
-                      op.
                     </span>
                   </div>
                 </q-item-label>
