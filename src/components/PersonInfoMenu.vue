@@ -3,148 +3,154 @@
     anchor="top right"
     self="top start"
   >
-    <q-card class="person-info-menu column no-wrap">
-      <!-- Header: name, languages, weight (very compact) -->
+    <q-card class="person-info-menu">
+      <!-- Header -->
       <q-card-section class="q-pa-sm q-pb-xs">
-        <div class="row items-center justify-between no-wrap">
-          <div class="row items-center no-wrap">
-            <q-avatar
-              size="24px"
-              :color="person.role === 'counselor' ? 'secondary' : 'primary'"
-              text-color="white"
-              class="q-mr-sm"
-            >
+        <div class="row items-start no-wrap q-gutter-sm">
+          <q-avatar
+            size="32px"
+            :color="person.role === 'counselor' ? 'secondary' : 'primary'"
+            text-color="white"
+          >
+            <q-icon
+              name="person"
+              size="20px"
+            />
+          </q-avatar>
+
+          <div class="col-grow">
+            <div class="row items-center no-wrap q-mb-none">
+              <div class="text-subtitle2 col-shrink ellipsis q-mr-xs">
+                {{ person.name }}
+              </div>
               <q-icon
-                name="person"
+                v-if="person.firstTime"
+                name="grade"
                 size="16px"
-              />
-            </q-avatar>
-
-            <div class="column">
-              <div class="row items-center no-wrap">
-                <div class="text-subtitle2 ellipsis q-mr-xs">
-                  {{ person.name }}
-                </div>
-
-                <div
-                  v-if="hasLanguages"
-                  class="row items-center"
-                >
-                  <q-chip
-                    v-for="lang in person.languages"
-                    :key="lang"
-                    dense
-                    size="sm"
-                    class="q-pa-xs q-mr-xs"
-                  >
-                    {{ lang }}
-                  </q-chip>
-                </div>
-              </div>
-
-              <div
-                v-if="hasWeight"
-                class="text-caption text-grey-7"
+                color="amber-7"
+                class="q-ml-xs"
               >
-                {{ person.weight }}&nbsp;kg
-              </div>
+                <q-tooltip>First flight</q-tooltip>
+              </q-icon>
+            </div>
+
+            <div class="text-caption text-grey-7">
+              <span>{{ roleLabel }}</span>
+              <template v-if="nationalityLabel">
+                <span class="text-grey-5"> · </span>
+                <span>{{ nationalityLabel }}</span>
+              </template>
+              <template v-if="hasWeight">
+                <span class="text-grey-5"> · </span>
+                <span>{{ person.weight }}&thinsp;kg</span>
+              </template>
+            </div>
+
+            <div
+              v-if="hasLanguages"
+              class="row items-center no-wrap q-mt-xs q-gutter-xs"
+            >
+              <q-chip
+                v-for="lang in person.languages"
+                :key="lang"
+                dense
+                size="sm"
+                class="q-ma-none q-px-xs"
+              >
+                {{ lang }}
+              </q-chip>
             </div>
           </div>
         </div>
       </q-card-section>
 
-      <!-- Divider + section title for flights -->
-      <q-separator
-        v-if="hasHistory"
-        spaced
-        inset
-      />
+      <!-- Flight history -->
+      <template v-if="hasHistory">
+        <q-separator
+          spaced
+          inset
+        />
 
-      <q-card-section
-        v-if="hasHistory"
-        class="q-pa-xs q-pt-none"
-      >
-        <div class="row items-center q-px-xs q-mb-xs text-caption text-grey-6">
-          <q-icon
-            name="flight_takeoff"
-            size="16px"
-            class="q-mr-xs"
-          />
-          <span>Flights</span>
-        </div>
-
-        <q-list
-          dense
-          class="person-history-list"
-        >
-          <q-item
-            v-for="flight in flightHistory"
-            :key="flight.seriesId"
-            dense
-            :active="flight.isCurrentFlight"
-            active-class="person-history-active"
+        <q-card-section class="q-pa-xs q-pt-none">
+          <div
+            class="row items-center q-px-xs q-mb-xs text-caption text-grey-6"
           >
-            <q-item-section>
-              <!-- Flight header -->
-              <q-item-label class="flight-title text-caption">
-                <q-chip
-                  dense
-                  size="sm"
-                  class="q-mr-xs flight-index-chip"
-                >
-                  {{ flight.seriesIndex + 1 }}
-                </q-chip>
+            <q-icon
+              name="flight_takeoff"
+              size="14px"
+              class="q-mr-xs"
+            />
+            <span>Flights</span>
+          </div>
 
-                <span>Flight {{ flight.seriesIndex + 1 }}</span>
-                <span v-if="flight.isCurrentFlight"> · current</span>
-              </q-item-label>
+          <q-list
+            dense
+            class="person-history-list"
+          >
+            <q-item
+              v-for="flight in flightHistory"
+              :key="flight.seriesId"
+              dense
+              :active="flight.isCurrentFlight"
+              active-class="person-history-active"
+            >
+              <q-item-section>
+                <q-item-label class="flight-header text-caption">
+                  <span class="text-weight-medium">{{
+                    flightLabel(flight)
+                  }}</span>
+                  <q-badge
+                    v-if="flight.isCurrentFlight"
+                    color="primary"
+                    class="q-ml-xs"
+                  >
+                    now
+                  </q-badge>
+                </q-item-label>
 
-              <!-- Vehicles vertically -->
-              <q-item-label class="flight-vehicles text-caption">
-                <div class="column">
+                <q-item-label class="text-caption q-mt-xs">
                   <div
                     v-for="v in flight.vehicles"
                     :key="v.id"
-                    class="row items-center q-mb-xs flight-vehicle-row"
-                    :class="{ 'flight-vehicle-balloon': v.kind === 'balloon' }"
+                    class="row items-center q-mb-xs vehicle-row"
+                    :class="
+                      v.kind === 'balloon'
+                        ? 'vehicle-row--balloon'
+                        : 'vehicle-row--car'
+                    "
                   >
                     <q-icon
                       :name="
                         v.kind === 'balloon' ? 'flight' : 'airport_shuttle'
                       "
-                      size="16px"
+                      :color="v.kind === 'balloon' ? 'primary' : 'grey-6'"
+                      size="14px"
                       class="q-mr-xs"
                     />
-
-                    <div class="ellipsis">
-                      {{ v.name }}
-                      <span
-                        v-if="v.isOperator"
-                        class="text-italic"
-                      >
-                        (op)</span
-                      >
-                    </div>
-
-                    <q-chip
+                    <span class="ellipsis col-grow">{{ v.name }}</span>
+                    <span
                       v-if="v.group"
-                      dense
-                      size="xs"
-                      class="q-ml-xs flight-group-chip"
+                      class="group-label q-ml-xs"
                     >
-                      {{ v.group }}
-                    </q-chip>
+                      [{{ v.group }}]
+                    </span>
+                    <span
+                      v-if="v.isOperator"
+                      class="text-grey-6 q-ml-xs operator-label"
+                    >
+                      op.
+                    </span>
                   </div>
-                </div>
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-card-section>
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+      </template>
 
       <!-- Empty state -->
       <q-card-section
-        v-if="!hasLanguages && !hasWeight && !hasHistory"
+        v-if="isEmpty"
         class="q-pa-sm text-caption text-grey-6 text-center"
       >
         No additional information.
@@ -173,11 +179,25 @@ const { person, flightSeries } = defineProps<{
   flightSeries: FlightSeries;
 }>();
 
+const NATIONALITY_LABELS: Record<string, string> = {
+  de: 'German',
+  fr: 'French',
+};
+
 const hasLanguages = computed(
   () => !!person.languages && person.languages.length > 0,
 );
 
 const hasWeight = computed(() => typeof person.weight === 'number');
+
+const nationalityLabel = computed<string | undefined>(
+  () =>
+    NATIONALITY_LABELS[person.nationality] ?? (person.nationality || undefined),
+);
+
+const roleLabel = computed<string>(() =>
+  person.role === 'counselor' ? 'Counselor' : 'Participant',
+);
 
 interface VehicleInFlightSummary {
   id: ID;
@@ -190,7 +210,6 @@ interface VehicleInFlightSummary {
 interface FlightHistorySummary {
   seriesId: ID;
   seriesIndex: number;
-  date?: string;
   isCurrentFlight: boolean;
   vehicles: VehicleInFlightSummary[];
 }
@@ -213,12 +232,8 @@ function resolveVehicle(vehicleId: ID): {
 }
 
 const flightHistory = computed<FlightHistorySummary[]>(() => {
-  if (!project.value) {
-    // fallback: only current series
-    return buildHistoryForSeriesList([flightSeries], person.id);
-  }
-
-  return buildHistoryForSeriesList(project.value.flights, person.id);
+  const seriesList = project.value?.flights ?? [flightSeries];
+  return buildHistoryForSeriesList(seriesList, person.id);
 });
 
 function buildHistoryForSeriesList(
@@ -268,19 +283,17 @@ function buildHistoryForSeriesList(
     });
 
     const vehicles = Array.from(vehicleMapForSeries.values());
+    vehicles.sort((a, b) => {
+      if (a.kind === b.kind) return 0;
+      if (a.kind === 'balloon') return -1;
+      if (b.kind === 'balloon') return 1;
+      return 0;
+    });
 
     if (vehicles.length > 0) {
-      // vehicles.sort((a, b) => {
-      //   if (a.kind === b.kind) return 0;
-      //   if (a.kind === 'balloon') return -1;
-      //   if (b.kind === 'balloon') return 1;
-      //   return 0;
-      // });
-
       result.push({
         seriesId: series.id,
         seriesIndex,
-        date: series.date,
         isCurrentFlight: series.id === flightSeries.id,
         vehicles,
       });
@@ -290,60 +303,63 @@ function buildHistoryForSeriesList(
   return result;
 }
 
+function flightLabel(flight: FlightHistorySummary): string {
+  return `Flight ${(flight.seriesIndex + 1).toString()}`;
+}
+
 const hasHistory = computed(() => flightHistory.value.length > 0);
+
+const isEmpty = computed(
+  () =>
+    !hasLanguages.value &&
+    !hasWeight.value &&
+    !hasHistory.value &&
+    !person.firstTime &&
+    !nationalityLabel.value,
+);
 </script>
 
 <style scoped>
 .person-info-menu {
-  min-width: 180px;
-  max-width: 260px;
+  min-width: 200px;
 }
 
 .person-history-list {
-  max-height: 220px;
+  max-height: 240px;
   overflow-y: auto;
 }
 
-.person-history-list :deep(.q-item) {
-  padding-top: 4px;
-  padding-bottom: 4px;
-  margin-bottom: 4px;
-  border-radius: 18px;
-}
-
-.person-history-active {
-  background: rgba(0, 0, 0, 0.06);
-  color: inherit;
-}
-
-.person-history-active :deep(.q-item__label) {
-  color: inherit;
-}
-
-.flight-title {
+.flight-header {
   display: flex;
   align-items: center;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
-.flight-index-chip {
-  padding: 0 4px;
-}
-
-.flight-vehicles {
-  margin-top: 2px;
-}
-
-.flight-vehicle-row {
+.vehicle-row {
   font-size: 11px;
+  line-height: 1.4;
 }
 
-.flight-vehicle-balloon {
+.vehicle-row--balloon {
   font-weight: 600;
 }
 
-.flight-group-chip {
+.vehicle-row--car {
+  color: rgba(0, 0, 0, 0.54);
   font-size: 10px;
-  padding: 0 4px;
+}
+
+.group-label {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: monospace;
+  color: rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.operator-label {
+  font-size: 10px;
+  font-style: italic;
+  flex-shrink: 0;
 }
 </style>
