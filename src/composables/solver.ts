@@ -155,6 +155,11 @@ export function useSolver() {
       flightSeries.value.id,
     );
 
+    const balloonHistory = buildBalloonHistory(
+      project.value,
+      flightSeries.value.id,
+    );
+
     const peopleMeetHistory = buildPeopleMeetHistory(
       project.value.flights,
       flightSeries.value.id,
@@ -170,6 +175,7 @@ export function useSolver() {
         vehicleGroups,
         preAssignments,
         groupHistory,
+        balloonHistory,
         peopleMeetHistory,
         fixedGroups,
         options,
@@ -260,6 +266,32 @@ function buildGroupHistory(
         (acc[pid] ??= {})[gid] = (acc[pid][gid] ?? 0) + 1;
       });
 
+      return acc;
+    }, {});
+}
+
+function buildBalloonHistory(
+  project: Project,
+  seriesId: string,
+): Record<ID, Record<ID, number>> {
+  const balloonIds = new Set(project.balloons.map((b) => b.id));
+
+  return project.flights
+    .filter((series) => series.id !== seriesId)
+    .flatMap((series) => series.legs)
+    .reduce<Record<ID, Record<ID, number>>>((acc, leg) => {
+      Object.entries(leg.assignments)
+        .filter(([vehicleId]) => balloonIds.has(vehicleId))
+        .filter(([vehicleId]) => !leg.canceledBalloonIds.includes(vehicleId))
+        .forEach(([balloonId, assignment]) => {
+          const people = [
+            ...(assignment.operatorId ? [assignment.operatorId] : []),
+            ...assignment.passengerIds,
+          ];
+          people.forEach((pid) => {
+            (acc[pid] ??= {})[balloonId] = (acc[pid][balloonId] ?? 0) + 1;
+          });
+        });
       return acc;
     }, {});
 }

@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "postinstall": "quasar prepare",
-    "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
+    "lint": "vue-tsc --noEmit && eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "dev": "quasar dev -m electron",
     "build": "quasar build -m electron"

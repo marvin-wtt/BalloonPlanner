@@ -66,7 +66,7 @@
                 </q-list>
               </q-expansion-item>
               <q-expansion-item
-                label="Constrains"
+                label="Constraints"
                 group="options"
                 :header-inset-level="0.2"
                 :content-inset-level="0.4"
@@ -83,7 +83,7 @@
                     </q-item-section>
                     <q-item-section avatar>
                       <q-toggle
-                        v-model="options.constrains.commonLanguagePassengers"
+                        v-model="options.constraints.commonLanguagePassengers"
                         color="primary"
                       />
                     </q-item-section>
@@ -100,7 +100,7 @@
                     </q-item-section>
                     <q-item-section avatar>
                       <q-toggle
-                        v-model="options.constrains.commonLanguageOperators"
+                        v-model="options.constraints.commonLanguageOperators"
                         color="primary"
                       />
                     </q-item-section>
@@ -167,7 +167,24 @@
                       <q-input
                         v-model.number="options.weights.groupRotation"
                         label="Vehicle Rotation"
-                        hint="Higher values try to rotate people through different balloons"
+                        hint="Higher values try to rotate people through different groups"
+                        type="number"
+                        step="1"
+                        :rules="[signedIntegerRule]"
+                        hide-bottom-space
+                        clearable
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
+                  <q-item>
+                    <q-item-section>
+                      <q-input
+                        v-model.number="options.weights.balloonRotation"
+                        label="Balloon Rotation"
+                        hint="Higher values try to rotate passengers across different balloons"
                         type="number"
                         step="1"
                         :rules="[signedIntegerRule]"
@@ -354,7 +371,7 @@ type Require<T, K extends keyof T> = T & {
 };
 
 const options = reactive<
-  Require<SolveFlightLegOptions, 'weights' | 'constrains'>
+  Require<SolveFlightLegOptions, 'weights' | 'constraints'>
 >({
   planningHorizonDepth: 0,
   timeLimit: 600,
@@ -363,6 +380,7 @@ const options = reactive<
     passengerFairness: 30,
     tiebreakFairness: 1,
     groupRotation: 5,
+    balloonRotation: 10,
     groupPassengerBalance: 7,
     pilotFairness: 5,
     noSoloParticipant: 100,
@@ -370,7 +388,7 @@ const options = reactive<
     diverseNationalities: 3,
     lowFlightsLookahead: 30,
   },
-  constrains: {
+  constraints: {
     commonLanguagePassengers: true,
     commonLanguageOperators: true,
   },

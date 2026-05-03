@@ -58,8 +58,9 @@ export interface SolveFlightLegRequest {
       passengerIds: ID[];
     }
   >; // key: vehicleId
-  groupHistory?: Record<ID, Record<ID, number>>; // key: personId, value: balloonIds -> count
-  peopleMeetHistory?: Record<ID, Record<ID, number>>; // key: personId, value: balloonIds -> count
+  groupHistory?: Record<ID, Record<ID, number>>; // key: personId, value: groupId (balloonId) -> count
+  balloonHistory?: Record<ID, Record<ID, number>>; // key: personId, value: balloonId -> count (only actual balloon flights)
+  peopleMeetHistory?: Record<ID, Record<ID, number>>; // key: personId, value: personId -> count
   fixedGroups?: Record<ID, ID>;
 
   people: {
@@ -77,20 +78,23 @@ export interface SolveFlightLegRequest {
 
 export interface SolveFlightLegOptions extends Record<string, unknown> {
   weights?: SolveFlightLegWeights;
-  constrains?: SolveFlightLegConstrains;
+  constraints?: SolveFlightLegConstraints;
 
   planningHorizonDepth?: number;
   counselorFlightDiscount?: number;
   timeLimit?: number;
 }
 
-export interface SolveFlightLegWeights
-  extends Record<string, number | undefined> {
+export interface SolveFlightLegWeights extends Record<
+  string,
+  number | undefined
+> {
   pilotFairness?: number;
   passengerFairness?: number;
   meetingNewPeople?: number;
   tiebreakFairness?: number;
   groupRotation?: number;
+  balloonRotation?: number;
   diverseNationalities?: number;
   noSoloParticipant?: number;
   groupPassengerBalance?: number;
@@ -98,8 +102,10 @@ export interface SolveFlightLegWeights
   defaultPersonWeight?: number;
 }
 
-export interface SolveFlightLegConstrains
-  extends Record<string, boolean | undefined> {
+export interface SolveFlightLegConstraints extends Record<
+  string,
+  boolean | undefined
+> {
   commonLanguageOperators?: boolean;
   commonLanguagePassengers?: boolean;
 }

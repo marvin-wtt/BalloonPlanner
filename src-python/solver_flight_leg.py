@@ -57,11 +57,12 @@ def solve_flight_leg(
     vehicle_groups: Dict[str, List[str]],
     *,
     group_history: Optional[Dict[str, Dict[str, int]]],
+    balloon_history: Optional[Dict[str, Dict[str, int]]],
     people_meet_history: Optional[Dict[str, Dict[str, int]]],
     frozen: Optional[Dict[str, VehicleAssignment]],
     fixed_groups: Optional[Dict[str, str]],
     planning_horizon_legs: int,
-    # Constrains
+    # Constraints
     c_common_language_passengers: bool,
     c_common_language_operators: bool,
     # soft weights
@@ -73,6 +74,7 @@ def solve_flight_leg(
     w_new_meetings: int,
     w_group_passenger_balance: int,
     w_group_rotation: int,
+    w_balloon_rotation: int,
     w_low_flights_lookahead: int,
     counselor_flight_discount: float,
     # misc
@@ -443,6 +445,34 @@ def solve_flight_leg(
             nf = 1.0 / (1.0 + float(group_history.get(p, {}).get(v, 0)))
             # scale the novelty reward for passengers; subtract op to avoid rewarding operators
             objective_terms.append(-w_group_rotation * nf * (pax[p, v] - op[p, v]))
+
+    # 3.6b balloon passenger rotation
+    # Rewards putting passengers in balloons they have not flown in before.
+    if w_balloon_rotation != 0 and balloon_history:
+        for p in person_ids:
+            for v in balloon_ids:
+                past = float(balloon_history.get(p, {}).get(v, 0))
+                nf = 1.0 / (1.0 + past)
+                # pax[p,v] - op[p,v] is 1 only for non-operator balloon passengers
+                objective_terms.append(
+                    -w_balloon_rotation * nf * (pax[p, v] - op[p, v])
+                )
+
+    # 3.6c balloon rotation lookahead: prepare cars for next leg
+    # On leg 1 (fixed_groups is None), reward placing high-novelty people in cars
+    # of groups where they haven't flown before. The stay-in-group constraint
+    # (2.7) then keeps them in that group for leg 2, where they can fly in that balloon.
+    if (
+        w_balloon_rotation != 0
+        and balloon_history
+        and fixed_groups is None
+        and planning_horizon_legs >= 1
+    ):
+        for p in person_ids:
+            for bid in balloon_ids:
+                nf = 1.0 / (1.0 + float(balloon_history.get(p, {}).get(bid, 0)))
+                for cid in vehicle_groups.get(bid, []):
+                    objective_terms.append(-w_balloon_rotation * nf * pax[p, cid])
 
     # 3.7 language-aware lookahead: prioritise low-flight pax in group cars (no overweight lookahead)
     if w_low_flights_lookahead != 0 and planning_horizon_legs >= 1 and person_ids:

@@ -19,7 +19,7 @@ from solver_vehicle_group import solve_vehicle_groups
 
 def _emit_error(msg: str, *, exit_code: int = 1) -> None:
     try:
-        json.dump({"message": msg}, sys.stdout)
+        json.dump({"message": msg}, sys.stderr)
         sys.stdout.write("\n")
     finally:
         sys.exit(exit_code)
@@ -83,7 +83,7 @@ def _handle_build_groups(payload: Dict[str, Any]) -> Dict[str, Any]:
 def _handle_solve_leg(payload: Dict[str, Any], args: Namespace | Any = None):
     options = payload.get("options", {})
     weights = options.get("weights", {})
-    constrains = options.get("constrains", {})
+    constraints = options.get("constraints", {})
 
     return solve_flight_leg(
         balloons=payload.get("balloons", []),
@@ -91,6 +91,7 @@ def _handle_solve_leg(payload: Dict[str, Any], args: Namespace | Any = None):
         people=payload.get("people", []),
         vehicle_groups=payload.get("vehicleGroups"),
         group_history=payload.get("groupHistory"),
+        balloon_history=payload.get("balloonHistory"),
         people_meet_history=payload.get("peopleMeetHistory"),
         frozen=payload.get("preAssignments"),
         fixed_groups=payload.get("fixedGroups"),
@@ -99,13 +100,14 @@ def _handle_solve_leg(payload: Dict[str, Any], args: Namespace | Any = None):
         planning_horizon_legs=options.get("planningHorizonDepth", 0),
         default_person_weight=options.get("defaultPersonWeight", 80),
         # solver constraints
-        c_common_language_operators=constrains.get("commonLanguageOperators", True),
-        c_common_language_passengers=constrains.get("commonLanguagePassengers", True),
+        c_common_language_operators=constraints.get("commonLanguageOperators", True),
+        c_common_language_passengers=constraints.get("commonLanguagePassengers", True),
         # solver weights
         w_passenger_fairness=weights.get("passengerFairness", 30),
         w_pilot_fairness=weights.get("pilotFairness", 5),
         w_tiebreak_fairness=weights.get("tiebreakFairness", 1),
         w_group_rotation=weights.get("groupRotation", 5),
+        w_balloon_rotation=weights.get("balloonRotation", 10),
         w_group_passenger_balance=weights.get("groupPassengerBalance", 7),
         w_no_solo_participant=weights.get("noSoloParticipant", 100),
         w_new_meetings=weights.get("meetingNewPeople", 1),
