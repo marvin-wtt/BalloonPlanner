@@ -417,6 +417,14 @@ export const useFlightStore = defineStore('flight', () => {
     return counts;
   });
 
+  function updateFlightSeriesDate(seriesId: ID, date: string) {
+    const series = project.value?.flights.find((s) => s.id === seriesId);
+    if (!series) {
+      throw new Error('Flight series not found');
+    }
+    series.date = date;
+  }
+
   return {
     // Computed
     flightSeries,
@@ -436,6 +444,7 @@ export const useFlightStore = defineStore('flight', () => {
     mergeSeries,
     deleteFlightSeries,
     deleteFlightLeg,
+    updateFlightSeriesDate,
   };
 });
 

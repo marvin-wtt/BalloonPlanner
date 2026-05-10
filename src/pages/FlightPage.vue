@@ -16,7 +16,7 @@
         :class="menuClasses"
       >
         <q-tabs
-          v-model="menuTabs"
+          :model-value="menuTab"
           vertical
           active-bg-color="grey-6"
           class="bg-grey-10 text-white column justify-between"
@@ -35,10 +35,11 @@
             label="Balloons"
             name="balloons"
             icon="flight"
+            @click.prevent="onTabClick('balloons')"
           >
             <q-badge
               v-if="showBalloonsMenuBadge"
-              color="red"
+              color="primary"
               floating
             >
               {{ availableBalloons.length }}
@@ -48,10 +49,11 @@
             label="Cars"
             name="cars"
             icon="airport_shuttle"
+            @click.prevent="onTabClick('cars')"
           >
             <q-badge
               v-if="showCarsMenuBadge"
-              color="red"
+              color="primary"
               floating
             >
               {{ availableCars.length }}
@@ -59,12 +61,13 @@
           </q-tab>
           <q-tab
             label="Counselors"
-            name="supervisors"
+            name="counselors"
             icon="supervisor_account"
+            @click.prevent="onTabClick('counselors')"
           >
             <q-badge
               v-if="showCounselorsMenuBadge"
-              color="red"
+              color="primary"
               floating
             >
               {{ availableCounselors.length }}
@@ -74,10 +77,11 @@
             label="Participants"
             name="participants"
             icon="group"
+            @click.prevent="onTabClick('participants')"
           >
             <q-badge
               v-if="showParticipantsMenuBadge"
-              color="red"
+              color="primary"
               floating
             >
               {{ availableParticipants.length }}
@@ -92,15 +96,16 @@
             label="Settings"
             name="settings"
             icon="settings"
+            @click.prevent="onTabClick('settings')"
           />
         </q-tabs>
 
         <div
-          v-if="menuTabs !== 'overview'"
+          v-if="menuTab !== 'overview'"
           class="col-grow self-stretch column"
         >
           <q-tab-panels
-            v-model="menuTabs"
+            v-model="menuTab"
             animated
             transition-next="jump-up"
             transition-prev="jump-down"
@@ -118,7 +123,7 @@
             />
 
             <flight-people-panel
-              name="supervisors"
+              name="counselors"
               role="counselor"
               :people="availableCounselors"
             />
@@ -237,7 +242,7 @@ const { clearLegPassengers } = useFlightOperations();
 
 enableDragDropTouch();
 
-const menuTabs = ref('overview');
+const menuTab = ref('overview');
 const editable = ref<boolean>(true);
 const panelItemDragging = ref<boolean>(false);
 
@@ -250,6 +255,10 @@ provide('flight-panel-list-dragging', (dragging: boolean) => {
 
 onMounted(onRouteUpdate);
 watch(() => route.params, onRouteUpdate);
+
+function onTabClick(name: string) {
+  menuTab.value = name === menuTab.value ? 'overview' : name;
+}
 
 async function onRouteUpdate() {
   let { projectId, flightId } = route.params;
@@ -461,11 +470,11 @@ const availableCounselors = computed<Person[]>(() => {
 });
 
 const showFab = computed<boolean>(() => {
-  return !quasar.screen.xs || menuTabs.value === 'overview';
+  return !quasar.screen.xs || menuTab.value === 'overview';
 });
 
 const menuClasses = computed<string>(() => {
-  return menuTabs.value !== 'overview'
+  return menuTab.value !== 'overview'
     ? 'col-xl-3 col-lg-3 col-md-4 col-sm-6 col-xs-12'
     : '';
 });

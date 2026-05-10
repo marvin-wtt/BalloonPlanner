@@ -14,8 +14,12 @@
         @click="changeSeries(series.id)"
       >
         <q-item-section>
-          <q-item-label>
-            {{ seriesName(index) }}
+          <q-item-label>{{ seriesName(index) }}</q-item-label>
+          <q-item-label
+            v-if="series.date"
+            caption
+          >
+            {{ formatDate(series.date) }}
           </q-item-label>
         </q-item-section>
         <q-item-section side>
@@ -32,10 +36,17 @@
                 <q-item
                   v-close-popup
                   clickable
+                  @click="editSeriesDate(series.id, series.date)"
+                >
+                  <q-item-section>Edit date</q-item-section>
+                </q-item>
+                <q-item
+                  v-close-popup
+                  clickable
                   :disable="project.flights[0]?.id === series.id"
                   @click="mergeSeries(series.id)"
                 >
-                  <q-item-section class="text-warning"> Merge </q-item-section>
+                  <q-item-section class="text-warning">Merge</q-item-section>
                 </q-item>
                 <q-item
                   v-close-popup
@@ -43,9 +54,7 @@
                   :disable="project.flights.length === 1"
                   @click="deleteSeries(series.id)"
                 >
-                  <q-item-section class="text-negative">
-                    Delete
-                  </q-item-section>
+                  <q-item-section class="text-negative">Delete</q-item-section>
                 </q-item>
               </q-list>
             </q-menu>
@@ -72,9 +81,7 @@
         @click="changeLeg(leg.id)"
       >
         <q-item-section>
-          <q-item-label>
-            {{ legName(index) }}
-          </q-item-label>
+          <q-item-label>{{ legName(index) }}</q-item-label>
         </q-item-section>
         <q-item-section side>
           <q-btn
@@ -101,9 +108,7 @@
                   clickable
                   @click="deleteLeg(leg.id)"
                 >
-                  <q-item-section class="text-negative">
-                    Delete
-                  </q-item-section>
+                  <q-item-section class="text-negative">Delete</q-item-section>
                 </q-item>
               </q-list>
             </q-menu>
@@ -123,7 +128,9 @@
       dense
       :loading="addFlightLoading"
       @click="addFlight"
-    />
+    >
+      <q-tooltip>Add flight or leg</q-tooltip>
+    </q-btn>
   </template>
 </template>
 
@@ -138,6 +145,7 @@ import { useQuasar } from 'quasar';
 import CreateFlightDialog, {
   type CreateFlightDialogData,
 } from 'components/dialog/CreateFlightDialog.vue';
+import EditFlightDateDialog from 'components/dialog/EditFlightDateDialog.vue';
 import { useErrorHelper } from 'src/composables/error';
 
 const quasar = useQuasar();
@@ -180,6 +188,17 @@ function legName(index: number): string {
   return `Leg ${(index + 1).toString()}`;
 }
 
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const day = d.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+  const period = d.getUTCHours() < 12 ? 'Morning' : 'Evening';
+  return `${day} · ${period}`;
+}
+
 function addFlight() {
   if (!project.value) {
     return false;
@@ -199,6 +218,7 @@ function addFlight() {
         const flight = flightStore.createFlightSeries(
           {
             vehicleGroups: data.vehicleGroups,
+            date: data.date,
           },
           data.assignments,
         );
@@ -278,6 +298,22 @@ function deleteLeg(flightId: ID) {
   withErrorNotification(() => {
     flightStore.deleteFlightLeg(flightId);
   });
+}
+
+function editSeriesDate(seriesId: ID, currentDate?: string) {
+  quasar
+    .dialog({
+      component: EditFlightDateDialog,
+      componentProps: { initialDate: currentDate },
+    })
+    .onOk((date: string | undefined) => {
+      withErrorNotification(() => {
+        flightStore.updateFlightSeriesDate(
+          seriesId,
+          date ?? new Date().toISOString(),
+        );
+      });
+    });
 }
 </script>
 

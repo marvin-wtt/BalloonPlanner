@@ -10,9 +10,11 @@
       size="sm"
       padding="xs"
       color="grey"
-      :icon="settingsIcon"
+      :icon="editable ? 'check' : 'edit'"
       @click="toggleEditable()"
-    />
+    >
+      <q-tooltip>{{ editable ? 'Done editing' : 'Edit list' }}</q-tooltip>
+    </q-btn>
 
     <q-list
       bordered
@@ -157,11 +159,9 @@ const updateDragging = inject<(v: boolean) => void>(
 );
 
 const editable = ref(false);
-const settingsIcon = ref('settings');
 
 function toggleEditable() {
   editable.value = !editable.value;
-  settingsIcon.value = editable.value ? 'done' : 'settings';
 }
 
 function editItem(item: T) {
