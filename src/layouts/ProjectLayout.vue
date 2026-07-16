@@ -105,15 +105,15 @@
 </template>
 
 <script lang="ts" setup>
-import { minimize, toggleMaximize, closeApp } from 'src/composables/windowAPI';
+import { minimize, toggleMaximize, closeApp } from '@/composables/windowAPI';
 import { useRoute, useRouter } from 'vue-router';
-import { useProjectStore } from 'stores/project';
+import { useProjectStore } from '@/stores/project';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import FlightSelectionItem from 'components/toolbar/FlightSelectionItem.vue';
-import UpdateBtn from 'components/UpdateBtn.vue';
+import FlightSelectionItem from '@/components/toolbar/FlightSelectionItem.vue';
+import UpdateBtn from '@/components/UpdateBtn.vue';
 import { useQuasar } from 'quasar';
-import type { Project } from 'app/src-common/entities';
+import type { Project } from '@/../src-common/entities';
 
 const quasar = useQuasar();
 const route = useRoute();

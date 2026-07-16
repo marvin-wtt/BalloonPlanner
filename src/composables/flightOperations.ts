@@ -4,11 +4,11 @@ import type {
   ID,
   Person,
   VehicleAssignment,
-} from 'app/src-common/entities';
-import { useFlightStore } from 'stores/flight';
-import { useProjectStore } from 'stores/project';
+} from '@/../src-common/entities';
+import { useFlightStore } from '@/stores/flight';
+import { useProjectStore } from '@/stores/project';
 import { storeToRefs } from 'pinia';
-import { NULL_ID } from 'app/src-common/constants';
+import { NULL_ID } from '@/../src-common/constants';
 
 export function useFlightOperations() {
   const flightStore = useFlightStore();

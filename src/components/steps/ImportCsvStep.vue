@@ -50,7 +50,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { Person } from 'app/src-common/entities';
+import type { Person } from '@/../src-common/entities';
 import { computed, ref } from 'vue';
 import Papa from 'papaparse';
 

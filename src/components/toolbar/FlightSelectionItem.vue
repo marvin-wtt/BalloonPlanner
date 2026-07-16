@@ -137,16 +137,16 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useProjectStore } from 'stores/project';
+import { useProjectStore } from '@/stores/project';
 import { useRouter } from 'vue-router';
-import { useFlightStore } from 'stores/flight';
-import type { ID } from 'app/src-common/entities';
+import { useFlightStore } from '@/stores/flight';
+import type { ID } from '@/../src-common/entities';
 import { useQuasar } from 'quasar';
 import CreateFlightDialog, {
   type CreateFlightDialogData,
-} from 'components/dialog/CreateFlightDialog.vue';
-import EditFlightDateDialog from 'components/dialog/EditFlightDateDialog.vue';
-import { useErrorHelper } from 'src/composables/error';
+} from '@/components/dialog/CreateFlightDialog.vue';
+import EditFlightDateDialog from '@/components/dialog/EditFlightDateDialog.vue';
+import { useErrorHelper } from '@/composables/error';
 
 const quasar = useQuasar();
 const router = useRouter();

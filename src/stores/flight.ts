@@ -8,9 +8,9 @@ import type {
   FlightLeg,
   ID,
   VehicleAssignmentMap,
-} from 'app/src-common/entities';
-import { useProjectStore } from 'stores/project';
-import { NULL_ID } from 'app/src-common/constants';
+} from '@/../src-common/entities';
+import { useProjectStore } from '@/stores/project';
+import { NULL_ID } from '@/../src-common/constants';
 
 export const useFlightStore = defineStore('flight', () => {
   const projectStore = useProjectStore();

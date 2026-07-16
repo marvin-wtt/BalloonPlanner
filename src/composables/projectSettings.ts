@@ -1,6 +1,6 @@
 import { computed } from 'vue';
-import { useProjectStore } from 'stores/project';
-import type { ProjectSettings } from 'app/src-common/entities';
+import { useProjectStore } from '@/stores/project';
+import type { ProjectSettings } from '@/../src-common/entities';
 
 const DEFAULTS: Readonly<ProjectSettings> = {
   disableAssignmentProtection: false,

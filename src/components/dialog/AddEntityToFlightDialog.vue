@@ -67,7 +67,7 @@
 </template>
 
 <script lang="ts" generic="T extends Identifiable & { name: string }" setup>
-import type { Identifiable } from 'app/src-common/entities';
+import type { Identifiable } from '@/../src-common/entities';
 import { useDialogPluginComponent } from 'quasar';
 import { ref } from 'vue';
 

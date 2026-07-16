@@ -355,7 +355,7 @@
 <script lang="ts" setup>
 import { reactive, toRaw } from 'vue';
 import { useDialogPluginComponent } from 'quasar';
-import type { SolveFlightLegOptions } from 'app/src-common/api/solver.api';
+import type { SolveFlightLegOptions } from '@/../src-common/api/solver.api';
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();

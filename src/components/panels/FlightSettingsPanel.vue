@@ -300,7 +300,7 @@
 
 <script lang="ts" setup>
 import { QItem, QList } from 'quasar';
-import { useProjectSettings } from 'src/composables/projectSettings';
+import { useProjectSettings } from '@/composables/projectSettings';
 
 const {
   disableAssignmentProtection,

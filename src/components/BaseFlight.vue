@@ -66,20 +66,20 @@ import type {
   Identifiable,
   FlightLeg,
   Project,
-} from 'app/src-common/entities';
-import DropZone from 'components/drag/DropZone.vue';
+} from '@/../src-common/entities';
+import DropZone from '@/components/drag/DropZone.vue';
 import { computed } from 'vue';
-import BaseVehicleGroup from 'components/BaseVehicleGroup.vue';
-import { useFlightOperations } from 'src/composables/flightOperations';
+import BaseVehicleGroup from '@/components/BaseVehicleGroup.vue';
+import { useFlightOperations } from '@/composables/flightOperations';
 import { storeToRefs } from 'pinia';
-import { useFlightStore } from 'stores/flight';
-import { useProjectSettings } from 'src/composables/projectSettings';
+import { useFlightStore } from '@/stores/flight';
+import { useProjectSettings } from '@/composables/projectSettings';
 import {
   validateFlightLegAndSeries,
   type FlightValidationResult,
-} from 'src/util/flight-validator';
-import { NULL_ID } from 'app/src-common/constants';
-import { vehicleGroupLabel } from 'src/util/group';
+} from '@/util/flight-validator';
+import { NULL_ID } from '@/../src-common/constants';
+import { vehicleGroupLabel } from '@/util/group';
 
 const flightStore = useFlightStore();
 const { availablePeople, availableCars, availableBalloons } =

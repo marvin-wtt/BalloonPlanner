@@ -131,8 +131,8 @@ import type {
   FlightSeries,
   VehicleAssignmentMap,
   VehicleGroup,
-} from 'app/src-common/entities';
-import { useFlightStore } from 'stores/flight';
+} from '@/../src-common/entities';
+import { useFlightStore } from '@/stores/flight';
 import { storeToRefs } from 'pinia';
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =

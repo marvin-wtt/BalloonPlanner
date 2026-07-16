@@ -1,6 +1,6 @@
-import { useFlightStore } from 'stores/flight';
+import { useFlightStore } from '@/stores/flight';
 import { storeToRefs } from 'pinia';
-import { useProjectStore } from 'stores/project';
+import { useProjectStore } from '@/stores/project';
 import type {
   FlightLeg,
   FlightSeries,
@@ -9,9 +9,9 @@ import type {
   Project,
   VehicleAssignmentMap,
   VehicleGroup,
-} from 'app/src-common/entities';
-import type { SolveFlightLegOptions } from 'app/src-common/api/solver.api';
-import { deepToRaw } from 'src/util/deep-to-raw';
+} from '@/../src-common/entities';
+import type { SolveFlightLegOptions } from '@/../src-common/api/solver.api';
+import { deepToRaw } from '@/util/deep-to-raw';
 import { computed, ref } from 'vue';
 
 interface SolveSnapshot {

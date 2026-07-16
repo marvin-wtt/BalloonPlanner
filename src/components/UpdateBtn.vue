@@ -196,7 +196,7 @@ import { computed, ref, useAttrs } from 'vue';
 import { format } from 'quasar';
 import type { UpdateInfo } from 'electron-updater';
 import { storeToRefs } from 'pinia';
-import { useUpdaterStore } from 'stores/update-store';
+import { useUpdaterStore } from '@/stores/update-store';
 
 const updaterStore = useUpdaterStore();
 const { status, version } = storeToRefs(updaterStore);

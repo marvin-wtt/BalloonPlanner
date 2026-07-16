@@ -1,8 +1,8 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
-import type { Project, ProjectMeta } from 'app/src-common/entities';
+import type { Project, ProjectMeta } from '@/../src-common/entities';
 import { ref, watch } from 'vue';
 import { debounce, useQuasar } from 'quasar';
-import { deepToRaw } from 'src/util/deep-to-raw';
+import { deepToRaw } from '@/util/deep-to-raw';
 
 export const useProjectStore = defineStore('project', () => {
   const quasar = useQuasar();

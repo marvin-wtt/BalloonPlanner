@@ -117,11 +117,11 @@
 </template>
 
 <script lang="ts" setup>
-import type { Person } from 'app/src-common/entities';
+import type { Person } from '@/../src-common/entities';
 import { ref } from 'vue';
-import ImportOnlineSteps from 'components/steps/ImportOnlineSteps.vue';
-import ImportJsonStep from 'components/steps/ImportJsonStep.vue';
-import ImportCsvStep from 'components/steps/ImportCsvStep.vue';
+import ImportOnlineSteps from '@/components/steps/ImportOnlineSteps.vue';
+import ImportJsonStep from '@/components/steps/ImportJsonStep.vue';
+import ImportCsvStep from '@/components/steps/ImportCsvStep.vue';
 
 const modelValue = defineModel<Person[]>();
 

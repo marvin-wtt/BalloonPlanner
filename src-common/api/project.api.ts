@@ -1,4 +1,4 @@
-import type { Project, ProjectMeta } from 'app/src-common/entities';
+import type { Project, ProjectMeta } from '@/../src-common/entities';
 
 export interface ProjectsAPI {
   index: () => Promise<ProjectMeta[]>;

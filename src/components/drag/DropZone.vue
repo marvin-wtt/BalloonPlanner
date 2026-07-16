@@ -17,9 +17,9 @@
 </template>
 
 <script lang="ts" setup>
-import { DragHelper } from 'src/util/DragHelper';
+import { DragHelper } from '@/util/DragHelper';
 import { ref } from 'vue';
-import type { Identifiable } from 'app/src-common/entities';
+import type { Identifiable } from '@/../src-common/entities';
 
 type DropState = 'accept' | 'warn' | 'reject';
 

@@ -1,6 +1,6 @@
-import type { Person } from 'app/src-common/entities';
-import { readJsonFile } from 'src/util/json-file-reader';
-import { makeUniqueNames } from 'src/util/unique-name';
+import type { Person } from '@/../src-common/entities';
+import { readJsonFile } from '@/util/json-file-reader';
+import { makeUniqueNames } from '@/util/unique-name';
 
 /**
  * Reads a JSON file, unwraps nested `data` properties, validates

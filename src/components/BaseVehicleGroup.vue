@@ -75,7 +75,7 @@
 </template>
 
 <script lang="ts" setup>
-import DropZone from 'components/drag/DropZone.vue';
+import DropZone from '@/components/drag/DropZone.vue';
 import type {
   Car,
   Identifiable,
@@ -84,14 +84,14 @@ import type {
   FlightSeries,
   FlightLeg,
   VehicleGroup,
-} from 'app/src-common/entities';
+} from '@/../src-common/entities';
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useFlightStore } from 'stores/flight';
-import BaseVehicle from 'components/BaseVehicle.vue';
-import { useFlightOperations } from 'src/composables/flightOperations';
-import { useProjectSettings } from 'src/composables/projectSettings';
-import { NULL_ID } from 'app/src-common/constants';
+import { useFlightStore } from '@/stores/flight';
+import BaseVehicle from '@/components/BaseVehicle.vue';
+import { useFlightOperations } from '@/composables/flightOperations';
+import { useProjectSettings } from '@/composables/projectSettings';
+import { NULL_ID } from '@/../src-common/constants';
 
 const { groupAlignment, groupStyle, showGroupLabel } = useProjectSettings();
 const flightStore = useFlightStore();

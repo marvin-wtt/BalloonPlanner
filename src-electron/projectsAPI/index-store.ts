@@ -1,5 +1,5 @@
 import Store from 'electron-store';
-import type { ProjectMeta } from 'app/src-common/entities';
+import type { ProjectMeta } from '@/../src-common/entities';
 import { app } from 'electron';
 import path from 'path';
 

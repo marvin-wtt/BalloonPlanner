@@ -25,15 +25,15 @@
 </template>
 
 <script lang="ts" setup>
-import type { Balloon } from 'app/src-common/entities';
-import FlightPanelList from 'components/panels/FlightPanelList.vue';
-import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
+import type { Balloon } from '@/../src-common/entities';
+import FlightPanelList from '@/components/panels/FlightPanelList.vue';
+import EditBalloonDialog from '@/components/dialog/EditBalloonDialog.vue';
 import { useQuasar } from 'quasar';
-import { useFlightOperations } from 'src/composables/flightOperations';
+import { useFlightOperations } from '@/composables/flightOperations';
 import { storeToRefs } from 'pinia';
-import { useFlightStore } from 'stores/flight';
-import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';
-import { useProjectStore } from 'stores/project';
+import { useFlightStore } from '@/stores/flight';
+import AddEntityToFlightDialog from '@/components/dialog/AddEntityToFlightDialog.vue';
+import { useProjectStore } from '@/stores/project';
 
 const quasar = useQuasar();
 const projectStore = useProjectStore();

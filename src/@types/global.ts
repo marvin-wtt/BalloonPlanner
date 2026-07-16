@@ -3,7 +3,7 @@ import type {
   ProjectsAPI,
   SolverAPI,
   AppAPI,
-} from 'app/src-common/api';
+} from '@/../src-common/api';
 
 declare global {
   interface Window {

@@ -73,9 +73,9 @@
 </template>
 
 <script lang="ts" setup>
-import type { Car, Person } from 'app/src-common/entities';
+import type { Car, Person } from '@/../src-common/entities';
 import { type QTableColumn, useQuasar } from 'quasar';
-import EditCarDialog from 'components/dialog/EditCarDialog.vue';
+import EditCarDialog from '@/components/dialog/EditCarDialog.vue';
 import { computed } from 'vue';
 
 const quasar = useQuasar();

@@ -169,8 +169,8 @@
 <script lang="ts" setup>
 import { computed, ref, toRaw } from 'vue';
 import type { QSelectOption } from 'quasar';
-import { loadJson } from 'components/steps/JsonInputLoader';
-import { type Person } from 'app/src-common/entities';
+import { loadJson } from '@/components/steps/JsonInputLoader';
+import { type Person } from '@/../src-common/entities';
 
 const modelValue = defineModel<Person[]>();
 
@@ -249,6 +249,7 @@ async function login() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Client-type': 'app',
       },
       body: JSON.stringify({
         email: toRaw(email.value),

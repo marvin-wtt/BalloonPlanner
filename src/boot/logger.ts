@@ -1,5 +1,5 @@
 import log from 'electron-log/renderer';
-import { defineBoot } from '#q-app/wrappers'; // renderer build
+import { defineBoot } from '#q-app'; // renderer build
 
 export default defineBoot(({ app }) => {
   // Levels / destinations

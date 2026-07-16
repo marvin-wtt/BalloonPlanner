@@ -210,25 +210,25 @@
 </template>
 
 <script lang="ts" setup>
-import BaseVehiclePersonCell from 'components/BaseVehiclePersonCell.vue';
-import DraggableItem from 'components/drag/DraggableItem.vue';
+import BaseVehiclePersonCell from '@/components/BaseVehiclePersonCell.vue';
+import DraggableItem from '@/components/drag/DraggableItem.vue';
 import type {
   FlightLeg,
   FlightSeries,
   Vehicle,
   VehicleAssignment,
   VehicleGroup,
-} from 'app/src-common/entities';
+} from '@/../src-common/entities';
 import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useFlightStore } from 'stores/flight';
-import { useFlightUtils } from 'src/composables/reservedCapacity';
-import { useFlightOperations } from 'src/composables/flightOperations';
-import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
+import { useFlightStore } from '@/stores/flight';
+import { useFlightUtils } from '@/composables/reservedCapacity';
+import { useFlightOperations } from '@/composables/flightOperations';
+import EditBalloonDialog from '@/components/dialog/EditBalloonDialog.vue';
 import { useQuasar } from 'quasar';
-import EditCarDialog from 'components/dialog/EditCarDialog.vue';
-import { useProjectStore } from 'stores/project';
-import { useProjectSettings } from 'src/composables/projectSettings';
+import EditCarDialog from '@/components/dialog/EditCarDialog.vue';
+import { useProjectStore } from '@/stores/project';
+import { useProjectSettings } from '@/composables/projectSettings';
 
 const {
   removeCarFromVehicleGroup,

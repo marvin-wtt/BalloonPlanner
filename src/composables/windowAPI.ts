@@ -1,17 +1,17 @@
 export function minimize() {
-  if (process.env.MODE === 'electron') {
+  if (import.meta.env.QUASAR_MODE === 'electron') {
     window.windowAPI.minimize();
   }
 }
 
 export function toggleMaximize() {
-  if (process.env.MODE === 'electron') {
+  if (import.meta.env.QUASAR_MODE === 'electron') {
     window.windowAPI.toggleMaximize();
   }
 }
 
 export function closeApp() {
-  if (process.env.MODE === 'electron') {
+  if (import.meta.env.QUASAR_MODE === 'electron') {
     window.windowAPI.close();
   }
 }

@@ -66,8 +66,8 @@
 </template>
 
 <script lang="ts" setup>
-import type { Person } from 'app/src-common/entities';
-import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
+import type { Person } from '@/../src-common/entities';
+import EditPersonDialog from '@/components/dialog/EditPersonDialog.vue';
 import { type QTableColumn, useQuasar } from 'quasar';
 
 const quasar = useQuasar();

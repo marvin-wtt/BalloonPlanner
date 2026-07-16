@@ -6,7 +6,7 @@ import log from 'electron-log';
 import type {
   SolveVehicleGroupsRequest,
   SolveFlightLegRequest,
-} from 'app/src-common/api/solver.api';
+} from '@/../src-common/api/solver.api';
 
 const PROCESS_TIMEOUT_MS = 1_000_000;
 const SCRIPT_BASE = 'solver_main';
@@ -101,7 +101,7 @@ function spawnProcess(
 }
 
 function spawnArgs(): [string, string[]] {
-  if (process.env.DEV) {
+  if (import.meta.env.QUASAR_DEV) {
     // In dev, run from a local Python venv
     const cwd = fileURLToPath(new URL('.', import.meta.url));
     const srcPy = path.join(cwd, '..', '..', 'src-python');

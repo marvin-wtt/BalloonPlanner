@@ -1,4 +1,4 @@
-import type { Project } from 'app/src-common/entities';
+import type { Project } from '@/../src-common/entities';
 import semver from 'semver';
 import { app } from 'electron';
 

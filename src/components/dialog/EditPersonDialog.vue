@@ -117,7 +117,7 @@
 
 <script lang="ts" setup>
 import { computed, reactive } from 'vue';
-import type { Person, PersonRole } from 'app/src-common/entities';
+import type { Person, PersonRole } from '@/../src-common/entities';
 import { useDialogPluginComponent } from 'quasar';
 
 const {

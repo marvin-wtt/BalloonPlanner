@@ -26,16 +26,16 @@
 </template>
 
 <script lang="ts" setup>
-import type { Person } from 'app/src-common/entities';
-import FlightPanelList from 'components/panels/FlightPanelList.vue';
-import { useProjectStore } from 'stores/project';
+import type { Person } from '@/../src-common/entities';
+import FlightPanelList from '@/components/panels/FlightPanelList.vue';
+import { useProjectStore } from '@/stores/project';
 import { storeToRefs } from 'pinia';
 import { useQuasar } from 'quasar';
-import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';
-import { useFlightOperations } from 'src/composables/flightOperations';
-import { useFlightStore } from 'stores/flight';
-import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
-import { useProjectSettings } from 'src/composables/projectSettings';
+import AddEntityToFlightDialog from '@/components/dialog/AddEntityToFlightDialog.vue';
+import { useFlightOperations } from '@/composables/flightOperations';
+import { useFlightStore } from '@/stores/flight';
+import EditPersonDialog from '@/components/dialog/EditPersonDialog.vue';
+import { useProjectSettings } from '@/composables/projectSettings';
 import { computed } from 'vue';
 
 const quasar = useQuasar();

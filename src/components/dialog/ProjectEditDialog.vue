@@ -58,7 +58,7 @@
 
 <script lang="ts" setup>
 import { ref, toRaw } from 'vue';
-import type { ProjectMeta } from 'app/src-common/entities';
+import type { ProjectMeta } from '@/../src-common/entities';
 import { useDialogPluginComponent } from 'quasar';
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =

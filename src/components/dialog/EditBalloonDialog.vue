@@ -99,9 +99,9 @@
 
 <script lang="ts" setup>
 import { computed, reactive, ref } from 'vue';
-import type { Person, Balloon } from 'app/src-common/entities';
+import type { Person, Balloon } from '@/../src-common/entities';
 import { useDialogPluginComponent, type QSelectOption } from 'quasar';
-import { required } from 'src/util/required';
+import { required } from '@/util/required';
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
