@@ -14,6 +14,9 @@
 import { DragHelper } from '@/util/DragHelper';
 import type { Identifiable } from '@/../src-common/entities';
 import { onBeforeUnmount, ref } from 'vue';
+import { useDragState } from '@/composables/dragState';
+
+const { setDraggedItem, clearDraggedItem } = useDragState();
 
 const {
   item,
@@ -38,12 +41,14 @@ onBeforeUnmount(() => {
     return;
   }
 
+  clearDraggedItem();
   emit(DragHelper.accepted ? 'complete' : 'cancel');
 });
 
 function onDragStart(event: DragEvent) {
   event.stopPropagation();
   DragHelper.startDrag(event, item);
+  setDraggedItem(item);
   dragged.value = true;
 
   const dragContent = document.createElement('div');
@@ -66,6 +71,7 @@ function onDragEnd(event: DragEvent) {
   }
 
   dragged.value = false;
+  clearDraggedItem();
   DragHelper.endDrop();
 
   const node = document.querySelector('.drag-content');

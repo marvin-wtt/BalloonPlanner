@@ -1,6 +1,5 @@
 import { ipcMain, type IpcMainInvokeEvent } from 'electron';
 import { spawn } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import path from 'path';
 import log from 'electron-log';
 import type {
@@ -103,9 +102,10 @@ function spawnProcess(
 
 function spawnArgs(): [string, string[]] {
   if (import.meta.env.QUASAR_DEV) {
-    // In dev, run from a local Python venv
-    const cwd = fileURLToPath(new URL('.', import.meta.url));
-    const srcPy = path.join(cwd, '..', '..', 'src-python');
+    // In dev, run from a local Python venv. Resolve from the project root
+    // (the dev server's cwd) rather than counting `..` from the bundled
+    // main file, whose depth under .quasar/ is not stable across builds.
+    const srcPy = path.join(process.cwd(), 'src-python');
     const pythonBin =
       process.platform === 'win32'
         ? path.join(srcPy, '.venv', 'Scripts', 'python.exe')

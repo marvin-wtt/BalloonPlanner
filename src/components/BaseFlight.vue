@@ -53,6 +53,7 @@ import { useFlightOperations } from '@/composables/flightOperations';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from '@/stores/flight';
 import { useProjectSettings } from '@/composables/projectSettings';
+import { useVehicleGroupProtection } from '@/composables/vehicleGroupProtection';
 import {
   validateFlightLegAndSeries,
   type FlightValidationResult,
@@ -66,6 +67,8 @@ const { availablePeople, availableCars, availableBalloons } =
   storeToRefs(flightStore);
 const { groupAlignment } = useProjectSettings();
 const { addVehicleGroup, addCarToVehicleGroup } = useFlightOperations();
+const { protectionActive, carIsPlaced, confirmChange } =
+  useVehicleGroupProtection();
 
 const { project, flightSeries, flightLeg, editable } = defineProps<{
   project: Project;
@@ -109,7 +112,15 @@ function classifyDrop(element: Identifiable): 'accept' | 'warn' | 'reject' {
       // Only allow one group without a balloon
       !flightSeries.vehicleGroups.some((group) => group.balloonId === NULL_ID);
 
-    return isAllowed ? 'accept' : 'reject';
+    if (!isAllowed) {
+      return 'reject';
+    }
+
+    // Pulling an already-placed car out into its own group clears assignments
+    // in the other legs, so warn that the drop will ask for confirmation.
+    return protectionActive.value && carIsPlaced(element.id)
+      ? 'warn'
+      : 'accept';
   }
 
   if (elementIsBalloon(element)) {
@@ -123,9 +134,19 @@ function flightContainsBalloon(balloon: Balloon): boolean {
   return !availableBalloons.value.some((b) => b.id === balloon.id);
 }
 
-function onDrop(element: Identifiable) {
+async function onDrop(element: Identifiable) {
   // If the dropped element is a car, add it as a group without a balloon.
   if (elementIsCar(element)) {
+    // Moving an already-placed car is destructive; a fresh car from the tray
+    // is not. The removal from the source group shares this decision, so the
+    // dialog is shown only once per move.
+    if (carIsPlaced(element.id)) {
+      const confirmed = await confirmChange();
+      if (!confirmed) {
+        return;
+      }
+    }
+
     addVehicleGroup(NULL_ID);
     addCarToVehicleGroup(NULL_ID, element.id);
     return;

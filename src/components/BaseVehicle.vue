@@ -2,7 +2,7 @@
   <draggable-item
     :item="vehicle"
     :label="vehicle.name"
-    :disabled="!editable || !allowVehicleGroupChange"
+    :disabled="!editable"
     class="row"
     @complete="onVehicleRemoved"
   >
@@ -103,7 +103,6 @@
                 <q-item
                   v-close-popup
                   clickable
-                  :disable="!allowVehicleGroupChange"
                   @click="onVehicleRemoved()"
                 >
                   <q-item-section class="text-negative">
@@ -229,6 +228,7 @@ import { useQuasar } from 'quasar';
 import EditCarDialog from '@/components/dialog/EditCarDialog.vue';
 import { useProjectStore } from '@/stores/project';
 import { useProjectSettings } from '@/composables/projectSettings';
+import { useVehicleGroupProtection } from '@/composables/vehicleGroupProtection';
 
 const {
   removeCarFromVehicleGroup,
@@ -248,7 +248,6 @@ const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
 const { balloonMap, carMap, personMap } = storeToRefs(flightStore);
 const {
-  disableVehicleGroupProtection,
   showVehicleWeight,
   showVehicleIndex,
   showVehicleLabel,
@@ -257,6 +256,7 @@ const {
   balloonColor,
   carColor,
 } = useProjectSettings();
+const { confirmChange } = useVehicleGroupProtection();
 
 const { vehicleId, group, flightSeries, flightLeg, assignment, editable } =
   defineProps<{
@@ -334,13 +334,6 @@ const isFirstLeg = computed<boolean>(() => {
   return flightSeries.legs.findIndex((l) => l.id === flightLeg.id) === 0;
 });
 
-const allowVehicleGroupChange = computed<boolean>(() => {
-  return (
-    flightSeries.legs.length === 1 ||
-    (disableVehicleGroupProtection.value ?? false)
-  );
-});
-
 const isCanceled = computed<boolean>(() => {
   return flightLeg.canceledBalloonIds.includes(vehicleId);
 });
@@ -382,7 +375,15 @@ function onRestoreCapacity() {
   restoreCapacity(vehicleId);
 }
 
-function onVehicleRemoved() {
+async function onVehicleRemoved() {
+  // Removing a placed vehicle clears its assignments in every other flight
+  // leg, so confirm first when protection is active. The decision is shared
+  // with the drop that pairs with a move, so the dialog is shown only once.
+  const confirmed = await confirmChange();
+  if (!confirmed) {
+    return;
+  }
+
   if (vehicle.value.type === 'balloon') {
     removeVehicleGroup(vehicleId);
   } else {

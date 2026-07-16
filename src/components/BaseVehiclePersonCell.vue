@@ -125,6 +125,7 @@ import EditPersonDialog from '@/components/dialog/EditPersonDialog.vue';
 import { useQuasar } from 'quasar';
 import { useProjectStore } from '@/stores/project';
 import { useProjectSettings } from '@/composables/projectSettings';
+import { useAssignmentProtection } from '@/composables/assignmentProtection';
 import PersonInfoMenu from '@/components/PersonInfoMenu.vue';
 import { vehicleGroupLabel } from '@/util/group';
 
@@ -145,6 +146,7 @@ const {
   addVehiclePassenger,
   removeVehiclePassenger,
 } = useFlightOperations();
+const { confirmChange } = useAssignmentProtection();
 
 const {
   person = null,
@@ -352,12 +354,6 @@ function classifyDrop(element: Identifiable): 'accept' | 'warn' | 'reject' {
     return 'reject';
   }
 
-  const sameGroup = wasInSameVehicleGroupInPreviousLeg(element.id);
-
-  if (!sameGroup && !disableAssignmentProtection.value) {
-    return 'reject';
-  }
-
   if (operator) {
     if (!vehicle.allowedOperatorIds.includes(element.id)) {
       return 'reject';
@@ -366,10 +362,24 @@ function classifyDrop(element: Identifiable): 'accept' | 'warn' | 'reject' {
     return 'reject';
   }
 
-  return sameGroup ? 'accept' : 'warn';
+  // Assigning to a different group than the previous leg is allowed, but warn
+  // (and, when protection is active, confirm on drop) that it breaks cross-leg
+  // group consistency.
+  return wasInSameVehicleGroupInPreviousLeg(element.id) ? 'accept' : 'warn';
 }
 
-function onDrop(element: Identifiable) {
+async function onDrop(element: Identifiable) {
+  // A cross-group assignment breaks consistency with the previous leg. When
+  // protection is active, confirm before proceeding. Only the drop is guarded,
+  // so the dialog is shown once.
+  const sameGroup = wasInSameVehicleGroupInPreviousLeg(element.id);
+  if (!sameGroup && !disableAssignmentProtection.value) {
+    const confirmed = await confirmChange();
+    if (!confirmed) {
+      return;
+    }
+  }
+
   addPersonToVehicle(element.id);
 }
 

@@ -91,12 +91,17 @@ import { useFlightStore } from '@/stores/flight';
 import BaseVehicle from '@/components/BaseVehicle.vue';
 import { useFlightOperations } from '@/composables/flightOperations';
 import { useProjectSettings } from '@/composables/projectSettings';
+import { useVehicleGroupProtection } from '@/composables/vehicleGroupProtection';
+import { useDragState } from '@/composables/dragState';
 import { NULL_ID } from '@/../src-common/constants';
 
 const { groupAlignment, groupStyle, showGroupLabel } = useProjectSettings();
 const flightStore = useFlightStore();
-const { carMap, balloonMap } = storeToRefs(flightStore);
+const { carMap, balloonMap, personMap } = storeToRefs(flightStore);
 const { addCarToVehicleGroup } = useFlightOperations();
+const { protectionActive, carIsPlaced, confirmChange } =
+  useVehicleGroupProtection();
+const { draggedItem } = useDragState();
 
 const {
   flightSeries,
@@ -123,9 +128,22 @@ const styleClass = computed<string>(() => {
     groupStyle.value === 'dashed'
       ? 'vehicle-group__dashed'
       : 'vehicle-group__highlighted',
+    highlightAsTarget.value ? 'vehicle-group__drop-target' : undefined,
   ]
     .filter(Boolean)
     .join(' ');
+});
+
+// While a person is being dragged, highlight the group(s) they can be assigned
+// to without breaking consistency with the previous leg (i.e. where dropping
+// them is an `accept`, not a `warn`).
+const highlightAsTarget = computed<boolean>(() => {
+  const item = draggedItem.value;
+  if (!item || !(item.id in personMap.value)) {
+    return false;
+  }
+
+  return !isCanceled.value && personBelongsToGroup(item.id);
 });
 
 const warningText = computed<string | null>(() => {
@@ -181,6 +199,34 @@ function elementIsCar(element: Identifiable): element is Car {
   return flightSeries.carIds.includes(element.id);
 }
 
+// Group-level mirror of the per-cell previous-leg check in
+// BaseVehiclePersonCell: is the person part of this group in the previous leg?
+function personBelongsToGroup(personId: string): boolean {
+  const idx = flightSeries.legs.findIndex((l) => l.id === flightLeg.id);
+  // First leg: nothing constrains the person yet, so any group is valid.
+  if (idx === 0) {
+    return true;
+  }
+
+  const previousLeg = flightSeries.legs[idx - 1];
+  if (!previousLeg) {
+    return false;
+  }
+
+  const groupVehicleIds = [group.balloonId, ...group.carIds];
+  return groupVehicleIds.some((vid) => {
+    const assignment = previousLeg.assignments[vid];
+    if (!assignment) {
+      return false;
+    }
+
+    return (
+      assignment.operatorId === personId ||
+      assignment.passengerIds.includes(personId)
+    );
+  });
+}
+
 function classifyDrop(element: Identifiable): 'accept' | 'warn' | 'reject' {
   if (!editable) {
     return 'reject';
@@ -190,11 +236,24 @@ function classifyDrop(element: Identifiable): 'accept' | 'warn' | 'reject' {
     return 'reject';
   }
 
-  return group.carIds.some((id) => id === element.id) ? 'reject' : 'accept';
+  if (group.carIds.some((id) => id === element.id)) {
+    return 'reject';
+  }
+
+  // Moving an already-placed car clears assignments in the other legs, so warn
+  // that the drop will ask for confirmation.
+  return protectionActive.value && carIsPlaced(element.id) ? 'warn' : 'accept';
 }
 
-function drop(element: Identifiable) {
+async function drop(element: Identifiable) {
   if (!elementIsCar(element)) {
+    return;
+  }
+
+  // Only a move from another group is destructive; a fresh car from the tray
+  // is not, so it never prompts. The removal from the source group shares this
+  // decision, so the dialog is shown only once per move.
+  if (carIsPlaced(element.id) && !(await confirmChange())) {
     return;
   }
 
@@ -205,6 +264,23 @@ function drop(element: Identifiable) {
 <style lang="scss" scoped>
 .vehicle-group {
   border-radius: 15px;
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+/* Ring shown around a group that the person being dragged can be assigned to.
+   box-shadow keeps the layout stable and follows the rounded corners. */
+.vehicle-group__drop-target {
+  box-shadow: 0 0 0 3px $primary;
+}
+
+/* The dashed variant already draws its own border, so recolor that instead of
+   stacking a ring outside it (which reads as a competing double line). */
+.vehicle-group__dashed.vehicle-group__drop-target {
+  border-style: solid;
+  border-color: $primary;
+  box-shadow: none;
 }
 
 .vehicle-group__canceled {
