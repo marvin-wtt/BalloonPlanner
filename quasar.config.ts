@@ -34,8 +34,8 @@ export default defineConfig(() => {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
     build: {
       target: {
-        browser: ['es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1'],
-        node: 'node16',
+        browser: 'baseline-widely-available',
+        node: 'node22',
       },
 
       vueRouterMode: 'hash', // available values: 'hash', 'history'
@@ -165,17 +165,6 @@ export default defineConfig(() => {
 
       bundler: 'builder', // 'packager' or 'builder'
 
-      packager: {
-        // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
-        // OS X / Mac App Store
-        // appBundleId: '',
-        // appCategoryType: '',
-        // osxSign: '',
-        // protocol: 'myapp://path',
-        // Windows only
-        // win32metadata: { ... }
-      },
-
       preloadScripts: ['electron-preload'],
 
       builder: {
@@ -197,18 +186,11 @@ export default defineConfig(() => {
             name: 'Balloon Planner Project',
             description: 'Balloon Planner Project File',
             role: 'Editor',
-            icon: 'icons/icon.png',
+            icon: 'electron-assets/icons/icon.png',
             mimeType: 'application/json',
           },
         ],
       },
-    },
-
-    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-browser-extensions/configuring-bex
-    bex: {
-      // extraScripts: ['my-content-script'],
-      // extendBexScriptsConf (esbuildConf) {}
-      // extendBexManifestJson (json) {}
     },
   };
 });

@@ -54,6 +54,6 @@ jobs:
         run: npm ci
 
       - name: Build App
-        run: npm run build
+        run: npm run build -- --publish onTag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
