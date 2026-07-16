@@ -3,18 +3,20 @@
     {{ title }}
   </a>
   <div class="column">
-    <q-btn
-      class="q-ma-xs q-ml-auto q-mr-none items-end"
-      square
-      outline
-      size="sm"
-      padding="xs"
-      color="grey"
-      :icon="editable ? 'check' : 'edit'"
-      @click="toggleEditable()"
-    >
-      <q-tooltip>{{ editable ? 'Done editing' : 'Edit list' }}</q-tooltip>
-    </q-btn>
+    <div class="row items-center q-ma-xs q-ml-auto q-mr-none no-wrap">
+      <slot name="header-actions" />
+      <q-btn
+        square
+        outline
+        size="sm"
+        padding="xs"
+        color="grey"
+        :icon="editable ? 'check' : 'edit'"
+        @click="toggleEditable()"
+      >
+        <q-tooltip>{{ editable ? 'Done editing' : 'Edit list' }}</q-tooltip>
+      </q-btn>
+    </div>
 
     <q-list
       bordered

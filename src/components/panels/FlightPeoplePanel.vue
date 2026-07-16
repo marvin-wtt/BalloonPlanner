@@ -7,13 +7,48 @@
       <flight-panel-list
         :title
         :item-name
-        :items="people"
+        :items="sortedPeople"
         :dense="people.length > 10"
         @add="showAddPeople()"
         @create="showCreatePerson()"
         @edit="(person: Person) => showEditPerson(person)"
         @delete="(person: Person) => showDeletePerson(person)"
       >
+        <template #header-actions>
+          <q-btn-dropdown
+            square
+            outline
+            size="sm"
+            padding="xs"
+            color="grey"
+            icon="sort"
+            :label="sortLabel"
+            no-caps
+            class="q-mr-xs"
+          >
+            <q-tooltip>Sort by</q-tooltip>
+            <q-list dense>
+              <q-item
+                v-for="option in sortOptions"
+                :key="option.value"
+                v-close-popup
+                clickable
+                :active="sortBy === option.value"
+                @click="sortBy = option.value"
+              >
+                <q-item-section side>
+                  <q-icon
+                    :name="sortBy === option.value ? 'check' : ''"
+                    size="xs"
+                  />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ option.label }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
+        </template>
         <template #main="{ item }">
           {{ item.name }}
         </template>
@@ -30,13 +65,13 @@ import type { Person } from '@/../src-common/entities';
 import FlightPanelList from '@/components/panels/FlightPanelList.vue';
 import { useProjectStore } from '@/stores/project';
 import { storeToRefs } from 'pinia';
-import { useQuasar } from 'quasar';
+import { type QSelectOption, useQuasar } from 'quasar';
 import AddEntityToFlightDialog from '@/components/dialog/AddEntityToFlightDialog.vue';
 import { useFlightOperations } from '@/composables/flightOperations';
 import { useFlightStore } from '@/stores/flight';
 import EditPersonDialog from '@/components/dialog/EditPersonDialog.vue';
 import { useProjectSettings } from '@/composables/projectSettings';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const quasar = useQuasar();
 const projectStore = useProjectStore();
@@ -61,6 +96,36 @@ const title = computed<string>(() => {
 
 const itemName = computed<string>(() => {
   return role === 'counselor' ? 'Counselor' : 'Participant';
+});
+
+type SortKey = 'name' | 'flights';
+
+const sortOptions: QSelectOption<SortKey>[] = [
+  { label: 'Name', value: 'name' },
+  { label: 'Flights', value: 'flights' },
+];
+
+const sortBy = ref<SortKey>('name');
+
+const sortLabel = computed<string>(() => {
+  return (
+    sortOptions.find((option) => option.value === sortBy.value)?.label ?? ''
+  );
+});
+
+const sortedPeople = computed<Person[]>(() => {
+  return people.toSorted((a, b) => {
+    if (sortBy.value === 'flights') {
+      const flightsA = (numberOfFlights.value[a.id] ?? 0) - (a.firstTime ? 0.5 : 0);
+      const flightsB = (numberOfFlights.value[b.id] ?? 0) - (b.firstTime ? 0.5 : 0);
+
+      if (flightsA !== flightsB) {
+        return flightsA - flightsB;
+      }
+    }
+
+    return a.name.localeCompare(b.name);
+  });
 });
 
 function formatPersonMeta(person: Person): string {
