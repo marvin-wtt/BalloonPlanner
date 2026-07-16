@@ -471,7 +471,7 @@ class DragDropTouch {
 
     // DragEvents need a data transfer object
     setDataTransfer(evt, this._dataTransfer);
-    target.dispatchEvent(evt as unknown as Event);
+    target.dispatchEvent(evt);
     return evt.defaultPrevented;
   }
 

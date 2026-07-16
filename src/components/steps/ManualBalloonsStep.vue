@@ -73,9 +73,9 @@
 </template>
 
 <script lang="ts" setup>
-import type { Balloon, Person } from 'app/src-common/entities';
+import type { Balloon, Person } from '@/../src-common/entities';
 import { type QTableColumn, useQuasar } from 'quasar';
-import EditBalloonDialog from 'components/dialog/EditBalloonDialog.vue';
+import EditBalloonDialog from '@/components/dialog/EditBalloonDialog.vue';
 import { computed } from 'vue';
 
 const quasar = useQuasar();

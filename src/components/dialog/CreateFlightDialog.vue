@@ -131,8 +131,8 @@ import type {
   FlightSeries,
   VehicleAssignmentMap,
   VehicleGroup,
-} from 'app/src-common/entities';
-import { useFlightStore } from 'stores/flight';
+} from '@/../src-common/entities';
+import { useFlightStore } from '@/stores/flight';
 import { storeToRefs } from 'pinia';
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
@@ -265,40 +265,49 @@ function createAssignments(): VehicleAssignmentMap {
   }
 
   if (keepAssignment.value === 'operators') {
-    return Object.entries(leg.assignments).reduce((acc, [id, assignment]) => {
-      acc[id] = {
-        operatorId: assignment.operatorId,
-        passengerIds: [],
-      };
+    return Object.entries(leg.assignments).reduce<VehicleAssignmentMap>(
+      (acc, [id, assignment]) => {
+        acc[id] = {
+          operatorId: assignment.operatorId,
+          passengerIds: [],
+        };
 
-      return acc;
-    }, {});
+        return acc;
+      },
+      {},
+    );
   }
 
   if (keepAssignment.value === 'pilots') {
-    return Object.entries(leg.assignments).reduce((acc, [id, assignment]) => {
-      acc[id] = {
-        operatorId: Object.keys(balloonMap.value).includes(id)
-          ? assignment.operatorId
-          : null,
-        passengerIds: [],
-      };
+    return Object.entries(leg.assignments).reduce<VehicleAssignmentMap>(
+      (acc, [id, assignment]) => {
+        acc[id] = {
+          operatorId: Object.keys(balloonMap.value).includes(id)
+            ? assignment.operatorId
+            : null,
+          passengerIds: [],
+        };
 
-      return acc;
-    }, {});
+        return acc;
+      },
+      {},
+    );
   }
 
   if (keepAssignment.value === 'counselors') {
-    return Object.entries(leg.assignments).reduce((acc, [id, assignment]) => {
-      acc[id] = {
-        operatorId: assignment.operatorId,
-        passengerIds: assignment.passengerIds.filter(
-          (pid) => personMap.value[pid]?.role === 'counselor',
-        ),
-      };
+    return Object.entries(leg.assignments).reduce<VehicleAssignmentMap>(
+      (acc, [id, assignment]) => {
+        acc[id] = {
+          operatorId: assignment.operatorId,
+          passengerIds: assignment.passengerIds.filter(
+            (pid) => personMap.value[pid]?.role === 'counselor',
+          ),
+        };
 
-      return acc;
-    }, {});
+        return acc;
+      },
+      {},
+    );
   }
 
   return {};

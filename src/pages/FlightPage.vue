@@ -211,21 +211,22 @@ import { computed, nextTick, onMounted, provide, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
-import { useProjectStore } from 'stores/project';
-import BaseFlight from 'components/BaseFlight.vue';
-import type { Balloon, Car, Person } from 'app/src-common/entities';
-import { useFlightStore } from 'stores/flight';
-import { useFlightOperations } from 'src/composables/flightOperations';
-import FlightSettingsPanel from 'components/panels/FlightSettingsPanel.vue';
-import FlightBalloonsPanel from 'components/panels/FlightBalloonsPanel.vue';
-import FlightCarsPanel from 'components/panels/FlightCarsPanel.vue';
-import SmartFillDialog from 'components/dialog/SmartFillDialog.vue';
+import { useProjectStore } from '@/stores/project';
+import BaseFlight from '@/components/BaseFlight.vue';
+import type { Balloon, Car, Person } from '@/../src-common/entities';
+import { useFlightStore } from '@/stores/flight';
+import { useFlightOperations } from '@/composables/flightOperations';
+import FlightSettingsPanel from '@/components/panels/FlightSettingsPanel.vue';
+import FlightBalloonsPanel from '@/components/panels/FlightBalloonsPanel.vue';
+import FlightCarsPanel from '@/components/panels/FlightCarsPanel.vue';
+import SmartFillDialog from '@/components/dialog/SmartFillDialog.vue';
 import { toPng } from 'html-to-image';
-import { useProjectSettings } from 'src/composables/projectSettings';
-import { useSolver } from 'src/composables/solver';
-import type { SolveFlightLegOptions } from 'app/src-common/api/solver.api';
-import { enableDragDropTouch } from 'src/util/drag-drop-touch/drag-drop-touch';
-import FlightPeoplePanel from 'components/panels/FlightPeoplePanel.vue';
+import { useProjectSettings } from '@/composables/projectSettings';
+import { useSolver } from '@/composables/solver';
+import type { SolveFlightLegOptions } from '@/../src-common/api/solver.api';
+import { enableDragDropTouch } from '@/util/drag-drop-touch/drag-drop-touch';
+import FlightPeoplePanel from '@/components/panels/FlightPeoplePanel.vue';
+import { getErrorMessage } from '@/composables/error';
 
 const route = useRoute();
 const router = useRouter();
@@ -376,7 +377,7 @@ async function smartFill(options: SolveFlightLegOptions) {
     notify({
       type: 'warning',
       message: 'Failed to fill the flight',
-      caption: error.message,
+      caption: getErrorMessage(error),
       timeout: 2000,
     });
   } finally {

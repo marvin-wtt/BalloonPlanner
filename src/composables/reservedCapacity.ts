@@ -1,5 +1,5 @@
-import { useFlightStore } from 'stores/flight';
-import type { VehicleGroup } from 'app/src-common/entities';
+import { useFlightStore } from '@/stores/flight';
+import type { VehicleGroup } from '@/../src-common/entities';
 
 function useFlightUtils() {
   const flightStore = useFlightStore();

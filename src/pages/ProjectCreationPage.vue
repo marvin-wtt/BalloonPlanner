@@ -113,13 +113,13 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
-import type { Balloon, Car, Person } from 'app/src-common/entities';
-import ImportPeopleStep from 'components/steps/ImportPeopleStep.vue';
-import ManualPeopleStep from 'components/steps/ManualPeopleStep.vue';
-import ManualBalloonsStep from 'components/steps/ManualBalloonsStep.vue';
-import ManualCarsStep from 'components/steps/ManualCarsStep.vue';
+import type { Balloon, Car, Person } from '@/../src-common/entities';
+import ImportPeopleStep from '@/components/steps/ImportPeopleStep.vue';
+import ManualPeopleStep from '@/components/steps/ManualPeopleStep.vue';
+import ManualBalloonsStep from '@/components/steps/ManualBalloonsStep.vue';
+import ManualCarsStep from '@/components/steps/ManualCarsStep.vue';
 import { useRouter } from 'vue-router';
-import { useProjectStore } from 'stores/project';
+import { useProjectStore } from '@/stores/project';
 
 const router = useRouter();
 const projectStore = useProjectStore();

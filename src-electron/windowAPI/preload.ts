@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron';
-import type { WindowAPI } from 'app/src-common/api';
+import type { WindowAPI } from '@/../src-common/api';
 
 const api: WindowAPI = {
   minimize: () => {

@@ -1,0 +1,19 @@
+{
+  "name": "balloon-planner-electron",
+  "version": "1.0.0",
+  "description": "Balloon Planner Electron main/preload process",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "electron-log": "^5.4.4",
+    "electron-store": "^11.0.2",
+    "electron-updater": "^6.8.9",
+    "fs-extra": "^11.3.6",
+    "semver": "^7.8.5"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/semver": "^7.7.1",
+    "electron": "^43.0.0"
+  }
+}

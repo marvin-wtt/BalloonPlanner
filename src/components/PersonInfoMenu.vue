@@ -164,10 +164,10 @@ import type {
   Person,
   ID,
   VehicleKind,
-} from 'app/src-common/entities';
+} from '@/../src-common/entities';
 import { storeToRefs } from 'pinia';
-import { useProjectStore } from 'stores/project';
-import { vehicleGroupLabel } from 'src/util/group';
+import { useProjectStore } from '@/stores/project';
+import { vehicleGroupLabel } from '@/util/group';
 
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);

@@ -33,7 +33,7 @@ export function copyProps(
   for (let i = 0; i < props.length; i++) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const p = props[i]!;
-    dst[p] = src[p];
+    dst[p] = (src as unknown as Record<string, unknown>)[p];
   }
 }
 
@@ -123,7 +123,7 @@ function copyComputedStyles(src: HTMLElement, dst: HTMLElement): void {
 
   for (const key of cs) {
     if (key.includes('transition')) continue;
-    dst.style[key] = cs[key];
+    dst.style.setProperty(key, cs.getPropertyValue(key));
   }
 
   Object.keys(dst.dataset).forEach((key) => {

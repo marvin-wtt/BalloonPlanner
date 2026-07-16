@@ -90,9 +90,9 @@
 
 <script lang="ts" setup>
 import { computed, reactive, ref } from 'vue';
-import type { Car, Person } from 'app/src-common/entities';
+import type { Car, Person } from '@/../src-common/entities';
 import { type QSelectOption, useDialogPluginComponent } from 'quasar';
-import { required } from 'src/util/required';
+import { required } from '@/util/required';
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();

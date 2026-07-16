@@ -26,14 +26,14 @@
 
 <script lang="ts" setup>
 import { useQuasar } from 'quasar';
-import { useFlightStore } from 'stores/flight';
+import { useFlightStore } from '@/stores/flight';
 import { storeToRefs } from 'pinia';
-import { useFlightOperations } from 'src/composables/flightOperations';
-import type { Car } from 'app/src-common/entities';
-import FlightPanelList from 'components/panels/FlightPanelList.vue';
-import EditCarDialog from 'components/dialog/EditCarDialog.vue';
-import AddEntityToFlightDialog from 'components/dialog/AddEntityToFlightDialog.vue';
-import { useProjectStore } from 'stores/project';
+import { useFlightOperations } from '@/composables/flightOperations';
+import type { Car } from '@/../src-common/entities';
+import FlightPanelList from '@/components/panels/FlightPanelList.vue';
+import EditCarDialog from '@/components/dialog/EditCarDialog.vue';
+import AddEntityToFlightDialog from '@/components/dialog/AddEntityToFlightDialog.vue';
+import { useProjectStore } from '@/stores/project';
 
 const quasar = useQuasar();
 const projectStore = useProjectStore();

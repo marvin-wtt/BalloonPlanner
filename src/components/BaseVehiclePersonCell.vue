@@ -114,19 +114,19 @@ import type {
   FlightLeg,
   FlightSeries,
   VehicleGroup,
-} from 'app/src-common/entities';
+} from '@/../src-common/entities';
 import { computed } from 'vue';
-import DropZone from 'components/drag/DropZone.vue';
-import DraggableItem from 'components/drag/DraggableItem.vue';
-import { useFlightStore } from 'stores/flight';
+import DropZone from '@/components/drag/DropZone.vue';
+import DraggableItem from '@/components/drag/DraggableItem.vue';
+import { useFlightStore } from '@/stores/flight';
 import { storeToRefs } from 'pinia';
-import { useFlightOperations } from 'src/composables/flightOperations';
-import EditPersonDialog from 'components/dialog/EditPersonDialog.vue';
+import { useFlightOperations } from '@/composables/flightOperations';
+import EditPersonDialog from '@/components/dialog/EditPersonDialog.vue';
 import { useQuasar } from 'quasar';
-import { useProjectStore } from 'stores/project';
-import { useProjectSettings } from 'src/composables/projectSettings';
-import PersonInfoMenu from 'components/PersonInfoMenu.vue';
-import { vehicleGroupLabel } from 'src/util/group';
+import { useProjectStore } from '@/stores/project';
+import { useProjectSettings } from '@/composables/projectSettings';
+import PersonInfoMenu from '@/components/PersonInfoMenu.vue';
+import { vehicleGroupLabel } from '@/util/group';
 
 const quasar = useQuasar();
 const projectStore = useProjectStore();

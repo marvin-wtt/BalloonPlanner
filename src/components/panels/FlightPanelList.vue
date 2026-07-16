@@ -131,8 +131,8 @@
 </template>
 
 <script lang="ts" generic="T extends Identifiable" setup>
-import type { Identifiable } from 'app/src-common/entities';
-import DraggableItem from 'components/drag/DraggableItem.vue';
+import type { Identifiable } from '@/../src-common/entities';
+import DraggableItem from '@/components/drag/DraggableItem.vue';
 import { QItem } from 'quasar';
 import { inject, ref } from 'vue';
 

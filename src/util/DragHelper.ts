@@ -1,4 +1,4 @@
-import type { Identifiable } from 'app/src-common/entities';
+import type { Identifiable } from '@/../src-common/entities';
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class DragHelper {

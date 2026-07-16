@@ -1,4 +1,4 @@
-import type { Project } from 'app/src-common/entities';
+import type { Project } from '@/../src-common/entities';
 import path from 'path';
 import fse from 'fs-extra';
 
@@ -72,7 +72,7 @@ export async function deleteProjectFromPath(fullFilePath: string) {
   try {
     await fse.unlink(fullFilePath);
   } catch (e) {
-    if (e.code !== 'ENOENT') {
+    if (e && typeof e === 'object' && 'code' in e && e.code !== 'ENOENT') {
       throw e;
     }
   }

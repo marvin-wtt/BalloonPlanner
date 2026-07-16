@@ -11,8 +11,8 @@
 </template>
 
 <script lang="ts" setup>
-import { DragHelper } from 'src/util/DragHelper';
-import type { Identifiable } from 'app/src-common/entities';
+import { DragHelper } from '@/util/DragHelper';
+import type { Identifiable } from '@/../src-common/entities';
 import { onBeforeUnmount, ref } from 'vue';
 
 const {

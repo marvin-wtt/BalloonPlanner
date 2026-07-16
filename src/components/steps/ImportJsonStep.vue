@@ -50,9 +50,10 @@
 </template>
 
 <script lang="ts" setup>
-import type { Person } from 'app/src-common/entities';
+import type { Person } from '@/../src-common/entities';
 import { computed, ref } from 'vue';
-import { loadJsonFile } from 'components/steps/JsonInputLoader';
+import { loadJsonFile } from '@/components/steps/JsonInputLoader';
+import { getErrorMessage } from '@/composables/error';
 
 const modelValue = defineModel<Person[]>();
 
@@ -87,7 +88,7 @@ async function processJson() {
 
     emit('continue');
   } catch (reason) {
-    errorMessage.value = reason.message;
+    errorMessage.value = getErrorMessage(reason);
   } finally {
     loading.value = false;
   }

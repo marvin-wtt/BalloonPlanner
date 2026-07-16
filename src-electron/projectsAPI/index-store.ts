@@ -1,5 +1,5 @@
 import Store from 'electron-store';
-import type { ProjectMeta } from 'app/src-common/entities';
+import type { ProjectMeta } from '@/../src-common/entities';
 import { app } from 'electron';
 import path from 'path';
 
@@ -14,7 +14,6 @@ export function getProjectIndex() {
 }
 
 export function projectFilePath(id: string): string {
-  console.trace(id);
   const filePath = getProjectIndex().find((meta) => meta.id === id)?.filePath;
 
   if (!filePath) {

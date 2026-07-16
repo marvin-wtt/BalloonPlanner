@@ -116,14 +116,14 @@
 </template>
 
 <script lang="ts" setup>
-import ProjectCard from 'components/ProjectCard.vue';
-import type { ProjectMeta } from 'app/src-common/entities';
+import ProjectCard from '@/components/ProjectCard.vue';
+import type { ProjectMeta } from '@/../src-common/entities';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { useProjectStore } from 'stores/project';
+import { useProjectStore } from '@/stores/project';
 import { storeToRefs } from 'pinia';
 import { onBeforeMount } from 'vue';
-import ProjectEditDialog from 'components/dialog/ProjectEditDialog.vue';
+import ProjectEditDialog from '@/components/dialog/ProjectEditDialog.vue';
 
 const router = useRouter();
 const quasar = useQuasar();

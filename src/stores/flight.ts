@@ -8,9 +8,9 @@ import type {
   FlightLeg,
   ID,
   VehicleAssignmentMap,
-} from 'app/src-common/entities';
-import { useProjectStore } from 'stores/project';
-import { NULL_ID } from 'app/src-common/constants';
+} from '@/../src-common/entities';
+import { useProjectStore } from '@/stores/project';
+import { NULL_ID } from '@/../src-common/constants';
 
 export const useFlightStore = defineStore('flight', () => {
   const projectStore = useProjectStore();
@@ -394,9 +394,10 @@ export const useFlightStore = defineStore('flight', () => {
     const counts: Record<string, number> = {};
 
     const balloonIds = project.value.balloons.map((balloon) => balloon.id);
+    const people: Person[] = project.value.people;
 
     for (const l of history.value) {
-      for (const person of project.value.people) {
+      for (const person of people) {
         const pid = person.id;
 
         // check if this person is flying on any of the balloons

@@ -4,7 +4,7 @@ import electronUpdater, {
   type AppUpdater,
   CancellationToken,
 } from 'electron-updater';
-import type { AppUpdate } from 'app/src-common/api/app.api';
+import type { AppUpdate } from '@/../src-common/api/app.api';
 
 export default () => {
   ipcMain.on('app:checkForUpdate', () => {

@@ -1,4 +1,4 @@
-import { ipcMain, type IpcMainEvent } from 'electron';
+import { ipcMain, type IpcMainInvokeEvent } from 'electron';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'path';
@@ -6,7 +6,7 @@ import log from 'electron-log';
 import type {
   SolveVehicleGroupsRequest,
   SolveFlightLegRequest,
-} from 'app/src-common/api/solver.api';
+} from '@/../src-common/api/solver.api';
 
 const PROCESS_TIMEOUT_MS = 1_000_000;
 const SCRIPT_BASE = 'solver_main';
@@ -14,12 +14,13 @@ const SCRIPT_BASE = 'solver_main';
 export default () => {
   ipcMain.handle(
     'solve:vehicle-groups',
-    (_evt: IpcMainEvent, request: SolveVehicleGroupsRequest) =>
+    (_evt: IpcMainInvokeEvent, request: SolveVehicleGroupsRequest) =>
       runVehicleGroupSolver(request),
   );
   ipcMain.handle(
     'solve:flight-leg',
-    (_evt: IpcMainEvent, request: SolveFlightLegRequest) => runSolver(request),
+    (_evt: IpcMainInvokeEvent, request: SolveFlightLegRequest) =>
+      runSolver(request),
   );
 };
 
@@ -101,7 +102,7 @@ function spawnProcess(
 }
 
 function spawnArgs(): [string, string[]] {
-  if (process.env.DEV) {
+  if (import.meta.env.QUASAR_DEV) {
     // In dev, run from a local Python venv
     const cwd = fileURLToPath(new URL('.', import.meta.url));
     const srcPy = path.join(cwd, '..', '..', 'src-python');

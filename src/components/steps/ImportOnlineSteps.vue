@@ -169,8 +169,9 @@
 <script lang="ts" setup>
 import { computed, ref, toRaw } from 'vue';
 import type { QSelectOption } from 'quasar';
-import { loadJson } from 'components/steps/JsonInputLoader';
-import { type Person } from 'app/src-common/entities';
+import { loadJson } from '@/components/steps/JsonInputLoader';
+import { getErrorMessage } from '@/composables/error';
+import { type Person } from '@/../src-common/entities';
 
 const modelValue = defineModel<Person[]>();
 
@@ -221,6 +222,7 @@ async function verifyUrl() {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'X-Client-type': 'app',
       },
     });
     if (!response.ok) {
@@ -249,6 +251,7 @@ async function login() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Client-type': 'app',
       },
       body: JSON.stringify({
         email: toRaw(email.value),
@@ -274,7 +277,7 @@ async function login() {
     extractCamps(data);
     emit('to', 'select-camp');
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
   } finally {
     loading.value = false;
   }
@@ -292,6 +295,7 @@ async function twoFactorLogin() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Client-type': 'app',
       },
       body: JSON.stringify({
         token: toRaw(partialToken.value),
@@ -309,7 +313,7 @@ async function twoFactorLogin() {
     extractCamps(data);
     emit('to', 'select-camp');
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
     return;
   } finally {
     loading.value = false;
@@ -366,6 +370,7 @@ async function downloadPeople() {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'X-Client-type': 'app',
           Authorization: `Bearer ${accessToken.value}`,
         },
       },
@@ -382,7 +387,7 @@ async function downloadPeople() {
 
     emit('continue');
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
     return;
   } finally {
     loading.value = false;
