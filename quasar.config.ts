@@ -174,7 +174,7 @@ export default defineConfig(() => {
 
         extraResources: [
           {
-            from: 'dist/python',
+            from: '../dist/python',
             to: 'python-bin',
             filter: ['*.exe'],
           },
