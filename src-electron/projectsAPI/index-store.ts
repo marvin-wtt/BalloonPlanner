@@ -14,7 +14,6 @@ export function getProjectIndex() {
 }
 
 export function projectFilePath(id: string): string {
-  console.trace(id);
   const filePath = getProjectIndex().find((meta) => meta.id === id)?.filePath;
 
   if (!filePath) {

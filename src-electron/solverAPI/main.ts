@@ -1,4 +1,4 @@
-import { ipcMain, type IpcMainEvent } from 'electron';
+import { ipcMain, type IpcMainInvokeEvent } from 'electron';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'path';
@@ -14,12 +14,13 @@ const SCRIPT_BASE = 'solver_main';
 export default () => {
   ipcMain.handle(
     'solve:vehicle-groups',
-    (_evt: IpcMainEvent, request: SolveVehicleGroupsRequest) =>
+    (_evt: IpcMainInvokeEvent, request: SolveVehicleGroupsRequest) =>
       runVehicleGroupSolver(request),
   );
   ipcMain.handle(
     'solve:flight-leg',
-    (_evt: IpcMainEvent, request: SolveFlightLegRequest) => runSolver(request),
+    (_evt: IpcMainInvokeEvent, request: SolveFlightLegRequest) =>
+      runSolver(request),
   );
 };
 

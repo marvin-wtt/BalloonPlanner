@@ -7,12 +7,41 @@ type AnyProject = Record<string, any>;
 
 type Migration = (data: AnyProject) => AnyProject;
 
+// Legacy data shapes the migrations read from. These describe the on-disk
+// format of older project versions, not the current entity types.
+interface LegacyVehicle {
+  id: string;
+  operatorId: string | null;
+  passengerIds: string[];
+}
+
+interface LegacyVehicleGroup {
+  balloon: LegacyVehicle;
+  cars: LegacyVehicle[];
+}
+
+interface LegacyLeg {
+  id: string;
+  [key: string]: unknown;
+}
+
+interface LegacyFlight {
+  vehicleGroups: LegacyVehicleGroup[];
+  legs: LegacyLeg[];
+  [key: string]: unknown;
+}
+
+interface LegacyAssignment {
+  operatorId: string | null;
+  passengerIds: string[];
+}
+
 const migrations: Record<string, Migration> = {
   '1.0.0-beta.12': (data): Pick<Project, 'flights'> => {
     // Create flight legs and separate groups and assignments
     return {
       ...data,
-      flights: data.flights.map((flight) => ({
+      flights: data.flights.map((flight: LegacyFlight) => ({
         ...flight,
         vehicleGroups: flight.vehicleGroups.map((group) => ({
           balloonId: group.balloon.id,
@@ -21,7 +50,9 @@ const migrations: Record<string, Migration> = {
         legs: [
           {
             id: crypto.randomUUID(),
-            assignments: flight.vehicleGroups.reduce((map, group) => {
+            assignments: flight.vehicleGroups.reduce<
+              Record<string, LegacyAssignment>
+            >((map, group) => {
               map[group.balloon.id] = {
                 operatorId: group.balloon.operatorId,
                 passengerIds: group.balloon.passengerIds,
@@ -42,7 +73,7 @@ const migrations: Record<string, Migration> = {
   '1.0.0-beta.13': (data) => {
     return {
       ...data,
-      flights: data.flights.map((flight) => ({
+      flights: data.flights.map((flight: LegacyFlight) => ({
         ...flight,
         legs: flight.legs.map((leg) => ({
           ...leg,
@@ -54,7 +85,7 @@ const migrations: Record<string, Migration> = {
   '1.5.1': (data) => {
     return {
       ...data,
-      flights: data.flights.map((flight) => ({
+      flights: data.flights.map((flight: LegacyFlight) => ({
         ...flight,
         legs: flight.legs.map((leg) => ({
           ...leg,

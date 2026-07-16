@@ -6,14 +6,14 @@
   >
     <div
       v-if="empty"
-      class="col-12 text-center text-body1"
+      class="col-12 text-center text-body1 flight-body"
     >
       Drop a balloon here to start.
     </div>
 
     <div
       v-else
-      class="full-width column"
+      class="full-width column flight-body"
     >
       <q-scroll-area class="col-grow">
         <div
@@ -32,28 +32,6 @@
           />
         </div>
       </q-scroll-area>
-
-      <q-banner
-        v-if="validationError"
-        dense
-        class="col-shrink bg-negative text-white"
-      >
-        <template #avatar>
-          <q-icon name="warning" />
-        </template>
-
-        {{ validationError.message }}
-
-        <template #action>
-          <q-btn
-            v-if="validationError.fix && editable"
-            flat
-            dense
-            label="Fix"
-            @click="fixError"
-          />
-        </template>
-      </q-banner>
     </div>
   </drop-zone>
 </template>
@@ -68,7 +46,8 @@ import type {
   Project,
 } from '@/../src-common/entities';
 import DropZone from '@/components/drag/DropZone.vue';
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, watch } from 'vue';
+import { type QNotifyCreateOptions, useQuasar } from 'quasar';
 import BaseVehicleGroup from '@/components/BaseVehicleGroup.vue';
 import { useFlightOperations } from '@/composables/flightOperations';
 import { storeToRefs } from 'pinia';
@@ -81,6 +60,7 @@ import {
 import { NULL_ID } from '@/../src-common/constants';
 import { vehicleGroupLabel } from '@/util/group';
 
+const quasar = useQuasar();
 const flightStore = useFlightStore();
 const { availablePeople, availableCars, availableBalloons } =
   storeToRefs(flightStore);
@@ -166,13 +146,62 @@ const validationError = computed<FlightValidationResult | null>(() => {
   return validateFlightLegAndSeries(project, flightSeries, flightLeg);
 });
 
-function fixError() {
-  validationError.value?.fix?.();
+// Show the validation error as a persistent notification with an optional
+// "Fix" action instead of an inline banner, so it never competes with the
+// flight layout or the page FAB for space.
+let updateNotification: ReturnType<typeof quasar.notify> | null = null;
+
+function hideNotification() {
+  updateNotification?.();
+  updateNotification = null;
 }
+
+function showNotification(error: FlightValidationResult) {
+  const props: QNotifyCreateOptions = {
+    type: 'negative',
+    icon: 'warning',
+    message: error.message,
+    timeout: 0,
+    position: 'bottom',
+    actions:
+      error.fix && editable
+        ? [
+            {
+              label: 'Fix',
+              color: 'white',
+              rounded: true,
+              handler: () => error.fix?.(),
+            },
+          ]
+        : [],
+  };
+
+  if (updateNotification) {
+    updateNotification(props);
+  } else {
+    updateNotification = quasar.notify(props);
+  }
+}
+
+watch(
+  () => [validationError.value, editable] as const,
+  ([error]) => {
+    if (error) {
+      showNotification(error);
+    } else {
+      hideNotification();
+    }
+  },
+  { immediate: true },
+);
+
+onBeforeUnmount(hideNotification);
 </script>
 
 <style scoped>
-div {
+/* Structural wrappers must fill the drop zone so the scroll area can grow. */
+.drop-zone,
+.flight-body {
   height: 100%;
 }
 </style>

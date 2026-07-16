@@ -72,7 +72,7 @@ export async function deleteProjectFromPath(fullFilePath: string) {
   try {
     await fse.unlink(fullFilePath);
   } catch (e) {
-    if (e.code !== 'ENOENT') {
+    if (e && typeof e === 'object' && 'code' in e && e.code !== 'ENOENT') {
       throw e;
     }
   }

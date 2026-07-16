@@ -3,6 +3,7 @@ import {
   BrowserWindow,
   ipcMain,
   type IpcMainEvent,
+  type IpcMainInvokeEvent,
   dialog,
 } from 'electron';
 import type { Project, ProjectMeta } from '@/../src-common/entities';
@@ -132,20 +133,31 @@ async function loadExternalFile(fullFilePath: string) {
     });
 }
 
-const handleEvent = (next: (...args: unknown[]) => unknown) => {
-  return (_event: IpcMainEvent, ...args: unknown[]) => {
+const handleInvokeEvent = <Args extends unknown[], Result>(
+  next: (...args: Args) => Result,
+) => {
+  return (_event: IpcMainInvokeEvent, ...args: Args) => {
     return next(...args);
   };
 };
 
+const handleEvent = <Args extends unknown[]>(
+  next: (...args: Args) => void,
+) => {
+  return (_event: IpcMainEvent, ...args: Args): void => {
+    next(...args);
+  };
+};
+
+
 const projectApiHandler = {
-  index: handleEvent(getProjectIndex),
-  show: handleEvent(load),
-  store: handleEvent(store),
-  update: handleEvent(update),
-  destroy: handleEvent(destroy),
-  remove: handleEvent(remove),
-  openFile: handleEvent(openFile),
+  index: handleInvokeEvent(getProjectIndex),
+  show: handleInvokeEvent(load),
+  store: handleInvokeEvent(store),
+  update: handleInvokeEvent(update),
+  destroy: handleInvokeEvent(destroy),
+  remove: handleInvokeEvent(remove),
+  openFile: handleEvent(() => void openFile()),
 };
 
 async function store(project: Project) {
