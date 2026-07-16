@@ -226,6 +226,7 @@ import { useSolver } from '@/composables/solver';
 import type { SolveFlightLegOptions } from '@/../src-common/api/solver.api';
 import { enableDragDropTouch } from '@/util/drag-drop-touch/drag-drop-touch';
 import FlightPeoplePanel from '@/components/panels/FlightPeoplePanel.vue';
+import { getErrorMessage } from '@/composables/error';
 
 const route = useRoute();
 const router = useRouter();
@@ -376,7 +377,7 @@ async function smartFill(options: SolveFlightLegOptions) {
     notify({
       type: 'warning',
       message: 'Failed to fill the flight',
-      caption: error.message,
+      caption: getErrorMessage(error),
       timeout: 2000,
     });
   } finally {

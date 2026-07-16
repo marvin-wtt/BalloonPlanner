@@ -272,7 +272,7 @@ function createAssignments(): VehicleAssignmentMap {
       };
 
       return acc;
-    }, {});
+    }, {} as VehicleAssignmentMap);
   }
 
   if (keepAssignment.value === 'pilots') {
@@ -285,7 +285,7 @@ function createAssignments(): VehicleAssignmentMap {
       };
 
       return acc;
-    }, {});
+    }, {} as VehicleAssignmentMap);
   }
 
   if (keepAssignment.value === 'counselors') {
@@ -298,7 +298,7 @@ function createAssignments(): VehicleAssignmentMap {
       };
 
       return acc;
-    }, {});
+    }, {} as VehicleAssignmentMap);
   }
 
   return {};

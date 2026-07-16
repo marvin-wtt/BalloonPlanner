@@ -90,7 +90,7 @@ const pagination = {
   sortBy: 'name',
 };
 
-const nationMap = {
+const nationMap: Record<string, string> = {
   de: 'German',
   fr: 'French',
 };

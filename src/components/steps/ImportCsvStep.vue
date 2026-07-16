@@ -53,6 +53,7 @@
 import type { Person } from '@/../src-common/entities';
 import { computed, ref } from 'vue';
 import Papa from 'papaparse';
+import { getErrorMessage } from '@/composables/error';
 
 const modelValue = defineModel<Person[]>();
 
@@ -98,7 +99,7 @@ async function processCsv() {
 
     emit('continue');
   } catch (reason) {
-    errorMessage.value = reason.message;
+    errorMessage.value = getErrorMessage(reason);
   } finally {
     loading.value = false;
   }

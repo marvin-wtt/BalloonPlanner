@@ -3,6 +3,7 @@ import type { Project, ProjectMeta } from '@/../src-common/entities';
 import { ref, watch } from 'vue';
 import { debounce, useQuasar } from 'quasar';
 import { deepToRaw } from '@/util/deep-to-raw';
+import { getErrorMessage } from '@/composables/error';
 
 export const useProjectStore = defineStore('project', () => {
   const quasar = useQuasar();
@@ -71,7 +72,7 @@ export const useProjectStore = defineStore('project', () => {
     } catch (error) {
       quasar.notify({
         message: 'Failed to create project',
-        caption: error.message,
+        caption: getErrorMessage(error),
         color: 'negative',
         group: 'project-error',
       });
@@ -87,7 +88,7 @@ export const useProjectStore = defineStore('project', () => {
     } catch (e) {
       quasar.notify({
         message: 'Failed to delete project',
-        caption: e.message,
+        caption: getErrorMessage(e),
         color: 'negative',
         group: 'project-error',
       });
@@ -103,7 +104,7 @@ export const useProjectStore = defineStore('project', () => {
     } catch (e) {
       quasar.notify({
         message: 'Failed to load project',
-        caption: e.message,
+        caption: getErrorMessage(e),
         color: 'negative',
         group: 'project-error',
       });
@@ -128,7 +129,7 @@ export const useProjectStore = defineStore('project', () => {
       console.error(e);
       quasar.notify({
         message: 'Failed to save project',
-        caption: e.message,
+        caption: getErrorMessage(e),
         color: 'negative',
         group: 'project-error',
       });
@@ -143,7 +144,7 @@ export const useProjectStore = defineStore('project', () => {
     } catch (e) {
       quasar.notify({
         message: 'Failed to remove project',
-        caption: e.message,
+        caption: getErrorMessage(e),
         color: 'negative',
         group: 'project-error',
       });
