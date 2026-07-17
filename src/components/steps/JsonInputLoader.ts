@@ -28,7 +28,7 @@ export function loadJson(
 
   // Normalize and validate each entry
   const normalized = unwrapped
-    .filter((entry) => !isObject(entry) || !entry.waitingList)
+    .filter((entry) => !isObject(entry) || entry.status === 'ACCEPTED')
     .map((entry, i) => {
       const id =
         isObject(entry) && typeof entry.id === 'string'
@@ -45,8 +45,8 @@ export function loadJson(
 
       return {
         id,
-        firstName,
-        lastName,
+        firstName: normalizeName(firstName),
+        lastName: normalizeName(lastName),
         role: normalizeRole(role),
         nationality: address.country.toLowerCase(),
         languages: extractLanguages(entry),
@@ -109,6 +109,17 @@ function isValidPersonData(x: unknown): x is {
 /** Normalize role values. */
 function normalizeRole(role: string): Person['role'] {
   return role === 'participant' ? 'participant' : 'counselor';
+}
+
+/** Trim, collapse whitespace, and title-case a name. */
+function normalizeName(name: string): string {
+  return name
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase()
+    .replace(/(^|[\s'’-])(\p{L})/gu, (_, sep: string, char: string) => {
+      return sep + char.toLocaleUpperCase();
+    });
 }
 
 /** Extract languages from various possible shapes on the entry. */

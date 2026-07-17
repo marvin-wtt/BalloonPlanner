@@ -28,6 +28,7 @@
                 (val && val.trim().length > 0) || 'Name is required.',
             ]"
             hide-bottom-space
+            autofocus
             outlined
             rounded
           />
