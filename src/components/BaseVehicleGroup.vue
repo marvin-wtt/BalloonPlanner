@@ -35,7 +35,7 @@
       </div>
 
       <div
-        class="q-gutter-md q-pa-md q-pb-lg"
+        class="vehicle-group__vehicles"
         :class="groupAlignment === 'vertical' ? 'row' : 'column'"
       >
         <!-- Balloon -->
@@ -272,16 +272,19 @@ async function drop(element: Identifiable) {
 
 <style lang="scss" scoped>
 .vehicle-group {
-  border-radius: 15px;
+  border-radius: var(--radius-group);
   transition:
     box-shadow 0.15s ease,
-    border-color 0.15s ease;
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 /* Ring shown around a group that the person being dragged can be assigned to.
    box-shadow keeps the layout stable and follows the rounded corners. */
 .vehicle-group__drop-target {
-  box-shadow: 0 0 0 3px $primary;
+  box-shadow:
+    0 0 0 3px $primary,
+    var(--shadow-card);
 }
 
 /* The dashed variant already draws its own border, so recolor that instead of
@@ -293,36 +296,56 @@ async function drop(element: Identifiable) {
 }
 
 .vehicle-group__canceled {
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
 .vehicle-group > div {
-  padding: 0 3px;
+  padding: 0;
   margin-top: -0.8em;
 }
 
+/* Vehicles sit on a single inset that the label aligns to (both 14px), with an
+   even gap between them. Replaces the stacked q-pa-md / q-pb-lg / q-gutter-md
+   utilities so the padding no longer doubles up and the bottom isn't cavernous. */
+.vehicle-group__vehicles {
+  padding: 8px 14px 14px;
+  gap: 12px;
+}
+
+/* Group label as a manifest-section chip: uppercase, tracked, and lifted just
+   off the card so it reads as a heading without a full header bar. */
 .vehicle-group__label {
-  background: white none repeat scroll 0 0;
   display: inline-block;
-  padding: 0 5px;
-  border-radius: 10px;
-  margin-left: 1em;
-  font-weight: bold;
+  margin-left: 14px;
+  padding: 3px 12px;
+  border-radius: var(--radius-chip);
+  background: var(--surface-card);
+  color: var(--ink-strong);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-card);
+}
+
+.vehicle-group__label a {
+  color: var(--ink-faint);
 }
 
 .vehicle-group__dashed {
-  border-style: dashed;
-  border-width: 2px;
-  border-color: $grey-7;
-  background-color: $grey-3;
+  border: 2px dashed var(--border-strong);
+  background-color: var(--surface-group-dashed);
 
   .vehicle-group__label {
-    background-color: $grey-3;
+    background-color: var(--surface-group-dashed);
+    border: 1px solid var(--border-strong);
+    box-shadow: none;
   }
 }
 
 .vehicle-group__highlighted {
-  border: none;
-  background-color: $grey-5;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--surface-group);
+  box-shadow: var(--shadow-card);
 }
 </style>

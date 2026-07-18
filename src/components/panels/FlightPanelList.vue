@@ -1,26 +1,30 @@
 <template>
-  <a class="text-h6">
-    {{ title }}
-  </a>
   <div class="column">
-    <div class="row items-center q-ma-xs q-ml-auto q-mr-none no-wrap">
-      <slot name="header-actions" />
-      <q-btn
-        square
-        outline
-        size="sm"
-        padding="xs"
-        color="grey"
-        :icon="editable ? 'check' : 'edit'"
-        @click="toggleEditable()"
-      >
-        <q-tooltip>{{ editable ? 'Done editing' : 'Edit list' }}</q-tooltip>
-      </q-btn>
+    <div class="panel-header row items-center no-wrap q-mb-sm">
+      <div class="panel-header__title col-grow">
+        {{ title }}
+        <span class="panel-header__count">{{ items.length }}</span>
+      </div>
+      <div class="row items-center no-wrap q-gutter-xs">
+        <slot name="header-actions" />
+        <q-btn
+          square
+          outline
+          size="sm"
+          padding="xs"
+          color="grey"
+          :icon="editable ? 'check' : 'edit'"
+          @click="toggleEditable()"
+        >
+          <q-tooltip>{{ editable ? 'Done editing' : 'Edit list' }}</q-tooltip>
+        </q-btn>
+      </div>
     </div>
 
     <q-list
       bordered
       separator
+      class="panel-list"
       :dense="dense"
     >
       <!-- Empty List -->
@@ -183,4 +187,32 @@ function addItem() {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.panel-header__title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink-strong);
+}
+
+/* Live count of what's in the tray, so the section header doubles as a status. */
+.panel-header__count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  background: var(--surface-group);
+  border-radius: var(--radius-chip);
+  padding: 1px 9px;
+  min-width: 1.6rem;
+  text-align: center;
+}
+
+.panel-list {
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--surface-card);
+  border-color: var(--border-subtle);
+}
+</style>

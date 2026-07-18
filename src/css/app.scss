@@ -1,5 +1,42 @@
 // app global css in SCSS form
 
+// -----------------------------------------------------------------------------
+// Design tokens — "dawn flight board"
+// A calm, airy planning canvas where the flight manifest is the hero and the
+// surrounding chrome recedes. Shared by every flight-board component so the
+// surfaces, borders, and elevation read as one system. Solid colours only on
+// anything inside #flight-content so the html-to-image PNG export stays faithful.
+// -----------------------------------------------------------------------------
+:root {
+  // Surfaces, from the canvas up to the cards that sit on it.
+  --surface-canvas: #e8edf3;
+  --surface-card: #ffffff;
+  --surface-group: #dee4ed;
+  --surface-group-dashed: #eef1f6;
+  --surface-rail: #1e2732;
+  --surface-rail-hover: #29343f;
+  --surface-rail-active: #34506f;
+
+  // Hairlines and separators.
+  --border-subtle: #d6dde6;
+  --border-strong: #c1cad6;
+
+  // Ink.
+  --ink-strong: #1f2a37;
+  --ink-muted: #64717f;
+  --ink-faint: #91a0b0;
+
+  // Elevation — tuned soft and cool so cards lift without a heavy drop shadow.
+  --shadow-card: 0 1px 2px rgba(23, 39, 58, 0.06), 0 2px 6px rgba(23, 39, 58, 0.07);
+  --shadow-card-hover: 0 2px 4px rgba(23, 39, 58, 0.08), 0 8px 20px rgba(23, 39, 58, 0.13);
+  --shadow-rail: 2px 0 12px rgba(23, 39, 58, 0.18);
+
+  // Corner radii.
+  --radius-card: 12px;
+  --radius-group: 16px;
+  --radius-chip: 999px;
+}
+
 // Hide number input arrows in all browsers
 /* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,

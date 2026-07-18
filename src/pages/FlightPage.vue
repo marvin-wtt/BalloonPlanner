@@ -115,7 +115,7 @@
             transition-next="jump-up"
             transition-prev="jump-down"
             vertical
-            class="no-wrap col-grow shadow-24"
+            class="no-wrap col-grow shadow-8"
           >
             <flight-balloons-panel
               name="balloons"
@@ -521,6 +521,10 @@ const menuClasses = computed<string>(() => {
   .q-tab--active {
     background: var(--surface-rail-active);
     color: #fff;
+  }
+
+  .q-tabs__indicator {
+    display: none;
   }
 
   .q-tab__content {

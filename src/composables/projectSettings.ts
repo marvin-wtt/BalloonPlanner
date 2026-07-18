@@ -16,8 +16,8 @@ const DEFAULTS: Readonly<ProjectSettings> = {
   personDefaultWeight: 80,
   groupAlignment: 'horizontal',
   groupStyle: 'dashed',
-  balloonColor: '#1976d2',
-  carColor: '#999999',
+  balloonColor: '#0369A1',
+  carColor: '#475569',
 };
 
 /**

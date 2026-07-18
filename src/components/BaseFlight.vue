@@ -6,9 +6,19 @@
   >
     <div
       v-if="empty"
-      class="col-12 text-center text-body1 flight-body"
+      class="col-12 flight-body row items-center justify-center"
     >
-      Drop a balloon here to start.
+      <div class="flight-empty column items-center justify-center">
+        <q-icon
+          name="flight"
+          size="44px"
+          class="flight-empty__icon"
+        />
+        <div class="flight-empty__title">Start with a balloon</div>
+        <div class="flight-empty__text">
+          Drag a balloon from the tray onto the board to open its first group.
+        </div>
+      </div>
     </div>
 
     <div
@@ -224,5 +234,33 @@ onBeforeUnmount(hideNotification);
 .drop-zone,
 .flight-body {
   height: 100%;
+}
+
+/* Empty board: an inviting dashed dropzone rather than a bare line of text. */
+.flight-empty {
+  max-width: 22rem;
+  padding: 2.5rem 2rem;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-group);
+  background: var(--surface-group-dashed);
+  text-align: center;
+}
+
+.flight-empty__icon {
+  color: var(--ink-faint);
+  transform: rotate(-45deg);
+}
+
+.flight-empty__title {
+  margin-top: 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink-strong);
+}
+
+.flight-empty__text {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
 }
 </style>

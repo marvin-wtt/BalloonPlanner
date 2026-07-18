@@ -7,7 +7,7 @@
     @complete="onVehicleRemoved"
   >
     <table
-      class="vehicle-table shadow-2 relative-position"
+      class="vehicle-table relative-position"
       @dragenter.stop
       @dragover.stop
       @dragleave.stop
@@ -433,20 +433,24 @@ function onVehicleEdit() {
 </script>
 
 <style scoped>
+/* The vehicle is the manifest: a clean white card whose only strong line is the
+   colour-coded label spine. Interior rules are hairlines so rows read as a list,
+   not a spreadsheet grid. Solid colours keep the PNG export faithful. */
 .vehicle-table {
-  background-color: white;
-  border-collapse: collapse;
-  border-radius: 10px;
+  background-color: var(--surface-card);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
 
 .vehicle-footer {
   text-align: center;
-  font-size: 0.8rem;
-  border-top: 1px solid;
-}
-
-.vehicle-table tr:last-child * {
-  border-bottom: none;
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--border-subtle);
+  padding: 3px 8px;
 }
 
 .vehicle-label {
@@ -454,13 +458,8 @@ function onVehicleEdit() {
   text-align: center;
   padding: 0.5em;
   border: 0;
-  background-color: darkgray;
+  background-color: var(--ink-faint);
   color: white;
-  border-radius: 10px 0 0 0;
-}
-
-.vehicle-label--rounded {
-  border-radius: 10px 0 0 10px;
 }
 
 .vehicle-label span {
@@ -469,30 +468,47 @@ function onVehicleEdit() {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .vehicle-index {
   min-width: 0;
   text-align: center;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
   width: 2em;
 }
 
 th {
-  border-bottom: 2px solid;
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .vehicle-person {
   min-width: 120px;
   height: 30px;
   padding: 0 0.5em;
+  color: var(--ink-strong);
+  transition: background-color 0.12s ease;
+}
+
+/* Faint wash on hover marks every seat as an interactive drop target; the
+   drag-over highlight (which uses !important) still wins while dragging. */
+.vehicle-person:hover {
+  background-color: rgba(52, 80, 111, 0.06);
 }
 
 .vehicle-person__indexed {
-  border-left: 2px solid;
+  border-left: 1px solid var(--border-subtle);
 }
 
 td.vehicle-person {
-  border-bottom: 0.5px dotted;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.vehicle-table tr:last-child .vehicle-person,
+.vehicle-table tr:last-child .vehicle-index {
+  border-bottom: none;
 }
 </style>
