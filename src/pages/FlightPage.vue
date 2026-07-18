@@ -1,10 +1,13 @@
 <template>
   <q-page class="full-width row justify-start no-wrap">
     <template v-if="isLoading">
-      <q-spinner
-        color="primary"
-        size="3em"
-      />
+      <div class="flight-status column items-center justify-center full-width">
+        <q-spinner
+          color="primary"
+          size="2.5em"
+        />
+        <div class="flight-status__text q-mt-md">Loading flight…</div>
+      </div>
     </template>
 
     <template v-else-if="flightSeries">
@@ -18,13 +21,15 @@
         <q-tabs
           :model-value="menuTab"
           vertical
-          active-bg-color="grey-6"
-          class="bg-grey-10 text-white column justify-between"
+          active-bg-color="transparent"
+          indicator-color="transparent"
+          class="flight-rail text-white column justify-between"
         >
           <q-tab
             label="Overview"
             name="overview"
             icon="home"
+            @click.prevent="onTabClick('overview')"
           />
           <q-separator
             spaced
@@ -199,8 +204,16 @@
     </template>
 
     <template v-else>
-      <div class="row full-width justify-center content-center text-center">
-        Select a flight first.
+      <div class="flight-status column items-center justify-center full-width">
+        <q-icon
+          name="flight_takeoff"
+          size="48px"
+          class="flight-status__icon"
+        />
+        <div class="flight-status__title q-mt-md">No flight selected</div>
+        <div class="flight-status__text">
+          Pick a flight and leg from the toolbar to start planning.
+        </div>
       </div>
     </template>
   </q-page>
@@ -482,15 +495,80 @@ const menuClasses = computed<string>(() => {
 </script>
 
 <style lang="scss">
-.q-tab__content {
-  width: 90px !important;
-}
+// Vertical navigation rail: a calm deep-slate column that anchors the board
+// without competing with the manifest cards for attention.
+.flight-rail {
+  background: var(--surface-rail);
+  box-shadow: var(--shadow-rail);
+  padding: 6px 0;
 
-.q-tab .q-badge {
-  right: 0 !important;
+  .q-tab {
+    min-height: 68px;
+    margin: 2px 8px;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.66);
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+
+    &:hover {
+      background: var(--surface-rail-hover);
+      color: #fff;
+    }
+  }
+
+  // Active tab reads as a solid, brand-tinted key rather than a flat grey fill.
+  .q-tab--active {
+    background: var(--surface-rail-active);
+    color: #fff;
+  }
+
+  .q-tab__content {
+    width: 84px !important;
+  }
+
+  .q-tab__label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .q-tab .q-badge {
+    right: 6px !important;
+    top: 6px;
+    font-weight: 700;
+  }
+
+  .q-separator {
+    background: rgba(255, 255, 255, 0.12) !important;
+  }
 }
 
 .flight-view {
-  background-color: $grey-3;
+  background-color: var(--surface-canvas);
+}
+
+// Full-page loading / empty states, centred and unobtrusive.
+.flight-status {
+  min-height: 60vh;
+  padding: 2rem;
+  text-align: center;
+  color: var(--ink-muted);
+}
+
+.flight-status__icon {
+  color: var(--ink-faint);
+}
+
+.flight-status__title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.flight-status__text {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  max-width: 22rem;
 }
 </style>

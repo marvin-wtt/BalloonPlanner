@@ -137,6 +137,27 @@
               <q-item-label>Show number of flights</q-item-label>
             </q-item-section>
           </q-item>
+          <q-item
+            v-ripple
+            tag="label"
+          >
+            <q-item-section
+              avatar
+              top
+            >
+              <q-checkbox
+                v-model="showHandover"
+                color="primary"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Show handover list</q-item-label>
+              <q-item-label caption>
+                Lists who swaps groups before the next leg, so drivers know who
+                to hand over
+              </q-item-label>
+            </q-item-section>
+          </q-item>
           <q-separator />
           <q-item-label header>Weight</q-item-label>
           <q-item
@@ -310,6 +331,7 @@ const {
   showVehicleIcon,
   showGroupLabel,
   showNumberOfFlights,
+  showHandover,
   showPersonWeight,
   showVehicleWeight,
   personDefaultWeight,

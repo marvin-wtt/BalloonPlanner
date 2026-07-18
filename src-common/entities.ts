@@ -71,6 +71,7 @@ export interface ProjectSettings {
   showVehicleIcon?: boolean;
   showGroupLabel?: boolean;
   showNumberOfFlights?: boolean;
+  showHandover?: boolean;
   showPersonWeight?: boolean;
   showVehicleWeight?: boolean;
   personDefaultWeight?: number;

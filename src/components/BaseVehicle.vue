@@ -79,26 +79,28 @@
                   >
                     <q-item-section>Restore capacity</q-item-section>
                   </q-item>
-                  <q-item
-                    v-if="!isCanceled"
-                    v-close-popup
-                    clickable
-                    :disable="isFirstLeg"
-                    @click="onFlightCancel()"
-                  >
-                    <q-item-section class="text-warning">Cancel</q-item-section>
-                  </q-item>
-                  <q-item
-                    v-else
-                    v-close-popup
-                    clickable
-                    :disable="isFirstLeg"
-                    @click="onFlightReactivate()"
-                  >
-                    <q-item-section class="text-info">
-                      Reactivate
-                    </q-item-section>
-                  </q-item>
+                  <template v-if="!isFirstLeg">
+                    <q-item
+                      v-if="!isCanceled"
+                      v-close-popup
+                      clickable
+                      @click="onFlightCancel()"
+                    >
+                      <q-item-section class="text-warning">
+                        Cancel
+                      </q-item-section>
+                    </q-item>
+                    <q-item
+                      v-else
+                      v-close-popup
+                      clickable
+                      @click="onFlightReactivate()"
+                    >
+                      <q-item-section class="text-info">
+                        Reactivate
+                      </q-item-section>
+                    </q-item>
+                  </template>
                 </template>
                 <q-item
                   v-close-popup

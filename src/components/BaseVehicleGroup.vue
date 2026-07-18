@@ -70,6 +70,13 @@
           />
         </div>
       </div>
+
+      <group-handover-list
+        v-if="showHandover"
+        :flight-series="flightSeries"
+        :flight-leg="flightLeg"
+        :group="group"
+      />
     </div>
   </drop-zone>
 </template>
@@ -89,13 +96,15 @@ import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useFlightStore } from '@/stores/flight';
 import BaseVehicle from '@/components/BaseVehicle.vue';
+import GroupHandoverList from '@/components/GroupHandoverList.vue';
 import { useFlightOperations } from '@/composables/flightOperations';
 import { useProjectSettings } from '@/composables/projectSettings';
 import { useVehicleGroupProtection } from '@/composables/vehicleGroupProtection';
 import { useDragState } from '@/composables/dragState';
 import { NULL_ID } from '@/../src-common/constants';
 
-const { groupAlignment, groupStyle, showGroupLabel } = useProjectSettings();
+const { groupAlignment, groupStyle, showGroupLabel, showHandover } =
+  useProjectSettings();
 const flightStore = useFlightStore();
 const { carMap, balloonMap, personMap } = storeToRefs(flightStore);
 const { addCarToVehicleGroup } = useFlightOperations();

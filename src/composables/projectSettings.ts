@@ -10,6 +10,7 @@ const DEFAULTS: Readonly<ProjectSettings> = {
   showVehicleIcon: false,
   showGroupLabel: true,
   showNumberOfFlights: true,
+  showHandover: true,
   showPersonWeight: false,
   showVehicleWeight: false,
   personDefaultWeight: 80,
@@ -104,6 +105,7 @@ export function useProjectSettings() {
   const showVehicleIcon = field('showVehicleIcon');
   const showGroupLabel = field('showGroupLabel');
   const showNumberOfFlights = field('showNumberOfFlights');
+  const showHandover = field('showHandover');
   const showPersonWeight = field('showPersonWeight');
   const showVehicleWeight = field('showVehicleWeight');
   const personDefaultWeight = field('personDefaultWeight');
@@ -123,6 +125,7 @@ export function useProjectSettings() {
     showVehicleIcon,
     showGroupLabel,
     showNumberOfFlights,
+    showHandover,
     showPersonWeight,
     showVehicleWeight,
     personDefaultWeight,
