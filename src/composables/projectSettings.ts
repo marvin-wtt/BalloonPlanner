@@ -10,7 +10,7 @@ const DEFAULTS: Readonly<ProjectSettings> = {
   showVehicleIcon: false,
   showGroupLabel: true,
   showNumberOfFlights: true,
-  showHandover: true,
+  showHandover: false,
   showPersonWeight: false,
   showVehicleWeight: false,
   personDefaultWeight: 80,
