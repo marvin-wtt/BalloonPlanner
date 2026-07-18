@@ -8,192 +8,53 @@
       <div class="q-gutter-sm">
         <q-list separator>
           <q-item-label header>Behaviour</q-item-label>
-          <q-item
-            v-ripple
-            tag="label"
-          >
-            <q-item-section
-              avatar
-              top
-            >
-              <q-checkbox
-                v-model="disableAssignmentProtection"
-                color="primary"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Disable assignment protection</q-item-label>
-              <q-item-label caption>
-                The protection prohibits changes across vehicle groups after the
-                first leg
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-item
-            v-ripple
-            tag="label"
-          >
-            <q-item-section
-              avatar
-              top
-            >
-              <q-checkbox
-                v-model="disableVehicleGroupProtection"
-                color="primary"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Disable vehicle group protection</q-item-label>
-              <q-item-label caption>
-                The protection prohibits changes to the vehicle groups after the
-                first leg
-              </q-item-label>
-            </q-item-section>
-          </q-item>
+          <setting-toggle
+            v-model="disableAssignmentProtection"
+            label="Disable assignment protection"
+            caption="The protection prohibits changes across vehicle groups after the first leg"
+          />
+          <setting-toggle
+            v-model="disableVehicleGroupProtection"
+            label="Disable vehicle group protection"
+            caption="The protection prohibits changes to the vehicle groups after the first leg"
+          />
           <q-item-label header>Information</q-item-label>
-          <q-item
-            v-ripple
-            tag="label"
-          >
-            <q-item-section
-              avatar
-              top
-            >
-              <q-checkbox
-                v-model="showVehicleLabel"
-                color="primary"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Show vehicle name</q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-item
+          <setting-toggle
+            v-model="showVehicleLabel"
+            label="Show vehicle name"
+          />
+          <setting-toggle
             v-if="showVehicleLabel"
-            v-ripple
-            tag="label"
-          >
-            <q-item-section
-              avatar
-              top
-            >
-              <q-checkbox
-                v-model="showVehicleIcon"
-                color="primary"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Show vehicle Icon</q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-item
-            v-ripple
-            tag="label"
-          >
-            <q-item-section
-              avatar
-              top
-            >
-              <q-checkbox
-                v-model="showGroupLabel"
-                color="primary"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Show group name</q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-item
-            v-ripple
-            tag="label"
-          >
-            <q-item-section
-              avatar
-              top
-            >
-              <q-checkbox
-                v-model="showVehicleIndex"
-                color="primary"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Show passenger index</q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-item
-            v-ripple
-            tag="label"
-          >
-            <q-item-section
-              avatar
-              top
-            >
-              <q-checkbox
-                v-model="showNumberOfFlights"
-                color="primary"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Show number of flights</q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-item
-            v-ripple
-            tag="label"
-          >
-            <q-item-section
-              avatar
-              top
-            >
-              <q-checkbox
-                v-model="showHandover"
-                color="primary"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Show handover list</q-item-label>
-              <q-item-label caption>
-                Lists who swaps groups before the next leg, so drivers know who
-                to hand over
-              </q-item-label>
-            </q-item-section>
-          </q-item>
+            v-model="showVehicleIcon"
+            label="Show vehicle Icon"
+          />
+          <setting-toggle
+            v-model="showGroupLabel"
+            label="Show group name"
+          />
+          <setting-toggle
+            v-model="showVehicleIndex"
+            label="Show passenger index"
+          />
+          <setting-toggle
+            v-model="showNumberOfFlights"
+            label="Show number of flights"
+          />
+          <setting-toggle
+            v-model="showHandover"
+            label="Show handover list"
+            caption="Lists who swaps groups before the next leg, so drivers know who to hand over"
+          />
           <q-separator />
           <q-item-label header>Weight</q-item-label>
-          <q-item
-            v-ripple
-            tag="label"
-          >
-            <q-item-section
-              avatar
-              top
-            >
-              <q-checkbox
-                v-model="showPersonWeight"
-                color="primary"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Show weight of person</q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-item
-            v-ripple
-            tag="label"
-          >
-            <q-item-section
-              avatar
-              top
-            >
-              <q-checkbox
-                v-model="showVehicleWeight"
-                color="primary"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>Show total weight</q-item-label>
-            </q-item-section>
-          </q-item>
+          <setting-toggle
+            v-model="showPersonWeight"
+            label="Show weight of person"
+          />
+          <setting-toggle
+            v-model="showVehicleWeight"
+            label="Show total weight"
+          />
           <q-item>
             <q-item-section>
               <q-item-label>Default Person Weight</q-item-label>
@@ -322,6 +183,7 @@
 <script lang="ts" setup>
 import { QItem, QList } from 'quasar';
 import { useProjectSettings } from '@/composables/projectSettings';
+import SettingToggle from '@/components/panels/SettingToggle.vue';
 
 const {
   disableAssignmentProtection,
