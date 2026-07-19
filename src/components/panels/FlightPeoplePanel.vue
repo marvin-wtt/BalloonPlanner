@@ -16,14 +16,13 @@
       >
         <template #header-actions>
           <q-btn-dropdown
-            square
-            outline
+            :label="sortLabel"
+            color="grey"
             size="sm"
             padding="xs"
-            color="grey"
-            icon="sort"
-            :label="sortLabel"
             no-caps
+            square
+            outline
             class="q-mr-xs"
           >
             <q-tooltip>Sort by</q-tooltip>
@@ -116,8 +115,10 @@ const sortLabel = computed<string>(() => {
 const sortedPeople = computed<Person[]>(() => {
   return people.toSorted((a, b) => {
     if (sortBy.value === 'flights') {
-      const flightsA = (numberOfFlights.value[a.id] ?? 0) - (a.firstTime ? 0.5 : 0);
-      const flightsB = (numberOfFlights.value[b.id] ?? 0) - (b.firstTime ? 0.5 : 0);
+      const flightsA =
+        (numberOfFlights.value[a.id] ?? 0) - (a.firstTime ? 0.5 : 0);
+      const flightsB =
+        (numberOfFlights.value[b.id] ?? 0) - (b.firstTime ? 0.5 : 0);
 
       if (flightsA !== flightsB) {
         return flightsA - flightsB;
