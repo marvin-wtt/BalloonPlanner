@@ -125,9 +125,12 @@ export function useSolver() {
     }
 
     const reducedIds = new Set(flightLeg.value.reducedCapacityBalloonIds);
-    const balloons = Object.values(balloonMap.value).map((b) =>
-      reducedIds.has(b.id) ? { ...b, maxCapacity: b.maxCapacity - 1 } : b,
-    );
+    const canceledIds = new Set(flightLeg.value.canceledBalloonIds);
+    const balloons = Object.values(balloonMap.value)
+      .filter((b) => !canceledIds.has(b.id))
+      .map((b) =>
+        reducedIds.has(b.id) ? { ...b, maxCapacity: b.maxCapacity - 1 } : b,
+      );
     const cars = Object.values(carMap.value);
 
     const numberOfFlights = countFlightsBeforeFlightLeg(
@@ -148,7 +151,11 @@ export function useSolver() {
       return acc;
     }, {});
 
-    const preAssignments = flightLeg.value.assignments;
+    const preAssignments = Object.fromEntries(
+      Object.entries(flightLeg.value.assignments).filter(
+        ([vehicleId]) => !canceledIds.has(vehicleId),
+      ),
+    );
 
     const groupHistory = buildGroupHistory(
       project.value,

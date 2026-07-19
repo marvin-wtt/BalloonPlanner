@@ -127,11 +127,15 @@ function handleError(
   stdoutData: string,
   stderrData: string,
 ): Error {
+  // The solver emits its structured error JSON on stderr
   let errorData: unknown;
-  try {
-    errorData = JSON.parse(stdoutData);
-  } catch {
-    // ignore
+  for (const raw of [stderrData, stdoutData]) {
+    try {
+      errorData = JSON.parse(raw);
+      break;
+    } catch {
+      // ignore
+    }
   }
 
   if (

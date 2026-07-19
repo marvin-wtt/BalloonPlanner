@@ -49,7 +49,7 @@
                   <q-item>
                     <q-item-section>
                       <q-input
-                        v-model.number="options.weights.counselorFlightDiscount"
+                        v-model.number="options.counselorFlightDiscount"
                         label="Counselor Flight Disadvantage over Participants"
                         hint="Value is subtracted from actual counselor flights"
                         type="number"
@@ -213,12 +213,13 @@
                       />
                     </q-item-section>
                   </q-item>
-                  <q-item v-if="(options.weights.lowFlightsLookahead ?? 0) > 0">
+                  <q-item>
                     <q-item-section>
                       <q-input
                         v-model.number="options.weights.lowFlightsLookahead"
                         label="Future Leg Fairness"
                         hint="Higher values try to equalize participant flights in future legs"
+                        type="number"
                         step="1"
                         :rules="[signedIntegerRule]"
                         hide-bottom-space
@@ -375,8 +376,8 @@ const options = reactive<
 >({
   planningHorizonDepth: 0,
   timeLimit: 600,
+  counselorFlightDiscount: 0.9,
   weights: {
-    counselorFlightDiscount: 0.9,
     passengerFairness: 30,
     tiebreakFairness: 1,
     groupRotation: 5,

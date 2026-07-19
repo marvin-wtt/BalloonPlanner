@@ -82,6 +82,7 @@ export interface SolveFlightLegOptions extends Record<string, unknown> {
 
   planningHorizonDepth?: number;
   counselorFlightDiscount?: number;
+  defaultPersonWeight?: number;
   timeLimit?: number;
 }
 
@@ -99,7 +100,6 @@ export interface SolveFlightLegWeights extends Record<
   noSoloParticipant?: number;
   groupPassengerBalance?: number;
   lowFlightsLookahead?: number;
-  defaultPersonWeight?: number;
 }
 
 export interface SolveFlightLegConstraints extends Record<

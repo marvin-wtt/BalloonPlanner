@@ -445,6 +445,24 @@ class TestGroupRotation:
                        w_group_rotation=50)
         assert "px" not in occupants(result, "b2")
 
+    def test_avoids_car_of_group_person_has_been_in_before(self):
+        # group_history is keyed by group id (= balloon id); it must also steer
+        # people away from the *cars* of that group. Balloons hold only the
+        # pilot here, so px/py must ride in cars.
+        people = [
+            person("p1", role="counselor"), person("p2", role="counselor"),
+            person("p3", role="counselor"), person("p4", role="counselor"),
+            person("px"), person("py"),
+        ]
+        b = [balloon("b1", 1, ["p1"]), balloon("b2", 1, ["p2"])]
+        c = [car("c1", 4, ["p3"]), car("c2", 4, ["p4"])]
+        groups = {"b1": ["c1"], "b2": ["c2"]}
+        result = solve(b, c, people, groups,
+                       group_history={"px": {"b2": 5}, "py": {"b1": 5}},
+                       w_group_rotation=50)
+        assert "px" in occupants(result, "c1")
+        assert "py" in occupants(result, "c2")
+
 
 class TestBalloonRotation:
     def test_prefers_passenger_who_has_not_flown_this_balloon(self):
@@ -501,6 +519,27 @@ class TestBalloonRotationLookahead:
             b, c, people, groups,
             balloon_history={"px": {"b2": 3}, "py": {"b1": 3}},
             fixed_groups=None,
+            planning_horizon_legs=1,
+            w_balloon_rotation=100,
+        )
+        assert "px" in occupants(result, "b1") | occupants(result, "c1")
+        assert "py" in occupants(result, "b2") | occupants(result, "c2")
+
+    def test_lookahead_active_with_empty_fixed_groups(self):
+        # The app sends fixedGroups={} (not None) on the first leg; an empty
+        # dict must enable the first-leg lookahead exactly like None does.
+        people = [
+            person("p1", role="counselor"), person("p2", role="counselor"),
+            person("p3", role="counselor"), person("p4", role="counselor"),
+            person("px"), person("py"),
+        ]
+        b = [balloon("b1", 2, ["p1"]), balloon("b2", 2, ["p2"])]
+        c = [car("c1", 4, ["p3"]), car("c2", 4, ["p4"])]
+        groups = {"b1": ["c1"], "b2": ["c2"]}
+        result = solve(
+            b, c, people, groups,
+            balloon_history={"px": {"b2": 3}, "py": {"b1": 3}},
+            fixed_groups={},
             planning_horizon_legs=1,
             w_balloon_rotation=100,
         )

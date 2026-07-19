@@ -103,10 +103,10 @@ def solve_vehicle_groups(
 
     for bid, fixed_cars in frozen.items():
         if bid not in balloon_ids:
-            raise ValueError(f"balloon {balloon_names[bid]} not found")
+            raise ValueError(f"balloon {bid} not found")
         for cid in fixed_cars:
             if cid not in car_ids:
-                raise ValueError(f"car {car_names[cid]} not found")
+                raise ValueError(f"car {cid} not found")
 
     # Helpful pre-errors: no operator candidates for real balloons only
     for bid in balloon_ids:

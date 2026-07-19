@@ -234,7 +234,9 @@ def solve_flight_leg(
                 model.Add(op[pid, vid] == 0)
 
     # 2.7 stay-in-group when this is NOT the first leg
-    if fixed_groups is not None:
+    # NOTE: the app sends an *empty dict* (not None) on the first leg, so all
+    # first-leg gates below must use truthiness, never `is None`.
+    if fixed_groups:
         # take group from previous leg (last entry)
         allowed = defaultdict(set)
 
@@ -346,7 +348,7 @@ def solve_flight_leg(
             objective_terms.append(+w_no_solo_participant * solo_part)
 
     # 3.4 group passenger deviation
-    if w_group_passenger_balance != 0 and fixed_groups is None:
+    if w_group_passenger_balance != 0 and not fixed_groups:
         n_people = len(person_ids)
         seats_in_air = sum(capacity[bid] for bid in balloon_ids)
         # integer target; fair rounding happens via deviation vars
@@ -383,7 +385,7 @@ def solve_flight_leg(
             objective_terms.append(-w_divers_nationalities * minority)
 
     # 3.5b avoid repeated meetings inside a vehicle group (existence penalty, fast) — only if groups are not fixed
-    if w_new_meetings != 0 and fixed_groups is None and people_meet_history is not None:
+    if w_new_meetings != 0 and not fixed_groups and people_meet_history is not None:
         # Keep the model lean: consider at most K past contacts per person
         max_contacts_per_person = 8  # tune 6–10
 
@@ -437,12 +439,19 @@ def solve_flight_leg(
                 # Minimize: small penalty for any repeated meet in the same group
                 objective_terms.append(w_new_meetings * repeat_exists)
 
-    # 3.6 fresh vehicle (passengers only)
-    if w_group_rotation != 0 and fixed_groups is None and group_history:
+    # 3.6 fresh group (passengers only)
+    if w_group_rotation != 0 and not fixed_groups and group_history:
+        # history is keyed by group id (= balloon id); map each vehicle to its group
+        group_of = {bid: bid for bid in vehicle_groups}
+        for bid, car_ids in vehicle_groups.items():
+            for cid in car_ids:
+                group_of[cid] = bid
+
         for p, v in product(person_ids, vehicle_ids):
             # 1 / (1 + repeats): 1.0 if never seen, 0.5 after 1 repeat, 0.33 after 2, ...
-            # Keeps a diminishing (never-negative) incentive for less-used vehicles.
-            nf = 1.0 / (1.0 + float(group_history.get(p, {}).get(v, 0)))
+            # Keeps a diminishing (never-negative) incentive for less-used groups.
+            gid = group_of.get(v, v)
+            nf = 1.0 / (1.0 + float(group_history.get(p, {}).get(gid, 0)))
             # scale the novelty reward for passengers; subtract op to avoid rewarding operators
             objective_terms.append(-w_group_rotation * nf * (pax[p, v] - op[p, v]))
 
@@ -465,7 +474,7 @@ def solve_flight_leg(
     if (
         w_balloon_rotation != 0
         and balloon_history
-        and fixed_groups is None
+        and not fixed_groups
         and planning_horizon_legs >= 1
     ):
         for p in person_ids:

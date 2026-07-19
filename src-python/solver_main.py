@@ -20,7 +20,7 @@ from solver_vehicle_group import solve_vehicle_groups
 def _emit_error(msg: str, *, exit_code: int = 1) -> None:
     try:
         json.dump({"message": msg}, sys.stderr)
-        sys.stdout.write("\n")
+        sys.stderr.write("\n")
     finally:
         sys.exit(exit_code)
 
