@@ -378,13 +378,32 @@ function classifyDrop(element: Identifiable): 'accept' | 'warn' | 'reject' {
 
 async function onDrop(element: Identifiable) {
   // A cross-group assignment breaks consistency with the previous leg. When
-  // protection is active, confirm before proceeding. Only the drop is guarded,
-  // so the dialog is shown once.
+  // protection is active, confirm before proceeding.
   const sameGroup = wasInSameVehicleGroupInPreviousLeg(element.id);
-  if (!sameGroup && !disableAssignmentProtection.value) {
-    const confirmed = await confirmChange();
-    if (!confirmed) {
-      return;
+  if (sameGroup || disableAssignmentProtection.value) {
+    // Plain move: the source cell removes its person on drag end as usual.
+    addPersonToVehicle(element.id);
+    return;
+  }
+
+  // The confirmation outlives the drag, but the source's drag-end removal
+  // fires immediately — declining would still leave the person unassigned.
+  // So the whole move (source removal included) is applied here instead;
+  // dropHandled must be set before any await so the source cell skips its
+  // removal.
+  DragHelper.dropHandled = true;
+
+  const confirmed = await confirmChange();
+  if (!confirmed) {
+    return;
+  }
+
+  const source = findPersonSlot(element.id);
+  if (source) {
+    if (source.operator) {
+      setVehicleOperator(source.vehicleId, null);
+    } else {
+      removeVehiclePassenger(source.vehicleId, element.id);
     }
   }
 
