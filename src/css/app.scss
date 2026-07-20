@@ -27,8 +27,10 @@
   --ink-faint: #91a0b0;
 
   // Elevation — tuned soft and cool so cards lift without a heavy drop shadow.
-  --shadow-card: 0 1px 2px rgba(23, 39, 58, 0.06), 0 2px 6px rgba(23, 39, 58, 0.07);
-  --shadow-card-hover: 0 2px 4px rgba(23, 39, 58, 0.08), 0 8px 20px rgba(23, 39, 58, 0.13);
+  --shadow-card:
+    0 1px 2px rgba(23, 39, 58, 0.06), 0 2px 6px rgba(23, 39, 58, 0.07);
+  --shadow-card-hover:
+    0 2px 4px rgba(23, 39, 58, 0.08), 0 8px 20px rgba(23, 39, 58, 0.13);
   --shadow-rail: 2px 0 12px rgba(23, 39, 58, 0.18);
 
   // Corner radii.

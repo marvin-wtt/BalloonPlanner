@@ -141,14 +141,11 @@ const handleInvokeEvent = <Args extends unknown[], Result>(
   };
 };
 
-const handleEvent = <Args extends unknown[]>(
-  next: (...args: Args) => void,
-) => {
+const handleEvent = <Args extends unknown[]>(next: (...args: Args) => void) => {
   return (_event: IpcMainEvent, ...args: Args): void => {
     next(...args);
   };
 };
-
 
 const projectApiHandler = {
   index: handleInvokeEvent(getProjectIndex),

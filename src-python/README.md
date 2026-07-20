@@ -12,8 +12,8 @@ streaming CLI that accepts a single JSON payload on stdin and returns a JSON res
 
 - Feasible by construction: encodes critical operational rules as hard constraints.
 - Two-stage workflow:
-  1) Group cars with balloons.
-  2) Assign operators and passengers per leg within those groups.
+  1. Group cars with balloons.
+  2. Assign operators and passengers per leg within those groups.
 - Deterministic and tunable: seedable shuffles and CP-SAT parameterization (`--seed`, `--workers`, time limits).
 - Language-aware: operator compatibility and passenger–operator language checks on balloons; cross-vehicle operator
   compatibility inside a cluster.

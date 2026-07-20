@@ -1,4 +1,8 @@
-import type { FlightLeg, FlightSeries, Project } from '@/../src-common/entities';
+import type {
+  FlightLeg,
+  FlightSeries,
+  Project,
+} from '@/../src-common/entities';
 import { NULL_ID } from '@/../src-common/constants';
 
 export interface FlightValidationResult {
