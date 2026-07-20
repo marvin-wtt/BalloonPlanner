@@ -80,10 +80,11 @@
           v-for="meta in projects"
           :key="meta.id"
           class="position-relative"
-          @click="openProject(meta)"
+          :missing="isMissing(meta)"
+          @click="!isMissing(meta) && openProject(meta)"
         >
           <q-btn
-            v-if="!meta.isInternal"
+            v-if="!meta.isInternal || isMissing(meta)"
             icon="close"
             class="projects-card__remove"
             size="sm"
@@ -99,7 +100,22 @@
             <div class="projects-card__name">
               {{ meta.name }}
             </div>
-            <div class="projects-card__desc">
+            <div
+              v-if="isMissing(meta)"
+              class="projects-card__missing row items-center no-wrap"
+            >
+              <q-icon
+                name="error_outline"
+                size="16px"
+                class="q-mr-xs"
+              />
+              <span>File not found</span>
+              <q-tooltip>{{ meta.filePath }}</q-tooltip>
+            </div>
+            <div
+              v-else
+              class="projects-card__desc"
+            >
               {{ meta.description || 'No description' }}
             </div>
           </q-card-section>
@@ -115,6 +131,7 @@
               size="sm"
               flat
               round
+              :disable="isMissing(meta)"
               @click.stop="downloadProject(meta)"
             >
               <q-tooltip>Export</q-tooltip>
@@ -125,15 +142,17 @@
               size="sm"
               flat
               round
-              disable
+              :disable="isMissing(meta)"
+              @click.stop="revealProject(meta)"
             >
-              <q-tooltip>{{ meta.filePath }}</q-tooltip>
+              <q-tooltip>Show in folder</q-tooltip>
             </q-btn>
             <q-btn
               icon="edit"
               size="sm"
               flat
               round
+              :disable="isMissing(meta)"
               @click.stop="onEditProject(meta)"
             >
               <q-tooltip>Edit</q-tooltip>
@@ -176,6 +195,10 @@ const projects = computed<ProjectMeta[]>(() => projectIndex.value ?? []);
 onBeforeMount(async () => {
   await projectStore.loadIndex();
 });
+
+function isMissing(project: ProjectMeta): boolean {
+  return project.exists === false;
+}
 
 async function downloadProject(project: ProjectMeta) {
   await projectStore.loadProject(project.id);
@@ -281,6 +304,10 @@ async function createProject() {
 function loadProject() {
   window.projectAPI.openFile();
 }
+
+function revealProject(project: ProjectMeta) {
+  window.projectAPI.reveal(project.id);
+}
 </script>
 
 <style scoped>
@@ -361,6 +388,12 @@ function loadProject() {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.projects-card__missing {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--q-negative);
 }
 
 .projects-card__actions {

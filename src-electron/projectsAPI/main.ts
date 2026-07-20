@@ -5,10 +5,12 @@ import {
   type IpcMainEvent,
   type IpcMainInvokeEvent,
   dialog,
+  shell,
 } from 'electron';
 import type { Project, ProjectMeta } from '@/../src-common/entities';
 import {
   deleteProjectFromPath,
+  projectFileExists,
   readProjectFromPath,
   writeProjectToPath,
 } from '@/../src-electron/projectsAPI/file-utils';
@@ -34,6 +36,7 @@ export default () => {
   ipcMain.handle('project:destroy', projectApiHandler.destroy);
   ipcMain.handle('project:remove', projectApiHandler.remove);
   ipcMain.on('project:open-file', projectApiHandler.openFile);
+  ipcMain.on('project:reveal', projectApiHandler.reveal);
 
   ipcMain.on('project:ready', () => {
     loadFromArgs(process.argv).catch((err: unknown) => {
@@ -148,14 +151,34 @@ const handleEvent = <Args extends unknown[]>(next: (...args: Args) => void) => {
 };
 
 const projectApiHandler = {
-  index: handleInvokeEvent(getProjectIndex),
+  index: handleInvokeEvent(index),
   show: handleInvokeEvent(load),
   store: handleInvokeEvent(store),
   update: handleInvokeEvent(update),
   destroy: handleInvokeEvent(destroy),
   remove: handleInvokeEvent(remove),
   openFile: handleEvent(() => void openFile()),
+  reveal: handleEvent(reveal),
 };
+
+// `exists` is derived on every read instead of being stored, so entries whose
+// file was moved or deleted outside the app are detected.
+async function index(): Promise<ProjectMeta[]> {
+  return Promise.all(
+    getProjectIndex().map(async (meta) => ({
+      ...meta,
+      exists: await projectFileExists(meta.filePath),
+    })),
+  );
+}
+
+function reveal(id: string) {
+  try {
+    shell.showItemInFolder(projectFilePath(id));
+  } catch (err: unknown) {
+    log.error(`Failed to reveal project ${id}`, err);
+  }
+}
 
 async function store(project: Project) {
   const projectDir = app.getPath('userData');

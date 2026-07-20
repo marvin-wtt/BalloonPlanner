@@ -27,6 +27,12 @@ export async function readProjectFromPath(
   }
 }
 
+export async function projectFileExists(
+  fullFilePath: string,
+): Promise<boolean> {
+  return fse.pathExists(fullFilePath);
+}
+
 export async function writeProjectToPath(
   project: Project,
   fullFilePath: string,

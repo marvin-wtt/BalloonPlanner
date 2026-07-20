@@ -101,4 +101,5 @@ export interface ProjectMeta {
   description?: string;
   filePath: string;
   isInternal?: boolean;
+  exists?: boolean;
 }

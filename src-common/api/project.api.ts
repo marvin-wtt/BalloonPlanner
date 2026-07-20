@@ -9,4 +9,5 @@ export interface ProjectsAPI {
   remove: (id: string) => Promise<void>;
   onOpenRequest: (callback: (meta: Project) => void) => void;
   openFile: () => void;
+  reveal: (id: string) => void;
 }

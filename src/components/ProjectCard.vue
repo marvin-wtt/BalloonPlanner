@@ -1,15 +1,28 @@
 <template>
   <q-card
-    v-ripple
-    class="cursor-pointer q-hoverable project-card column no-wrap"
+    v-ripple="!missing"
+    class="project-card column no-wrap"
+    :class="missing ? 'project-card--missing' : 'cursor-pointer q-hoverable'"
   >
-    <span class="q-focus-helper" />
+    <span
+      v-if="!missing"
+      class="q-focus-helper"
+    />
 
     <slot />
   </q-card>
 </template>
 
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+withDefaults(
+  defineProps<{
+    missing?: boolean;
+  }>(),
+  {
+    missing: false,
+  },
+);
+</script>
 
 <style scoped>
 .project-card {
@@ -24,9 +37,17 @@
     border-color 0.15s ease;
 }
 
-.project-card:hover {
+.project-card:not(.project-card--missing):hover {
   box-shadow: var(--shadow-card-hover);
   transform: translateY(-2px);
   border-color: var(--border-strong);
+}
+
+/* Stale index entry: the file behind it is gone, so the card cannot be opened. */
+.project-card--missing {
+  cursor: not-allowed;
+  opacity: 0.65;
+  border-style: dashed;
+  box-shadow: none;
 }
 </style>
