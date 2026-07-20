@@ -1,87 +1,92 @@
 <template>
-  <draggable-item
+  <drop-zone
     v-if="person"
     :tag="operator ? 'th' : 'td'"
-    :item="person"
-    :label="person.name"
-    :disabled="!editable"
     :class="{ 'text-negative': overfilled, 'blocked-slot': blocked }"
-    @complete="onDragEnd()"
+    :classify="classifySwap"
+    @dropped="onSwapDrop"
   >
-    <div class="row no-wrap items-center">
-      <div class="col-grow">
-        <span>
-          {{ person.name }}
-        </span>
-        <span
-          v-if="showNumberOfFlights"
-          :class="coloredLabels ? 'text-blue' : ''"
-        >
-          {{ flightsLabel }}
-        </span>
-        <span
-          v-if="showPersonWeight"
-          :class="coloredLabels ? 'text-orange' : ''"
-        >
-          {{ weightLabel }}
-        </span>
-      </div>
-
-      <div
-        v-if="status"
-        class="q-ml-xs no-wrap row items-center"
-      >
-        <q-icon
-          :name="status.icon"
-          :color="status.color"
-          size="sm"
-          dense
-        >
-          <q-tooltip>
-            {{ status.text }}
-          </q-tooltip>
-        </q-icon>
-
-        <span
-          v-if="status.suffix"
-          class="status-suffix"
-          :class="`text-${status.color}`"
-        >
-          {{ status.suffix }}
-        </span>
-      </div>
-    </div>
-
-    <person-info-menu
-      :flight-series
-      :person
-    />
-
-    <q-menu
-      touch-position
-      context-menu
+    <draggable-item
+      :item="person"
+      :label="person.name"
+      :disabled="!editable"
+      @complete="onDragComplete()"
     >
-      <q-list
-        dense
-        style="min-width: 100px"
+      <div class="row no-wrap items-center">
+        <div class="col-grow">
+          <span>
+            {{ person.name }}
+          </span>
+          <span
+            v-if="showNumberOfFlights"
+            :class="coloredLabels ? 'text-blue' : ''"
+          >
+            {{ flightsLabel }}
+          </span>
+          <span
+            v-if="showPersonWeight"
+            :class="coloredLabels ? 'text-orange' : ''"
+          >
+            {{ weightLabel }}
+          </span>
+        </div>
+
+        <div
+          v-if="status"
+          class="q-ml-xs no-wrap row items-center"
+        >
+          <q-icon
+            :name="status.icon"
+            :color="status.color"
+            size="sm"
+            dense
+          >
+            <q-tooltip>
+              {{ status.text }}
+            </q-tooltip>
+          </q-icon>
+
+          <span
+            v-if="status.suffix"
+            class="status-suffix"
+            :class="`text-${status.color}`"
+          >
+            {{ status.suffix }}
+          </span>
+        </div>
+      </div>
+
+      <person-info-menu
+        :flight-series
+        :person
+      />
+
+      <q-menu
+        touch-position
+        context-menu
       >
-        <q-item
-          v-close-popup
-          clickable
-          @click="onEdit()"
+        <q-list
+          dense
+          style="min-width: 100px"
         >
-          <q-item-section>Edit</q-item-section>
-        </q-item>
-        <q-item
-          v-close-popup
-          clickable
-          @click="onDragEnd()"
-        >
-          <q-item-section class="text-negative">Remove</q-item-section>
-        </q-item>
-      </q-list>
-    </q-menu>
-  </draggable-item>
+          <q-item
+            v-close-popup
+            clickable
+            @click="onEdit()"
+          >
+            <q-item-section>Edit</q-item-section>
+          </q-item>
+          <q-item
+            v-close-popup
+            clickable
+            @click="onRemove()"
+          >
+            <q-item-section class="text-negative">Remove</q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </draggable-item>
+  </drop-zone>
 
   <component
     :is="operator ? 'th' : 'td'"
@@ -128,12 +133,14 @@ import { useProjectSettings } from '@/composables/projectSettings';
 import { useAssignmentProtection } from '@/composables/assignmentProtection';
 import PersonInfoMenu from '@/components/PersonInfoMenu.vue';
 import { vehicleGroupLabel } from '@/util/group';
+import { DragHelper } from '@/util/DragHelper';
 
 const quasar = useQuasar();
 const projectStore = useProjectStore();
 const { project } = storeToRefs(projectStore);
 const flightStore = useFlightStore();
-const { personMap, numberOfFlights } = storeToRefs(flightStore);
+const { personMap, balloonMap, carMap, numberOfFlights } =
+  storeToRefs(flightStore);
 const {
   showPersonWeight,
   showNumberOfFlights,
@@ -145,6 +152,7 @@ const {
   setVehicleOperator,
   addVehiclePassenger,
   removeVehiclePassenger,
+  replaceVehiclePassenger,
 } = useFlightOperations();
 const { confirmChange } = useAssignmentProtection();
 
@@ -383,12 +391,131 @@ async function onDrop(element: Identifiable) {
   addPersonToVehicle(element.id);
 }
 
-function onDragEnd() {
+function onDragComplete() {
+  // A swap drop has already reassigned both people, including removing this
+  // cell's person from here; the usual source-side removal must be skipped.
+  if (DragHelper.dropHandled) {
+    return;
+  }
+
+  onRemove();
+}
+
+function onRemove() {
   if (!person) {
     return;
   }
 
   removePersonFromVehicle(person.id);
+}
+
+interface PersonSlot {
+  vehicleId: string;
+  operator: boolean;
+}
+
+function findPersonSlot(personId: string): PersonSlot | null {
+  for (const [vehicleId, a] of Object.entries(flightLeg.assignments)) {
+    if (a.operatorId === personId) {
+      return { vehicleId, operator: true };
+    }
+
+    if (a.passengerIds.includes(personId)) {
+      return { vehicleId, operator: false };
+    }
+  }
+
+  return null;
+}
+
+function findVehicle(vehicleId: string): Vehicle | undefined {
+  return carMap.value[vehicleId] ?? balloonMap.value[vehicleId];
+}
+
+function findVehicleGroup(vehicleId: string): VehicleGroup | undefined {
+  return flightSeries.vehicleGroups.find(
+    (g) => g.balloonId === vehicleId || g.carIds.includes(vehicleId),
+  );
+}
+
+function classifySwap(
+  element: Identifiable,
+): 'accept' | 'warn' | 'reject' | null {
+  if (!person || element.id === person.id) {
+    return null;
+  }
+
+  if (!editable || !(element.id in personMap.value)) {
+    return 'reject';
+  }
+
+  // Only a person already seated in this leg can swap seats
+  const source = findPersonSlot(element.id);
+  if (!source) {
+    return 'reject';
+  }
+
+  // The dragged person must be able to take this seat …
+  if (operator && !vehicle.allowedOperatorIds.includes(element.id)) {
+    return 'reject';
+  }
+
+  // … and this cell's person must be able to take the vacated seat
+  if (source.operator) {
+    const sourceVehicle = findVehicle(source.vehicleId);
+    if (!sourceVehicle?.allowedOperatorIds.includes(person.id)) {
+      return 'reject';
+    }
+  }
+
+  const sourceGroup = findVehicleGroup(source.vehicleId);
+  const consistent =
+    wasInSameVehicleGroupInPreviousLeg(element.id) &&
+    (!sourceGroup ||
+      wasInSameVehicleGroupInPreviousLeg(person.id, sourceGroup));
+
+  return consistent ? 'accept' : 'warn';
+}
+
+async function onSwapDrop(element: Identifiable) {
+  if (!person) {
+    return;
+  }
+
+  const source = findPersonSlot(element.id);
+  if (!source) {
+    return;
+  }
+
+  // The whole swap is applied here, so the source cell's drag-end removal has
+  // to be skipped. Must be set before any await: the source's drag end fires
+  // right after this drop handler yields.
+  DragHelper.dropHandled = true;
+
+  if (classifySwap(element) === 'warn' && !disableAssignmentProtection.value) {
+    const confirmed = await confirmChange();
+    if (!confirmed) {
+      return;
+    }
+  }
+
+  const occupantId = person.id;
+
+  // In-place replacement keeps each seat row. The target seat must be filled
+  // before the source seat: for a swap within the same passenger list, the
+  // source-side replacement must find the dragged person at their original
+  // index, not the one just swapped in.
+  if (operator) {
+    setVehicleOperator(vehicle.id, element.id);
+  } else {
+    replaceVehiclePassenger(vehicle.id, occupantId, element.id);
+  }
+
+  if (source.operator) {
+    setVehicleOperator(source.vehicleId, occupantId);
+  } else {
+    replaceVehiclePassenger(source.vehicleId, element.id, occupantId);
+  }
 }
 
 function onEdit() {
@@ -425,7 +552,10 @@ function removePersonFromVehicle(personId: string) {
   }
 }
 
-function wasInSameVehicleGroupInPreviousLeg(personId: string): boolean {
+function wasInSameVehicleGroupInPreviousLeg(
+  personId: string,
+  inGroup: VehicleGroup = group,
+): boolean {
   if (isFirstLeg.value) {
     return true;
   }
@@ -436,7 +566,7 @@ function wasInSameVehicleGroupInPreviousLeg(personId: string): boolean {
     return false;
   }
 
-  const groupVehicleIds = [group.balloonId, ...group.carIds];
+  const groupVehicleIds = [inGroup.balloonId, ...inGroup.carIds];
 
   return groupVehicleIds.some((vid) => {
     const assignment = previousLeg.assignments[vid];

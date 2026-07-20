@@ -23,8 +23,10 @@ import type { Identifiable } from '@/../src-common/entities';
 
 type DropState = 'accept' | 'warn' | 'reject';
 
+// `classify` may return null to ignore the drag entirely: no highlight and no
+// accept, e.g. when a person is dragged over their own seat.
 const { tag = 'div', classify = () => 'accept' } = defineProps<{
-  classify?: (element: Identifiable) => DropState;
+  classify?: (element: Identifiable) => DropState | null;
   tag?: string | object;
 }>();
 
@@ -43,7 +45,8 @@ function setDropEffect(event: DragEvent, value: DataTransfer['dropEffect']) {
 function applyHighlight(event: DragEvent) {
   event.preventDefault();
 
-  const state = DragHelper.element !== null ? classify(DragHelper.element) : null;
+  const state =
+    DragHelper.element !== null ? classify(DragHelper.element) : null;
   highlightState.value = state;
   DragHelper.accepted = state !== null && state !== 'reject';
 

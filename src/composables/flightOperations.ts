@@ -232,6 +232,20 @@ export function useFlightOperations() {
     removeFirst(assignment.passengerIds, (p) => p === personId);
   }
 
+  // Replaces in place so the seat row (array index) is preserved, e.g. when
+  // two people swap seats.
+  function replaceVehiclePassenger(
+    vehicleId: ID,
+    personId: ID,
+    replacementId: ID,
+  ) {
+    const assignment = ensureVehicleAssignment(vehicleId);
+    const i = assignment.passengerIds.indexOf(personId);
+    if (i >= 0) {
+      assignment.passengerIds.splice(i, 1, replacementId);
+    }
+  }
+
   function createPerson(person: Omit<Person, 'id'>) {
     const p = requireProject();
     const id = crypto.randomUUID();
@@ -337,6 +351,7 @@ export function useFlightOperations() {
     setVehicleOperator,
     addVehiclePassenger,
     removeVehiclePassenger,
+    replaceVehiclePassenger,
     clearVehicle,
     clearLegPassengers,
 
