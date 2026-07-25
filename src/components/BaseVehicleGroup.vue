@@ -5,7 +5,10 @@
     :class="styleClass"
     @dropped="drop"
   >
-    <div class="relative-position">
+    <div
+      class="relative-position"
+      :class="{ 'vehicle-group__content--tucked': hasLabelContent }"
+    >
       <div
         v-if="hasLabelContent"
         class="vehicle-group__label"
@@ -312,6 +315,12 @@ async function drop(element: Identifiable) {
 
 .vehicle-group > div {
   padding: 0;
+}
+
+/* Pulls the content up to tuck under the label chip's shadow/overlap. Only
+   applies when the chip actually renders, otherwise it eats the vehicles'
+   own top padding instead. */
+.vehicle-group__content--tucked {
   margin-top: -0.8em;
 }
 
