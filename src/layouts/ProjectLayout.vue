@@ -58,10 +58,11 @@
         <q-space />
 
         <update-btn
-          icon="info"
+          icon="sym_o_info"
           dense
           flat
           rounded
+          class="q-mr-sm"
         />
 
         <q-separator
