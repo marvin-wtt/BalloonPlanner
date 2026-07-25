@@ -6,7 +6,10 @@
     @dropped="drop"
   >
     <div class="relative-position">
-      <div class="vehicle-group__label">
+      <div
+        v-if="hasLabelContent"
+        class="vehicle-group__label"
+      >
         <span v-if="showGroupLabel">
           {{ label }}
         </span>
@@ -18,8 +21,8 @@
         </span>
 
         <q-badge
-          v-if="warningText"
-          color="warning"
+          v-if="errorText"
+          color="negative"
           class="q-ml-sm"
           rounded
         >
@@ -29,7 +32,7 @@
             size="1em"
           />
           <q-tooltip>
-            {{ warningText }}
+            {{ errorText }}
           </q-tooltip>
         </q-badge>
       </div>
@@ -155,7 +158,7 @@ const highlightAsTarget = computed<boolean>(() => {
   return !isCanceled.value && personBelongsToGroup(item.id);
 });
 
-const warningText = computed<string | null>(() => {
+const errorText = computed<string | null>(() => {
   if (trailerClutchWarning.value) {
     return 'The group is missing a trailer clutch';
   }
@@ -165,6 +168,14 @@ const warningText = computed<string | null>(() => {
   }
 
   return null;
+});
+
+// The label chip carries its own background/padding/shadow, so it must not
+// render as an empty pill when there's nothing inside it to show.
+const hasLabelContent = computed<boolean>(() => {
+  return (
+    (showGroupLabel.value ?? false) || isCanceled.value || errorText.value !== null
+  );
 });
 
 const cars = computed<Car[]>(() => {
