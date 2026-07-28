@@ -63,6 +63,10 @@ export interface FlightSeries extends Identifiable {
   legs: FlightLeg[];
 }
 
+export type WarningCategory = 'warning' | 'error' | 'swap';
+
+export type WarningVisibility = 'show' | 'hide-export' | 'hide';
+
 export interface ProjectSettings {
   disableAssignmentProtection?: boolean;
   disableVehicleGroupProtection?: boolean;
@@ -79,6 +83,7 @@ export interface ProjectSettings {
   groupStyle?: 'dashed' | 'highlighted';
   balloonColor?: string;
   carColor?: string;
+  warningVisibility?: Partial<Record<WarningCategory, WarningVisibility>>;
 }
 
 export interface Project extends Identifiable {

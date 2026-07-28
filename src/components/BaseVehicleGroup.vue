@@ -12,6 +12,7 @@
       <div
         v-if="hasLabelContent"
         class="vehicle-group__label"
+        :data-export-hide="labelExportHide"
       >
         <span v-if="showGroupLabel">
           {{ label }}
@@ -28,6 +29,7 @@
           color="negative"
           class="q-ml-sm"
           rounded
+          :data-export-hide="errorExportHide"
         >
           <q-icon
             name="priority_high"
@@ -106,11 +108,13 @@ import GroupHandoverList from '@/components/GroupHandoverList.vue';
 import { useFlightOperations } from '@/composables/flightOperations';
 import { useProjectSettings } from '@/composables/projectSettings';
 import { useVehicleGroupProtection } from '@/composables/vehicleGroupProtection';
+import { useWarningVisibility } from '@/composables/warningVisibility';
 import { useDragState } from '@/composables/dragState';
 import { NULL_ID } from '@/../src-common/constants';
 
 const { groupAlignment, groupStyle, showGroupLabel, showHandover } =
   useProjectSettings();
+const { isHiddenAlways, visibilityOf } = useWarningVisibility();
 const flightStore = useFlightStore();
 const { carMap, balloonMap, personMap } = storeToRefs(flightStore);
 const { addCarToVehicleGroup } = useFlightOperations();
@@ -162,6 +166,10 @@ const highlightAsTarget = computed<boolean>(() => {
 });
 
 const errorText = computed<string | null>(() => {
+  if (isHiddenAlways('error')) {
+    return null;
+  }
+
   if (trailerClutchWarning.value) {
     return 'The group is missing a trailer clutch';
   }
@@ -173,12 +181,30 @@ const errorText = computed<string | null>(() => {
   return null;
 });
 
+// Whether the error badge should disappear from an exported image while
+// staying visible on screen.
+const errorExportHide = computed<boolean>(() => {
+  return errorText.value !== null && visibilityOf('error') === 'hide-export';
+});
+
 // The label chip carries its own background/padding/shadow, so it must not
 // render as an empty pill when there's nothing inside it to show.
 const hasLabelContent = computed<boolean>(() => {
   return (
     (showGroupLabel.value ?? false) || isCanceled.value || errorText.value !== null
   );
+});
+
+// Whether removing just the error badge in export would leave the label pill
+// empty (i.e. nothing else keeps the pill visible) — only then does the
+// whole pill need to go too.
+const labelExportHide = computed<boolean>(() => {
+  const forcedSolelyByError =
+    errorText.value !== null &&
+    !(showGroupLabel.value ?? false) &&
+    !isCanceled.value;
+
+  return forcedSolelyByError && errorExportHide.value;
 });
 
 const cars = computed<Car[]>(() => {

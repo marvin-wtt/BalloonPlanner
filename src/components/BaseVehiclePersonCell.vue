@@ -34,6 +34,7 @@
         <div
           v-if="status"
           class="q-ml-xs no-wrap row items-center"
+          :data-export-hide="statusExportHide"
         >
           <q-icon
             :name="status.icon"
@@ -119,6 +120,7 @@ import type {
   FlightLeg,
   FlightSeries,
   VehicleGroup,
+  WarningCategory,
 } from '@/../src-common/entities';
 import { computed } from 'vue';
 import DropZone from '@/components/drag/DropZone.vue';
@@ -131,6 +133,7 @@ import { useQuasar } from 'quasar';
 import { useProjectStore } from '@/stores/project';
 import { useProjectSettings } from '@/composables/projectSettings';
 import { useAssignmentProtection } from '@/composables/assignmentProtection';
+import { useWarningVisibility } from '@/composables/warningVisibility';
 import PersonInfoMenu from '@/components/PersonInfoMenu.vue';
 import { vehicleGroupLabel } from '@/util/group';
 import { DragHelper } from '@/util/DragHelper';
@@ -155,6 +158,7 @@ const {
   replaceVehiclePassenger,
 } = useFlightOperations();
 const { confirmChange } = useAssignmentProtection();
+const { isHiddenAlways, visibilityOf } = useWarningVisibility();
 
 const {
   person = null,
@@ -185,6 +189,7 @@ interface StatusInfo {
   text: string;
   icon: string;
   suffix?: string | undefined;
+  type: WarningCategory;
 }
 
 const flightsLabel = computed<string>(() => {
@@ -222,7 +227,11 @@ const status = computed<StatusInfo | undefined>(() => {
     blockedStatus.value,
     multiLegStatus.value,
     languageStatus.value,
-  ].find((info): info is StatusInfo => info !== false);
+  ].find((info): info is StatusInfo => info !== false && !isHiddenAlways(info.type));
+});
+
+const statusExportHide = computed<boolean>(() => {
+  return status.value !== undefined && visibilityOf(status.value.type) === 'hide-export';
 });
 
 const overfillStatus = computed<StatusInfo | false>(() => {
@@ -234,6 +243,7 @@ const overfillStatus = computed<StatusInfo | false>(() => {
     icon: 'sym_o_error',
     color: 'negative',
     text: 'Vehicle capacity exceeded',
+    type: 'error',
   };
 });
 
@@ -244,8 +254,9 @@ const blockedStatus = computed<StatusInfo | false>(() => {
 
   return {
     icon: 'sym_o_do_not_disturb_on',
-    color: 'warning',
+    color: 'negative',
     text: 'Place blocked for this leg',
+    type: 'error',
   };
 });
 
@@ -282,6 +293,7 @@ const languageStatus = computed<StatusInfo | false>(() => {
       icon: 'sym_o_translate',
       color: 'warning',
       text: 'No common language with pilot',
+      type: 'warning',
     };
   }
 
@@ -295,6 +307,7 @@ const languageStatus = computed<StatusInfo | false>(() => {
       icon: 'sym_o_translate',
       color: 'warning',
       text: 'No common language with operator',
+      type: 'warning',
     };
   }
 
@@ -317,6 +330,7 @@ const languageStatus = computed<StatusInfo | false>(() => {
     icon: 'sym_o_translate',
     color: 'warning',
     text: 'No common language with operator or other passengers',
+    type: 'warning',
   };
 });
 
@@ -334,6 +348,7 @@ const multiLegStatus = computed<StatusInfo | false>(() => {
     color: 'negative',
     text: `${person.name} was assigned to different group in previous flight`,
     suffix: findPreviousGroupLabel(person.id),
+    type: 'swap',
   };
 });
 
@@ -350,6 +365,7 @@ const operatorInfo = computed<StatusInfo | false>(() => {
     icon: 'sym_o_do_not_disturb_on',
     color: 'negative',
     text: `${person.name} not allowed to operate this vehicle`,
+    type: 'error',
   };
 });
 

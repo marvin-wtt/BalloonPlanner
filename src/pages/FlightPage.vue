@@ -235,6 +235,7 @@ import FlightCarsPanel from '@/components/panels/FlightCarsPanel.vue';
 import SmartFillDialog from '@/components/dialog/SmartFillDialog.vue';
 import { toPng } from 'html-to-image';
 import { useProjectSettings } from '@/composables/projectSettings';
+import { useWarningVisibility } from '@/composables/warningVisibility';
 import { useSolver } from '@/composables/solver';
 import type { SolveFlightLegOptions } from '@/../src-common/api/solver.api';
 import { enableDragDropTouch } from '@/util/drag-drop-touch/drag-drop-touch';
@@ -252,6 +253,7 @@ const { project, isLoading } = storeToRefs(projectStore);
 const { flightSeries, flightLeg } = storeToRefs(flightStore);
 
 const { personDefaultWeight } = useProjectSettings();
+const { stripExportHiddenWarnings } = useWarningVisibility();
 const { clearLegPassengers } = useFlightOperations();
 
 enableDragDropTouch();
@@ -410,6 +412,9 @@ async function onExportImage() {
   const clone = src?.cloneNode(true) as HTMLElement;
   clone.classList.add('no-wrap');
   clone.classList.remove('fit');
+  // Strips warnings the user chose to hide in the exported image only; the
+  // live tree (src) is never touched, so nothing flickers on screen.
+  stripExportHiddenWarnings(clone);
   Object.assign(container.style, {
     position: 'fixed',
     top: '0',

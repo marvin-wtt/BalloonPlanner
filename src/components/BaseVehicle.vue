@@ -175,7 +175,10 @@
           />
         </tr>
 
-        <tr v-if="showFooter">
+        <tr
+          v-if="showFooter"
+          :data-export-hide="footerExportHide"
+        >
           <td
             colspan="3"
             class="vehicle-footer"
@@ -185,14 +188,20 @@
                 <template
                   v-if="vehicle.type === 'balloon' && vehicle.maxWeight"
                 >
-                  <span :class="isOverweight ? 'text-negative text-bold' : ''">
+                  <span
+                    :data-export-declass="overweightExportHide"
+                    :class="overweightClass"
+                  >
                     {{ totalWeight }} kg
                   </span>
                   <span>/ {{ vehicle.maxWeight }} kg</span>
                 </template>
                 <template v-else>{{ totalWeight }} kg</template>
               </div>
-              <div v-if="isOverweight">
+              <div
+                v-if="showOverweightWarning"
+                :data-export-hide="overweightExportHide"
+              >
                 <q-icon
                   name="sym_o_error"
                   color="warning"
@@ -231,6 +240,7 @@ import EditCarDialog from '@/components/dialog/EditCarDialog.vue';
 import { useProjectStore } from '@/stores/project';
 import { useProjectSettings } from '@/composables/projectSettings';
 import { useVehicleGroupProtection } from '@/composables/vehicleGroupProtection';
+import { useWarningVisibility } from '@/composables/warningVisibility';
 
 const {
   removeCarFromVehicleGroup,
@@ -259,6 +269,7 @@ const {
   carColor,
 } = useProjectSettings();
 const { confirmChange } = useVehicleGroupProtection();
+const { isHiddenAlways, visibilityOf } = useWarningVisibility();
 
 const { vehicleId, group, flightSeries, flightLeg, assignment, editable } =
   defineProps<{
@@ -353,12 +364,37 @@ const blockedRow = computed<number | null>(() => {
   return vehicle.value.maxCapacity - 1;
 });
 
+const showOverweightWarning = computed<boolean>(() => {
+  return isOverweight.value && !isHiddenAlways('warning');
+});
+
+const overweightClass = computed<string>(() => {
+  return showOverweightWarning.value ? 'text-negative text-bold' : '';
+});
+
 const showFooter = computed<boolean>(() => {
-  if (isOverweight.value) {
+  if (showOverweightWarning.value) {
     return true;
   }
 
   return vehicle.value.type === 'balloon' && (showVehicleWeight.value ?? false);
+});
+
+// Whether the overweight warning (icon + emphasis) should disappear from an
+// exported image while staying visible on screen.
+const overweightExportHide = computed<boolean>(() => {
+  return showOverweightWarning.value && visibilityOf('warning') === 'hide-export';
+});
+
+// The footer row itself should only be removed from the export when it
+// exists solely because of the warning — otherwise removing it would also
+// delete the "show total weight" row the user asked to keep.
+const footerExportHide = computed<boolean>(() => {
+  const forcedByWarning =
+    showOverweightWarning.value &&
+    !(vehicle.value.type === 'balloon' && (showVehicleWeight.value ?? false));
+
+  return forcedByWarning && visibilityOf('warning') === 'hide-export';
 });
 
 function onFlightCancel() {

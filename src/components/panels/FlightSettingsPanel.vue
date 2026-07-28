@@ -45,6 +45,20 @@
             label="Show handover list"
             caption="Lists who swaps groups before the next leg, so drivers know who to hand over"
           />
+          <q-item-label header>Alerts</q-item-label>
+          <setting-select
+            v-for="row in WARNING_ROWS"
+            :key="row.type"
+            :model-value="visibilityOf(row.type)"
+            :label="row.label"
+            :caption="row.caption"
+            :options="VISIBILITY_OPTIONS"
+            @update:model-value="
+              (v) => {
+                if (v !== undefined) setVisibility(row.type, v);
+              }
+            "
+          />
           <q-separator />
           <q-item-label header>Weight</q-item-label>
           <setting-toggle
@@ -72,40 +86,22 @@
             </q-item-section>
           </q-item>
           <q-item-label header>Appearance</q-item-label>
-          <q-item>
-            <q-item-section>
-              <q-select
-                v-model="groupAlignment"
-                label="Group Alignment"
-                :options="[
-                  { label: 'Vertical', value: 'vertical' },
-                  { label: 'Horizontal', value: 'horizontal' },
-                ]"
-                emit-value
-                map-options
-                rounded
-                outlined
-                dense
-              />
-            </q-item-section>
-          </q-item>
-          <q-item>
-            <q-item-section>
-              <q-select
-                v-model="groupStyle"
-                label="Group Alignment"
-                :options="[
-                  { label: 'Dashed', value: 'dashed' },
-                  { label: 'Highlighted', value: 'highlighted' },
-                ]"
-                emit-value
-                map-options
-                rounded
-                outlined
-                dense
-              />
-            </q-item-section>
-          </q-item>
+          <setting-select
+            v-model="groupAlignment"
+            label="Group Alignment"
+            :options="[
+              { label: 'Vertical', value: 'vertical' },
+              { label: 'Horizontal', value: 'horizontal' },
+            ]"
+          />
+          <setting-select
+            v-model="groupStyle"
+            label="Group Style"
+            :options="[
+              { label: 'Dashed', value: 'dashed' },
+              { label: 'Highlighted', value: 'highlighted' },
+            ]"
+          />
           <q-item>
             <q-item-section>
               <q-input
@@ -183,7 +179,13 @@
 <script lang="ts" setup>
 import { QItem, QList } from 'quasar';
 import { useProjectSettings } from '@/composables/projectSettings';
+import { useWarningVisibility } from '@/composables/warningVisibility';
 import SettingToggle from '@/components/panels/SettingToggle.vue';
+import SettingSelect from '@/components/panels/SettingSelect.vue';
+import type {
+  WarningCategory,
+  WarningVisibility,
+} from '@/../src-common/entities';
 
 const {
   disableAssignmentProtection,
@@ -202,6 +204,42 @@ const {
   balloonColor,
   carColor,
 } = useProjectSettings();
+
+const { visibilityOf, setVisibility } = useWarningVisibility();
+
+// Adding a new hideable notice only needs the right category
+// (data-export-hide/-declass tag, plus isHiddenAlways(category) where it
+// renders) — visibility itself is controlled per category, not per notice.
+interface WarningRow {
+  type: WarningCategory;
+  label: string;
+  caption?: string;
+}
+
+const WARNING_ROWS: WarningRow[] = [
+  {
+    type: 'warning',
+    label: 'Warnings',
+    caption: 'Language mismatch, balloon overweight',
+  },
+  {
+    type: 'error',
+    label: 'Errors',
+    caption:
+      'Capacity exceeded, operator not allowed, blocked place, missing trailer clutch',
+  },
+  {
+    type: 'swap',
+    label: 'Group swaps',
+    caption: 'Person assigned to a different group than the previous leg',
+  },
+];
+
+const VISIBILITY_OPTIONS: { label: string; value: WarningVisibility }[] = [
+  { label: 'Show', value: 'show' },
+  { label: 'Hide in export', value: 'hide-export' },
+  { label: 'Hide always', value: 'hide' },
+];
 
 const { name } = defineProps<{
   name: string;

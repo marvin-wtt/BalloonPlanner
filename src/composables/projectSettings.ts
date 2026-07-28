@@ -18,6 +18,8 @@ const DEFAULTS: Readonly<ProjectSettings> = {
   groupStyle: 'dashed',
   balloonColor: '#0369A1',
   carColor: '#475569',
+  // warningVisibility has no default: it's a sparse record managed by
+  // useWarningVisibility, absence means "show" for every warning type.
 };
 
 /**
@@ -97,41 +99,32 @@ export function useProjectSettings() {
     });
   }
 
-  // expose v-model friendly refs
-  const disableAssignmentProtection = field('disableAssignmentProtection');
-  const disableVehicleGroupProtection = field('disableVehicleGroupProtection');
-  const showVehicleIndex = field('showVehicleIndex');
-  const showVehicleLabel = field('showVehicleLabel');
-  const showVehicleIcon = field('showVehicleIcon');
-  const showGroupLabel = field('showGroupLabel');
-  const showNumberOfFlights = field('showNumberOfFlights');
-  const showHandover = field('showHandover');
-  const showPersonWeight = field('showPersonWeight');
-  const showVehicleWeight = field('showVehicleWeight');
-  const personDefaultWeight = field('personDefaultWeight');
-  const groupAlignment = field('groupAlignment');
-  const groupStyle = field('groupStyle');
-  const balloonColor = field('balloonColor');
-  const carColor = field('carColor');
+  // v-model friendly refs, one per DEFAULTS key. Adding a new simple setting
+  // only needs a default above and one line here — no separate declaration
+  // list to keep in sync.
+  const fields = {
+    disableAssignmentProtection: field('disableAssignmentProtection'),
+    disableVehicleGroupProtection: field('disableVehicleGroupProtection'),
+    showVehicleIndex: field('showVehicleIndex'),
+    showVehicleLabel: field('showVehicleLabel'),
+    showVehicleIcon: field('showVehicleIcon'),
+    showGroupLabel: field('showGroupLabel'),
+    showNumberOfFlights: field('showNumberOfFlights'),
+    showHandover: field('showHandover'),
+    showPersonWeight: field('showPersonWeight'),
+    showVehicleWeight: field('showVehicleWeight'),
+    personDefaultWeight: field('personDefaultWeight'),
+    groupAlignment: field('groupAlignment'),
+    groupStyle: field('groupStyle'),
+    balloonColor: field('balloonColor'),
+    carColor: field('carColor'),
+    warningVisibility: field('warningVisibility'),
+  };
 
   return {
     settings,
     patch,
     reset,
-    disableAssignmentProtection,
-    disableVehicleGroupProtection,
-    showVehicleIndex,
-    showVehicleLabel,
-    showVehicleIcon,
-    showGroupLabel,
-    showNumberOfFlights,
-    showHandover,
-    showPersonWeight,
-    showVehicleWeight,
-    personDefaultWeight,
-    groupAlignment,
-    groupStyle,
-    balloonColor,
-    carColor,
+    ...fields,
   };
 }
