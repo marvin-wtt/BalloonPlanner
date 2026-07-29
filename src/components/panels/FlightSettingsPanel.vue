@@ -11,12 +11,12 @@
           <setting-toggle
             v-model="disableAssignmentProtection"
             label="Disable assignment protection"
-            caption="The protection prohibits changes across vehicle groups after the first leg"
+            caption="The protection requires confirmation before assigning someone across vehicle groups after the first leg"
           />
           <setting-toggle
             v-model="disableVehicleGroupProtection"
             label="Disable vehicle group protection"
-            caption="The protection prohibits changes to the vehicle groups after the first leg"
+            caption="The protection requires confirmation before changing the vehicle groups after the first leg"
           />
           <q-item-label header>Information</q-item-label>
           <setting-toggle
@@ -26,7 +26,7 @@
           <setting-toggle
             v-if="showVehicleLabel"
             v-model="showVehicleIcon"
-            label="Show vehicle Icon"
+            label="Show vehicle icon"
           />
           <setting-toggle
             v-model="showGroupLabel"
@@ -59,7 +59,6 @@
               }
             "
           />
-          <q-separator />
           <q-item-label header>Weight</q-item-label>
           <setting-toggle
             v-model="showPersonWeight"
@@ -69,26 +68,21 @@
             v-model="showVehicleWeight"
             label="Show total weight"
           />
-          <q-item>
-            <q-item-section>
-              <q-item-label>Default Person Weight</q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-input
-                v-model.number="personDefaultWeight"
-                type="number"
-                suffix=" kg"
-                style="width: 75px"
-                dense
-                rounded
-                outlined
-              />
-            </q-item-section>
-          </q-item>
+          <setting-item label="Default person weight">
+            <q-input
+              v-model.number="personDefaultWeight"
+              type="number"
+              suffix=" kg"
+              style="width: 75px"
+              dense
+              rounded
+              outlined
+            />
+          </setting-item>
           <q-item-label header>Appearance</q-item-label>
           <setting-select
             v-model="groupAlignment"
-            label="Group Alignment"
+            label="Group alignment"
             :options="[
               { label: 'Vertical', value: 'vertical' },
               { label: 'Horizontal', value: 'horizontal' },
@@ -96,7 +90,7 @@
           />
           <setting-select
             v-model="groupStyle"
-            label="Group Style"
+            label="Group style"
             :options="[
               { label: 'Dashed', value: 'dashed' },
               { label: 'Highlighted', value: 'highlighted' },
@@ -104,70 +98,18 @@
           />
           <q-item>
             <q-item-section>
-              <q-input
+              <color-picker-input
                 v-model="balloonColor"
-                label="Balloon Color"
-                :rules="['anyColor']"
-                hide-bottom-space
-                clearable
-                clear-icon="sym_o_undo"
-                rounded
-                outlined
-                dense
-              >
-                <template #append>
-                  <q-icon
-                    name="colorize"
-                    class="cursor-pointer"
-                  >
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-color
-                        v-model="balloonColor"
-                        no-header
-                        default-view="palette"
-                      />
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+                label="Balloon color"
+              />
             </q-item-section>
           </q-item>
           <q-item>
             <q-item-section>
-              <q-input
+              <color-picker-input
                 v-model="carColor"
-                label="Car Color"
-                :rules="['anyColor']"
-                hide-bottom-space
-                clearable
-                clear-icon="sym_o_undo"
-                rounded
-                outlined
-                dense
-              >
-                <template #append>
-                  <q-icon
-                    name="colorize"
-                    class="cursor-pointer"
-                  >
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-color
-                        v-model="carColor"
-                        no-header
-                        default-view="palette"
-                      />
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+                label="Car color"
+              />
             </q-item-section>
           </q-item>
         </q-list>
@@ -177,11 +119,13 @@
 </template>
 
 <script lang="ts" setup>
-import { QItem, QList } from 'quasar';
+import { QItem, QItemSection, QList } from 'quasar';
 import { useProjectSettings } from '@/composables/projectSettings';
 import { useWarningVisibility } from '@/composables/warningVisibility';
 import SettingToggle from '@/components/panels/SettingToggle.vue';
 import SettingSelect from '@/components/panels/SettingSelect.vue';
+import SettingItem from '@/components/panels/SettingItem.vue';
+import ColorPickerInput from '@/components/panels/ColorPickerInput.vue';
 import type {
   WarningCategory,
   WarningVisibility,
