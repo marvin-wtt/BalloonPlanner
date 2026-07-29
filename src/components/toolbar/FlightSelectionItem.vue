@@ -41,17 +41,17 @@
                   <q-item-section>Edit date</q-item-section>
                 </q-item>
                 <q-item
+                  v-if="project.flights[0]?.id !== series.id"
                   v-close-popup
                   clickable
-                  :disable="project.flights[0]?.id === series.id"
                   @click="mergeSeries(series.id)"
                 >
                   <q-item-section class="text-warning">Merge</q-item-section>
                 </q-item>
                 <q-item
+                  v-if="project.flights.length !== 1"
                   v-close-popup
                   clickable
-                  :disable="project.flights.length === 1"
                   @click="deleteSeries(series.id)"
                 >
                   <q-item-section class="text-negative">Delete</q-item-section>
@@ -95,16 +95,16 @@
             <q-menu>
               <q-list style="min-width: 100px">
                 <q-item
+                  v-if="flightSeries?.legs[0]?.id !== leg.id"
                   v-close-popup
-                  :disable="flightSeries?.legs[0]?.id === leg.id"
                   clickable
                   @click="detachLeg(leg.id)"
                 >
                   <q-item-section class="text-warning">Detach</q-item-section>
                 </q-item>
                 <q-item
+                  v-if="flightSeries?.legs.length !== 1"
                   v-close-popup
-                  :disable="flightSeries?.legs.length === 1"
                   clickable
                   @click="deleteLeg(leg.id)"
                 >
