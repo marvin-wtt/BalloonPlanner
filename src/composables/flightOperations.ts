@@ -232,17 +232,14 @@ export function useFlightOperations() {
     removeFirst(assignment.passengerIds, (p) => p === personId);
   }
 
-  // Replaces in place so the seat row (array index) is preserved, e.g. when
-  // two people swap seats.
-  function replaceVehiclePassenger(
+  function replaceVehiclePassengerAt(
     vehicleId: ID,
-    personId: ID,
+    index: number,
     replacementId: ID,
   ) {
     const assignment = ensureVehicleAssignment(vehicleId);
-    const i = assignment.passengerIds.indexOf(personId);
-    if (i >= 0) {
-      assignment.passengerIds.splice(i, 1, replacementId);
+    if (index >= 0 && index < assignment.passengerIds.length) {
+      assignment.passengerIds.splice(index, 1, replacementId);
     }
   }
 
@@ -351,7 +348,7 @@ export function useFlightOperations() {
     setVehicleOperator,
     addVehiclePassenger,
     removeVehiclePassenger,
-    replaceVehiclePassenger,
+    replaceVehiclePassengerAt,
     clearVehicle,
     clearLegPassengers,
 

@@ -3,6 +3,7 @@
     :item="vehicle"
     :label="vehicle.name"
     :disabled="!editable"
+    :can-drag="isVehicleDragAllowed"
     class="row"
     @complete="onVehicleRemoved"
   >
@@ -383,7 +384,9 @@ const showFooter = computed<boolean>(() => {
 // Whether the overweight warning (icon + emphasis) should disappear from an
 // exported image while staying visible on screen.
 const overweightExportHide = computed<boolean>(() => {
-  return showOverweightWarning.value && visibilityOf('warning') === 'hide-export';
+  return (
+    showOverweightWarning.value && visibilityOf('warning') === 'hide-export'
+  );
 });
 
 // The footer row itself should only be removed from the export when it
@@ -431,6 +434,12 @@ async function onVehicleRemoved() {
 
 function onVehicleClear() {
   clearVehicle(vehicleId);
+}
+
+function isVehicleDragAllowed(event: DragEvent): boolean {
+  const target = document.elementFromPoint(event.clientX, event.clientY);
+
+  return target?.closest('[data-empty-seat]') == null;
 }
 
 function onVehicleEdit() {

@@ -23,11 +23,13 @@ const {
   label = null,
   tag = 'div',
   disabled,
+  canDrag = () => true,
 } = defineProps<{
   item: Identifiable;
   label?: string | null;
   tag?: string | object;
   disabled?: boolean;
+  canDrag?: (event: DragEvent) => boolean;
 }>();
 
 const emit = defineEmits<{
@@ -47,6 +49,12 @@ onBeforeUnmount(() => {
 
 function onDragStart(event: DragEvent) {
   event.stopPropagation();
+
+  if (!canDrag(event)) {
+    event.preventDefault();
+    return;
+  }
+
   DragHelper.startDrag(event, item);
   setDraggedItem(item);
   dragged.value = true;

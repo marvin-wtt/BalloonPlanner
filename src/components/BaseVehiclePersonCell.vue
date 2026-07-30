@@ -92,6 +92,7 @@
   <component
     :is="operator ? 'th' : 'td'"
     v-else-if="blocked"
+    data-empty-seat="true"
     class="blocked-slot"
   >
     <q-icon
@@ -106,6 +107,7 @@
   <drop-zone
     v-else
     :tag="operator ? 'th' : 'td'"
+    data-empty-seat="true"
     :classify="classifyDrop"
     @dropped="onDrop"
   />
@@ -155,7 +157,7 @@ const {
   setVehicleOperator,
   addVehiclePassenger,
   removeVehiclePassenger,
-  replaceVehiclePassenger,
+  replaceVehiclePassengerAt,
 } = useFlightOperations();
 const { confirmChange } = useAssignmentProtection();
 const { isHiddenAlways, visibilityOf } = useWarningVisibility();
@@ -227,11 +229,16 @@ const status = computed<StatusInfo | undefined>(() => {
     blockedStatus.value,
     multiLegStatus.value,
     languageStatus.value,
-  ].find((info): info is StatusInfo => info !== false && !isHiddenAlways(info.type));
+  ].find(
+    (info): info is StatusInfo => info !== false && !isHiddenAlways(info.type),
+  );
 });
 
 const statusExportHide = computed<boolean>(() => {
-  return status.value !== undefined && visibilityOf(status.value.type) === 'hide-export';
+  return (
+    status.value !== undefined &&
+    visibilityOf(status.value.type) === 'hide-export'
+  );
 });
 
 const overfillStatus = computed<StatusInfo | false>(() => {
@@ -536,20 +543,30 @@ async function onSwapDrop(element: Identifiable) {
 
   const occupantId = person.id;
 
-  // In-place replacement keeps each seat row. The target seat must be filled
-  // before the source seat: for a swap within the same passenger list, the
-  // source-side replacement must find the dragged person at their original
-  // index, not the one just swapped in.
+  // Capture both seats' indices before either is touched. Once one seat is
+  // overwritten with the other passenger's id, an id-based lookup for the
+  // remaining seat could resolve to that just-filled duplicate instead of
+  // its own original seat — this matters in particular for a swap within
+  // the same vehicle, where both seats share one passenger list.
+  const targetIndex = operator
+    ? -1
+    : assignment.passengerIds.indexOf(occupantId);
+  const sourceIndex = source.operator
+    ? -1
+    : (flightLeg.assignments[source.vehicleId]?.passengerIds.indexOf(
+        element.id,
+      ) ?? -1);
+
   if (operator) {
     setVehicleOperator(vehicle.id, element.id);
-  } else {
-    replaceVehiclePassenger(vehicle.id, occupantId, element.id);
+  } else if (targetIndex >= 0) {
+    replaceVehiclePassengerAt(vehicle.id, targetIndex, element.id);
   }
 
   if (source.operator) {
     setVehicleOperator(source.vehicleId, occupantId);
-  } else {
-    replaceVehiclePassenger(source.vehicleId, element.id, occupantId);
+  } else if (sourceIndex >= 0) {
+    replaceVehiclePassengerAt(source.vehicleId, sourceIndex, occupantId);
   }
 }
 
