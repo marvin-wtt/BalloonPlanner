@@ -43,8 +43,7 @@ export function useWarningVisibility() {
       Object.entries(merged).filter(([, v]) => v !== 'show'),
     ) as Partial<Record<WarningCategory, WarningVisibility>>;
 
-    warningVisibility.value =
-      Object.keys(next).length > 0 ? next : undefined;
+    warningVisibility.value = Object.keys(next).length > 0 ? next : undefined;
   }
 
   /**
@@ -56,11 +55,11 @@ export function useWarningVisibility() {
    * never needs to know which category it's removing.
    */
   function stripExportHiddenWarnings(root: ParentNode): void {
-    root.querySelectorAll('[data-export-hide]').forEach((el) => {
+    root.querySelectorAll('[data-export-hide="true"]').forEach((el) => {
       el.remove();
     });
 
-    root.querySelectorAll('[data-export-declass]').forEach((el) => {
+    root.querySelectorAll('[data-export-declass="true"]').forEach((el) => {
       el.removeAttribute('class');
     });
   }
