@@ -53,7 +53,8 @@ export function useSolver() {
       throw new Error('No project, flight series or flight leg selected');
     }
 
-    snapshot.value = {
+    const previousSnapshot = snapshot.value;
+    const preAttemptState: SolveSnapshot = {
       legId: flightLeg.value.id,
       assignments: structuredClone(deepToRaw(flightLeg.value.assignments)),
       vehicleGroups: structuredClone(
@@ -61,14 +62,26 @@ export function useSolver() {
       ),
     };
 
-    const legIndex = flightSeries.value.legs.findIndex(
-      (leg) => leg.id === flightLeg.value?.id,
-    );
-    if (legIndex === 0) {
-      await solveVehicleGroups();
-    }
+    try {
+      const legIndex = flightSeries.value.legs.findIndex(
+        (leg) => leg.id === flightLeg.value?.id,
+      );
+      if (legIndex === 0) {
+        await solveVehicleGroups();
+      }
 
-    await solveFlightLeg(options);
+      await solveFlightLeg(options);
+
+      // Only the successful attempt becomes undo-able; nothing should
+      // appear undo-able if the solve failed.
+      snapshot.value = preAttemptState;
+    } catch (error) {
+      // solveVehicleGroups may have already mutated state before the
+      // failure; revert it so a failed solve leaves nothing changed.
+      flightSeries.value.vehicleGroups = preAttemptState.vehicleGroups;
+      snapshot.value = previousSnapshot;
+      throw error;
+    }
   }
 
   async function solveVehicleGroups() {
