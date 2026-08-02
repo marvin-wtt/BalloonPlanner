@@ -593,6 +593,39 @@ class TestLowFlightsLookahead:
         assert "low1" in c1_occ
         assert "low2" in c1_occ
 
+    def test_low_flight_cutoff_is_per_group_not_global(self):
+        # Two language-segregated groups: the "en" group has plenty of
+        # zero-flight candidates, the "fr" group has exactly one (slightly
+        # used) candidate. A global low-flight cutoff sized for the combined
+        # fleet gets soaked up entirely by the abundant "en" pool, so the
+        # lone "fr" candidate never gets classified as low-flight and has no
+        # protection from immediately flying (and never being reserved for
+        # leg 2). The cutoff must be computed per group, over only that
+        # group's own language-eligible candidates.
+        people = [
+            person("op_en", role="counselor", flights=5, languages=["en"]),
+            person("op_fr", role="counselor", flights=10, languages=["fr"]),
+            *[
+                person(f"en_low_{i}", flights=0, languages=["en"])
+                for i in range(6)
+            ],
+            person("fr_low_0", flights=1, languages=["fr"]),
+        ]
+        b = [balloon("b_en", 3, ["op_en"]), balloon("b_fr", 3, ["op_fr"])]
+        c = [car("c_en", 12, ["op_en"]), car("c_fr", 12, ["op_fr"])]
+        result = solve(
+            b, c, people, {"b_en": ["c_en"], "b_fr": ["c_fr"]},
+            planning_horizon_legs=1,
+            w_passenger_fairness=10,
+            w_low_flights_lookahead=100,
+            c_common_language_passengers=True,
+            c_common_language_operators=True,
+        )
+        # fr_low_0 should be held back in its own group's car (to fly leg 2),
+        # not immediately sent up in leg 1's balloon.
+        assert "fr_low_0" in occupants(result, "c_fr")
+        assert "fr_low_0" not in occupants(result, "b_fr")
+
 
 # ===========================================================================
 # solve_vehicle_groups

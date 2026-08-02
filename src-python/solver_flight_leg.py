@@ -168,6 +168,39 @@ def solve_flight_leg(
         if p
     }
 
+    # ------------------------------------------------------------------
+    # 0.c Sanity checks — catch obvious infeasibility with a clear message
+    # instead of letting the solver grind toward a bare "No feasible
+    # assignment" once nothing fits.
+    # ------------------------------------------------------------------
+    total_capacity = sum(capacity.values())
+    if len(person_ids) > total_capacity:
+        raise ValueError(
+            f"Not enough seats for everyone: {len(person_ids)} people but only "
+            f"{total_capacity} seats across all vehicles."
+        )
+
+    vehicle_names = {v: vehicles_by_id[v].get("name", v) for v in vehicle_ids}
+    for vid, assignment in (frozen or {}).items():
+        if vid not in capacity:
+            continue
+        seat_count = len(
+            {assignment["operatorId"]} - {None} | set(assignment["passengerIds"])
+        )
+        if seat_count > capacity[vid]:
+            raise ValueError(
+                f"Fixed assignment for {vehicle_names.get(vid, vid)} needs "
+                f"{seat_count} seats but it only has {capacity[vid]}."
+            )
+        op_id = assignment["operatorId"]
+        if op_id is not None and op_id not in allowed_op.get(vid, set()):
+            op_name = people_by_id.get(op_id, {}).get("name", op_id)
+            raise ValueError(
+                f"{op_name} is fixed as the operator of "
+                f"{vehicle_names.get(vid, vid)} but is not an eligible operator "
+                f"for it."
+            )
+
     priorities = {
         p: i
         for i, p in enumerate(
@@ -485,20 +518,6 @@ def solve_flight_leg(
 
     # 3.7 language-aware lookahead: prioritise low-flight pax in group cars (no overweight lookahead)
     if w_low_flights_lookahead != 0 and planning_horizon_legs >= 1 and person_ids:
-        # Seats available across the next H legs
-        seats_per_leg = sum(capacity[bid] for bid in balloon_ids)
-        future_seats = planning_horizon_legs * seats_per_leg
-
-        # Global cutoff: who counts as "low-flight"
-        sorted_f = sorted(flights_so_far[p] for p in person_ids)
-        if future_seats <= 0:
-            cutoff = -(10**9)  # nobody qualifies
-        elif future_seats >= len(sorted_f):
-            cutoff = sorted_f[-1]
-        else:
-            cutoff = sorted_f[future_seats - 1]
-
-        low = {p: int(flights_so_far[p] <= cutoff) for p in person_ids}
 
         # Language eligibility for a group (balloon id = bid):
         # A passenger is eligible if they share ≥1 language with at least one *potential*
@@ -520,21 +539,39 @@ def solve_flight_leg(
                     return 1
             return 0
 
-        # Target: in each group's cars, achieve at least H * capacity(low-flight, lang-eligible) over horizon
+        # Target: in each group's cars, achieve at least H * capacity(low-flight, lang-eligible) over horizon.
+        # The "low-flight" cutoff is computed per group, over only that group's own
+        # eligible candidates — not as one global ranking shared across all groups.
+        # A shared ranking lets one language cluster's low-flight people crowd out
+        # another cluster's quota (e.g. all "low" slots landing on English speakers
+        # while the French-speaking group's cars get none, since only English
+        # speakers were eligible to fill it), which is exactly backwards for a
+        # per-group target.
         for bid in balloon_ids:
-            target = int(planning_horizon_legs * capacity[bid])
+            car_ids = vehicle_groups.get(bid, [])
+            eligible = [p for p in person_ids if lang_eligible(p, bid)]
+            if not eligible:
+                continue
+
+            future_seats = planning_horizon_legs * capacity[bid]
+            sorted_f = sorted(flights_so_far[p] for p in eligible)
+            if future_seats <= 0:
+                cutoff = -(10**9)  # nobody qualifies
+            elif future_seats >= len(sorted_f):
+                cutoff = sorted_f[-1]
+            else:
+                cutoff = sorted_f[future_seats - 1]
+
+            low = {p: int(flights_so_far[p] <= cutoff) for p in eligible}
+
+            target = int(min(future_seats, sum(low.values())))
             if target <= 0:
                 continue
 
-            car_ids = vehicle_groups.get(bid, [])
-            low_lang_in_cars = sum(
-                low[p] * lang_eligible(p, bid) * pax[p, v]
-                for v in car_ids
-                for p in person_ids
-            )
+            low_in_cars = sum(low[p] * pax[p, v] for v in car_ids for p in eligible)
 
             short = model.NewIntVar(0, target, f"short_{bid}")
-            model.Add(short >= target - low_lang_in_cars)
+            model.Add(short >= target - low_in_cars)
             objective_terms.append(w_low_flights_lookahead * short)
 
     # 3.8 random fairness tiebreaker
