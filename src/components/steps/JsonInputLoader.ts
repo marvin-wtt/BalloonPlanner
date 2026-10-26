@@ -37,11 +37,13 @@ export function loadJson(
 
       const computedData = unwrapComputed(entry);
 
-      if (!isValidPersonData(computedData)) {
+      const group = extractGroup(entry, computedData);
+
+      if (!isValidPersonData(computedData) || group === undefined) {
         throw new Error(`Invalid person record at index ${i.toString()}`);
       }
 
-      const { firstName, lastName, group, role } = computedData;
+      const { firstName, lastName, role } = computedData;
 
       return {
         id,
@@ -93,15 +95,32 @@ function isObject(x: unknown): x is Record<string, unknown> {
 function isValidPersonData(x: unknown): x is {
   firstName: string;
   lastName: string;
-  group: string;
   role: string;
 } {
   if (!isObject(x)) return false;
-  const { firstName, lastName, group, role } = x;
+  const { firstName, lastName, role } = x;
   if (typeof firstName !== 'string' || firstName.trim() === '') return false;
   if (typeof lastName !== 'string' || lastName.trim() === '') return false;
-  if (typeof group !== 'string' || group.length !== 2) return false;
   return !(typeof role !== 'string' || role.trim() === '');
+}
+
+/**
+ * Extract the two-letter group (country code). The server sends it next to
+ * `computedData`; flat files may carry it on the record itself. Falls back to
+ * `address.country` for older exports and registrations without a group.
+ */
+function extractGroup(entry: unknown, computed: unknown): string | undefined {
+  const candidates = [
+    isObject(entry) ? entry.group : undefined,
+    isObject(computed) ? computed.group : undefined,
+    isObject(computed) && isObject(computed.address)
+      ? computed.address.country
+      : undefined,
+  ];
+
+  return candidates.find(
+    (c): c is string => typeof c === 'string' && c.length === 2,
+  );
 }
 
 /** Normalize role values. */
