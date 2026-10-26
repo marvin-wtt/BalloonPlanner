@@ -41,14 +41,14 @@ export function loadJson(
         throw new Error(`Invalid person record at index ${i.toString()}`);
       }
 
-      const { firstName, lastName, address, role } = computedData;
+      const { firstName, lastName, group, role } = computedData;
 
       return {
         id,
         firstName: normalizeName(firstName),
         lastName: normalizeName(lastName),
         role: normalizeRole(role),
-        nationality: address.country.toLowerCase(),
+        nationality: group.toLowerCase(),
         languages: extractLanguages(entry),
       };
     });
@@ -93,16 +93,14 @@ function isObject(x: unknown): x is Record<string, unknown> {
 function isValidPersonData(x: unknown): x is {
   firstName: string;
   lastName: string;
-  address: { country: string };
+  group: string;
   role: string;
 } {
   if (!isObject(x)) return false;
-  const { firstName, lastName, address, role } = x;
+  const { firstName, lastName, group, role } = x;
   if (typeof firstName !== 'string' || firstName.trim() === '') return false;
   if (typeof lastName !== 'string' || lastName.trim() === '') return false;
-  if (!isObject(address)) return false;
-  const country = address.country;
-  if (typeof country !== 'string' || country.length !== 2) return false;
+  if (typeof group !== 'string' || group.length !== 2) return false;
   return !(typeof role !== 'string' || role.trim() === '');
 }
 

@@ -96,17 +96,13 @@ You can import people data using a JSON file with the following structure:
     "firstName": "John",
     "lastName": "Doe",
     "role": "participant",
-    "address": {
-      "country": "de"
-    }
+    "group": "de"
   },
   {
     "firstName": "Jane",
     "lastName": "Smith",
     "role": "counselor",
-    "address": {
-      "country": "fr"
-    }
+    "group": "fr"
   }
 ]
 ```
@@ -116,7 +112,7 @@ Required fields:
 - `firstName`: Person's first name (non-empty string)
 - `lastName`: Person's last name (non-empty string)
 - `role`: Person's role (string, normalized to either 'participant' or 'counselor')
-- `address.country`: Two-letter country code (string, exactly 2 characters)
+- `group`: Two-letter country code (string, exactly 2 characters)
 
 Optional fields:
 

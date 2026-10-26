@@ -131,19 +131,19 @@
   </q-step>
 
   <q-step
-    name="select-camp"
-    title="Select Camp"
+    name="select-event"
+    title="Select Event"
     icon="list"
-    :done="!!campId"
+    :done="!!eventId"
   >
     <div
       class="column q-gutter-md"
       style="max-width: 300px"
     >
       <q-select
-        v-model="campId"
-        label="Select Camp"
-        :options="campOptions"
+        v-model="eventId"
+        label="Select Event"
+        :options="eventOptions"
         map-options
         emit-value
         :error
@@ -161,7 +161,7 @@
         color="primary"
         :loading
         rounded
-        :disable="!campId"
+        :disable="!eventId"
         @click="downloadPeople"
       />
     </q-stepper-navigation>
@@ -192,12 +192,12 @@ const server = ref<string>();
 const email = ref<string>();
 const password = ref<string>();
 const otp = ref<string>();
-const campId = ref<string>();
+const eventId = ref<string>();
 
 const partialToken = ref<string>();
 const accessToken = ref<string>();
 const locale = ref<string>();
-const campOptions = ref<QSelectOption[]>();
+const eventOptions = ref<QSelectOption[]>();
 
 const error = computed(() => errorMessage.value != undefined);
 const url = computed(() => {
@@ -231,7 +231,7 @@ interface LoginResponse {
   };
 }
 
-interface Camp {
+interface Event {
   id: string;
   name: string | Record<string, string>;
 }
@@ -337,8 +337,8 @@ function twoFactorLogin() {
 
 async function handleAuthResponse(response: LoginResponse) {
   applyAuth(response);
-  await loadCamps();
-  emit('to', 'select-camp');
+  await loadEvents();
+  emit('to', 'select-event');
 }
 
 function handleAuthError(error: unknown) {
@@ -356,16 +356,16 @@ function handleAuthError(error: unknown) {
 }
 
 function downloadPeople() {
-  const camp = campId.value;
-  if (!camp || !accessToken.value) {
+  const event = eventId.value;
+  if (!event || !accessToken.value) {
     return;
   }
 
   return run(async () => {
-    const data = await request('GET', `camps/${camp}/registrations/`);
+    const data = await request('GET', `events/${event}/registrations/`);
     modelValue.value = loadJson(data);
     emit('continue');
-  }, 'Failed to download camp data.');
+  }, 'Failed to download event data.');
 }
 
 function applyAuth(response: LoginResponse) {
@@ -373,25 +373,25 @@ function applyAuth(response: LoginResponse) {
   locale.value = response.profile.locale;
 }
 
-async function loadCamps() {
-  const response = await request<{ data: Camp[] }>(
+async function loadEvents() {
+  const response = await request<{ data: Event[] }>(
     'GET',
-    'camps/?view=assigned',
+    'events/?view=assigned',
   );
-  const camps = response.data;
+  const events = response.data;
 
   // Prefer the country subtag (e.g. "DE" of "de-DE") over the language ("de").
   const [language = '', country = ''] = locale.value?.split('-') ?? [];
   const preferredKeys = [country, language].filter((key) => key.length > 0);
 
-  campOptions.value = camps.map((camp) => ({
-    label: campLabel(camp, preferredKeys),
-    value: camp.id,
+  eventOptions.value = events.map((event) => ({
+    label: eventLabel(event, preferredKeys),
+    value: event.id,
   }));
 }
 
-function campLabel(camp: Camp, preferredKeys: string[]): string {
-  const name = camp.name;
+function eventLabel(event: Event, preferredKeys: string[]): string {
+  const name = event.name;
   if (typeof name === 'string') {
     return name;
   }

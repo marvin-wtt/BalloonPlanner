@@ -19,7 +19,7 @@
         <q-item-section>
           <q-item-label>Online</q-item-label>
           <q-item-label caption>
-            Download data from camp registration server
+            Download data from event registration server
           </q-item-label>
         </q-item-section>
       </q-item>
