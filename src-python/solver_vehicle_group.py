@@ -155,6 +155,40 @@ def solve_vehicle_groups(
         if not ok:
             model.Add(x[cid, bid] == 0)
 
+    # operators must exist *simultaneously*: every real balloon and every grouped
+    # car gets its own operator, and a car's operator must share a language with
+    # its balloon's operator. Checking pairs one by one is not enough, e.g. when
+    # the only compatible driver is also needed as a pilot elsewhere.
+    person_ids = {p["id"] for p in people}
+    y = {}
+    for vid, cands in list(allowed_op_balloon.items()) + list(allowed_op_car.items()):
+        for p in cands & person_ids:
+            y[p, vid] = model.NewBoolVar(f"y_{p}_{vid}")
+
+    for p in person_ids:
+        model.Add(sum(var for (q, _), var in y.items() if q == p) <= 1)
+
+    for b in balloon_ids:
+        ops_b = [y[p, b] for p in allowed_op_balloon[b] & person_ids]
+        model.Add(sum(ops_b) == (1 if bal_need[b] > 0 else 0))
+
+    for c in car_ids:
+        ops_c = [y[p, c] for p in allowed_op_car[c] & person_ids]
+        model.Add(sum(ops_c) == sum(x[c, b] for b in balloon_ids))
+
+    def speaks_with(p: str, q: str) -> bool:
+        lp, lq = langs.get(p), langs.get(q)
+        return not lp or not lq or bool(set(lp) & set(lq))
+
+    for b in real_balloon_ids:
+        for c in car_ids:
+            if not compat_cb[(c, b)]:
+                continue
+            for p in allowed_op_balloon[b] & person_ids:
+                for q in allowed_op_car[c] & person_ids:
+                    if p != q and not speaks_with(p, q):
+                        model.Add(y[p, b] + y[q, c] + x[c, b] <= 2)
+
     # objective: minimise unused passenger seats
     unused = model.NewIntVar(0, sum(pax_cap.values()), "unused")
     model.Add(unused == sum(pax_cap.values()) - sum(pax_cap[c] * x[c, b] for c, b in x))

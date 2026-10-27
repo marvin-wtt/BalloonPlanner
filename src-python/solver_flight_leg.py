@@ -102,9 +102,9 @@ def solve_flight_leg(
     # ------------------------------------------------------------------
     # 0.a Input preparation
     # ------------------------------------------------------------------
-    # Avoid side effects when shuffling
+    # Avoid side effects when shuffling and reserving seats (copies the car dicts too)
     balloons = balloons[:]
-    cars = cars[:]
+    cars = [dict(c) for c in cars]
     people = people[:]
     # Deterministic shuffles
     random.seed(random_seed)
@@ -485,12 +485,20 @@ def solve_flight_leg(
 
     # 3.7 language-aware lookahead: prioritise low-flight pax in group cars (no overweight lookahead)
     if w_low_flights_lookahead != 0 and planning_horizon_legs >= 1 and person_ids:
-        # Seats available across the next H legs
-        seats_per_leg = sum(capacity[bid] for bid in balloon_ids)
+        # Passenger seats (pilot excluded) available across the next H legs
+        seats_per_leg = sum(max(capacity[bid] - 1, 0) for bid in balloon_ids)
         future_seats = planning_horizon_legs * seats_per_leg
 
+        # Counselors carry the same discount as in 3.2, so they only count as
+        # "low-flight" once no participant with as few flights is left.
+        effective_flights = {
+            p: flights_so_far[p]
+            + (0 if is_participant[p] else counselor_flight_discount)
+            for p in person_ids
+        }
+
         # Global cutoff: who counts as "low-flight"
-        sorted_f = sorted(flights_so_far[p] for p in person_ids)
+        sorted_f = sorted(effective_flights.values())
         if future_seats <= 0:
             cutoff = -(10**9)  # nobody qualifies
         elif future_seats >= len(sorted_f):
@@ -498,7 +506,7 @@ def solve_flight_leg(
         else:
             cutoff = sorted_f[future_seats - 1]
 
-        low = {p: int(flights_so_far[p] <= cutoff) for p in person_ids}
+        low = {p: int(effective_flights[p] <= cutoff) for p in person_ids}
 
         # Language eligibility for a group (balloon id = bid):
         # A passenger is eligible if they share ≥1 language with at least one *potential*
@@ -520,17 +528,19 @@ def solve_flight_leg(
                     return 1
             return 0
 
-        # Target: in each group's cars, achieve at least H * capacity(low-flight, lang-eligible) over horizon
+        # Target: in each group's cars, achieve at least H * passenger seats (low-flight, lang-eligible)
+        # over horizon. Drivers are excluded: they are needed behind the wheel again.
         for bid in balloon_ids:
-            target = int(planning_horizon_legs * capacity[bid])
+            target = int(planning_horizon_legs * max(capacity[bid] - 1, 0))
             if target <= 0:
                 continue
 
             car_ids = vehicle_groups.get(bid, [])
             low_lang_in_cars = sum(
-                low[p] * lang_eligible(p, bid) * pax[p, v]
+                pax[p, v] - op[p, v]
                 for v in car_ids
                 for p in person_ids
+                if low[p] and lang_eligible(p, bid)
             )
 
             short = model.NewIntVar(0, target, f"short_{bid}")

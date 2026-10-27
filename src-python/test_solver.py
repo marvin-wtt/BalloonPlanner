@@ -593,6 +593,40 @@ class TestLowFlightsLookahead:
         assert "low1" in c1_occ
         assert "low2" in c1_occ
 
+    @pytest.mark.parametrize("seed", [1, 7, 42])
+    def test_leg_one_leaves_flyable_participants_in_every_group(self, seed):
+        # Drivers and a counselor speak all languages, so they used to count as
+        # "next-leg passengers" for any group. Leg 1 then grounded a French-only
+        # participant under a German pilot, and someone else had to fly twice.
+        people = [
+            person("pilot_de", role="counselor", languages=["de"]),
+            person("pilot_fr", role="counselor", languages=["fr"]),
+            person("driver1", role="counselor"),
+            person("driver2", role="counselor"),
+            person("counselor", role="counselor"),
+            person("de1", languages=["de"]),
+            person("de2", languages=["de"]),
+            person("fr1", languages=["fr"]),
+            person("fr2", languages=["fr"]),
+        ]
+        b = [balloon("b1", 2, ["pilot_de"]), balloon("b2", 2, ["pilot_fr"])]
+        c = [car("c1", 5, ["driver1"]), car("c2", 5, ["driver2"])]
+        groups = {"b1": ["c1"], "b2": ["c2"]}
+        weights = dict(w_passenger_fairness=30, w_tiebreak_fairness=1,
+                       w_divers_nationalities=3, w_low_flights_lookahead=30,
+                       c_common_language_passengers=True, random_seed=seed)
+
+        leg1 = solve(b, c, people, groups, planning_horizon_legs=1, **weights)
+
+        flown = {p for bid in groups for p in passengers(leg1, bid)}
+        group_of = {v: bid for bid, cars in groups.items() for v in [bid, *cars]}
+        fixed = {p: group_of[v] for v in group_of for p in occupants(leg1, v)}
+        people2 = [dict(p, flightsSoFar=int(p["id"] in flown)) for p in people]
+        leg2 = solve(b, c, people2, groups, fixed_groups=fixed, **weights)
+
+        flown |= {p for bid in groups for p in passengers(leg2, bid)}
+        assert {"de1", "de2", "fr1", "fr2"} <= flown
+
 
 # ===========================================================================
 # solve_vehicle_groups
@@ -614,10 +648,11 @@ class TestSolveVehicleGroups:
 
     def test_each_car_in_at_most_one_group(self):
         b = [balloon("b1", 2, ["p1"]), balloon("b2", 2, ["p2"])]
-        c = [car("c1", 3, ["p1"]), car("c2", 3, ["p2"])]
+        c = [car("c1", 3, ["p3"]), car("c2", 3, ["p4"])]
         people = [
             person("p1", role="counselor"), person("p2", role="counselor"),
-            person("p3"), person("p4"), person("p5"), person("p6"),
+            person("p3", role="counselor"), person("p4", role="counselor"),
+            person("p5"), person("p6"),
         ]
         result = solve_vehicle_groups(b, c, people)
         all_assigned = [cid for cars in result["vehicleGroups"].values() for cid in cars]
@@ -662,3 +697,30 @@ class TestSolveVehicleGroups:
         c = [car("c1", 3, ["c_driver"])]
         with pytest.raises(RuntimeError):
             solve_vehicle_groups(b, c, people)
+
+    def test_compatible_driver_not_needed_as_pilot_elsewhere(self):
+        # Car c_fr can only be driven by "bridge" (en) for the German pilot, but
+        # "bridge" is also the only pilot of b_fr. Pairwise checks allowed
+        # b_de <- c_fr anyway, which left the leg without any feasible assignment.
+        people, b, c = self._bridge_fleet()
+        for seed in (1, 7, 42):
+            groups = solve_vehicle_groups(b, c, people, random_seed=seed)["vehicleGroups"]
+            assert groups == {"b_de": ["c_de"], "b_fr": ["c_fr"]}
+
+    def test_rejects_groups_without_distinct_operators(self):
+        people, b, c = self._bridge_fleet()
+        with pytest.raises(RuntimeError):
+            solve_vehicle_groups(b, c, people, frozen={"b_de": ["c_fr"]})
+
+    @staticmethod
+    def _bridge_fleet():
+        people = [
+            person("pilot_de", role="counselor", languages=["de", "en"]),
+            person("driver_de", role="counselor", languages=["de", "en"]),
+            person("bridge", role="counselor", languages=["en", "fr"]),
+            person("driver_fr", role="counselor", languages=["fr"]),
+            person("p1"), person("p2"), person("p3"), person("p4"),
+        ]
+        b = [balloon("b_de", 2, ["pilot_de"]), balloon("b_fr", 2, ["bridge"])]
+        c = [car("c_de", 4, ["driver_de"]), car("c_fr", 4, ["bridge", "driver_fr"])]
+        return people, b, c
