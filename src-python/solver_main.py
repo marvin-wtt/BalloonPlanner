@@ -95,6 +95,7 @@ def _handle_solve_leg(payload: Dict[str, Any], args: Namespace | Any = None):
         people_meet_history=payload.get("peopleMeetHistory"),
         frozen=payload.get("preAssignments"),
         fixed_groups=payload.get("fixedGroups"),
+        previous_leg_passenger_ids=payload.get("previousLegPassengerIds"),
         # problem params
         counselor_flight_discount=options.get("counselorFlightDiscount", 0.9),
         planning_horizon_legs=options.get("planningHorizonDepth", 0),
@@ -113,6 +114,8 @@ def _handle_solve_leg(payload: Dict[str, Any], args: Namespace | Any = None):
         w_new_meetings=weights.get("meetingNewPeople", 1),
         w_divers_nationalities=weights.get("diverseNationalities", 3),
         w_low_flights_lookahead=weights.get("lowFlightsLookahead", 30),
+        w_no_consecutive_leg_flights=weights.get("noConsecutiveLegFlights", 1000),
+        w_next_leg_fill=weights.get("nextLegFill", 30),
         # Configuration
         time_limit_s=options.get("timeLimit", 600),
         num_search_workers=args.get("workers", 15),

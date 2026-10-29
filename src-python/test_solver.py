@@ -61,6 +61,7 @@ def solve(
     group_history=None,
     balloon_history=None,
     people_meet_history=None,
+    previous_leg_passenger_ids=None,
     planning_horizon_legs=0,
     w_pilot_fairness=0,
     w_passenger_fairness=0,
@@ -72,6 +73,8 @@ def solve(
     w_group_rotation=0,
     w_balloon_rotation=0,
     w_low_flights_lookahead=0,
+    w_no_consecutive_leg_flights=0,
+    w_next_leg_fill=0,
     counselor_flight_discount=0.9,
     default_person_weight=80,
     c_common_language_passengers=False,
@@ -90,6 +93,7 @@ def solve(
         people_meet_history=people_meet_history,
         frozen=frozen or {},
         fixed_groups=fixed_groups,
+        previous_leg_passenger_ids=previous_leg_passenger_ids,
         planning_horizon_legs=planning_horizon_legs,
         c_common_language_passengers=c_common_language_passengers,
         c_common_language_operators=c_common_language_operators,
@@ -103,6 +107,8 @@ def solve(
         w_group_rotation=w_group_rotation,
         w_balloon_rotation=w_balloon_rotation,
         w_low_flights_lookahead=w_low_flights_lookahead,
+        w_no_consecutive_leg_flights=w_no_consecutive_leg_flights,
+        w_next_leg_fill=w_next_leg_fill,
         counselor_flight_discount=counselor_flight_discount,
         default_person_weight=default_person_weight,
         time_limit_s=time_limit_s,
@@ -626,6 +632,122 @@ class TestLowFlightsLookahead:
 
         flown |= {p for bid in groups for p in passengers(leg2, bid)}
         assert {"de1", "de2", "fr1", "fr2"} <= flown
+
+
+class TestNoConsecutiveLegFlights:
+    # One group: balloon seats pilot + 2, car seats driver + 3 (+3 reserved)
+    PEOPLE = [
+        person("pilot", role="counselor"),
+        person("driver", role="counselor"),
+        person("a"),
+        person("b"),
+        person("c"),
+        person("d"),
+    ]
+    B = [balloon("b1", 3, ["pilot"])]
+    C = [car("c1", 7, ["driver"])]
+    GROUPS = {"b1": ["c1"]}
+    FIXED = {p["id"]: "b1" for p in PEOPLE}
+
+    def test_previous_leg_passengers_stay_on_ground(self):
+        # a and b flew last leg; fairness alone would fly them again
+        people = [dict(p, flightsSoFar=0 if p["id"] in ("a", "b") else 3)
+                  for p in self.PEOPLE]
+        result = solve(self.B, self.C, people, self.GROUPS,
+                       fixed_groups=self.FIXED,
+                       previous_leg_passenger_ids=["a", "b"],
+                       w_passenger_fairness=30,
+                       w_no_consecutive_leg_flights=1000)
+        assert passengers(result, "b1") == {"c", "d"}
+
+    def test_rule_disabled_with_zero_weight(self):
+        people = [dict(p, flightsSoFar=0 if p["id"] in ("a", "b") else 3)
+                  for p in self.PEOPLE]
+        result = solve(self.B, self.C, people, self.GROUPS,
+                       fixed_groups=self.FIXED,
+                       previous_leg_passenger_ids=["a", "b"],
+                       w_passenger_fairness=30)
+        assert passengers(result, "b1") == {"a", "b"}
+
+    def test_previous_pilot_may_fly_again(self):
+        result = solve(self.B, self.C, self.PEOPLE, self.GROUPS,
+                       fixed_groups=self.FIXED,
+                       previous_leg_passenger_ids=["pilot"],
+                       w_no_consecutive_leg_flights=1000)
+        assert operator(result, "b1") == "pilot"
+
+    def test_frozen_assignment_overrides_rule(self):
+        frozen = {"b1": {"operatorId": None, "passengerIds": ["a"]}}
+        result = solve(self.B, self.C, self.PEOPLE, self.GROUPS,
+                       frozen=frozen,
+                       fixed_groups=self.FIXED,
+                       previous_leg_passenger_ids=["a", "b"],
+                       w_no_consecutive_leg_flights=1000)
+        assert "a" in passengers(result, "b1")
+        assert "b" not in passengers(result, "b1")
+
+    def test_rule_is_soft_when_unavoidable(self):
+        # Only a and b can fill the balloon; violating beats failing
+        people = [p for p in self.PEOPLE if p["id"] not in ("c", "d")]
+        fixed = {p["id"]: "b1" for p in people}
+        result = solve(self.B, self.C, people, self.GROUPS,
+                       fixed_groups=fixed,
+                       previous_leg_passenger_ids=["a", "b"],
+                       w_passenger_fairness=30,
+                       w_no_consecutive_leg_flights=10)
+        assert passengers(result, "b1") == {"a", "b"}
+
+    def test_next_leg_fill_keeps_eligible_crew_in_cars(self):
+        # Two groups. Everyone has been in group b1 before, so group rotation
+        # pulls the whole ground crew into c2 and leaves c1 without anyone
+        # to fly balloon b1 next leg.
+        people = [
+            person("pilot1", role="counselor", flights=5),
+            person("pilot2", role="counselor", flights=5),
+            person("driver1", role="counselor", flights=5),
+            person("driver2", role="counselor", flights=5),
+            person("x1", flights=0),
+            person("x2", flights=0),
+            person("y1", flights=0),
+            person("y2", flights=0),
+            person("z1", flights=0),
+            person("z2", flights=0),
+            person("z3", flights=0),
+            person("z4", flights=0),
+        ]
+        b = [balloon("b1", 3, ["pilot1"]), balloon("b2", 3, ["pilot2"])]
+        c = [car("c1", 7, ["driver1"]), car("c2", 7, ["driver2"])]
+        groups = {"b1": ["c1"], "b2": ["c2"]}
+        history = {p["id"]: {"b1": 3} for p in people}
+        result = solve(b, c, people, groups,
+                       group_history=history,
+                       w_passenger_fairness=30,
+                       w_group_rotation=50,
+                       w_no_consecutive_leg_flights=1000,
+                       w_next_leg_fill=1000)
+        for car_id in ("c1", "c2"):
+            assert len(passengers(result, car_id)) >= 2
+
+    def test_three_leg_series_alternates(self):
+        groups = self.GROUPS
+        weights = dict(w_passenger_fairness=30, w_tiebreak_fairness=1,
+                       w_no_consecutive_leg_flights=1000, w_next_leg_fill=30)
+        flights = {p["id"]: 0 for p in self.PEOPLE}
+        previous = []
+        fixed = {}
+        for _ in range(3):
+            people = [dict(p, flightsSoFar=flights[p["id"]]) for p in self.PEOPLE]
+            result = solve(self.B, self.C, people, groups,
+                           fixed_groups=fixed,
+                           previous_leg_passenger_ids=previous,
+                           **weights)
+            flown = passengers(result, "b1")
+            assert not (flown & set(previous))
+            assert len(flown) == 2
+            for p in occupants(result, "b1"):
+                flights[p] += 1
+            previous = list(flown)
+            fixed = self.FIXED
 
 
 # ===========================================================================

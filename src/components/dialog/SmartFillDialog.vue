@@ -233,6 +233,40 @@
                   <q-item>
                     <q-item-section>
                       <q-input
+                        v-model.number="options.weights.noConsecutiveLegFlights"
+                        label="No Consecutive Leg Flights"
+                        hint="Higher values try to avoid passengers flying in two consecutive legs"
+                        type="number"
+                        step="1"
+                        :rules="[signedIntegerRule]"
+                        hide-bottom-space
+                        clearable
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
+                  <q-item>
+                    <q-item-section>
+                      <q-input
+                        v-model.number="options.weights.nextLegFill"
+                        label="Next Leg Fill"
+                        hint="Higher values try to keep enough passengers in group cars to fill the balloon next leg"
+                        type="number"
+                        step="1"
+                        :rules="[signedIntegerRule]"
+                        hide-bottom-space
+                        clearable
+                        dense
+                        outlined
+                        rounded
+                      />
+                    </q-item-section>
+                  </q-item>
+                  <q-item>
+                    <q-item-section>
+                      <q-input
                         v-model.number="options.weights.pilotFairness"
                         label="Pilot Fairness"
                         hint="Higher values try to equalize pilot flights"
@@ -388,6 +422,8 @@ const options = reactive<
     meetingNewPeople: 1,
     diverseNationalities: 3,
     lowFlightsLookahead: 30,
+    noConsecutiveLegFlights: 1000,
+    nextLegFill: 30,
   },
   constraints: {
     commonLanguagePassengers: true,

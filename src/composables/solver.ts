@@ -187,6 +187,12 @@ export function useSolver() {
 
     const fixedGroups = buildFixedGroups(flightSeries.value, flightLeg.value);
 
+    const previousLegPassengerIds = buildPreviousLegPassengers(
+      project.value,
+      flightSeries.value,
+      flightLeg.value,
+    );
+
     const response = await window.solverAPI.solveFlightLeg(
       deepToRaw({
         balloons,
@@ -198,6 +204,7 @@ export function useSolver() {
         balloonHistory,
         peopleMeetHistory,
         fixedGroups,
+        previousLegPassengerIds,
         options,
       }),
     );
@@ -345,6 +352,25 @@ export function buildFixedGroups(
     },
     {},
   );
+}
+
+function buildPreviousLegPassengers(
+  project: Project,
+  series: FlightSeries,
+  leg: FlightLeg,
+): ID[] {
+  const prevLeg = getPreviousFlightLeg(series, leg);
+  if (!prevLeg) {
+    return [];
+  }
+
+  const balloonIds = new Set(project.balloons.map((b) => b.id));
+
+  // Operators are excluded: only passenger seats count towards the rule
+  return Object.entries(prevLeg.assignments)
+    .filter(([vehicleId]) => balloonIds.has(vehicleId))
+    .filter(([vehicleId]) => !prevLeg.canceledBalloonIds.includes(vehicleId))
+    .flatMap(([, assignment]) => assignment.passengerIds);
 }
 
 function buildVehiclePairs(series: FlightSeries) {

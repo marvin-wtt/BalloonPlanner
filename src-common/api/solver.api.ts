@@ -62,6 +62,7 @@ export interface SolveFlightLegRequest {
   balloonHistory?: Record<ID, Record<ID, number>>; // key: personId, value: balloonId -> count (only actual balloon flights)
   peopleMeetHistory?: Record<ID, Record<ID, number>>; // key: personId, value: personId -> count
   fixedGroups?: Record<ID, ID>;
+  previousLegPassengerIds?: ID[]; // balloon passengers (operators excluded) of the previous leg in this series
 
   people: {
     id: ID;
@@ -100,6 +101,8 @@ export interface SolveFlightLegWeights extends Record<
   noSoloParticipant?: number;
   groupPassengerBalance?: number;
   lowFlightsLookahead?: number;
+  noConsecutiveLegFlights?: number;
+  nextLegFill?: number;
 }
 
 export interface SolveFlightLegConstraints extends Record<

@@ -22,6 +22,10 @@ A single-slot (one flight) solver with:
   – discourage “same vehicle again” (w_vehicle_rotation)
   – discourage exactly one participant alone in a car (w_no_solo_participant)
   – group passenger balance terms for leg 1 and leg 2
+  – discourage flying as passenger in two consecutive legs of a series
+    (w_no_consecutive_leg_flights)
+  – keep enough eligible passengers in each group's cars to fill the
+    balloon in the next leg (w_next_leg_fill)
 
 All weights are user-tunable kwargs.
 """
@@ -61,6 +65,7 @@ def solve_flight_leg(
     people_meet_history: Optional[Dict[str, Dict[str, int]]],
     frozen: Optional[Dict[str, VehicleAssignment]],
     fixed_groups: Optional[Dict[str, str]],
+    previous_leg_passenger_ids: Optional[List[str]],
     planning_horizon_legs: int,
     # Constraints
     c_common_language_passengers: bool,
@@ -76,6 +81,8 @@ def solve_flight_leg(
     w_group_rotation: int,
     w_balloon_rotation: int,
     w_low_flights_lookahead: int,
+    w_no_consecutive_leg_flights: int,
+    w_next_leg_fill: int,
     counselor_flight_discount: float,
     # misc
     default_person_weight: int,
@@ -166,6 +173,11 @@ def solve_flight_leg(
         for a in (frozen or {}).values()
         for p in ([a["operatorId"]] + a["passengerIds"])
         if p
+    }
+
+    # Balloon passengers of the previous leg in this series (operators excluded)
+    previous_leg_passengers = {
+        p for p in (previous_leg_passenger_ids or []) if p in people_by_id
     }
 
     priorities = {
@@ -316,6 +328,27 @@ def solve_flight_leg(
     # 3. Objective
     # ------------------------------------------------------------------
     objective_terms = []
+
+    # Language eligibility for a group (balloon id = bid):
+    # A passenger is eligible if they share ≥1 language with at least one *potential*
+    # operator of that balloon (allowed_op[bid]), or if either side "speaks all"
+    # (None/[] means "all" per 2.8).
+    def lang_eligible(p: str, bid: str) -> int:
+        lp = langs.get(p)
+        speaks_all_p = (lp is None) or (len(lp) == 0)
+        if speaks_all_p:
+            return 1
+        lp_set = set(lp)
+
+        # check any potential operator for this balloon
+        for q in allowed_op.get(bid, set()):
+            lq = langs.get(q)
+            if lq is None or len(lq) == 0:
+                return 1  # operator speaks all
+            if lp_set.intersection(lq):
+                return 1
+        return 0
+
     max_flights = max(flights_so_far.values()) + 1 if flights_so_far else 1
 
     # 3.1 pilot fairness
@@ -508,30 +541,18 @@ def solve_flight_leg(
 
         low = {p: int(effective_flights[p] <= cutoff) for p in person_ids}
 
-        # Language eligibility for a group (balloon id = bid):
-        # A passenger is eligible if they share ≥1 language with at least one *potential*
-        # operator of that balloon (allowed_op[bid]), or if either side "speaks all"
-        # (None/[] means "all" per 2.8).
-        def lang_eligible(p: str, bid: str) -> int:
-            lp = langs.get(p)
-            speaks_all_p = (lp is None) or (len(lp) == 0)
-            if speaks_all_p:
-                return 1
-            lp_set = set(lp)
-
-            # check any potential operator for this balloon
-            for q in allowed_op.get(bid, set()):
-                lq = langs.get(q)
-                if lq is None or len(lq) == 0:
-                    return 1  # operator speaks all
-                if lp_set.intersection(lq):
-                    return 1
-            return 0
-
         # Target: in each group's cars, achieve at least H * passenger seats (low-flight, lang-eligible)
         # over horizon. Drivers are excluded: they are needed behind the wheel again.
+        # With the consecutive-leg rule, today's balloon passengers fly again in
+        # the leg after next, so the car crew only has to cover every second leg.
+        car_covered_legs = (
+            (planning_horizon_legs + 1) // 2
+            if w_no_consecutive_leg_flights != 0
+            else planning_horizon_legs
+        )
+
         for bid in balloon_ids:
-            target = int(planning_horizon_legs * max(capacity[bid] - 1, 0))
+            target = int(car_covered_legs * max(capacity[bid] - 1, 0))
             if target <= 0:
                 continue
 
@@ -555,6 +576,40 @@ def solve_flight_leg(
                 if kind[v] == "balloon":
                     # positive term because we minimize: lower pr is better
                     objective_terms.append(w_tiebreak_fairness * pr * pax[p, v])
+
+    # 3.9 no balloon passenger in two consecutive legs
+    if w_no_consecutive_leg_flights != 0:
+        for p in previous_leg_passengers:
+            if p in frozen_people:
+                continue  # pre-assignments override the rule
+            for v in balloon_ids:
+                # pax[p,v] - op[p,v] is 1 only when p is a non-operator passenger
+                objective_terms.append(
+                    w_no_consecutive_leg_flights * (pax[p, v] - op[p, v])
+                )
+
+    # 3.10 next-leg fill: the next leg's balloon passengers come from this
+    # leg's car crew (groups stay fixed, balloon passengers are blocked by 3.9).
+    # Penalise every balloon seat the group's cars cannot fill in the next leg.
+    # Independent of the planning horizon, which only exists on the first leg.
+    if w_next_leg_fill != 0 and w_no_consecutive_leg_flights != 0:
+        for bid in balloon_ids:
+            seats = max(capacity[bid] - 1, 0)
+            if seats <= 0:
+                continue
+
+            car_ids = vehicle_groups.get(bid, [])
+            # Drivers are excluded: they are needed behind the wheel again.
+            eligible_in_cars = sum(
+                pax[p, v] - op[p, v]
+                for v in car_ids
+                for p in person_ids
+                if lang_eligible(p, bid)
+            )
+
+            short_next = model.NewIntVar(0, seats, f"shortNext_{bid}")
+            model.Add(short_next >= seats - eligible_in_cars)
+            objective_terms.append(w_next_leg_fill * short_next)
 
     model.Minimize(sum(objective_terms))
 
